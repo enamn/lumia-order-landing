@@ -85,13 +85,19 @@ export function Footer() {
         </nav>
       </div>
       <div className="wrap footer__legal">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px 20px' }}>
-          <a href="#privacy">Privacy Policy</a>
-          <a href="#data-deletion">Data Deletion</a>
-          <a href="#terms">Terms</a>
-        </div>
+        <LegalLinks />
         <span>A product by Afkar IO</span>
       </div>
     </footer>
+  );
+}
+
+export function LegalLinks() {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px 20px' }}>
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/data-deletion">Data Deletion</a>
+      <a href="/terms">Terms</a>
+    </div>
   );
 }

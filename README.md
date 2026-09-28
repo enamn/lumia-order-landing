@@ -46,6 +46,24 @@ Until that file is added, the device body is drawn in CSS. To use the photo, put
 `public/assets/lumia-terminal.png` and set `TERMINAL_PHOTO = '/assets/lumia-terminal.png'` in
 `src/components/Terminal.tsx`.
 
+## Pages
+
+| Path | Page |
+| --- | --- |
+| `/` | Landing page |
+| `/privacy` | Privacy Policy |
+| `/data-deletion` | Data Deletion |
+| `/terms` | Terms of Service (drafted, not from the design — needs legal review) |
+
+Legacy hash links (`/#privacy`, `/#data-deletion`, `/#terms`) redirect to these paths.
+Legal copy lives in `src/pages/Legal.tsx` (contact email and "last updated" date at the top).
+
+## Deployment
+
+Firebase App Hosting (`lumia-order-landing` backend, us-east4) rolls out every push to `main`.
+It builds with Node buildpacks (`npm run build`) and runs `npm start` → `server.js`, which serves
+`dist/` on `$PORT` with an SPA fallback.
+
 ## TODO
 
-- Real targets for *Sign in*, *Privacy Policy*, *Data Deletion* and *Terms* (currently `#` anchors).
+- Real target for *Sign in* (currently `#signin`).
