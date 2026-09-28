@@ -1,0 +1,83 @@
+/* Lumia Order Terminal — a 300×704 device illustration with a live screen. */
+.term { position: relative; width: 300px; height: 704px; margin: 0 auto; font-family: var(--sans); color: var(--ink); }
+.term__ring {
+  position: absolute; top: 60px; left: 6px; width: 288px; height: 640px; border-radius: 34px;
+  box-shadow: 0 0 0 3px rgba(255, 85, 119, 0.6), 0 0 60px 10px rgba(201, 61, 255, 0.35);
+  transition: opacity 0.35s; pointer-events: none;
+}
+.term__shadow {
+  position: absolute; left: 30px; right: 30px; bottom: 0; height: 22px; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(40, 8, 30, 0.35), rgba(40, 8, 30, 0));
+}
+.term__photo { position: absolute; top: 40px; left: 10px; width: 280px; height: auto; display: block; pointer-events: none; }
+
+/* CSS-drawn hardware */
+.term__head {
+  position: absolute; left: 40px; top: 64px; width: 222px; height: 172px;
+  border-radius: 24px 24px 8px 8px;
+  background: linear-gradient(180deg, #3a3a3e 0%, #202023 18%, #151517 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 6px 14px -6px rgba(0, 0, 0, 0.5);
+}
+.term__head::before {
+  content: ''; position: absolute; left: 22px; right: 22px; top: 0; height: 18px;
+  border-radius: 20px 20px 0 0; background: linear-gradient(180deg, #45454a, #2a2a2e);
+}
+.term__panel {
+  position: absolute; left: 26px; right: 26px; top: 30px; bottom: 22px; border-radius: 6px;
+  background: #0d0d0f; display: flex; align-items: center; justify-content: center; gap: 9px; color: #fff;
+}
+.term__panel b { display: block; font-size: 22px; font-weight: 700; letter-spacing: -0.035em; line-height: 0.95; }
+.term__panel span { display: block; font-size: 18px; font-weight: 300; line-height: 0.95; }
+.term__slot {
+  position: absolute; left: 50px; top: 226px; width: 202px; height: 8px; border-radius: 3px;
+  background: repeating-linear-gradient(90deg, #070707 0 3px, #111 3px 5px);
+}
+.term__body {
+  position: absolute; left: 36px; top: 236px; width: 230px; height: 448px;
+  border-radius: 12px 12px 38px 38px;
+  background: linear-gradient(90deg, #121214 0%, #242428 12%, #1b1b1e 50%, #242428 88%, #121214 100%);
+  box-shadow: 0 18px 30px -18px rgba(0, 0, 0, 0.6);
+}
+.term__bezel {
+  position: absolute; left: 52px; top: 272px; width: 198px; height: 382px; border-radius: 14px;
+  background: #060607; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+/* live screen: 262×525.5 scaled into the bezel */
+.term__screen { position: absolute; left: 62.3px; top: 284.2px; width: 178.4px; height: 357.8px; overflow: hidden; border-radius: 2px; }
+.term__scale { width: 262px; height: 525.5px; transform: scale(0.681); transform-origin: 0 0; }
+.ts {
+  position: relative; overflow: hidden; height: 100%;
+  background: linear-gradient(180deg, #ffffff 0%, #fdf4f8 62%, #f6ecff 100%);
+  padding: 0 14px 14px; display: flex; flex-direction: column; font-variant-numeric: tabular-nums;
+}
+.ts__status { display: flex; justify-content: space-between; align-items: center; height: 26px; flex: none; font-size: 10px; font-weight: 600; }
+.ts__batt { width: 16px; height: 8px; border-radius: 2px; border: 1.2px solid var(--ink); padding: 1px; }
+.ts__batt i { display: block; width: 72%; height: 100%; background: var(--ink); border-radius: 1px; }
+.ts__center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; }
+.ts__banner {
+  margin: 0 -14px; padding: 11px 14px; background: var(--grad); color: #fff;
+  display: flex; justify-content: space-between; align-items: center; font-family: var(--mono);
+}
+.ts__label { font-size: 10.5px; color: var(--muted); }
+.ts__actions { display: grid; grid-template-columns: 1fr 1.3fr; gap: 8px; }
+.ts__btn {
+  border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.06em;
+}
+.ts__btn--line { border: 1.5px solid var(--line-2); background: #fff; }
+.ts__btn--grad { background: var(--grad); color: #fff; }
+.ts__eta { height: 50px; border-radius: 12px; border: 1.5px solid var(--line-2); background: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; transition: all 0.25s; }
+.ts__eta.is-on { background: var(--chip); border-color: var(--pink); color: #8a2040; }
+.ts__glare { position: absolute; inset: 0; background: linear-gradient(118deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 30%); pointer-events: none; }
+
+/* receipt that prints out of the top slot */
+.term__receipt-wrap { position: absolute; left: 66px; width: 170px; top: 14px; height: 220px; display: flex; align-items: flex-end; z-index: 3; pointer-events: none; }
+.term__receipt-clip { width: 100%; overflow: hidden; transition: height 1.6s cubic-bezier(0.4, 0, 0.2, 1); filter: drop-shadow(0 8px 6px rgba(0, 0, 0, 0.45)); }
+.term__receipt {
+  background: linear-gradient(180deg, #ffffff 0%, #faf8f6 70%, #edeae6 100%);
+  clip-path: polygon(0 5px, 6% 0, 12% 5px, 18% 0, 24% 5px, 30% 0, 36% 5px, 42% 0, 48% 5px, 54% 0, 60% 5px, 66% 0, 72% 5px, 78% 0, 84% 5px, 90% 0, 96% 5px, 100% 0, 100% 100%, 0 100%);
+  padding: 12px 12px 40px; font-family: var(--mono); font-size: 9px; line-height: 1.7;
+}
+.term__receipt hr { border: 0; border-top: 1px dashed var(--ink); margin: 3px 0; }
+.term__lip { position: absolute; left: 61px; width: 182px; top: 232px; height: 4px; border-radius: 2px; background: #050505; z-index: 4; transition: opacity 0.3s; }
