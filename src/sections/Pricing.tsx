@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Terminal } from '../components/Terminal';
-import { PLANS, TERMINAL_PRICES, type Billing, type Plan } from '../data';
+import { PLANS, SIGNUP_URL, TERMINAL_PRICES, type Billing, type Plan } from '../data';
 
 export function Pricing() {
   const [billing, setBilling] = useState<Billing>('yearly');
@@ -122,7 +122,7 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: Billing }) {
         ))}
       </div>
       <div className="plan__cta">
-        <a href="#start" className="btn btn--primary btn--md btn--block">{plan.cta}</a>
+        <a href={SIGNUP_URL} className="btn btn--primary btn--md btn--block">{plan.cta}</a>
       </div>
     </div>
   );

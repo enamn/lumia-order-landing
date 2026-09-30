@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Terminal, type TerminalScreen } from '../components/Terminal';
 import { fade, useWide } from '../components/hooks';
-import { AI_STAGES, DEMO_CAPTIONS, DEMO_DURATIONS, DEMO_LAST_STEP, MINI_WAVE } from '../data';
+import { AI_STAGES, DEMO_CAPTIONS, DEMO_DURATIONS, DEMO_LAST_STEP, MINI_WAVE, SIGNUP_URL } from '../data';
 
 type Props = { autoplay?: boolean; speed?: number };
 
@@ -59,7 +59,7 @@ export function Hero({ autoplay = true, speed = 1 }: Props) {
               Lumia Order handles customer orders through WhatsApp — from text and voice messages to confirmed, structured orders ready for your restaurant.
             </p>
             <div className="hero__ctas">
-              <a href="#pricing" className="btn btn--primary">Start free</a>
+              <a href={SIGNUP_URL} className="btn btn--primary">Start free</a>
               <a href="#demo" className="btn btn--ghost" style={{ padding: '0 22px' }}>
                 See it in action <span style={{ fontSize: 15 }}>↓</span>
               </a>

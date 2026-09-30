@@ -66,4 +66,8 @@ It builds with Node buildpacks (`npm run build`) and runs `npm start` → `serve
 
 ## TODO
 
-- Real target for *Sign in* (currently `#signin`).
+- Set `VITE_ADMIN_URL` at build time (e.g. `https://app.order.lumia.ae`) so *Sign in* → `/login` and *Start free* → `/signup`. Unset in production, the buttons keep their old anchors; unset in local dev, they point to `http://localhost:3000`.
+
+## Business-owner application
+
+The separate Next.js dashboard lives in [`apps/admin`](apps/admin/README.md). It uses MongoDB and WhatsApp code verification. See its README for local setup and credentials. The landing page’s build and deployment remain independent.

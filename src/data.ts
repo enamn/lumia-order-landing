@@ -143,3 +143,10 @@ export const NAV_LINKS = [
   ['#pricing', 'Pricing'],
   ['#faq', 'FAQ'],
 ] as const;
+
+// Business-owner app (apps/admin). Set VITE_ADMIN_URL at build time (e.g. https://app.order.lumia.ae).
+// Without it, production keeps the old in-page anchors so no visitor is sent to a dead link; local dev defaults to localhost:3000.
+const env = (import.meta as unknown as { env?: { VITE_ADMIN_URL?: string; DEV?: boolean } }).env;
+const ADMIN_URL = (env?.VITE_ADMIN_URL ?? (env?.DEV ? 'http://localhost:3000' : '')).replace(/\/$/, '');
+export const SIGNUP_URL = ADMIN_URL ? `${ADMIN_URL}/signup` : '#pricing';
+export const LOGIN_URL = ADMIN_URL ? `${ADMIN_URL}/login` : '#signin';

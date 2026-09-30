@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Brand, LogoMark } from '../components/Logo';
-import { FAQ, NAV_LINKS } from '../data';
+import { FAQ, LOGIN_URL, NAV_LINKS, SIGNUP_URL } from '../data';
 
 export function Header() {
   return (
@@ -11,8 +11,8 @@ export function Header() {
           {NAV_LINKS.map(([href, label]) => <a key={href} href={href}>{label}</a>)}
         </nav>
         <div className="header__actions">
-          <a href="#signin" className="header__signin">Sign in</a>
-          <a href="#pricing" className="btn btn--primary btn--sm">Start free</a>
+          <a href={LOGIN_URL} className="header__signin">Sign in</a>
+          <a href={SIGNUP_URL} className="btn btn--primary btn--sm">Start free</a>
         </div>
       </div>
     </header>
@@ -66,8 +66,8 @@ export function Cta() {
           Let Lumia handle the conversation while your team focuses on the food.
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 34 }}>
-          <a href="#pricing" className="btn btn--primary btn--lg">Meet your AI ordering employee</a>
-          <a href="#pricing" className="btn btn--ghost btn--lg" style={{ padding: '0 24px' }}>Start free for 14 days</a>
+          <a href={SIGNUP_URL} className="btn btn--primary btn--lg">Meet your AI ordering employee</a>
+          <a href={SIGNUP_URL} className="btn btn--ghost btn--lg" style={{ padding: '0 24px' }}>Start free for 14 days</a>
         </div>
       </div>
     </section>
