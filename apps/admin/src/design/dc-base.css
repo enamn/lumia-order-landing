@@ -1,0 +1,19 @@
+/* Base styles from the design's <helmet>, scoped to .dc so the rest of the app is unaffected. */
+.dc,.dc *{box-sizing:border-box}
+.dc *{margin:0;padding:0}
+.dc{background:#fff;color:#1A0815;font-family:'Geist','IBM Plex Sans Arabic',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.dc a{color:#1A0815;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px}.dc a:hover{color:#FF5577}
+.dc button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+.dc button:disabled{cursor:default}
+.dc input{font:inherit;color:inherit;border:0;outline:none;background:none}
+.dc input::placeholder{color:#B89AA8}
+@keyframes lo-spin{to{transform:rotate(360deg)}}
+@keyframes lo-scan{0%{transform:translateY(-40px)}100%{transform:translateY(128px)}}
+@keyframes lo-shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+@keyframes lo-twinkle{0%,100%{transform:scale(.6) rotate(0);opacity:.4}50%{transform:scale(1) rotate(45deg);opacity:1}}
+@keyframes lo-rot{to{transform:rotate(360deg)}}
+@keyframes lo-breathe{0%,100%{transform:scale(.85);opacity:.55}50%{transform:scale(1.08);opacity:1}}
+@keyframes lo-draw{0%{stroke-dashoffset:100}55%{stroke-dashoffset:0}100%{stroke-dashoffset:-100}}
+@keyframes lo-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes lo-orbit{from{transform:rotate(0) translateX(78px) rotate(0)}to{transform:rotate(360deg) translateX(78px) rotate(-360deg)}}
+@keyframes lo-pulse{0%,100%{transform:scale(.7);opacity:.6}50%{transform:scale(1);opacity:1}}

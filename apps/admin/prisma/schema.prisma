@@ -1,0 +1,635 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "mongodb"
+  url = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MANAGER
+  STAFF
+  VIEWER
+}
+enum BusinessType {
+  RESTAURANT
+  SALON
+  CLINIC
+  AUTOMOTIVE
+  LAUNDRY
+  RETAIL
+  HOME_SERVICE
+  PROFESSIONAL_SERVICE
+  OTHER
+}
+enum OnboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+enum StepStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+  BLOCKED
+}
+enum StepKey {
+  BUSINESS
+  WHATSAPP
+  CATALOG
+  ORDERS
+  DELIVERY
+  AI_AGENT
+  DEVICE
+  TEST
+}
+enum ItemType {
+  PRODUCT
+  SERVICE
+}
+enum OrderStatus {
+  DRAFT
+  AWAITING_CUSTOMER_CONFIRMATION
+  AWAITING_BUSINESS_CONFIRMATION
+  ACCEPTED
+  PREPARING
+  READY
+  OUT_FOR_DELIVERY
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+enum TaxBehavior {
+  VAT_INCLUDED
+  VAT_EXCLUDED
+  VAT_EXEMPT
+}
+enum FulfillmentType {
+  DELIVERY
+  PICKUP
+  DINE_IN
+}
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  CANCELLED
+}
+
+model User {
+  id String @id @default(uuid()) @map("_id")
+  name String
+  email String @unique
+  emailVerified Boolean @default(false)
+  phoneNumber String @unique
+  phoneNumberVerified Boolean @default(false)
+  preferredLanguage String @default("en")
+  workspaceInitialized Boolean @default(false)
+  image String?
+  status String @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sessions Session[]
+  accounts Account[]
+  memberships Membership[]
+  @@map("users")
+}
+model Session {
+  id String @id @default(uuid()) @map("_id")
+  token String @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId])
+  @@map("sessions")
+}
+model Account {
+  id String @id @default(uuid()) @map("_id")
+  accountId String
+  providerId String
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  accessToken String?
+  refreshToken String?
+  idToken String?
+  accessTokenExpiresAt DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope String?
+  password String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("accounts")
+}
+model Verification {
+  id String @id @default(uuid()) @map("_id")
+  identifier String
+  value String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([identifier])
+  @@map("verifications")
+}
+model RateLimit {
+  id String @id @default(uuid()) @map("_id")
+  key String @unique
+  count Int
+  lastRequest BigInt
+  @@map("rate_limits")
+}
+model Organization {
+  id String @id @default(uuid()) @map("_id")
+  name String
+  slug String @unique
+  countryCode String @default("AE")
+  currencyCode String @default("AED")
+  timezone String @default("Asia/Dubai")
+  status String @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  members Membership[]
+  businesses Business[]
+  auditLogs AuditLog[]
+  @@map("organizations")
+}
+model Membership {
+  id String @id @default(uuid()) @map("_id")
+  organizationId String
+  userId String
+  role Role @default(VIEWER)
+  status String @default("ACTIVE")
+  organization Organization @relation(fields: [organizationId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([organizationId, userId])
+  @@index([userId, status])
+  @@map("organization_members")
+}
+model Business {
+  id String @id @default(uuid()) @map("_id")
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id])
+  name String
+  nameAr String?
+  slug String
+  businessType BusinessType @default(RESTAURANT)
+  phone String?
+  email String?
+  logoUrl String?
+  countryCode String @default("AE")
+  currencyCode String @default("AED")
+  timezone String @default("Asia/Dubai")
+  vatRegistered Boolean @default(false)
+  taxRegistrationNumber String?
+  status String @default("DRAFT")
+  revision Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  locations Location[]
+  onboarding OnboardingSession?
+  catalogs Catalog[]
+  customers Customer[]
+  conversations Conversation[]
+  orders Order[]
+  agents AiAgent[]
+  devices Device[]
+  whatsappAccounts WhatsAppAccount[]
+  orderSettings OrderSettings?
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@map("businesses")
+}
+model Location {
+  id String @id @default(uuid()) @map("_id")
+  businessId String
+  business Business @relation(fields: [businessId], references: [id])
+  name String
+  code String
+  addressLine1 String @default("")
+  addressLine2 String?
+  city String @default("")
+  emirate String @default("")
+  countryCode String @default("AE")
+  phone String?
+  latitude Float?
+  longitude Float?
+  timezone String @default("Asia/Dubai")
+  status String @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  hours BusinessHours[]
+  zones DeliveryZone[]
+  orders Order[]
+  devices Device[]
+  @@unique([businessId, code])
+    @@map("locations")
+}
+model BusinessHours {
+  id String @id @default(uuid()) @map("_id")
+  locationId String
+  location Location @relation(fields: [locationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  dayOfWeek Int
+  isClosed Boolean @default(false)
+  openTime String
+  closeTime String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([locationId, dayOfWeek])
+  @@map("business_hours")
+}
+model OnboardingSession {
+  id String @id @default(uuid()) @map("_id")
+  businessId String @unique
+  business Business @relation(fields: [businessId], references: [id])
+  currentStep StepKey @default(BUSINESS)
+  status OnboardingStatus @default(IN_PROGRESS)
+  startedAt DateTime @default(now())
+  completedAt DateTime?
+  lastActivityAt DateTime @default(now())
+  steps OnboardingStep[]
+  @@map("onboarding_sessions")
+}
+model OnboardingStep {
+  id String @id @default(uuid()) @map("_id")
+  onboardingSessionId String
+  session OnboardingSession @relation(fields: [onboardingSessionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  stepKey StepKey
+  status StepStatus @default(PENDING)
+  completedAt DateTime?
+  @@unique([onboardingSessionId, stepKey])
+  @@map("onboarding_steps")
+}
+model Catalog {
+  id String @id @default(uuid()) @map("_id")
+  businessId String
+  business Business @relation(fields: [businessId], references: [id])
+  name String
+  type String @default("PRODUCT")
+  layout Json @default("{}")
+  status String @default("DRAFT")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  categories CatalogCategory[]
+  items CatalogItem[]
+  @@index([businessId, status])
+  @@map("catalogs")
+}
+model CatalogCategory {
+  id String @id @default(uuid()) @map("_id")
+  catalogId String
+  catalog Catalog @relation(fields: [catalogId], references: [id])
+  name String
+  nameAr String?
+  sortOrder Int @default(0)
+  items CatalogItem[]
+    @@map("catalog_categories")
+}
+model CatalogItem {
+  id String @id @default(uuid()) @map("_id")
+  catalogId String
+  catalog Catalog @relation(fields: [catalogId], references: [id])
+  categoryId String?
+  category CatalogCategory? @relation(fields: [categoryId], references: [id])
+  type ItemType @default(PRODUCT)
+  name String
+  nameAr String?
+  description String?
+  descriptionAr String?
+  metadata Json @default("{}")
+  imageUrl String?
+  sku String?
+  basePriceMinor Int
+  currencyCode String @default("AED")
+  taxBehavior TaxBehavior @default(VAT_INCLUDED)
+  taxRateBps Int?
+  status String @default("ACTIVE")
+  isAvailable Boolean @default(true)
+  sortOrder Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  variants ItemVariant[]
+  modifierGroups ModifierGroup[]
+  @@index([catalogId, status])
+  @@map("catalog_items")
+}
+model ItemVariant {
+  id String @id @default(uuid()) @map("_id")
+  catalogItemId String
+  item CatalogItem @relation(fields: [catalogItemId], references: [id])
+  name String
+  nameAr String?
+  priceMinor Int
+  isDefault Boolean @default(false)
+  isAvailable Boolean @default(true)
+  @@index([catalogItemId])
+  @@map("item_variants")
+}
+model ModifierGroup {
+  id String @id @default(uuid()) @map("_id")
+  catalogItemId String
+  item CatalogItem @relation(fields: [catalogItemId], references: [id])
+  name String
+  nameAr String?
+  minSelections Int @default(0)
+  maxSelections Int @default(1)
+  required Boolean @default(false)
+  options ModifierOption[]
+  @@map("modifier_groups")
+}
+model ModifierOption {
+  id String @id @default(uuid()) @map("_id")
+  modifierGroupId String
+  group ModifierGroup @relation(fields: [modifierGroupId], references: [id])
+  name String
+  nameAr String?
+  priceDeltaMinor Int
+  isAvailable Boolean @default(true)
+  @@map("modifier_options")
+}
+model Customer {
+  id String @id @default(uuid()) @map("_id")
+  businessId String
+  business Business @relation(fields: [businessId], references: [id])
+  displayName String?
+  phone String
+  email String?
+  preferredLanguage String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  addresses CustomerAddress[]
+  conversations Conversation[]
+  orders Order[]
+  @@unique([businessId, phone])
+    @@map("customers")
+}
+model CustomerAddress {
+  id String @id @default(uuid()) @map("_id")
+  customerId String
+  customer Customer @relation(fields: [customerId], references: [id])
+  label String
+  addressText String
+  city String
+  emirate String?
+  countryCode String @default("AE")
+  latitude Float?
+  longitude Float?
+  isDefault Boolean @default(false)
+  @@map("customer_addresses")
+}
+model Conversation {
+  id String @id @default(uuid()) @map("_id")
+  businessId String
+  business Business @relation(fields: [businessId], references: [id])
+  customerId String
+  customer Customer @relation(fields: [customerId], references: [id])
+  channel String @default("WHATSAPP")
+  status String @default("OPEN")
+  assignedUserId String?
+  lastMessageAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  messages Message[]
+  orders Order[]
+    @@index([businessId, lastMessageAt])
+  @@map("conversations")
+}
+model Message {
+  id String @id @default(uuid()) @map("_id")
+  conversationId String
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  externalMessageId String?
+  direction String
+  senderType String
+  messageType String @default("TEXT")
+  textContent String?
+  mediaUrl String?
+  transcription String?
+  status String @default("PENDING")
+  createdAt DateTime @default(now())
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+model Order {
+  id String @id @default(uuid()) @map("_id")
+  businessId String
+  business Business @relation(fields: [businessId], references: [id])
+  locationId String
+  location Location @relation(fields: [locationId], references: [id])
+  customerId String
+  customer Customer @relation(fields: [customerId], references: [id])
+  conversationId String?
+  conversation Conversation? @relation(fields: [conversationId], references: [id])
+  orderNumber String
+  channel String @default("WHATSAPP")
+  fulfillmentType FulfillmentType
+  status OrderStatus @default(DRAFT)
+  currencyCode String @default("AED")
+  subtotalMinor Int
+  discountTotalMinor Int @default(0)
+  taxTotalMinor Int @default(0)
+  deliveryFeeMinor Int @default(0)
+  serviceFeeMinor Int @default(0)
+  totalMinor Int
+  paymentStatus PaymentStatus @default(PENDING)
+  customerNotes String?
+  internalNotes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  items OrderItem[]
+  deliveryDetails OrderDeliveryDetails?
+  history OrderStatusHistory[]
+  payments Payment[]
+  @@unique([businessId, orderNumber])
+  @@index([businessId, createdAt])
+  @@index([locationId, status])
+  @@map("orders")
+}
+model OrderItem {
+  id String @id @default(uuid()) @map("_id")
+  orderId String
+  order Order @relation(fields: [orderId], references: [id])
+  catalogItemId String?
+  variantId String?
+  itemNameSnapshot String
+  variantNameSnapshot String?
+  quantity Int
+  unitPriceMinor Int
+  subtotalMinor Int
+  taxAmountMinor Int
+  totalMinor Int
+  notes String?
+  modifiers OrderItemModifier[]
+  @@map("order_items")
+}
+model OrderItemModifier {
+  id String @id @default(uuid()) @map("_id")
+  orderItemId String
+  item OrderItem @relation(fields: [orderItemId], references: [id])
+  nameSnapshot String
+  quantity Int
+  priceDeltaMinor Int
+  totalMinor Int
+  @@map("order_item_modifiers")
+}
+model OrderDeliveryDetails {
+  id String @id @default(uuid()) @map("_id")
+  orderId String @unique
+  order Order @relation(fields: [orderId], references: [id])
+  recipientName String
+  recipientPhone String
+  addressText String
+  city String
+  emirate String?
+  deliveryInstructions String?
+  @@map("order_delivery_details")
+}
+model OrderStatusHistory {
+  id String @id @default(uuid()) @map("_id")
+  orderId String
+  order Order @relation(fields: [orderId], references: [id])
+  previousStatus OrderStatus?
+  newStatus OrderStatus
+  changedByType String
+  changedByUserId String?
+  reason String?
+  createdAt DateTime @default(now())
+  @@index([orderId, createdAt])
+  @@map("order_status_history")
+}
+model DeliveryZone {
+  id String @id @default(uuid()) @map("_id")
+  locationId String
+  location Location @relation(fields: [locationId], references: [id])
+  name String
+  type String @default("AREA")
+  deliveryFeeMinor Int
+  minimumOrderMinor Int?
+  configuration Json @default("{}")
+  isActive Boolean @default(true)
+  @@map("delivery_zones")
+}
+model Payment {
+  id String @id @default(uuid()) @map("_id")
+  orderId String
+  order Order @relation(fields: [orderId], references: [id])
+  method String @default("CASH")
+  provider String @default("MANUAL")
+  status PaymentStatus @default(PENDING)
+  amountMinor Int
+  currencyCode String @default("AED")
+  providerPaymentId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@map("payments")
+}
+model AiAgent {
+  id String @id @default(uuid()) @map("_id")
+  businessId String
+  business Business @relation(fields: [businessId], references: [id])
+  name String @default("Lumia")
+  role String @default("ORDER_ASSISTANT")
+  status String @default("DRAFT")
+  languages String[] @default(["en", "ar"])
+  tone String @default("Friendly")
+  instructions String @default("")
+  configuration Json @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([businessId])
+  @@map("ai_agents")
+}
+model Device {
+  id String @id @default(uuid()) @map("_id")
+  businessId String
+  business Business @relation(fields: [businessId], references: [id])
+  locationId String
+  location Location @relation(fields: [locationId], references: [id])
+  name String
+  serialNumber String @unique
+  deviceType String @default("ORDER_TERMINAL")
+  activationCodeHash String?
+  credentialHash String?
+  status String @default("INACTIVE")
+  lastSeenAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([locationId, status])
+  @@map("devices")
+}
+model WhatsAppAccount {
+  id String @id @default(uuid()) @map("_id")
+  businessId String
+  business Business @relation(fields: [businessId], references: [id])
+  provider String @default("META_CLOUD_API")
+  phoneNumberId String?
+  wabaId String?
+  displayPhoneNumber String?
+  verifiedName String?
+  permissions String[]
+  status String @default("PENDING")
+  accessTokenEncrypted String?
+  connectedAt DateTime?
+  disconnectedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([businessId])
+  @@map("whatsapp_accounts")
+}
+model OrderSettings {
+  id String @id @default(uuid()) @map("_id")
+  businessId String @unique
+  business Business @relation(fields: [businessId], references: [id])
+  requiresOrderAcceptance Boolean @default(true)
+  supportsDelivery Boolean @default(true)
+  supportsPickup Boolean @default(true)
+  minimumOrderAmountMinor Int @default(0)
+  configuredAt DateTime?
+  @@map("order_settings")
+}
+model AuditLog {
+  id String @id @default(uuid()) @map("_id")
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id])
+  businessId String?
+  userId String?
+  entityType String
+  entityId String
+  action String
+  beforeData Json?
+  afterData Json?
+  requestId String?
+  createdAt DateTime @default(now())
+  @@index([organizationId, createdAt])
+  @@map("audit_logs")
+}
+
+// A single challenge per normalized phone. TTL cleanup is not the expiry check.
+model PhoneChallenge {
+  id String @id @map("_id")
+  digest String
+  nonce String
+  language String @default("en")
+  attempts Int @default(0)
+  status String @default("PENDING")
+  expiresAt DateTime
+  cleanupAt DateTime
+  resendAt DateTime
+  windowStart DateTime
+  sends Int @default(1)
+  updatedAt DateTime @updatedAt
+  @@map("phone_challenges")
+}

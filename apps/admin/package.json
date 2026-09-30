@@ -1,0 +1,50 @@
+{
+  "name": "@lumia/admin",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "prisma generate && next build --webpack",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "prisma generate",
+    "db:seed": "node --env-file=.env --import tsx prisma/seed.ts",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "db:setup": "prisma db push && node --env-file=.env --import tsx scripts/mongo-indexes.ts",
+    "test:db": "RUN_DB_TESTS=true vitest run tests/database.test.ts tests/auth.integration.test.ts",
+    "db:local": "tsx scripts/local-mongo.ts"
+  },
+  "dependencies": {
+    "next": "16.3.6",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "@prisma/client": "6.19.3",
+    "better-auth": "1.7.6",
+    "zod": "4.3.6",
+    "lucide-react": "0.468.0",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "tailwind-merge": "3.5.0",
+    "@radix-ui/react-slot": "1.2.4"
+  },
+  "devDependencies": {
+    "prisma": "6.19.3",
+    "typescript": "5.9.3",
+    "@types/node": "22.19.15",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "tailwindcss": "4.2.1",
+    "@tailwindcss/postcss": "4.2.1",
+    "tsx": "4.21.0",
+    "vitest": "3.2.7",
+    "@playwright/test": "1.58.2",
+    "mongodb-memory-server": "10.2.3"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "overrides": {
+    "deepmerge-ts": "8.0.0"
+  }
+}

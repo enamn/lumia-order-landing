@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#fff;color:#1A0815;font-family:'Geist','IBM Plex Sans Arabic',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#1A0815;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px}a:hover{color:#FF5577}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+button:disabled{cursor:default}
+input{font:inherit;color:inherit;border:0;outline:none;background:none}
+input::placeholder{color:#B89AA8}
+@keyframes lo-spin{to{transform:rotate(360deg)}}
+@keyframes lo-scan{0%{transform:translateY(-40px)}100%{transform:translateY(128px)}}
+@keyframes lo-shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+@keyframes lo-twinkle{0%,100%{transform:scale(.6) rotate(0);opacity:.4}50%{transform:scale(1) rotate(45deg);opacity:1}}
+@keyframes lo-rot{to{transform:rotate(360deg)}}
+@keyframes lo-breathe{0%,100%{transform:scale(.85);opacity:.55}50%{transform:scale(1.08);opacity:1}}
+@keyframes lo-draw{0%{stroke-dashoffset:100}55%{stroke-dashoffset:0}100%{stroke-dashoffset:-100}}
+@keyframes lo-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes lo-orbit{from{transform:rotate(0) translateX(78px) rotate(0)}to{transform:rotate(360deg) translateX(78px) rotate(-360deg)}}
+@keyframes lo-pulse{0%,100%{transform:scale(.7);opacity:.6}50%{transform:scale(1);opacity:1}}
+</style>
+</helmet>
+<div style="min-height:100vh;min-height:100dvh;background:{{ L.pageBg }};background-color:#fff;display:flex;align-items:{{ L.pageAlign }};justify-content:center;padding:{{ L.pagePad }};font-family:'Geist','IBM Plex Sans Arabic',system-ui,sans-serif;color:#1A0815">
+<div ref="{{ devRef }}" style="width:{{ L.devW }};height:{{ L.devH }};min-height:{{ L.devMinH }};border-radius:{{ L.devRadius }};border:{{ L.devBd }};box-shadow:{{ L.devShadow }};overflow:{{ L.devOv }};background:{{ L.devBg }};transform:{{ L.devTf }};display:flex;flex-direction:column">
+
+<sc-if value="{{ isFlow }}" hint-placeholder-val="{{ true }}">
+<div style="flex:1;display:flex;align-items:{{ L.stAlign }};justify-content:center;padding:{{ L.stPad }}">
+<div style="width:100%;max-width:{{ L.cardW }};min-height:{{ L.cardMinH }};background:#fff;border:{{ L.cardBd }};border-radius:{{ L.cardRadius }};box-shadow:{{ L.cardShadow }};padding:{{ L.cardPad }};display:flex;flex-direction:column;position:relative">
+
+  <div style="display:flex;align-items:center;gap:12px;min-height:40px">
+    <sc-if value="{{ canBack }}" hint-placeholder-val="{{ false }}">
+      <button type="button" onClick="{{ back }}" aria-label="Back" style="width:40px;height:40px;border-radius:12px;border:1.5px solid #ECD9E0;display:flex;align-items:center;justify-content:center;flex:none" style-hover="background:#FBF3F8"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3 5 8l5 5" stroke="#1A0815" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+    </sc-if>
+    <div style="display:flex;align-items:center;gap:9px">
+      <svg width="30" height="30" viewBox="0 0 100 100" fill="none" style="display:block;flex:none"><defs><linearGradient id="gPD" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF5577"></stop><stop offset="1" stop-color="#C93DFF"></stop></linearGradient></defs><path d="M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z" stroke="url(#gPD)" stroke-width="8" stroke-linejoin="round"></path><path d="M28 30V66H40" stroke="#1A0815" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="64" cy="55" r="11" stroke="url(#gPD)" stroke-width="10"></circle></svg>
+      <span style="display:flex;flex-direction:column;line-height:.92"><span style="font-size:18px;font-weight:700;letter-spacing:-0.035em">Lumia</span><span style="font-size:14px;letter-spacing:-0.01em">Order</span></span>
+    </div>
+  </div>
+
+  <!-- 1 Mobile number -->
+  <sc-if value="{{ is.phone }}" hint-placeholder-val="{{ true }}">
+  <form data-screen-label="01 Mobile number" onSubmit="{{ sendCode }}" noValidate="{{ true }}" style="flex:1;display:flex;flex-direction:column">
+    <h1 style="font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:{{ L.headTop }};text-wrap:balance">Get started with Lumia Order</h1>
+    <p style="font-size:16px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty">Enter your mobile number to create your account or sign in.</p>
+    <label for="pd-phone" style="display:block;font-size:14px;font-weight:500;color:#3D1C31;margin-top:28px">Mobile number</label>
+    <div style="position:relative;margin-top:8px">
+      <div style="display:flex;align-items:stretch;height:56px;border-radius:14px;border:1.5px solid {{ pf.bd }};box-shadow:{{ pf.ring }};background:{{ pf.bg }};opacity:{{ pf.op }};transition:border-color .15s,box-shadow .15s">
+        <button type="button" onClick="{{ toggleCC }}" disabled="{{ sending }}" aria-label="Country code" style="display:flex;align-items:center;gap:8px;padding:0 12px 0 14px;flex:none;border-radius:12px 0 0 12px" style-hover="background:#FBF3F8">
+          <span style="font-size:20px;line-height:1">{{ cc.flag }}</span>
+          <span style="font-size:17px;font-weight:500">{{ cc.dial }}</span>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:block"><path d="M3 4.5 6 7.5 9 4.5" stroke="#8A5A6E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </button>
+        <span style="width:1px;margin:12px 0;background:#ECD9E0"></span>
+        <input id="pd-phone" ref="{{ phoneRef }}" type="tel" inputMode="numeric" autoComplete="tel-national" placeholder="{{ cc.ex }}" value="{{ phoneDisplay }}" onChange="{{ onPhone }}" onFocus="{{ phoneFocus }}" onBlur="{{ phoneBlur }}" disabled="{{ sending }}" style="flex:1;min-width:0;padding:0 14px;font-size:17px;letter-spacing:.01em;font-variant-numeric:tabular-nums"></input>
+        <sc-if value="{{ phoneValid }}" hint-placeholder-val="{{ false }}">
+          <span style="display:flex;align-items:center;padding-inline-end:16px"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="#E4F4EC"></circle><path d="M6 10.2 8.6 12.8 14 7.4" stroke="#16704A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+        </sc-if>
+      </div>
+      <sc-if value="{{ ccOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;top:62px;left:0;right:0;z-index:20;background:#fff;border:1px solid #ECD9E0;border-radius:14px;box-shadow:0 18px 40px -16px rgba(26,8,21,.28);padding:6px;max-height:300px;overflow:auto">
+          <sc-for list="{{ countries }}" as="c" hint-placeholder-count="6">
+            <button type="button" onClick="{{ c.pick }}" style="width:100%;display:flex;align-items:center;gap:12px;height:48px;padding:0 12px;border-radius:10px;text-align:start;background:{{ c.bg }}" style-hover="background:#FBF3F8">
+              <span style="font-size:20px;line-height:1;width:26px">{{ c.flag }}</span>
+              <span style="flex:1;font-size:15px">{{ c.name }}</span>
+              <span style="font-size:15px;color:#3D1C31;font-variant-numeric:tabular-nums">{{ c.dial }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+    <sc-if value="{{ phoneInvalid }}" hint-placeholder-val="{{ false }}">
+      <div role="alert" style="display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:14px;line-height:1.45;color:#B4233B">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex:none;margin-top:2px"><circle cx="8" cy="8" r="7" stroke="#B4233B" stroke-width="1.5"></circle><path d="M8 4.5v4.2" stroke="#B4233B" stroke-width="1.6" stroke-linecap="round"></path><circle cx="8" cy="11.2" r=".9" fill="#B4233B"></circle></svg>
+        <span>{{ phoneInvalidMsg }}</span>
+      </div>
+    </sc-if>
+    <sc-if value="{{ phoneHint }}" hint-placeholder-val="{{ true }}">
+      <div style="margin-top:10px;font-size:14px;line-height:1.45;color:#8A5A6E">We'll send a verification code on WhatsApp. No password needed.</div>
+    </sc-if>
+    <div style="flex:{{ L.spacer }};min-height:28px"></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button type="submit" disabled="{{ sending }}" style="height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">{{ spinnerSend }}<span>{{ sendLabel }}</span></button>
+    </div>
+    <p style="margin-top:20px;font-size:13px;line-height:1.5;color:#8A5A6E;text-align:center;text-wrap:pretty">By continuing, you agree to Lumia's <a href="{{ termsUrl }}" style="color:#3D1C31">Terms of Service</a> and <a href="Lumia Order Privacy.dc.html" style="color:#3D1C31">Privacy Policy</a>.</p>
+  </form>
+  </sc-if>
+
+  <!-- 2 OTP -->
+  <sc-if value="{{ is.otp }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="02 WhatsApp OTP" style="flex:1;display:flex;flex-direction:column">
+    <h1 style="font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:{{ L.headTop }}">Check your WhatsApp</h1>
+    <p style="font-size:16px;line-height:1.5;color:#3D1C31;margin-top:10px">We sent a 6-digit verification code to</p>
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:4px">
+      <span style="font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.01em">{{ masked }}</span>
+      <button type="button" onClick="{{ changeNumber }}" style="font-size:14px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px" style-hover="color:#FF5577">Change phone number</button>
+    </div>
+    <div onClick="{{ focusOtp }}" style="position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:28px;max-width:360px;opacity:{{ otpOp }}">
+      <sc-for list="{{ boxes }}" as="b" hint-placeholder-count="6">
+        <div style="height:60px;border-radius:12px;border:1.5px solid {{ b.bd }};box-shadow:{{ b.ring }};background:{{ b.bg }};display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;transition:border-color .12s,box-shadow .12s">
+          {{ b.ch }}
+          <sc-if value="{{ b.caret }}" hint-placeholder-val="{{ false }}"><span style="width:2px;height:26px;border-radius:1px;background:#FF5577"></span></sc-if>
+        </div>
+      </sc-for>
+      <input ref="{{ otpRef }}" aria-label="Verification code" type="text" inputMode="numeric" autoComplete="one-time-code" maxLength="6" value="{{ digits }}" onChange="{{ onOtp }}" onFocus="{{ otpFocus }}" onBlur="{{ otpBlur }}" disabled="{{ verifying }}" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;color:transparent;caret-color:transparent"></input>
+    </div>
+    <sc-if value="{{ otpMsg.show }}" hint-placeholder-val="{{ false }}">
+      <div role="alert" style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:14px;line-height:1.45;color:{{ otpMsg.fg }}">
+        <span style="width:6px;height:6px;border-radius:50%;background:{{ otpMsg.fg }};flex:none;margin-top:7px"></span>
+        <span>{{ otpMsg.text }}</span>
+      </div>
+    </sc-if>
+    <div style="flex:{{ L.spacer }};min-height:32px"></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button type="button" onClick="{{ verifyNow }}" disabled="{{ verifyDisabled }}" style="height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;display:flex;align-items:center;justify-content:center;gap:10px;opacity:{{ verifyOp }};box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">{{ spinnerVerify }}<span>{{ verifyLabel }}</span></button>
+      <button type="button" onClick="{{ resend }}" disabled="{{ resendDisabled }}" style="height:52px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px;color:{{ resendFg }};font-variant-numeric:tabular-nums" style-hover="border-color:#D9BFCB;background:#FBF3F8">{{ resendLabel }}</button>
+      <button type="button" onClick="{{ sms }}" style="height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px" style-hover="color:#FF5577">Send code by SMS</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- 2 Verified -->
+  <sc-if value="{{ is.verified }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="02b Number verified" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:64px 0;text-align:center">
+    <span style="width:72px;height:72px;border-radius:50%;background:#E4F4EC;display:flex;align-items:center;justify-content:center"><svg width="34" height="34" viewBox="0 0 20 20" fill="none"><path d="M5 10.4 8.4 13.8 15 7" stroke="#16704A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+    <h1 style="font-size:26px;font-weight:600;letter-spacing:-0.03em">Number verified</h1>
+  </div>
+  </sc-if>
+
+  <!-- 3 Restaurant name -->
+  <sc-if value="{{ is.name }}" hint-placeholder-val="{{ false }}">
+  <form data-screen-label="03 Restaurant name" onSubmit="{{ submitName }}" noValidate="{{ true }}" style="flex:1;display:flex;flex-direction:column">
+    <h1 style="font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:{{ L.headTop }};text-wrap:balance">Tell us about your restaurant</h1>
+    <label for="pd-name" style="display:block;font-size:14px;font-weight:500;color:#3D1C31;margin-top:28px">Restaurant name</label>
+    <input id="pd-name" ref="{{ nameRef }}" type="text" autoComplete="organization" placeholder="Burger House" value="{{ name }}" onChange="{{ onName }}" onFocus="{{ nameFocus }}" onBlur="{{ nameBlur }}" style="margin-top:8px;height:56px;border-radius:14px;border:1.5px solid {{ nf.bd }};box-shadow:{{ nf.ring }};padding:0 16px;font-size:17px;background:#fff;transition:border-color .15s,box-shadow .15s"></input>
+    <sc-if value="{{ nameErr }}" hint-placeholder-val="{{ false }}">
+      <div role="alert" style="margin-top:10px;font-size:14px;color:#B4233B">{{ nameErrText }}</div>
+    </sc-if>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:26px">
+      <span style="font-size:14px;font-weight:500;color:#3D1C31">Logo</span>
+      <span style="font-size:12px;font-weight:500;padding:2px 8px;border-radius:999px;background:#F3EEF1;color:#8A5A6E">Optional</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;margin-top:10px">
+      <span style="width:64px;height:64px;border-radius:16px;border:1.5px dashed {{ logoTile.bd }};background:#FBF3F8;flex:none;display:flex;align-items:center;justify-content:center;overflow:hidden">
+        <sc-if value="{{ logo }}" hint-placeholder-val="{{ false }}">{{ logoImg }}</sc-if>
+        <sc-if value="{{ noLogo }}" hint-placeholder-val="{{ true }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4.5" width="17" height="15" rx="3" stroke="#B89AA8" stroke-width="1.5"></rect><circle cx="9" cy="10" r="1.8" stroke="#B89AA8" stroke-width="1.5"></circle><path d="m5 17.5 4.5-4.5 3.5 3.5 2.5-2.5 3.5 3.5" stroke="#B89AA8" stroke-width="1.5" stroke-linejoin="round"></path></svg></sc-if>
+      </span>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
+        <label style="display:inline-flex;align-items:center;height:40px;padding:0 16px;border-radius:12px;border:1.5px solid #ECD9E0;font-size:15px;font-weight:500;cursor:pointer" style-hover="background:#FBF3F8;border-color:#D9BFCB">
+          {{ logoBtn }}
+          <input type="file" accept="image/png,image/jpeg,image/svg+xml" onChange="{{ onLogo }}" style="display:none"></input>
+        </label>
+        <span style="font-size:13px;color:#8A5A6E">PNG or JPG, square works best</span>
+      </div>
+    </div>
+    <div style="flex:{{ L.spacer }};min-height:32px"></div>
+    <button type="submit" style="height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Continue</button>
+  </form>
+  </sc-if>
+
+  <!-- 4 Menu upload -->
+  <sc-if value="{{ is.menu }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="04 Menu upload" style="flex:1;display:flex;flex-direction:column">
+    <h1 style="font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:{{ L.headTop }}">Add your menu</h1>
+    <p style="font-size:16px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty">Upload your existing menu and Lumia AI will create it for you.</p>
+    <label onDragOver="{{ dragOver }}" onDragLeave="{{ dragLeave }}" onDrop="{{ drop }}" style="margin-top:24px;border-radius:20px;border:1.5px dashed {{ dz.bd }};background:{{ dz.bg }};padding:36px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;cursor:pointer;transition:background .15s,border-color .15s" style-hover="border-color:#FF5577">
+      <span style="width:56px;height:56px;border-radius:16px;background:#FDEAF2;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9" stroke="#FF5577" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4.5 14.5v2a3 3 0 0 0 3 3h9a3 3 0 0 0 3-3v-2" stroke="#C93DFF" stroke-width="1.8" stroke-linecap="round"></path></svg></span>
+      <span style="font-size:19px;font-weight:600;letter-spacing:-0.02em;margin-top:16px">Upload your menu</span>
+      <span style="font-size:14px;color:#8A5A6E;margin-top:4px">PDF, JPG or PNG</span>
+      <span style="margin-top:20px;display:inline-flex;align-items:center;height:48px;padding:0 24px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)">Choose file</span>
+      <input type="file" accept="application/pdf,image/png,image/jpeg" onChange="{{ onMenuFile }}" style="display:none"></input>
+    </label>
+    <!-- LUMIA-EXT menu error -->
+    <sc-if value="{{ menuErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="margin-top:12px;font-size:14px;color:#B4233B">{{ menuErr }}</div></sc-if>
+    <div style="flex:{{ L.spacer }};min-height:28px"></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button type="button" onClick="{{ manual }}" style="height:52px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px" style-hover="border-color:#D9BFCB;background:#FBF3F8">Add menu manually</button>
+      <button type="button" onClick="{{ noMenu }}" style="height:44px;font-size:15px;font-weight:500;color:#8A5A6E;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px" style-hover="color:#FF5577">I don't have my menu right now</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- 5 Processing -->
+  <sc-if value="{{ is.processing }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="05 AI menu processing" style="flex:1;display:flex;flex-direction:column;align-items:center;text-align:center">
+    <div style="margin-top:{{ L.aiTop }};display:flex;justify-content:center">{{ aiLogo }}</div>
+    <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:28px;text-wrap:balance">Lumia is creating your menu</h1>
+    <div style="display:inline-flex;align-items:center;gap:8px;margin-top:12px;height:32px;padding:0 12px;border-radius:999px;background:#F3EEF1;font-size:13px;color:#3D1C31;max-width:100%">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="flex:none"><path d="M4 1.5h5L12.5 5v9.5h-8.5z" stroke="#8A5A6E" stroke-width="1.3" stroke-linejoin="round"></path><path d="M9 1.5V5h3.5" stroke="#8A5A6E" stroke-width="1.3" stroke-linejoin="round"></path></svg>
+      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ fileName }}</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-top:32px;max-width:300px;margin-inline:auto;text-align:start;width:100%">
+      <sc-for list="{{ phases }}" as="p" hint-placeholder-count="4">
+        <div style="display:flex;align-items:center;gap:12px;font-size:15px;color:{{ p.fg }};font-weight:{{ p.fw }}">
+          <span style="width:20px;height:20px;flex:none;display:flex;align-items:center;justify-content:center">
+            <sc-if value="{{ p.done }}" hint-placeholder-val="{{ false }}"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="#E4F4EC"></circle><path d="M6 10.2 8.6 12.8 14 7.4" stroke="#16704A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+            <sc-if value="{{ p.active }}" hint-placeholder-val="{{ false }}">{{ pulse }}</sc-if>
+            <sc-if value="{{ p.pending }}" hint-placeholder-val="{{ true }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid #E3CBD4"></span></sc-if>
+          </span>
+          <sc-if value="{{ p.plain }}" hint-placeholder-val="{{ true }}"><span>{{ p.label }}</span></sc-if>
+          <sc-if value="{{ p.active }}" hint-placeholder-val="{{ false }}">{{ shimmer }}</sc-if>
+        </div>
+      </sc-for>
+    </div>
+    <div style="flex:{{ L.spacer }};min-height:32px"></div>
+    <p style="font-size:13px;color:#8A5A6E;line-height:1.5;max-width:320px">You'll check everything Lumia finds before it goes live.</p>
+  </div>
+  </sc-if>
+
+  <!-- 5B Menu ready / confirm -->
+  <sc-if value="{{ is.ready }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="05b Menu ready · confirm" style="flex:1;display:flex;flex-direction:column">
+    <h1 style="font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:{{ L.headTop }}">Your menu is ready 🎉</h1>
+    <p style="font-size:16px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty">This is what Lumia AI found in your menu. Check the items and prices, then confirm.</p>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:20px">
+      <div style="border-radius:16px;background:#FBF3F8;padding:14px 18px;display:flex;flex-direction:column;gap:2px"><span style="font-size:30px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">{{ totalItems }}</span><span style="font-size:14px;color:#3D1C31">items found</span></div>
+      <div style="border-radius:16px;background:#FBF3F8;padding:14px 18px;display:flex;flex-direction:column;gap:2px"><span style="font-size:30px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">{{ totalCats }}</span><span style="font-size:14px;color:#3D1C31">categories</span></div>
+    </div>
+    <sc-if value="{{ hasFlags }}" hint-placeholder-val="{{ true }}">
+      <div style="margin-top:12px;border-radius:14px;background:#FFF4E5;padding:12px 16px;display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45;color:#6B3A00">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex:none;margin-top:2px"><path d="M8 1.8 15 14H1z" stroke="#C26A00" stroke-width="1.4" stroke-linejoin="round"></path><path d="M8 6.2v3.4" stroke="#C26A00" stroke-width="1.5" stroke-linecap="round"></path><circle cx="8" cy="11.6" r=".8" fill="#C26A00"></circle></svg>
+        <span>{{ flagMsg }}</span>
+      </div>
+    </sc-if>
+    <div style="margin-top:14px;border:1px solid #ECD9E0;border-radius:16px;display:flex;flex-direction:column;overflow:hidden">
+      <sc-for list="{{ review }}" as="g" hint-placeholder-count="6">
+        <div style="border-top:{{ g.bt }}">
+          <button type="button" onClick="{{ g.toggle }}" aria-expanded="{{ g.open }}" style="width:100%;display:flex;align-items:center;gap:10px;min-height:52px;padding:0 16px 0 18px;text-align:start" style-hover="background:#FBF3F8">
+            <span style="flex:1;font-size:15px;font-weight:600">{{ g.cat }}</span>
+            <sc-if value="{{ g.flagged }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#FFF4E5;color:#8A4B00">{{ g.flagLabel }}</span></sc-if>
+            <span style="font-size:14px;color:#8A5A6E;font-variant-numeric:tabular-nums">{{ g.label }}</span>
+            <svg width="14" height="14" viewBox="0 0 12 12" fill="none" style="transform:rotate({{ g.rot }});transition:transform .15s"><path d="M3 4.5 6 7.5 9 4.5" stroke="#8A5A6E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </button>
+          <sc-if value="{{ g.open }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:0 12px 10px 18px;display:flex;flex-direction:column">
+              <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="4">
+                <div style="display:flex;flex-direction:column;gap:6px;padding:8px 0;border-top:1px solid #F3EEF1">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <span style="flex:1;min-width:0;font-size:15px">{{ it.n }}</span>
+                    <label style="display:flex;align-items:center;gap:4px;height:38px;padding:0 10px;border-radius:10px;border:1.5px solid {{ it.bd }};background:{{ it.bg }};font-size:14px;color:#8A5A6E;flex:none">AED<input type="text" inputMode="decimal" value="{{ it.price }}" onChange="{{ it.onPrice }}" aria-label="{{ it.n }} price" style="width:44px;font-size:15px;color:#1A0815;text-align:end;font-variant-numeric:tabular-nums"></input></label>
+                  </div>
+                  <sc-if value="{{ it.flag }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:13px;color:#8A4B00">
+                      <span>Lumia wasn't sure about this price. Please check it.</span>
+                      <button type="button" onClick="{{ it.ok }}" style="font-size:13px;font-weight:600;color:#1A0815;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px">Looks right</button>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+    <sc-if value="{{ readyErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="margin-top:12px;font-size:14px;color:#B4233B">{{ readyErr }}</div></sc-if>
+    <div style="flex:{{ L.spacer }};min-height:24px"></div>
+    <div style="position:{{ L.stick }};bottom:0;background:#fff;padding-top:12px;display:flex;flex-direction:column;gap:10px;box-shadow:{{ L.stickSh }}">
+      <button type="button" onClick="{{ confirmMenu }}" disabled="{{ hasFlags }}" style="height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;opacity:{{ confirmOp }};box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Confirm menu</button>
+      <button type="button" onClick="{{ toMenuUpload }}" style="height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px" style-hover="color:#FF5577">Upload a different file</button>
+    </div>
+  </div>
+  </sc-if>
+
+</div>
+</div>
+</sc-if>
+
+<!-- Dashboard / menu -->
+<sc-if value="{{ is.dash }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="06 Dashboard · Menu" dir="{{ dir }}" style="flex:1;display:flex;min-height:100%;background:#fff">
+  <sc-if value="{{ dashWide }}" hint-placeholder-val="{{ true }}">
+    <aside style="flex:0 0 232px;border-inline-end:1px solid #F0E4E8;background:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
+      <div style="height:64px;padding:0 20px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #F0E4E8">
+        <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style="display:block;flex:none"><defs><linearGradient id="gPD2" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF5577"></stop><stop offset="1" stop-color="#C93DFF"></stop></linearGradient></defs><path d="M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z" stroke="url(#gPD2)" stroke-width="8" stroke-linejoin="round"></path><path d="M28 30V66H40" stroke="#1A0815" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="64" cy="55" r="11" stroke="url(#gPD2)" stroke-width="10"></circle></svg>
+        <span style="display:flex;flex-direction:column;line-height:.92"><span style="font-size:16px;font-weight:700;letter-spacing:-0.035em">Lumia</span><span style="font-size:12px;letter-spacing:-0.01em">Order</span></span>
+      </div>
+      <nav style="flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:2px">
+        <sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+          <a href="#" onClick="{{ n.pick }}" style="height:40px;padding:0 12px;border-radius:10px;display:flex;align-items:center;gap:12px;font-size:15px;text-decoration:none;font-weight:{{ n.fw }};color:{{ n.fg }};background:{{ n.bg }}" style-hover="background:#FBF3F8;color:#1A0815"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none"><path d="{{ n.icon }}" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>{{ n.label }}</a>
+        </sc-for>
+      </nav>
+      <div style="padding:12px;border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:8px">
+          <div role="radiogroup" aria-label="Dashboard language" style="display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;flex:none">
+            <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{ lg.on }}" onClick="{{ lg.pick }}" style="flex:1;height:30px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:{{ lg.fw }};background:{{ lg.bg }};color:{{ lg.fg }};box-shadow:{{ lg.sh }}">{{ lg.label }}</button></sc-for>
+          </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px">
+          <span style="width:32px;height:32px;border-radius:9px;flex:none;overflow:hidden;background:linear-gradient(135deg,#FF5577,#C93DFF);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center">
+          <sc-if value="{{ logo }}" hint-placeholder-val="{{ false }}">{{ logoImg }}</sc-if>
+          <sc-if value="{{ noLogo }}" hint-placeholder-val="{{ true }}">{{ initials }}</sc-if>
+        </span>
+          <span style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ nameOrDefault }}</span>
+        </div>
+      </div>
+    </aside>
+  </sc-if>
+
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:#fff">
+    <sc-if value="{{ dashNarrow }}" hint-placeholder-val="{{ false }}">
+      <header style="position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #F0E4E8">
+        <div style="height:56px;padding:0 16px;display:flex;align-items:center;gap:10px">
+          <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style="display:block;flex:none"><defs><linearGradient id="gPD2" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF5577"></stop><stop offset="1" stop-color="#C93DFF"></stop></linearGradient></defs><path d="M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z" stroke="url(#gPD2)" stroke-width="8" stroke-linejoin="round"></path><path d="M28 30V66H40" stroke="#1A0815" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="64" cy="55" r="11" stroke="url(#gPD2)" stroke-width="10"></circle></svg>
+          <span style="font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1">{{ nameOrDefault }}</span>
+          <div role="radiogroup" aria-label="Dashboard language" style="display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;flex:none">
+            <sc-for list="{{ langsShort }}" as="lg" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{ lg.on }}" onClick="{{ lg.pick }}" style="flex:1;height:28px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:{{ lg.fw }};background:{{ lg.bg }};color:{{ lg.fg }};box-shadow:{{ lg.sh }}">{{ lg.label }}</button></sc-for>
+          </div>
+          <span style="width:32px;height:32px;border-radius:9px;flex:none;overflow:hidden;background:linear-gradient(135deg,#FF5577,#C93DFF);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center">
+          <sc-if value="{{ logo }}" hint-placeholder-val="{{ false }}">{{ logoImg }}</sc-if>
+          <sc-if value="{{ noLogo }}" hint-placeholder-val="{{ true }}">{{ initials }}</sc-if>
+        </span>
+        </div>
+        <nav style="display:flex;gap:20px;overflow-x:auto;padding:0 16px">
+          <sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+            <button type="button" onClick="{{ n.pick }}" style="padding:8px 0 10px;white-space:nowrap;font-size:15px;font-weight:{{ n.fw }};color:{{ n.fg }};border-bottom:2px solid {{ n.bd }}">{{ n.label }}</button>
+          </sc-for>
+        </nav>
+      </header>
+    </sc-if>
+
+    <div style="flex:1;display:flex;min-height:0">
+    <main style="flex:1;min-width:0;padding:{{ L.dashPad }};display:flex;flex-direction:column;gap:26px">
+      <section style="border-radius:20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);padding:22px 24px;display:flex;flex-wrap:wrap;gap:18px 32px;align-items:center">
+        <div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px">
+            <h2 style="font-size:19px;font-weight:600;letter-spacing:-0.02em">{{ t.setupTitle }}</h2>
+            <span style="font-size:14px;font-weight:500;color:#8A2040;font-variant-numeric:tabular-nums">{{ setupLabel }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;max-width:420px">
+            <sc-for list="{{ setup }}" as="s" hint-placeholder-count="5"><span style="height:5px;border-radius:3px;background:{{ s.bar }}"></span></sc-for>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px 18px">
+            <sc-for list="{{ setup }}" as="s" hint-placeholder-count="5">
+              <button type="button" onClick="{{ s.pick }}" disabled="{{ s.done }}" style="display:flex;align-items:center;gap:7px;font-size:14px;color:{{ s.fg }};text-decoration:{{ s.ul }};text-decoration-color:#D9BFCB;text-underline-offset:3px" style-hover="color:#1A0815">
+                <sc-if value="{{ s.done }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="#16704A"></circle><path d="M6 10.2 8.6 12.8 14 7.4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+                <sc-if value="{{ s.todo }}" hint-placeholder-val="{{ true }}"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid #B79AA6;margin:1px"></span></sc-if>
+                {{ s.label }}
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        <button type="button" onClick="{{ continueSetup }}" style="height:48px;padding:0 22px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;flex:none;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">{{ t.continueSetup }}</button>
+      </section>
+
+      <!-- LUMIA-EXT dash error -->
+      <sc-if value="{{ dashErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:14px;color:#B4233B">{{ dashErr }}</div></sc-if>
+      <sc-if value="{{ pageMenu }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
+        <div>
+          <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">{{ t.menu }}</h1>
+          <sc-if value="{{ menuDone }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:6px;font-size:14px;color:#8A5A6E">
+              <span style="font-variant-numeric:tabular-nums">{{ menuMeta }}</span>
+              <span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;background:#FDEAF2;color:#8A2040;font-size:13px;font-weight:500"><span style="width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,#FF5577,#C93DFF)"></span>{{ t.created }}</span>
+            </div>
+          </sc-if>
+        </div>
+        <sc-if value="{{ menuDone }}" hint-placeholder-val="{{ true }}">
+          <button type="button" onClick="{{ openAddItem }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">{{ t.addItem }}</button>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ menuDone }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:16px;margin-top:-8px">
+          <label style="display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;max-width:520px">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex:none"><circle cx="7" cy="7" r="4.8" stroke="#8A5A6E" stroke-width="1.5"></circle><path d="m10.6 10.6 3.4 3.4" stroke="#8A5A6E" stroke-width="1.5" stroke-linecap="round"></path></svg>
+            <input type="search" value="{{ q }}" onChange="{{ onSearch }}" placeholder="{{ t.search }}" aria-label="{{ t.search }}" style="flex:1;min-width:0;font-size:15px"></input>
+            <sc-if value="{{ hasQ }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ clearSearch }}" aria-label="Clear" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none" style-hover="background:#FBF3F8"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="#8A5A6E" stroke-width="1.8" stroke-linecap="round"></path></svg></button></sc-if>
+          </label>
+
+          <sc-if value="{{ dashNarrow }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin-inline:-20px;padding-inline:20px">
+              <sc-for list="{{ cats }}" as="c" hint-placeholder-count="7">
+                <button type="button" onClick="{{ c.pick }}" style="height:40px;padding:0 14px;border-radius:999px;white-space:nowrap;font-size:14px;font-weight:500;background:{{ c.chipBg }};color:{{ c.chipFg }};border:1.5px solid {{ c.chipBd }};display:flex;align-items:center;gap:8px;flex:none">{{ c.label }}<span style="font-size:13px;opacity:.7;font-variant-numeric:tabular-nums">{{ c.count }}</span></button>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <div style="display:flex;gap:20px;align-items:flex-start">
+            <sc-if value="{{ dashWide }}" hint-placeholder-val="{{ true }}">
+              <nav aria-label="{{ t.categories }}" style="flex:0 0 220px;position:sticky;top:20px;display:flex;flex-direction:column;gap:2px;border:1px solid #F0E4E8;border-radius:16px;padding:6px">
+                <sc-for list="{{ cats }}" as="c" hint-placeholder-count="7">
+                  <button type="button" onClick="{{ c.pick }}" aria-current="{{ c.on }}" style="height:44px;padding:0 12px;border-radius:10px;display:flex;align-items:center;gap:10px;text-align:start;background:{{ c.bg }};color:{{ c.fg }};font-weight:{{ c.fw }};font-size:15px" style-hover="background:#FBF3F8">
+                    <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.label }}</span>
+                    <span style="font-size:13px;color:{{ c.countFg }};font-variant-numeric:tabular-nums">{{ c.count }}</span>
+                  </button>
+                </sc-for>
+              </nav>
+            </sc-if>
+
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:16px">
+              <sc-for list="{{ sections }}" as="g" hint-placeholder-count="2">
+                <section style="border:1px solid #F0E4E8;border-radius:16px;overflow:clip">
+                  <header style="position:sticky;top:{{ L.secTop }};z-index:2;background:#FAF6FA;padding:12px 18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;border-bottom:1px solid #F0E4E8">
+                    <span style="font-size:16px;font-weight:600">{{ g.name }}</span>
+                    <span style="font-size:14px;color:#8A5A6E">{{ g.alt }}</span>
+                    <span style="flex:1"></span>
+                    <span style="font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums">{{ g.meta }}</span>
+                  </header>
+                  <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="6">
+                    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:16px;min-height:60px;padding:9px 18px;border-top:{{ it.bt }}" style-hover="background:#FFFBFC">
+                      <div style="min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px">
+                        <span style="font-size:15px;font-weight:500;color:{{ it.nameFg }}">{{ it.main }}</span>
+                        <sc-if value="{{ it.hasAlt }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;color:#8A5A6E">{{ it.alt }}</span></sc-if>
+                        <sc-if value="{{ it.noAlt }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ it.editAr }}" style="font-size:13px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px" style-hover="color:#FF5577">+ {{ t.addAr }}</button></sc-if>
+                      </div>
+                      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
+                        <span style="font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap">{{ it.price }}</span>
+                        <sc-if value="{{ it.sold }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;font-weight:600;color:#8A5A6E">{{ t.soldOut }}</span></sc-if>
+                      </div>
+                      <button type="button" role="switch" aria-checked="{{ it.on }}" aria-label="{{ it.main }}" onClick="{{ it.toggle }}" style="width:48px;height:28px;border-radius:999px;flex:none;background:{{ it.tBg }};position:relative;transition:background .15s">
+                        <span style="position:absolute;top:3px;inset-inline-start:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX({{ it.knob }});transition:transform .18s"></span>
+                      </button>
+                    </div>
+                  </sc-for>
+                </section>
+              </sc-for>
+              <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+                <div style="border-radius:16px;background:#FAF6FA;padding:40px 20px;text-align:center;font-size:15px;color:#3D1C31">{{ t.noResults }}</div>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ menuEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:-6px;border-radius:20px;background:#FAF6FA;padding:56px 24px;display:flex;flex-direction:column;align-items:center;text-align:center">
+          <span style="width:56px;height:56px;border-radius:16px;background:#FDEAF2;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9" stroke="#FF5577" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4.5 14.5v2a3 3 0 0 0 3 3h9a3 3 0 0 0 3-3v-2" stroke="#C93DFF" stroke-width="1.8" stroke-linecap="round"></path></svg></span>
+          <h2 style="font-size:19px;font-weight:600;letter-spacing:-0.02em;margin-top:16px">Your menu is empty</h2>
+          <p style="font-size:15px;color:#3D1C31;margin-top:6px;max-width:360px;line-height:1.5">Upload your existing menu and Lumia AI will create it for you.</p>
+          <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px">
+            <button type="button" onClick="{{ toMenuUpload }}" style="height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Upload menu</button>
+            <button type="button" onClick="{{ openAddItem }}" style="height:46px;padding:0 20px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Add item manually</button>
+          </div>
+        </div>
+      </sc-if>
+      </sc-if>
+
+      <!-- WhatsApp page -->
+      <sc-if value="{{ pageWA }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="07 WhatsApp" dir="ltr" style="display:flex;flex-direction:column;gap:18px">
+        <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">WhatsApp</h1>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start">
+          <div style="background:#FAF6FA;border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#8A5A6E">Connection</span>
+            <div style="display:flex;align-items:center;gap:14px">
+              <span style="width:48px;height:48px;border-radius:14px;background:#fff;border:1px solid #ECD9E0;display:flex;align-items:center;justify-content:center;flex:none"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="display:block"><path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366"></path><path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff"></path></svg></span>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                <span style="font-size:16px;font-weight:600">WhatsApp Business</span>
+                <span style="font-size:15px;color:#3D1C31;font-variant-numeric:tabular-nums">{{ waPagePhone }}</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;border-top:1px solid #EFE3E9">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #EFE3E9">
+                <span style="font-size:14px;color:#8A5A6E">Status</span>
+                <span style="display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:{{ waStat.fg }}"><span style="width:9px;height:9px;border-radius:50%;background:{{ waStat.dot }};border:1.5px solid {{ waStat.ring }}"></span>{{ waStat.label }}</span>
+              </div>
+              <sc-if value="{{ waIsConnected }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EFE3E9;font-size:14px"><span style="color:#8A5A6E">Display name</span><span style="text-align:end">{{ waName }}</span></div>
+                <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EFE3E9;font-size:14px"><span style="color:#8A5A6E">Business account</span><span>Active</span></div>
+              </sc-if>
+              <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;font-size:14px"><span style="color:#8A5A6E">Your Lumia login</span><span style="font-variant-numeric:tabular-nums">{{ masked }}</span></div>
+            </div>
+            <sc-if value="{{ waIsConnected }}" hint-placeholder-val="{{ true }}">
+              <button type="button" onClick="{{ askDisconnect }}" style="align-self:flex-start;height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8;border-color:#D9BFCB">Disconnect</button>
+            </sc-if>
+            <sc-if value="{{ waIsDisconnected }}" hint-placeholder-val="{{ false }}">
+              <p style="font-size:14px;line-height:1.5;color:#3D1C31;text-wrap:pretty">Your menu, orders and customer data are still in Lumia.</p>
+              <button type="button" onClick="{{ reconnect }}" style="align-self:flex-start;height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Reconnect WhatsApp</button>
+            </sc-if>
+            <sc-if value="{{ waIsNone }}" hint-placeholder-val="{{ false }}">
+              <button type="button" onClick="{{ openWA }}" style="align-self:flex-start;height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Connect WhatsApp</button>
+            </sc-if>
+          </div>
+          <!-- LUMIA-EXT today hidden --><sc-if value="{{ waShowToday }}" hint-placeholder-val="{{ true }}">
+            <div style="background:#FAF6FA;border-radius:20px;padding:20px 22px 8px;display:flex;flex-direction:column">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#8A5A6E;padding-bottom:6px">Today</span>
+              <sc-for list="{{ waToday }}" as="t" hint-placeholder-count="3">
+                <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 0;border-top:{{ t.bt }}">
+                  <span style="font-size:15px;color:#3D1C31">{{ t.label }}</span>
+                  <span style="font-size:26px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">{{ t.v }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- Disconnect confirm -->
+      <sc-if value="{{ confirmDisc }}" hint-placeholder-val="{{ false }}">
+      <div dir="ltr" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px">
+        <div onClick="{{ cancelDisconnect }}" style="position:absolute;inset:0;background:rgba(26,8,21,.36)"></div>
+        <div role="alertdialog" aria-modal="true" data-screen-label="07b Disconnect WhatsApp" style="position:relative;width:100%;max-width:420px;background:#fff;border-radius:20px;padding:26px 24px 22px;box-shadow:0 30px 80px -30px rgba(26,8,21,.45);display:flex;flex-direction:column">
+          <h2 style="font-size:22px;font-weight:600;letter-spacing:-0.03em">Disconnect WhatsApp?</h2>
+          <p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty">Lumia will stop receiving and replying to customer messages from this number. Your menu, orders and customer data will remain in Lumia.</p>
+          <div style="display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:24px">
+            <button type="button" onClick="{{ cancelDisconnect }}" style="flex:1 1 140px;height:48px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Cancel</button>
+            <button type="button" onClick="{{ doDisconnect }}" style="flex:1 1 180px;height:48px;padding:0 18px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px" style-hover="background:#981B30">Disconnect WhatsApp</button>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      
+<!-- LUMIA-EXT edit dialog -->
+<sc-if value="{{ dlg.open }}" hint-placeholder-val="{{ false }}">
+<div dir="ltr" style="position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div onClick="{{ dlg.cancel }}" style="position:absolute;inset:0;background:rgba(26,8,21,.36)"></div>
+  <form role="dialog" aria-modal="true" aria-label="{{ dlg.title }}" data-screen-label="09 Edit dialog" onSubmit="{{ dlg.submit }}" noValidate="{{ true }}" style="position:relative;width:100%;max-width:420px;background:#fff;border-radius:20px;padding:26px 24px 22px;box-shadow:0 30px 80px -30px rgba(26,8,21,.45);display:flex;flex-direction:column">
+    <h2 style="font-size:22px;font-weight:600;letter-spacing:-0.03em">{{ dlg.title }}</h2>
+    <p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;text-wrap:pretty">{{ dlg.hint }}</p>
+    <sc-for list="{{ dlg.fields }}" as="f" hint-placeholder-count="3">
+      <label style="display:block;font-size:14px;font-weight:500;color:#3D1C31;margin-top:16px">{{ f.label }}
+        <input type="text" value="{{ f.value }}" onChange="{{ f.onChange }}" placeholder="{{ f.placeholder }}" dir="{{ f.dir }}" inputMode="{{ f.mode }}" autoFocus="{{ f.focus }}" style="display:block;margin-top:8px;height:48px;width:100%;border-radius:12px;border:1.5px solid #E3CBD4;padding:0 14px;font-size:16px;background:#fff"></input>
+      </label>
+    </sc-for>
+    <sc-if value="{{ dlg.error }}" hint-placeholder-val="{{ false }}"><div role="alert" style="margin-top:12px;font-size:14px;color:#B4233B">{{ dlg.error }}</div></sc-if>
+    <div style="display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:24px">
+      <button type="button" onClick="{{ dlg.cancel }}" style="flex:1 1 120px;height:48px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Cancel</button>
+      <button type="submit" disabled="{{ dlg.busy }}" style="flex:1 1 160px;height:48px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;opacity:{{ dlg.op }}">{{ dlg.saveLabel }}</button>
+    </div>
+  </form>
+</div>
+</sc-if>
+
+<!-- WhatsApp connection drawer -->
+      <sc-if value="{{ waOpen }}" hint-placeholder-val="{{ false }}">
+      <div dir="ltr" style="position:fixed;inset:0;z-index:40;display:flex;justify-content:flex-end">
+        <div onClick="{{ waClose }}" style="position:absolute;inset:0;background:rgba(26,8,21,.32)"></div>
+        <aside role="dialog" aria-modal="true" aria-label="Connect WhatsApp" data-screen-label="{{ waLabel }}" style="position:relative;width:{{ L.drawerW }};max-width:100%;height:100%;background:#fff;display:flex;flex-direction:column;box-shadow:-24px 0 60px -30px rgba(26,8,21,.35)">
+          <div style="height:64px;flex:none;padding:0 12px 0 24px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F0E4E8">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="display:block;flex:none"><path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366"></path><path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff"></path></svg>
+            <span style="flex:1;font-size:15px;font-weight:600">WhatsApp</span>
+            <span style="font-size:13px;font-weight:500;color:#8A5A6E;font-variant-numeric:tabular-nums">{{ waSetupLabel }}</span>
+            <button type="button" onClick="{{ waClose }}" aria-label="Close" style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none" style-hover="background:#FBF3F8"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="#1A0815" stroke-width="1.7" stroke-linecap="round"></path></svg></button>
+          </div>
+
+          <!-- Intro -->
+          <sc-if value="{{ wa.intro }}" hint-placeholder-val="{{ true }}">
+          <div style="flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)">
+            <span style="width:56px;height:56px;border-radius:16px;background:#EAF8EF;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" style="display:block"><path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366"></path><path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff"></path></svg></span>
+            <h2 style="font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px;text-wrap:balance">Connect your WhatsApp Business</h2>
+            <p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty">Connect the WhatsApp number your customers use to place orders. Lumia will receive messages and help turn them into orders automatically.</p>
+            <button type="button" onClick="{{ startConnect }}" style="margin-top:24px;height:54px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Connect WhatsApp</button>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#8A5A6E;margin-top:26px">What happens next</span>
+            <ol style="list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:12px">
+              <sc-for list="{{ waSteps }}" as="st" hint-placeholder-count="4">
+                <li style="display:flex;align-items:center;gap:12px;font-size:15px"><span style="width:24px;height:24px;border-radius:50%;border:1.5px solid #ECD9E0;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#8A2040;font-variant-numeric:tabular-nums">{{ st.n }}</span>{{ st.label }}</li>
+              </sc-for>
+            </ol>
+            <div style="margin-top:26px;border-radius:16px;background:#FAF6FA;padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;gap:10px;align-items:flex-start;font-size:14px;font-weight:600;line-height:1.4"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex:none;margin-top:2px"><circle cx="8" cy="8" r="7" stroke="#8A5A6E" stroke-width="1.4"></circle><path d="M8 7.2v4" stroke="#8A5A6E" stroke-width="1.5" stroke-linecap="round"></path><circle cx="8" cy="4.9" r=".85" fill="#8A5A6E"></circle></svg><span>Your login number and business WhatsApp can be different.</span></div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+                <div style="background:#fff;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px"><span style="font-size:12px;color:#8A5A6E">Your Lumia login</span><span style="font-size:14px;font-weight:500;font-variant-numeric:tabular-nums">{{ masked }}</span></div>
+                <div style="background:#fff;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px"><span style="font-size:12px;color:#8A5A6E">Restaurant WhatsApp</span><span style="font-size:14px;color:#3D1C31">Not connected yet</span></div>
+              </div>
+            </div>
+            <button type="button" onClick="{{ waClose }}" style="margin-top:20px;height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px" style-hover="color:#FF5577">Do this later</button>
+          </div>
+          </sc-if>
+
+          <!-- Connecting -->
+          <sc-if value="{{ wa.connecting }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;overflow:auto;padding:28px 24px;display:grid;align-content:safe center;justify-items:center;text-align:center">
+            <div style="position:relative;width:104px;height:104px;display:flex;align-items:center;justify-content:center">
+              {{ waRing }}
+              <span style="width:64px;height:64px;border-radius:20px;background:#fff;box-shadow:0 14px 30px -16px rgba(138,32,64,.45);display:flex;align-items:center;justify-content:center"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" style="display:block"><path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366"></path><path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff"></path></svg></span>
+            </div>
+            <h2 style="font-size:24px;font-weight:600;letter-spacing:-0.03em;margin-top:26px">Connecting to WhatsApp...</h2>
+            <p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;max-width:300px;text-wrap:pretty">Keep this window open while we finish the setup.</p>
+            <button type="button" onClick="{{ cancelConnect }}" style="margin-top:28px;height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px" style-hover="color:#FF5577">Cancel</button>
+          </div>
+          </sc-if>
+
+          <!-- Success -->
+          <sc-if value="{{ wa.success }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column">
+            <div style="flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)">
+              <span style="width:56px;height:56px;border-radius:50%;background:#E4F4EC;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 20 20" fill="none"><path d="M5 10.4 8.4 13.8 15 7" stroke="#16704A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+              <sc-if value="{{ waCatalog }}" hint-placeholder-val="{{ true }}"><h2 style="font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px">WhatsApp connected 🎉</h2></sc-if>
+              <sc-if value="{{ waNoCatalog }}" hint-placeholder-val="{{ false }}"><h2 style="font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px">WhatsApp connected successfully</h2></sc-if>
+              <div style="margin-top:22px;border:1px solid #ECD9E0;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;align-items:center;gap:14px">
+                  <span style="position:relative;width:52px;height:52px;border-radius:50%;background:#1A0815;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none">{{ waInitials }}<span style="position:absolute;right:-2px;bottom:-2px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:block"><path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366"></path><path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff"></path></svg></span></span>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                    <span style="font-size:12px;color:#8A5A6E">WhatsApp Business</span>
+                    <span style="font-size:17px;font-weight:600;letter-spacing:-0.01em">{{ waName }}</span>
+                    <span style="font-size:14px;color:#3D1C31;font-variant-numeric:tabular-nums">{{ waPhone }}</span>
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border-top:1px solid #F3EEF1;padding-top:14px">
+                  <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#8A5A6E">Status</span><span style="display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:#16704A"><span style="width:8px;height:8px;border-radius:50%;background:#25D366"></span>Connected</span></div>
+                  <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#8A5A6E">Business account</span><span style="font-size:14px;font-weight:500">Active</span></div>
+                </div>
+              </div>
+              <sc-if value="{{ waNoCatalog }}" hint-placeholder-val="{{ false }}">
+                <p style="margin-top:14px;border-radius:14px;background:#FAF6FA;padding:12px 16px;font-size:14px;line-height:1.5;color:#3D1C31">No WhatsApp catalog was found. Your current Lumia menu will continue to be used.</p>
+              </sc-if>
+            </div>
+            <div style="flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px">
+              <button type="button" onClick="{{ successContinue }}" style="height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Continue</button>
+              <button type="button" onClick="{{ manageConnection }}" style="height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px" style-hover="border-color:#D9BFCB;background:#FBF3F8">Manage connection</button>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- Import -->
+          <sc-if value="{{ wa.import }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column">
+            <div style="flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)">
+              <h2 style="font-size:24px;font-weight:600;letter-spacing:-0.03em;line-height:1.15;text-wrap:balance">We found information from your WhatsApp Business account</h2>
+              <p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty">Nothing in Lumia changes until you choose to use it.</p>
+              <div style="margin-top:20px;border:1px solid #ECD9E0;border-radius:16px;display:flex;flex-direction:column;padding:0 18px">
+                <sc-for list="{{ waImport }}" as="r" hint-placeholder-count="5">
+                  <div style="display:flex;align-items:center;gap:12px;min-height:58px;padding:10px 0;border-top:{{ r.bt }}">
+                    <span style="flex:0 0 96px;font-size:13px;color:#8A5A6E">{{ r.label }}</span>
+                    <div style="flex:1;min-width:0;display:flex;align-items:center;gap:10px">
+                      <sc-if value="{{ r.isLogo }}" hint-placeholder-val="{{ false }}"><span style="width:38px;height:38px;border-radius:50%;background:#1A0815;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none">{{ waInitials }}</span></sc-if>
+                      <span style="font-size:15px;font-weight:500;font-variant-numeric:tabular-nums">{{ r.value }}</span>
+                    </div>
+                    <sc-if value="{{ r.tag }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:{{ r.tagBg }};color:{{ r.tagFg }};flex:none">{{ r.tag }}</span></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px">
+              <button type="button" onClick="{{ useAll }}" style="height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Use this information</button>
+              <button type="button" onClick="{{ toReview }}" style="height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px" style-hover="border-color:#D9BFCB;background:#FBF3F8">Review first</button>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- Review differences -->
+          <sc-if value="{{ wa.review }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column">
+            <div style="flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)">
+              <h2 style="font-size:24px;font-weight:600;letter-spacing:-0.03em;line-height:1.15">Review differences</h2>
+              <p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty">Choose which version Lumia should use for each item.</p>
+              <div style="display:flex;flex-direction:column;gap:22px;margin-top:22px">
+                <sc-for list="{{ waDiffs }}" as="d" hint-placeholder-count="3">
+                  <div style="display:flex;flex-direction:column;gap:10px">
+                    <span style="font-size:14px;font-weight:600">{{ d.label }}</span>
+                    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+                      <sc-for list="{{ d.opts }}" as="o" hint-placeholder-count="2">
+                        <button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="text-align:start;border-radius:14px;border:1.5px solid {{ o.bd }};background:{{ o.bg }};padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-height:88px" style-hover="border-color:#D9BFCB">
+                          <span style="display:flex;align-items:center;gap:8px;font-size:12px;color:#8A5A6E"><span style="width:16px;height:16px;border-radius:50%;border:{{ o.dotBd }};background:#fff;flex:none"></span>{{ o.src }}</span>
+                          <span style="font-size:15px;font-weight:500;color:{{ o.fg }};overflow-wrap:anywhere">{{ o.value }}</span>
+                        </button>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:6px">
+              <button type="button" onClick="{{ saveChoices }}" style="height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Save choices</button>
+              <button type="button" onClick="{{ toImport }}" style="height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px" style-hover="color:#FF5577">Back</button>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- Catalog found -->
+          <sc-if value="{{ wa.catalog }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column;position:relative">
+            <div style="flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)">
+              <h2 style="font-size:24px;font-weight:600;letter-spacing:-0.03em;line-height:1.15">We found a WhatsApp catalog</h2>
+              <sc-if value="{{ menuDone }}" hint-placeholder-val="{{ true }}"><p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty">Your current Lumia menu stays as it is unless you choose to replace it.</p></sc-if>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:20px">
+                <div style="border-radius:16px;border:1px solid #ECD9E0;padding:14px 16px;display:flex;flex-direction:column;gap:4px">
+                  <span style="display:flex;align-items:center;gap:7px;font-size:13px;color:#8A5A6E"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block;flex:none"><path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366"></path></svg>WhatsApp catalog</span>
+                  <span style="font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">{{ waCatTotal }}</span>
+                  <span style="font-size:14px;color:#3D1C31">products · {{ waCatCount }} categories</span>
+                </div>
+                <sc-if value="{{ menuDone }}" hint-placeholder-val="{{ true }}">
+                <div style="border-radius:16px;background:#FAF6FA;padding:14px 16px;display:flex;flex-direction:column;gap:4px">
+                  <span style="display:flex;align-items:center;gap:7px;font-size:13px;color:#8A5A6E"><span style="width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,#FF5577,#C93DFF)"></span>Lumia menu · in use</span>
+                  <span style="font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">{{ lumiaItems }}</span>
+                  <span style="font-size:14px;color:#3D1C31">items · {{ lumiaCats }} categories</span>
+                </div>
+                </sc-if>
+              </div>
+              <sc-if value="{{ catOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:14px;border:1px solid #ECD9E0;border-radius:16px;padding:4px 18px">
+                  <sc-for list="{{ waCatList }}" as="g" hint-placeholder-count="5">
+                    <div style="padding:12px 0;border-top:{{ g.bt }};display:flex;flex-direction:column;gap:3px">
+                      <div style="display:flex;justify-content:space-between;gap:10px"><span style="font-size:15px;font-weight:600">{{ g.cat }}</span><span style="font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums">{{ g.label }}</span></div>
+                      <span style="font-size:13px;line-height:1.45;color:#3D1C31">{{ g.sample }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+            <sc-if value="{{ menuDone }}" hint-placeholder-val="{{ true }}">
+            <div style="flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px">
+              <button type="button" onClick="{{ waFinish }}" style="height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Keep current Lumia menu</button>
+              <button type="button" onClick="{{ toggleCat }}" style="height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px" style-hover="border-color:#D9BFCB;background:#FBF3F8">{{ catBtn }}</button>
+              <button type="button" onClick="{{ askReplace }}" style="height:40px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px" style-hover="color:#B4233B">Replace current menu</button>
+            </div>
+            </sc-if>
+            <sc-if value="{{ menuEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px">
+              <button type="button" onClick="{{ useCatalog }}" style="height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Use WhatsApp catalog as menu</button>
+              <button type="button" onClick="{{ toggleCat }}" style="height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px" style-hover="border-color:#D9BFCB;background:#FBF3F8">{{ catBtn }}</button>
+              <button type="button" onClick="{{ waFinish }}" style="height:40px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px" style-hover="color:#FF5577">Not now</button>
+            </div>
+            </sc-if>
+            <sc-if value="{{ confirmReplace }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;background:rgba(26,8,21,.32);display:flex;align-items:flex-end;padding:16px">
+              <div role="alertdialog" aria-modal="true" data-screen-label="08f Replace menu confirm" style="width:100%;background:#fff;border-radius:20px;padding:22px 20px 18px;box-shadow:0 20px 50px -20px rgba(26,8,21,.45);display:flex;flex-direction:column">
+                <h3 style="font-size:20px;font-weight:600;letter-spacing:-0.025em">Replace current menu?</h3>
+                <p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;text-wrap:pretty">Your {{ lumiaItems }} Lumia menu items will be replaced by {{ waCatTotal }} products from your WhatsApp catalog. Prices and availability you set in Lumia won't be kept.</p>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:20px">
+                  <button type="button" onClick="{{ cancelReplace }}" style="flex:1 1 120px;height:48px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Cancel</button>
+                  <button type="button" onClick="{{ useCatalog }}" style="flex:1 1 140px;height:48px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px" style-hover="background:#981B30">Replace menu</button>
+                </div>
+              </div>
+            </div>
+            </sc-if>
+          </div>
+          </sc-if>
+
+          <!-- Error -->
+          <sc-if value="{{ wa.error }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column">
+            <div style="flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)">
+              <span style="width:56px;height:56px;border-radius:50%;background:#FDECEE;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 16 16" fill="none"><path d="M8 4.2v4.6" stroke="#B4233B" stroke-width="1.7" stroke-linecap="round"></path><circle cx="8" cy="11.4" r=".95" fill="#B4233B"></circle></svg></span>
+              <h2 style="font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px">We couldn't connect WhatsApp</h2>
+              <p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty">Your Lumia account is safe. Try connecting again or continue setup and return later.</p>
+              <div style="margin-top:20px;border-radius:14px;background:#FAF6FA;padding:12px 16px;display:flex;flex-direction:column;gap:3px">
+                <span style="font-size:12px;color:#8A5A6E">What happened</span>
+                <span style="font-size:15px;line-height:1.45">{{ waErrText }}</span>
+              </div>
+            </div>
+            <div style="flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px">
+              <button type="button" onClick="{{ startConnect }}" style="height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Try again</button>
+              <button type="button" onClick="{{ waClose }}" style="height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px" style-hover="border-color:#D9BFCB;background:#FBF3F8">Do this later</button>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- Already connected elsewhere -->
+          <sc-if value="{{ wa.inUse }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column">
+            <div style="flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)">
+              <span style="width:56px;height:56px;border-radius:50%;background:#FFF4E5;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 16 16" fill="none"><path d="M8 1.8 15 14H1z" stroke="#C26A00" stroke-width="1.4" stroke-linejoin="round"></path><path d="M8 6.2v3.4" stroke="#C26A00" stroke-width="1.5" stroke-linecap="round"></path><circle cx="8" cy="11.6" r=".8" fill="#C26A00"></circle></svg></span>
+              <h2 style="font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px;text-wrap:balance">This WhatsApp number is already connected</h2>
+              <p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty">Choose another number or manage the existing connection before continuing.</p>
+              <div style="margin-top:20px;display:inline-flex;justify-self:start;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;background:#FAF6FA;font-size:14px;font-weight:500;font-variant-numeric:tabular-nums"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block;flex:none"><path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366"></path></svg>{{ waPhone }}</div>
+            </div>
+            <div style="flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px">
+              <button type="button" onClick="{{ startConnect }}" style="height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Choose another number</button>
+              <a href="#help" style="height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#1A0815" style-hover="border-color:#D9BFCB;background:#FBF3F8">View help</a>
+            </div>
+          </div>
+          </sc-if>
+        </aside>
+      </div>
+      </sc-if>
+    </main>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Flow&quot;,&quot;1 Mobile number&quot;,&quot;2 OTP&quot;,&quot;2 OTP · incorrect&quot;,&quot;2 OTP · expired&quot;,&quot;2 Number verified&quot;,&quot;3 Restaurant name&quot;,&quot;4 Menu upload&quot;,&quot;5 AI processing&quot;,&quot;5B Menu ready&quot;,&quot;Dashboard · menu&quot;,&quot;Dashboard · empty menu&quot;,&quot;WA · Connect&quot;,&quot;WA · Connecting&quot;,&quot;WA · Connected&quot;,&quot;WA · Connected, no catalog&quot;,&quot;WA · Import info&quot;,&quot;WA · Review differences&quot;,&quot;WA · Catalog found&quot;,&quot;WA · Replace menu confirm&quot;,&quot;WA · Error&quot;,&quot;WA · Number in use&quot;,&quot;Dashboard · WhatsApp connected&quot;,&quot;WhatsApp page · connected&quot;,&quot;WhatsApp page · disconnect&quot;,&quot;WhatsApp page · disconnected&quot;],&quot;default&quot;:&quot;Flow&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screens&quot;},&quot;viewport&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Auto&quot;,&quot;Mobile frame&quot;],&quot;default&quot;:&quot;Auto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screens&quot;},&quot;otpResult&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Correct&quot;,&quot;Incorrect&quot;,&quot;Expired&quot;],&quot;default&quot;:&quot;Correct&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;waResult&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Success · catalog&quot;,&quot;Success · no catalog&quot;,&quot;Permission cancelled&quot;,&quot;Business unavailable&quot;,&quot;Number already connected&quot;],&quot;default&quot;:&quot;Success · catalog&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;dashLanguage&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;English&quot;,&quot;Arabic&quot;],&quot;default&quot;:&quot;English&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
+const COUNTRIES = [
+  { flag: '🇦🇪', name: 'United Arab Emirates', dial: '+971', len: 9, groups: [2,3,4], ex: '50 123 4567', re: /^5[024568]\d{7}$/, label: 'UAE' },
+  { flag: '🇸🇦', name: 'Saudi Arabia', dial: '+966', len: 9, groups: [2,3,4], ex: '50 123 4567', re: /^5\d{8}$/, label: 'Saudi' },
+  { flag: '🇶🇦', name: 'Qatar', dial: '+974', len: 8, groups: [4,4], ex: '3312 3456', re: /^[3567]\d{7}$/, label: 'Qatari' },
+  { flag: '🇰🇼', name: 'Kuwait', dial: '+965', len: 8, groups: [4,4], ex: '5012 3456', re: /^[569]\d{7}$/, label: 'Kuwaiti' },
+  { flag: '🇧🇭', name: 'Bahrain', dial: '+973', len: 8, groups: [4,4], ex: '3600 1234', re: /^3\d{7}$/, label: 'Bahraini' },
+  { flag: '🇴🇲', name: 'Oman', dial: '+968', len: 8, groups: [4,4], ex: '9212 3456', re: /^[79]\d{7}$/, label: 'Omani' },
+  { flag: '🇪🇬', name: 'Egypt', dial: '+20', len: 10, groups: [3,3,4], ex: '100 123 4567', re: /^1[0125]\d{8}$/, label: 'Egyptian' },
+  { flag: '🇮🇳', name: 'India', dial: '+91', len: 10, groups: [5,5], ex: '98765 43210', re: /^[6-9]\d{9}$/, label: 'Indian' },
+  { flag: '🇬🇧', name: 'United Kingdom', dial: '+44', len: 10, groups: [4,6], ex: '7400 123456', re: /^7\d{9}$/, label: 'UK' },
+];
+const MENU = [
+  { cat: 'Burgers', items: [['Classic Burger',28],['Chicken Burger',25],['Cheese Burger',30],['Double Smash',38],['Mushroom Swiss',34],['Spicy Jalapeño',32],['Beef Bacon Burger',36],['Veggie Burger',26]] },
+  { cat: 'Meals', items: [['Classic Burger Meal',38],['Chicken Burger Meal',35],['Cheese Burger Meal',40],['Double Smash Meal',48],['Mushroom Swiss Meal',44],['Spicy Jalapeño Meal',42],['Beef Bacon Meal',46],['Veggie Meal',36],['Chicken Strips Meal',34],['Kids Meal',24],['Combo for Two',79],['Family Box',129]] },
+  { cat: 'Drinks', items: [['Pepsi',5],['Diet Pepsi',5],['7Up',5],['Mirinda',5],['Water',3],['Sparkling Water',7],['Fresh Orange',14],['Lemon Mint',14],['Iced Tea',10],['Milkshake',18]] },
+  { cat: 'Desserts', items: [['Chocolate Brownie',16],['Cheesecake',18],['Vanilla Sundae',12],['Cookie',8],['Churros',15],['Apple Pie',12]] },
+  { cat: 'Sides', items: [['Fries',10],['Curly Fries',13],['Onion Rings',14],['Coleslaw',8]] },
+  { cat: 'Other', items: [['Extra Cheese',4],['Garlic Mayo',3]] },
+];
+const TOTAL = MENU.reduce((a, c) => a + c.items.length, 0);
+const WA = { name: 'Burger House Sharjah', phone: '+971 55 XXX 8210', address: 'Al Majaz, Sharjah' };
+const WA_CAT = [
+  { cat: 'Burgers', items: [['Classic Burger',28],['Chicken Burger',25],['Cheese Burger',30],['Double Smash',38],['Mushroom Swiss',34],['Spicy Jalapeño',32],['Beef Bacon Burger',36],['Veggie Burger',26],['BBQ Burger',33],['Truffle Burger',42]] },
+  { cat: 'Combos', items: [['Classic Combo',38],['Chicken Combo',35],['Cheese Combo',40],['Smash Combo',48],['Kids Combo',24],['Combo for Two',79],['Family Box',129],['Strips Combo',34],['Veggie Combo',36]] },
+  { cat: 'Sides', items: [['Fries',10],['Curly Fries',13],['Onion Rings',14],['Coleslaw',8],['Loaded Fries',19],['Nuggets',16]] },
+  { cat: 'Drinks', items: [['Pepsi',5],['Diet Pepsi',5],['7Up',5],['Water',3],['Fresh Orange',14],['Lemon Mint',14],['Iced Tea',10],['Milkshake',18]] },
+  { cat: 'Desserts', items: [['Brownie',16],['Cheesecake',18],['Sundae',12],['Cookie',8]] },
+];
+const WA_ERR = { 'Permission cancelled': 'Permission was cancelled before setup finished.', 'Business unavailable': "The business account you selected isn't available right now." };
+const AR = { 'Classic Burger':'برجر كلاسيك','Chicken Burger':'برجر دجاج','Cheese Burger':'تشيز برجر','Double Smash':'دبل سماش','Mushroom Swiss':'مشروم سويس','Spicy Jalapeño':'برجر هالبينو حار','Beef Bacon Burger':'برجر لحم بيكون','Veggie Burger':'برجر نباتي','Classic Burger Meal':'وجبة برجر كلاسيك','Chicken Burger Meal':'وجبة برجر دجاج','Cheese Burger Meal':'وجبة تشيز برجر','Double Smash Meal':'وجبة دبل سماش','Mushroom Swiss Meal':'وجبة مشروم سويس','Spicy Jalapeño Meal':'وجبة هالبينو حار','Beef Bacon Meal':'وجبة لحم بيكون','Veggie Meal':'وجبة نباتية','Chicken Strips Meal':'وجبة ستربس دجاج','Kids Meal':'وجبة أطفال','Combo for Two':'كومبو لشخصين','Family Box':'بوكس العائلة','Pepsi':'بيبسي','Diet Pepsi':'بيبسي دايت','7Up':'سفن أب','Mirinda':'ميرندا','Water':'ماء','Sparkling Water':'مياه فوارة','Fresh Orange':'عصير برتقال طازج','Lemon Mint':'ليمون بالنعناع','Iced Tea':'شاي مثلج','Milkshake':'ميلك شيك','Chocolate Brownie':'براوني بالشوكولاتة','Cheesecake':'تشيز كيك','Vanilla Sundae':'صنداي فانيلا','Cookie':'كوكيز','Churros':'تشوروز','Apple Pie':'فطيرة التفاح','Fries':'بطاطس مقلية','Curly Fries':'بطاطس كيرلي','Onion Rings':'حلقات البصل','Coleslaw':'كول سلو','BBQ Burger':'برجر باربكيو','Truffle Burger':'برجر ترافل','Classic Combo':'كومبو كلاسيك','Chicken Combo':'كومبو دجاج','Cheese Combo':'كومبو تشيز','Smash Combo':'كومبو سماش','Kids Combo':'كومبو أطفال','Strips Combo':'كومبو ستربس','Veggie Combo':'كومبو نباتي','Loaded Fries':'بطاطس محمّلة','Nuggets':'ناجتس','Brownie':'براوني','Sundae':'صنداي' };
+const CAT_AR = { Burgers: 'برجر', Meals: 'وجبات', Drinks: 'مشروبات', Desserts: 'حلويات', Sides: 'أطباق جانبية', Other: 'إضافات', Combos: 'كومبو' };
+const NAV_AR = { Orders: 'الطلبات', Menu: 'القائمة', WhatsApp: 'واتساب', Customers: 'العملاء', Delivery: 'التوصيل', Settings: 'الإعدادات' };
+const T_EN = { menu: 'Menu', items: 'items', categories: 'categories', created: 'Created by Lumia AI', addItem: 'Add item', search: 'Search items', all: 'All items', soldOut: 'Sold out', addAr: 'Add Arabic name', noResults: 'No items match your search.', setupTitle: 'Get Lumia ready to receive orders', continueSetup: 'Continue setup', setup: ['Restaurant created', 'Menu added', ['Connect WhatsApp', 'WhatsApp connected'], 'Set delivery & order settings', 'Test Lumia'] };
+const T_AR = { menu: 'القائمة', items: 'صنف', categories: 'فئات', created: 'أنشأتها Lumia AI', addItem: 'إضافة صنف', search: 'ابحث عن صنف', all: 'كل الأصناف', soldOut: 'نفد', addAr: 'أضف الاسم بالعربية', noResults: 'لا توجد أصناف مطابقة لبحثك.', setupTitle: 'جهّز Lumia لاستقبال الطلبات', continueSetup: 'متابعة الإعداد', setup: ['تم إنشاء المطعم', 'تمت إضافة القائمة', ['ربط واتساب', 'تم ربط واتساب'], 'إعداد التوصيل والطلبات', 'تجربة Lumia'] };
+const count = (m) => m.reduce((a, c) => a + c.items.length, 0);
+const D = (o) => ({ step: 'dash', menuDone: true, ...o });
+const PHASES = ['Reading your menu', 'Finding categories', 'Extracting items and prices', 'Organizing your menu'];
+const fmt = (d, g) => { const o = []; let i = 0; for (const n of g) { if (i >= d.length) break; o.push(d.slice(i, i + n)); i += n; } return o.join(' '); };
+const aed = (p) => 'AED ' + p;
+const SCREENS = {
+  '1 Mobile number': { step: 'phone', num: '' },
+  '2 OTP': { step: 'otp', digits: '48', otpErr: null, resendIn: 24 },
+  '2 OTP · incorrect': { step: 'otp', digits: '482915', otpErr: 'incorrect', resendIn: 12 },
+  '2 OTP · expired': { step: 'otp', digits: '', otpErr: 'expired', resendIn: 0 },
+  '2 Number verified': { step: 'verified' },
+  '3 Restaurant name': { step: 'name', name: '' },
+  '4 Menu upload': { step: 'menu' },
+  '5 AI processing': { step: 'processing', phase: 2 },
+  '5B Menu ready': { step: 'ready', menuDone: true, flags: { 'Family Box': true, 'Fresh Orange': true }, edits: {}, open: { Meals: true, Drinks: true } },
+  'Dashboard · menu': { step: 'dash', menuDone: true },
+  'Dashboard · empty menu': { step: 'dash', menuDone: false },
+  'WA · Connect': D({ wa: 'intro' }),
+  'WA · Connecting': D({ wa: 'connecting' }),
+  'WA · Connected': D({ wa: 'success', waStatus: 'connected', waCatalog: true }),
+  'WA · Connected, no catalog': D({ wa: 'success', waStatus: 'connected', waCatalog: false }),
+  'WA · Import info': D({ wa: 'import', waStatus: 'connected' }),
+  'WA · Review differences': D({ wa: 'review', waStatus: 'connected' }),
+  'WA · Catalog found': D({ wa: 'catalog', waStatus: 'connected' }),
+  'WA · Replace menu confirm': D({ wa: 'catalog', waStatus: 'connected', confirmReplace: true }),
+  'WA · Error': D({ wa: 'error', waErr: 'Permission cancelled' }),
+  'WA · Number in use': D({ wa: 'inUse' }),
+  'Dashboard · WhatsApp connected': D({ waStatus: 'connected' }),
+  'WhatsApp page · connected': D({ page: 'WhatsApp', waStatus: 'connected' }),
+  'WhatsApp page · disconnect': D({ page: 'WhatsApp', waStatus: 'connected', confirmDisc: true }),
+  'WhatsApp page · disconnected': D({ page: 'WhatsApp', waStatus: 'disconnected' }),
+};
+const WA_BASE = { page: 'Menu', wa: null, waStatus: 'none', waErr: null, waCatalog: true, catOpen: false, confirmReplace: false, confirmDisc: false, menuSrc: 'lumia', address: '', choices: {} };
+
+class Component extends DCLogic {
+  state = {
+    step: 'phone', num: '', cc: 0, focused: false, invalid: false, sending: false, ccOpen: false,
+    digits: '', otpFocused: false, otpErr: null, verifying: false, resendAt: 0, now: Date.now(), note: null,
+    name: '', nameFocused: false, nameErr: false, logo: null, drag: false, fileName: 'burger-house-menu.pdf',
+    phase: 0, shown: 0, menuDone: false, cat: 'All', sold: { 'Beef Bacon Burger': true }, edits: {}, flags: { 'Family Box': true, 'Fresh Orange': true }, open: { Meals: true, Drinks: true }, ...WA_BASE, lang: this.props.dashLanguage === 'Arabic' ? 'ar' : 'en', q: '', w: typeof window !== 'undefined' ? window.innerWidth : 1200,
+  };
+  phoneRef = React.createRef(); otpRef = React.createRef(); nameRef = React.createRef(); previewRef = React.createRef(); devRef = React.createRef();
+  timers = [];
+  noopFn = () => {};
+  later(ms, fn) { const t = setTimeout(fn, ms); this.timers.push(t); return t; }
+  clearTimers() { this.timers.forEach(clearTimeout); this.timers = []; clearInterval(this.feed); }
+  onResize = () => { const w = document.documentElement.clientWidth || window.innerWidth; if (w !== this.state.w) this.setState({ w }); };
+  componentDidMount() {
+    window.addEventListener('resize', this.onResize);
+    this.onResize(); requestAnimationFrame(this.onResize);
+    if (window.ResizeObserver) { this.ro = new ResizeObserver(this.onResize); this.ro.observe(document.documentElement); }
+    window.addEventListener('load', this.onResize);
+    [0, 150, 500].forEach(ms => setTimeout(this.onResize, ms));
+    this.tick = setInterval(() => { if (this.state.step === 'otp') this.setState({ now: Date.now() }); }, 1000);
+    this.applyScreen();
+  }
+  componentWillUnmount() { window.removeEventListener('resize', this.onResize); this.ro && this.ro.disconnect(); clearInterval(this.tick); this.clearTimers(); }
+  componentDidUpdate(p) {
+    if (p && p.screen !== this.props.screen) this.applyScreen();
+    if (p && p.dashLanguage !== this.props.dashLanguage) this.setState({ lang: this.props.dashLanguage === 'Arabic' ? 'ar' : 'en' });
+    if (this.state.step === 'processing' && this.previewRef.current) this.previewRef.current.scrollTop = this.previewRef.current.scrollHeight;
+    if (this.prevStep !== this.state.step) {
+      this.prevStep = this.state.step;
+      if (this.devRef.current) this.devRef.current.scrollTop = 0;
+      if (typeof window !== 'undefined') window.scrollTo(0, 0);
+    }
+  }
+  focus(ref) { setTimeout(() => ref.current && ref.current.focus(), 60); }
+  applyScreen() {
+    const sc = SCREENS[this.props.screen];
+    this.clearTimers();
+    if (!sc) { this.setState({ step: 'phone' }); return; }
+    const base = { num: '501234567', cc: 0, invalid: false, sending: false, ccOpen: false, digits: '', otpErr: null, verifying: false, note: null, name: 'Burger House', nameErr: false, phase: 0, shown: 0, cat: 'All', fileName: 'burger-house-menu.pdf', ...WA_BASE };
+    const resendAt = Date.now() + (sc.resendIn ?? 30) * 1000;
+    this.setState({ ...base, ...sc, resendAt, now: Date.now() });
+    if (sc.step === 'otp' && !sc.otpErr) this.focus(this.otpRef);
+    if (sc.step === 'phone') this.focus(this.phoneRef);
+  }
+  go(step, extra = {}) {
+    this.setState({ step, ...extra });
+    if (step === 'otp') { this.setState({ resendAt: Date.now() + 30000, now: Date.now(), digits: '', otpErr: null, note: null }); this.focus(this.otpRef); }
+    if (step === 'name') this.focus(this.nameRef);
+    if (step === 'phone') this.focus(this.phoneRef);
+  }
+  sendCode = (e) => {
+    e && e.preventDefault();
+    const { num, cc, sending } = this.state;
+    if (sending) return;
+    if (!COUNTRIES[cc].re.test(num)) { this.setState({ invalid: true }); this.focus(this.phoneRef); return; }
+    this.setState({ sending: true, invalid: false, ccOpen: false });
+    this.later(1200, () => { this.setState({ sending: false }); this.go('otp'); });
+  };
+  verify(code) {
+    if (this.state.verifying || this.state.otpErr === 'expired') return;
+    this.setState({ verifying: true, otpErr: null, note: null });
+    this.later(900, () => {
+      const r = this.props.otpResult ?? 'Correct';
+      if (r === 'Incorrect') { this.setState({ verifying: false, otpErr: 'incorrect' }); this.focus(this.otpRef); }
+      else if (r === 'Expired') this.setState({ verifying: false, otpErr: 'expired', resendAt: 0 });
+      else { this.setState({ verifying: false }); this.go('verified'); this.later(1300, () => this.go('name')); }
+    });
+  }
+  startProcessing() {
+    this.clearTimers();
+    this.setState({ phase: 0, shown: 0 });
+    this.later(2600, () => this.setState({ phase: 1 }));
+    this.later(5200, () => this.setState({ phase: 2 }));
+    this.later(9400, () => this.setState({ phase: 3 }));
+    this.later(12000, () => this.setState({ step: 'ready', menuDone: true, shown: TOTAL, open: { Meals: true, Drinks: true } }));
+  }
+  openWA = (e) => { e && e.preventDefault && e.preventDefault(); if (this.devRef.current) this.devRef.current.scrollTop = 0; this.setState({ wa: 'intro', catOpen: false, confirmReplace: false }); };
+  startConnect = () => {
+    this.clearTimers();
+    this.setState({ wa: 'connecting' });
+    this.later(2600, () => {
+      const r = this.props.waResult ?? 'Success · catalog';
+      if (r.startsWith('Success')) this.setState({ wa: 'success', waStatus: 'connected', waCatalog: r !== 'Success · no catalog' });
+      else if (r === 'Number already connected') this.setState({ wa: 'inUse' });
+      else this.setState({ wa: 'error', waErr: r });
+    });
+  };
+  takeFile(f) { if (!f) return; this.setState({ fileName: f.name, drag: false, step: 'processing' }); this.startProcessing(); }
+  renderVals() {
+    const s = this.state;
+    const c = COUNTRIES[s.cc];
+    const frame = (this.props.viewport ?? 'Auto') === 'Mobile frame';
+    const narrow = frame || s.w < 600;
+    const wide = s.step === 'processing' || s.step === 'ready';
+    const isDash = s.step === 'dash';
+    const wash = 'radial-gradient(55% 45% at 0% 0%,#FFE9EF 0%,rgba(255,233,239,0) 100%),radial-gradient(50% 50% at 100% 100%,#F1E6FF 0%,rgba(241,230,255,0) 100%),#fff';
+    const stickL = frame || narrow ? { stick: 'sticky', stickSh: '0 -12px 16px -12px rgba(26,8,21,.12)', aiTop: '48px' } : { stick: 'static', stickSh: 'none', aiTop: '28px' };
+    const dashL = {};
+    const fullCard = { cardW: '100%', cardMinH: '100%', cardBd: '0', cardRadius: '0', cardShadow: 'none', spacer: '1', headTop: '36px', stAlign: 'stretch', stPad: '0', previewH: '240px', dashPadX: '20px', dashPad: '20px 20px 40px' };
+    const L = frame ? {
+      pageBg: isDash ? '#fff' : wash, pageAlign: 'center', pagePad: '32px 16px', devW: '390px', devH: '844px', devMinH: '0', devRadius: '44px', devBd: '1px solid #E3CBD4',
+      devShadow: '0 30px 80px -40px rgba(26,8,21,.35)', devOv: 'auto', devBg: '#fff', ...fullCard, cardPad: '56px 20px 34px',
+    } : narrow ? {
+      pageBg: '#fff', pageAlign: 'stretch', pagePad: '0', devW: '100%', devH: 'auto', devMinH: '100dvh', devRadius: '0', devBd: '0', devShadow: 'none', devOv: 'visible', devBg: '#fff',
+      ...fullCard, cardPad: '20px 20px calc(20px + env(safe-area-inset-bottom))',
+    } : {
+      pageBg: isDash ? '#fff' : wash, pageAlign: 'stretch', pagePad: '0', devW: '100%', devH: 'auto', devMinH: '100vh', devRadius: '0', devBd: '0', devShadow: 'none', devOv: 'visible', devBg: 'transparent',
+      cardW: wide ? '540px' : '448px', cardMinH: s.step === 'verified' ? '420px' : 'auto', cardBd: '1px solid #ECD9E0', cardRadius: '24px',
+      cardShadow: '0 1px 2px rgba(26,8,21,.04), 0 30px 80px -40px rgba(138,32,64,.28)', cardPad: '40px', spacer: '0', headTop: '32px',
+      stAlign: 'center', stPad: '64px 24px', previewH: '260px', dashPadX: '28px', dashPad: '28px 32px 48px',
+    };
+    Object.assign(L, dashL, stickL);
+    const overlay = !!s.wa || s.confirmDisc;
+    L.devTf = frame ? 'translateZ(0)' : 'none';
+    if (frame && overlay) L.devOv = 'hidden';
+    L.drawerW = narrow ? '100%' : '460px';
+    L.secTop = narrow ? '97px' : '0px';
+    const ring = (err, foc, busy) => err ? { bd: '#B4233B', ring: '0 0 0 4px rgba(180,35,59,.12)', bg: '#fff', op: 1 }
+      : foc && !busy ? { bd: '#FF5577', ring: '0 0 0 4px rgba(255,85,119,.14)', bg: '#fff', op: 1 }
+      : { bd: '#E3CBD4', ring: 'none', bg: busy ? '#FBF3F8' : '#fff', op: busy ? 0.7 : 1 };
+    const spin = (k) => React.createElement('span', { key: k, style: { width: 18, height: 18, borderRadius: '50%', border: '2px solid rgba(255,255,255,.35)', borderTopColor: '#fff', animation: 'lo-spin .8s linear infinite', display: 'block' } });
+
+    const groups = fmt(s.num || '501234567', c.groups).split(' ');
+    const masked = c.dial + ' ' + groups.map((g, i) => (i === 0 || i === groups.length - 1) ? g : 'X'.repeat(g.length)).join(' ');
+    const remain = Math.max(0, Math.ceil((s.resendAt - s.now) / 1000));
+    const expired = s.otpErr === 'expired';
+    const activeIdx = Math.min(s.digits.length, 5);
+    const boxes = Array.from({ length: 6 }, (_, i) => {
+      const ch = s.digits[i] || '';
+      const active = s.otpFocused && !s.verifying && i === activeIdx && !expired;
+      const err = s.otpErr === 'incorrect';
+      return { ch, caret: active && !ch, bd: err ? '#B4233B' : active ? '#FF5577' : ch ? '#D9BFCB' : '#E3CBD4', ring: err ? '0 0 0 3px rgba(180,35,59,.10)' : active ? '0 0 0 4px rgba(255,85,119,.14)' : 'none', bg: err ? '#FFF7F8' : expired ? '#FBF3F8' : '#fff' };
+    });
+    const otpMsg = s.otpErr === 'incorrect' ? { show: true, fg: '#B4233B', text: "That code isn't correct. Check the latest WhatsApp message and try again." }
+      : expired ? { show: true, fg: '#B4233B', text: 'This code has expired. Request a new one.' }
+      : s.note ? { show: true, fg: '#16704A', text: s.note } : { show: false };
+
+    let left = s.shown;
+    const liveGroups = s.phase >= 2 ? MENU.map(g => { const k = Math.min(left, g.items.length); left -= k; return { cat: g.cat, items: g.items.slice(0, k).map(([n, p]) => { const idx = MENU.slice(0, MENU.indexOf(g)).reduce((a, x) => a + x.items.length, 0) + g.items.findIndex(x => x[0] === n); return { n, price: aed(p), bg: s.phase === 2 && idx >= s.shown - 1 ? '#FDEAF2' : 'transparent' }; }) }; }).filter(g => g.items.length) : [];
+    const pulse = React.createElement('span', { key: 'pl', style: { width: 12, height: 12, borderRadius: '50%', background: 'linear-gradient(135deg,#FF5577,#C93DFF)', animation: 'lo-pulse 1.1s ease-in-out infinite', display: 'block' } });
+
+    const ce = React.createElement;
+    const star = (k, sz, st) => ce('svg', { key: k, width: sz, height: sz, viewBox: '0 0 16 16', style: { position: 'absolute', ...st } }, ce('path', { d: 'M8 0c.6 4.2 3.8 7.4 8 8-4.2.6-7.4 3.8-8 8-.6-4.2-3.8-7.4-8-8 4.2-.6 7.4-3.8 8-8z', fill: 'url(#gAI)' }));
+    const aiLogo = ce('div', { key: 'ai', style: { position: 'relative', width: 168, height: 168, display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+      ce('svg', { key: 'defs', width: 0, height: 0, style: { position: 'absolute' } }, ce('defs', null, ce('linearGradient', { id: 'gAI', x1: 0, y1: 0, x2: 1, y2: 1 }, ce('stop', { offset: 0, stopColor: '#FF5577' }), ce('stop', { offset: 1, stopColor: '#C93DFF' })))),
+      ce('div', { key: 'glow', style: { position: 'absolute', inset: 22, borderRadius: '50%', background: 'radial-gradient(circle,rgba(255,85,119,.45),rgba(201,61,255,.25) 55%,rgba(201,61,255,0) 72%)', filter: 'blur(10px)', animation: 'lo-breathe 2.4s ease-in-out infinite' } }),
+      ce('div', { key: 'track', style: { position: 'absolute', inset: 6, borderRadius: '50%', border: '1px solid #F0E4E8' } }),
+      ce('div', { key: 'ring', style: { position: 'absolute', inset: 6, borderRadius: '50%', background: 'conic-gradient(from 0deg,rgba(255,85,119,0),#FF5577 40%,#C93DFF 70%,rgba(201,61,255,0) 72%)', WebkitMask: 'radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px))', mask: 'radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px))', animation: 'lo-rot 1.8s linear infinite' } }),
+      ce('div', { key: 'core', style: { position: 'relative', width: 96, height: 96, borderRadius: 28, background: '#fff', boxShadow: '0 18px 40px -18px rgba(138,32,64,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'lo-bob 2.4s ease-in-out infinite' } },
+        ce('svg', { width: 62, height: 62, viewBox: '0 0 100 100', fill: 'none' },
+          ce('path', { d: 'M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z', stroke: '#F3E6EC', strokeWidth: 8, strokeLinejoin: 'round' }),
+          ce('path', { d: 'M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z', stroke: 'url(#gAI)', strokeWidth: 8, strokeLinejoin: 'round', strokeLinecap: 'round', pathLength: 100, strokeDasharray: 100, style: { animation: 'lo-draw 2.6s ease-in-out infinite' } }),
+          ce('path', { d: 'M28 30V66H40', stroke: '#1A0815', strokeWidth: 10, strokeLinecap: 'round', strokeLinejoin: 'round' }),
+          ce('circle', { cx: 64, cy: 55, r: 11, stroke: 'url(#gAI)', strokeWidth: 10, style: { transformOrigin: '64px 55px', animation: 'lo-breathe 1.2s ease-in-out infinite' } }))),
+      ce('div', { key: 'orb', style: { position: 'absolute', left: '50%', top: '50%', width: 0, height: 0, animation: 'lo-orbit 3.2s linear infinite' } }, star('o1', 14, { left: -7, top: -7 })),
+      star('s1', 16, { right: 14, top: 18, animation: 'lo-twinkle 1.6s ease-in-out infinite' }),
+      star('s2', 10, { left: 20, bottom: 26, animation: 'lo-twinkle 1.6s ease-in-out .6s infinite' }),
+      star('s3', 8, { left: 30, top: 24, animation: 'lo-twinkle 1.6s ease-in-out 1.1s infinite' }));
+    const shimmer = ce('span', { key: 'shm', style: { background: 'linear-gradient(90deg,#1A0815 0%,#1A0815 35%,#FF5577 45%,#C93DFF 55%,#1A0815 65%,#1A0815 100%)', backgroundSize: '200% 100%', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', animation: 'lo-shimmer 1.8s linear infinite' } }, PHASES[Math.min(s.phase, 3)]);
+    const priceOf = (n, p) => s.edits[n] ?? String(p);
+    const flagN = Object.values(s.flags).filter(Boolean).length;
+    const review = MENU.map((g, gi) => { const open = !!s.open[g.cat]; const fl = g.items.filter(([n]) => s.flags[n]).length; return {
+      cat: g.cat, label: `${g.items.length} items`, open, rot: open ? '180deg' : '0deg', bt: gi ? '1px solid #F0E4E8' : '0', flagged: fl > 0, flagLabel: fl === 1 ? '1 to check' : `${fl} to check`,
+      toggle: () => this.setState(st => ({ open: { ...st.open, [g.cat]: !st.open[g.cat] } })),
+      items: g.items.map(([n, p]) => { const f = !!s.flags[n]; return { n, price: priceOf(n, p), flag: f, bd: f ? '#F2B45C' : '#ECD9E0', bg: f ? '#FFF9F0' : '#fff',
+        onPrice: (e) => { const v = e.target.value.replace(/[^\d.]/g, ''); this.setState(st => ({ edits: { ...st.edits, [n]: v }, flags: { ...st.flags, [n]: false } })); },
+        ok: () => this.setState(st => ({ flags: { ...st.flags, [n]: false } })) }; }) }; });
+    const waOn = s.waStatus === 'connected';
+    const setupItems = [['Restaurant created', true], ['Menu added', s.menuDone], [waOn ? 'WhatsApp connected' : 'Connect WhatsApp', waOn, this.openWA], ['Set delivery & order settings', false], ['Test Lumia', false]];
+    const M = s.menuSrc === 'wa' ? WA_CAT : MENU;
+    const ar = s.lang === 'ar';
+    const T = ar ? T_AR : T_EN;
+    const qRaw = s.q.trim(), q = qRaw.toLowerCase();
+    const match = (n) => n.toLowerCase().includes(q) || (AR[n] || '').includes(qRaw);
+    const catName = (c) => ar ? (CAT_AR[c] || c) : c;
+    const sections = M.filter(g => q || s.cat === 'All' || g.cat === s.cat).map(g => {
+      const its = g.items.filter(([n]) => !q || match(n));
+      const soldN = its.filter(([n]) => s.sold[n]).length;
+      return { name: catName(g.cat), alt: ar ? g.cat : (CAT_AR[g.cat] || ''), meta: its.length + ' ' + T.items + (soldN ? ' · ' + soldN + ' ' + T.soldOut : ''),
+        items: its.map(([n, p], i) => { const on = !s.sold[n]; const arN = AR[n]; const alt = ar ? (arN ? n : null) : (arN || null);
+          return { main: ar ? (arN || n) : n, alt, hasAlt: !!alt, noAlt: !alt, on, sold: !on, price: aed(s.edits[n] ?? String(p)), bt: i ? '1px solid #F3EEF1' : '0', nameFg: on ? '#1A0815' : '#8A5A6E', tBg: on ? 'linear-gradient(90deg,#FF5577,#C93DFF)' : '#EAD9E1', knob: on ? (ar ? '-20px' : '20px') : '0px', toggle: () => this.setState(st => ({ sold: { ...st.sold, [n]: !st.sold[n] } })) }; }) };
+    }).filter(g => g.items.length);
+    const mkLang = (short) => [['en', 'EN'], ['ar', short ? 'ع' : 'العربية']].map(([k, label]) => { const on = s.lang === k; return { label, on, fw: on ? 600 : 500, bg: on ? '#fff' : 'transparent', fg: on ? '#1A0815' : '#8A5A6E', sh: on ? '0 1px 2px rgba(26,8,21,.12)' : 'none', pick: () => this.setState({ lang: k }) }; });
+    const nmNow = s.name.trim() || 'Burger House';
+    const ch = { name: 'lumia', logo: s.logo ? 'lumia' : 'wa', address: 'wa', ...s.choices };
+    const pickC = (k, v) => this.setState(st => ({ choices: { ...st.choices, [k]: v } }));
+    const diffs = [
+      ['name', 'Restaurant name', nmNow, WA.name],
+      ['logo', 'Logo', s.logo ? 'Your uploaded logo' : 'No logo', 'WhatsApp profile photo'],
+      ['address', 'Address', s.address || 'Not set', WA.address],
+    ];
+    const apply = (c) => this.setState(st => ({ name: c.name === 'wa' ? WA.name : st.name, address: c.address === 'wa' ? WA.address : st.address, wa: 'catalog', catOpen: false }));
+    const doneN = setupItems.filter(x => x[1]).length;
+    const nm = s.name.trim() || 'Burger House';
+    const initials = nm.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+
+    return {
+      L, isFlow: !isDash, canBack: ['otp', 'name', 'menu'].includes(s.step),
+      is: { phone: s.step === 'phone', otp: s.step === 'otp', verified: s.step === 'verified', name: s.step === 'name', menu: s.step === 'menu', processing: s.step === 'processing', ready: s.step === 'ready', dash: isDash },
+      back: () => { const prev = { otp: 'phone', name: 'phone', menu: 'name' }[s.step]; this.clearTimers(); this.setState({ verifying: false }); this.go(prev); },
+      devRef: this.devRef, noop: (e) => e && e.preventDefault && e.preventDefault(),
+      // phone
+      cc: c, phoneRef: this.phoneRef, sending: s.sending, ccOpen: s.ccOpen,
+      pf: ring(s.invalid, s.focused, s.sending),
+      phoneDisplay: fmt(s.num, c.groups), phoneValid: c.re.test(s.num) && !s.sending,
+      phoneInvalid: s.invalid, phoneHint: !s.invalid,
+      phoneInvalidMsg: s.num ? `Enter a valid ${c.label} mobile number, e.g. ${c.ex}` : 'Enter your mobile number to continue',
+      spinnerSend: s.sending ? spin('s1') : null, sendLabel: s.sending ? 'Sending code…' : 'Continue',
+      countries: COUNTRIES.map((x, i) => ({ ...x, bg: i === s.cc ? '#FDEAF2' : 'transparent', pick: () => { this.setState({ cc: i, ccOpen: false, num: s.num.slice(0, x.len), invalid: false }); this.focus(this.phoneRef); } })),
+      toggleCC: () => this.setState({ ccOpen: !s.ccOpen }),
+      onPhone: (e) => { let d = e.target.value.replace(/\D/g, ''); if (d.startsWith('0')) d = d.slice(1); this.setState({ num: d.slice(0, c.len), invalid: false }); },
+      phoneFocus: () => this.setState({ focused: true, ccOpen: false }), phoneBlur: () => this.setState({ focused: false }),
+      sendCode: this.sendCode,
+      // otp
+      masked, boxes, otpRef: this.otpRef, digits: s.digits, verifying: s.verifying, otpMsg,
+      otpOp: s.verifying || expired ? 0.55 : 1,
+      focusOtp: () => this.otpRef.current && this.otpRef.current.focus(),
+      onOtp: (e) => { const d = e.target.value.replace(/\D/g, '').slice(0, 6); this.setState({ digits: d, otpErr: expired ? 'expired' : null, note: null }); if (d.length === 6 && !expired) this.verify(d); },
+      otpFocus: () => this.setState({ otpFocused: true }), otpBlur: () => this.setState({ otpFocused: false }),
+      verifyNow: () => this.verify(s.digits),
+      verifyDisabled: s.digits.length < 6 || s.verifying || expired, verifyOp: (s.digits.length < 6 || expired) && !s.verifying ? 0.45 : 1,
+      spinnerVerify: s.verifying ? spin('s2') : null, verifyLabel: s.verifying ? 'Verifying…' : 'Verify',
+      resendDisabled: remain > 0 && !expired, resendFg: remain > 0 && !expired ? '#8A5A6E' : '#1A0815',
+      resendLabel: remain > 0 && !expired ? `Resend code in 0:${String(remain).padStart(2, '0')}` : 'Resend code',
+      resend: () => { this.setState({ digits: '', otpErr: null, resendAt: Date.now() + 30000, now: Date.now(), note: 'New code sent to your WhatsApp.' }); this.focus(this.otpRef); },
+      sms: () => { this.setState({ digits: '', otpErr: null, resendAt: Date.now() + 30000, now: Date.now(), note: `Code sent by SMS to ${masked}.` }); this.focus(this.otpRef); },
+      changeNumber: () => { this.clearTimers(); this.setState({ verifying: false }); this.go('phone'); },
+      // name
+      nameRef: this.nameRef, name: s.name, nameErr: s.nameErr, nf: ring(s.nameErr, s.nameFocused, false),
+      onName: (e) => this.setState({ name: e.target.value, nameErr: false }),
+      nameFocus: () => this.setState({ nameFocused: true }), nameBlur: () => this.setState({ nameFocused: false }),
+      submitName: (e) => { e.preventDefault(); if (!s.name.trim()) { this.setState({ nameErr: true }); this.focus(this.nameRef); return; } this.go('menu'); },
+      logo: s.logo, noLogo: !s.logo, logoImg: s.logo ? React.createElement('img', { key: 'lg', src: s.logo, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }) : null, logoBtn: s.logo ? 'Change logo' : 'Upload logo', logoTile: { bd: s.logo ? 'transparent' : '#E3CBD4' },
+      onLogo: (e) => { const f = e.target.files && e.target.files[0]; if (f) this.setState({ logo: URL.createObjectURL(f) }); },
+      initials, nameOrDefault: nm,
+      // menu
+      dz: s.drag ? { bd: '#FF5577', bg: '#FFF5F8' } : { bd: '#E3CBD4', bg: '#FFFBFC' },
+      dragOver: (e) => { e.preventDefault(); if (!s.drag) this.setState({ drag: true }); },
+      dragLeave: () => this.setState({ drag: false }),
+      drop: (e) => { e.preventDefault(); this.takeFile(e.dataTransfer.files && e.dataTransfer.files[0]); },
+      onMenuFile: (e) => this.takeFile(e.target.files && e.target.files[0]),
+      manual: () => this.go('dash', { menuDone: false, cat: 'All' }),
+      noMenu: () => this.go('dash', { menuDone: false, cat: 'All' }),
+      // processing
+      fileName: s.fileName, pulse, aiLogo, shimmer,
+      phases: PHASES.map((label, i) => ({ label, done: i < s.phase, active: i === s.phase, pending: i > s.phase, fg: i > s.phase ? '#8A5A6E' : '#1A0815', fw: i === s.phase ? 600 : 400, plain: i !== s.phase })),
+      noItemsYet: s.phase < 2 || s.shown === 0, liveGroups,
+      shownLabel: s.phase < 2 ? '—' : `${s.shown} ${s.shown === 1 ? 'item' : 'items'}`,
+      // ready
+      totalItems: s.step === 'dash' ? count(M) : TOTAL, totalCats: s.step === 'dash' ? M.length : MENU.length,
+      dir: ar ? 'rtl' : 'ltr', t: T, langs: mkLang(false), langsShort: mkLang(true),
+      menuMeta: count(M) + ' ' + T.items + ' · ' + M.length + ' ' + T.categories,
+      q: s.q, hasQ: !!s.q, onSearch: (e) => this.setState({ q: e.target.value }), clearSearch: () => this.setState({ q: '' }),
+      sections, noResults: sections.length === 0,
+      cats: [['All', T.all, count(M)], ...M.map(g => [g.cat, catName(g.cat), g.items.length])].map(([k, label, n]) => { const on = !q && s.cat === k; return { label, count: n, on, pick: () => this.setState({ cat: k, q: '' }), bg: on ? '#FDEAF2' : 'transparent', fg: on ? '#8A2040' : '#3D1C31', fw: on ? 600 : 400, countFg: on ? '#8A2040' : '#8A5A6E', chipBg: on ? '#1A0815' : '#fff', chipFg: on ? '#fff' : '#3D1C31', chipBd: on ? '#1A0815' : '#ECD9E0' }; }),
+      // whatsapp
+      pageMenu: s.page === 'Menu', pageWA: s.page === 'WhatsApp',
+      waOpen: !!s.wa, wa: { intro: s.wa === 'intro', connecting: s.wa === 'connecting', success: s.wa === 'success', import: s.wa === 'import', review: s.wa === 'review', catalog: s.wa === 'catalog', error: s.wa === 'error', inUse: s.wa === 'inUse' },
+      waLabel: { intro: '08 WhatsApp · Connect', connecting: '08a WhatsApp · Connecting', success: '08b WhatsApp · Connected', import: '08c WhatsApp · Import info', review: '08d WhatsApp · Review differences', catalog: '08e WhatsApp · Catalog found', error: '08g WhatsApp · Error', inUse: '08h WhatsApp · Number in use' }[s.wa] || '08 WhatsApp',
+      waClose: () => { this.clearTimers(); this.setState({ wa: null, confirmReplace: false }); },
+      openWA: this.openWA, startConnect: this.startConnect, continueSetup: () => { if (!waOn) this.openWA(); },
+      cancelConnect: () => { this.clearTimers(); this.setState({ wa: 'intro' }); },
+      waRing: ce('div', { key: 'war', style: { position: 'absolute', inset: 0, borderRadius: '50%', background: 'conic-gradient(from 0deg,rgba(255,85,119,0),#FF5577 40%,#C93DFF 70%,rgba(201,61,255,0) 72%)', WebkitMask: 'radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px))', mask: 'radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px))', animation: 'lo-rot 1.4s linear infinite' } }),
+      waSteps: ['Sign in with Meta', 'Select your business', 'Choose your WhatsApp number', 'Approve Lumia access'].map((label, i) => ({ n: i + 1, label })),
+      waCatalog: s.waCatalog, waNoCatalog: !s.waCatalog, waName: WA.name, waPhone: WA.phone, waInitials: 'BH',
+      successContinue: () => this.setState({ wa: s.waCatalog ? 'import' : null }),
+      manageConnection: () => this.setState({ wa: null, page: 'WhatsApp' }),
+      waImport: [
+        { label: 'Logo', value: 'Profile photo', isLogo: true, tag: s.logo ? 'Different' : 'New' },
+        { label: 'Business name', value: WA.name, tag: nmNow === WA.name ? '' : 'Different' },
+        { label: 'Phone', value: WA.phone, tag: '' },
+        { label: 'Address', value: WA.address, tag: s.address ? '' : 'New' },
+        { label: 'Catalog', value: `${count(WA_CAT)} products found`, tag: '' },
+      ].map((r, i) => ({ ...r, bt: i ? '1px solid #F3EEF1' : '0', tagBg: r.tag === 'New' ? '#E4F4EC' : '#FFF4E5', tagFg: r.tag === 'New' ? '#16704A' : '#8A4B00' })),
+      useAll: () => apply({ name: 'wa', logo: 'wa', address: 'wa' }),
+      toReview: () => this.setState({ wa: 'review' }), toImport: () => this.setState({ wa: 'import' }),
+      waDiffs: diffs.map(([k, label, lv, wv]) => ({ label, opts: [['lumia', 'Keep Lumia version', lv], ['wa', 'Use WhatsApp version', wv]].map(([v, src, value]) => { const on = ch[k] === v; return { src, value, on, bd: on ? '#FF5577' : '#ECD9E0', bg: on ? '#FFF5F8' : '#fff', dotBd: on ? '5px solid #FF5577' : '1.5px solid #D9BFCB', fg: value === 'Not set' || value === 'No logo' ? '#8A5A6E' : '#1A0815', pick: () => pickC(k, v) }; }) })),
+      saveChoices: () => apply(ch),
+      lumiaItems: count(MENU), lumiaCats: MENU.length, catOpen: s.catOpen, catBtn: s.catOpen ? 'Hide WhatsApp catalog' : 'Review WhatsApp catalog',
+      toggleCat: () => this.setState({ catOpen: !s.catOpen }),
+      waCatList: WA_CAT.map((g, i) => ({ cat: g.cat, label: `${g.items.length} products`, sample: g.items.slice(0, 4).map(x => x[0]).join(', ') + (g.items.length > 4 ? '…' : ''), bt: i ? '1px solid #F3EEF1' : '0' })),
+      askReplace: () => this.setState({ confirmReplace: true }), cancelReplace: () => this.setState({ confirmReplace: false }),
+      useCatalog: () => this.setState({ menuSrc: 'wa', menuDone: true, wa: null, confirmReplace: false, cat: 'All', page: 'Menu' }),
+      waFinish: () => this.setState({ wa: null }),
+      waErrText: WA_ERR[s.waErr] || WA_ERR['Business unavailable'],
+      waIsConnected: waOn, waIsDisconnected: s.waStatus === 'disconnected', waIsNone: s.waStatus === 'none',
+      waPagePhone: s.waStatus === 'none' ? 'Not connected yet' : WA.phone,
+      waStat: waOn ? { label: 'Connected', fg: '#16704A', dot: '#25D366', ring: '#25D366' } : s.waStatus === 'disconnected' ? { label: 'Disconnected', fg: '#3D1C31', dot: 'transparent', ring: '#8A5A6E' } : { label: 'Not connected', fg: '#3D1C31', dot: 'transparent', ring: '#B79AA6' },
+      waToday: [['Messages received', 36], ['AI replies', 29], ['Orders created', 8]].map(([label, v], i) => ({ label, v, bt: i ? '1px solid #EFE3E9' : '0' })),
+      confirmDisc: s.confirmDisc,
+      askDisconnect: () => this.setState({ confirmDisc: true }), cancelDisconnect: () => this.setState({ confirmDisc: false }),
+      doDisconnect: () => this.setState({ confirmDisc: false, waStatus: 'disconnected' }),
+      reconnect: () => { this.openWA(); this.startConnect(); },
+      review, hasFlags: flagN > 0, confirmOp: flagN > 0 ? 0.45 : 1,
+      flagMsg: flagN === 1 ? '1 price needs a quick check before you confirm.' : `${flagN} prices need a quick check before you confirm.`,
+      confirmMenu: () => { if (flagN) return; this.go('dash', { menuDone: true, cat: 'All' }); },
+      catSummary: MENU.map((g, i) => ({ cat: g.cat, label: `${g.items.length} items`, bt: i ? '1px solid #F0E4E8' : '0' })),
+      openLumia: () => this.go('dash', { menuDone: true, cat: 'All' }),
+      // dash
+      menuDone: s.menuDone, menuEmpty: !s.menuDone,
+      toMenuUpload: () => this.go('menu'),
+      dashNarrow: narrow, dashWide: !narrow,
+      nav: [['Orders', 'M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0'], ['Menu', 'M5 4.5h10M5 10h10M5 15.5h6'], ['WhatsApp', 'M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z'], ['Customers', 'M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5'], ['Delivery', 'M10 17s-5.5-4.6-5.5-9a5.5 5.5 0 0 1 11 0c0 4.4-5.5 9-5.5 9zM10 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z'], ['Settings', 'M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4']].map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e) => { e && e.preventDefault && e.preventDefault(); if (l === 'Menu' || l === 'WhatsApp') this.setState({ page: l }); }, fg: on ? '#8A2040' : '#3D1C31', fw: on ? 600 : 400, bg: on ? '#FDEAF2' : 'transparent', bd: on ? '#FF5577' : 'transparent' }; }),
+      setup: setupItems.map(([label0, done, fn], i) => { const lb = T.setup[i]; const label = Array.isArray(lb) ? lb[done ? 1 : 0] : lb; return { label, done, todo: !done, fg: done ? '#1A0815' : '#3D1C31', ul: !done && fn ? 'underline' : 'none', pick: fn || this.noopFn, bar: i < doneN ? '#16704A' : 'rgba(26,8,21,.12)' }; }),
+      setupLabel: ar ? `${doneN} من 5 مكتملة` : `${doneN} of 5 completed`, waSetupLabel: `${doneN} of 5 completed`,
+      chips: [{ cat: 'All', count: count(M) }, ...M.map(g => ({ cat: g.cat, count: g.items.length }))].map(x => { const on = x.cat === s.cat; return { ...x, bg: on ? '#1A0815' : '#fff', fg: on ? '#fff' : '#3D1C31', bd: on ? '#1A0815' : '#ECD9E0', pick: () => this.setState({ cat: x.cat }) }; }),
+      dashGroups: M.filter(g => s.cat === 'All' || g.cat === s.cat).map(g => ({ cat: g.cat, label: `${g.items.length} items`, items: g.items.map(([n, p], i) => { const on = !s.sold[n]; return { n, on, price: aed(priceOf(n, p)), bt: '1px solid #EFE3E9', status: on ? 'Available' : 'Sold out', statusFg: on ? '#16704A' : '#8A5A6E', nameFg: on ? '#1A0815' : '#8A5A6E', tBg: on ? 'linear-gradient(90deg,#FF5577,#C93DFF)' : '#EAD9E1', knob: on ? '22px' : '0px', toggle: () => this.setState(st => ({ sold: { ...st.sold, [n]: !st.sold[n] } })) }; }) })),
+    };
+  }
+}
+</script>
+</body>
+</html>

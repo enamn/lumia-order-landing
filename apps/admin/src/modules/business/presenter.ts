@@ -1,0 +1,3 @@
+import type { getBusiness } from "./service";
+import type { BusinessProfile } from "./validators";
+export function toProfile(b: Awaited<ReturnType<typeof getBusiness>>): BusinessProfile { const location = b.locations[0]; return { revision: b.revision, name: b.name, nameAr: b.nameAr ?? "", phone: b.phone ?? "", email: b.email ?? "", vatRegistered: b.vatRegistered, taxRegistrationNumber: b.taxRegistrationNumber ?? "", location: { id: location.id, name: location.name, addressLine1: location.addressLine1, city: location.city, emirate: location.emirate, hours: location.hours.map(h => ({ dayOfWeek: h.dayOfWeek, isClosed: h.isClosed, openTime: h.openTime, closeTime: h.closeTime })) } }; }

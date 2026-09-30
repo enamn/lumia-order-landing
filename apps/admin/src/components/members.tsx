@@ -1,0 +1,11 @@
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+type Member = { id: string; role: string; status: string; user: { name: string; phoneNumber: string } };
+export function Members({ businessId, initial, owner }: { businessId: string; initial: Member[]; owner: boolean }) {
+ const [error, setError] = useState(""); const [busy, setBusy] = useState(false); const [success, setSuccess] = useState(""); const router = useRouter();
+ async function submit(event: React.FormEvent<HTMLFormElement>) { event.preventDefault(); setError(""); setSuccess(""); setBusy(true); const form = new FormData(event.currentTarget); try { const response = await fetch(`/api/v1/businesses/${businessId}/members`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ phoneNumber: form.get("phoneNumber"), role: form.get("role") }) }); const json = await response.json(); if (!response.ok) throw Error(json.error.message); setSuccess("Team access updated."); router.refresh(); } catch (e) { setError(e instanceof Error ? e.message : "Unable to save."); } finally { setBusy(false); } }
+ return <section className="panel form-section"><h2>Your team</h2><p className="muted">Members share access across this organization. Add an existing Lumia account or update its role.</p><div className="member-list">{initial.map(m => <div className="member-row" key={m.id}><span className="avatar">{m.user.name[0]}</span><div><strong>{m.user.name}</strong><small>{m.user.phoneNumber}</small></div><span className="pill">{m.role.toLowerCase()}</span></div>)}</div><form className="member-form" onSubmit={submit}><label>WhatsApp number<Input name="phoneNumber" type="tel" required placeholder="+971501234567"/></label><label>Role<select className="input" name="role" defaultValue="STAFF">{(owner ? ["ADMIN", "MANAGER", "STAFF", "VIEWER"] : ["MANAGER", "STAFF", "VIEWER"]).map(r => <option key={r} value={r}>{r.toLowerCase()}</option>)}</select></label><Button disabled={busy}>Update access</Button></form>{error && <p role="alert" className="error-message">{error}</p>}{success && <p role="status" className="saved">{success}</p>}</section>;
+}

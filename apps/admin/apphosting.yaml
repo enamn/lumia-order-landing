@@ -1,0 +1,41 @@
+# Firebase App Hosting config for the restaurant app (app.order.lumia.ae).
+# Create a backend from the GitHub repo with root directory "apps/admin", then create the secrets below
+# (firebase apphosting:secrets:set NAME). Plain values are safe to commit; secrets are referenced by name only.
+runConfig:
+  cpu: 1
+  memoryMiB: 1024
+  minInstances: 0
+  maxInstances: 10
+  concurrency: 80
+env:
+  # --- public addresses ---
+  - variable: APP_URL
+    value: https://app.order.lumia.ae
+  - variable: BETTER_AUTH_URL
+    value: https://app.order.lumia.ae
+  - variable: NEXT_PUBLIC_MARKETING_URL
+    value: https://order.lumia.ae
+    availability: [BUILD, RUNTIME]
+  # --- Meta Embedded Signup (public ids) ---
+  - variable: NEXT_PUBLIC_META_APP_ID
+    value: "1074049208555666"
+  - variable: NEXT_PUBLIC_META_CONFIG_ID
+    value: "1069721759168496"
+  - variable: NEXT_PUBLIC_META_GRAPH_VERSION
+    value: v25.0
+  # --- lumia-order-api ---
+  - variable: LUMIA_API_URL
+    value: https://api.order.lumia.ae
+  # --- secrets (create with `firebase apphosting:secrets:set <name>`) ---
+  - variable: DATABASE_URL
+    secret: lumia-order-database-url
+    availability: [RUNTIME]
+  - variable: BETTER_AUTH_SECRET
+    secret: lumia-order-auth-secret
+    availability: [RUNTIME]
+  - variable: INTERNAL_API_KEY
+    secret: lumia-order-internal-api-key
+    availability: [RUNTIME]
+  - variable: WHATSAPP_TOKEN_ENCRYPTION_KEY
+    secret: lumia-order-token-encryption-key
+    availability: [RUNTIME]
