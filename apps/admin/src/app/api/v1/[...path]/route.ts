@@ -6,6 +6,7 @@ import { connectWhatsApp, getWhatsAppStatus, getImportInfo, applyImport, useCata
 import { createMessageTemplate } from "@/modules/whatsapp/templates";
 import { getMessageStats, listConversations } from "@/modules/messages/inbound";
 import { getConversation, sendReply } from "@/modules/messages/reply";
+import { getAiSettings, setAiSettings } from "@/modules/messages/ai";
 import { AppError } from "@/server/errors";
 import { createBusiness, getBusiness, listBusinesses, updateBusiness, updateLocation, readiness, completeOnboarding, members, setMember } from "@/modules/business/service";
 export const dynamic = "force-dynamic";
@@ -47,6 +48,10 @@ async function handle(request: Request, context: Context) {
       if (method === "POST" && subId === "catalog" && subId2 === "use" && path.length === 5) return useCatalog(userId, businessId, await jsonBody(request), requestId);
       if (method === "POST" && subId === "disconnect" && path.length === 4) return disconnectWhatsApp(userId, businessId, requestId);
       if (method === "POST" && subId === "templates" && path.length === 4) return createMessageTemplate(userId, businessId, await jsonBody(request), requestId);
+    }
+    if (section === "ai" && path.length === 3) {
+      if (method === "GET") return getAiSettings(userId, businessId);
+      if (method === "POST") return setAiSettings(userId, businessId, await jsonBody(request), requestId);
     }
     if (section === "conversations") {
       if (method === "GET" && path.length === 3) return listConversations(userId, businessId);

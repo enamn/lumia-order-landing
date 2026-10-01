@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { db } from "../src/server/db";
+import { ensureMongoIndexes } from "../scripts/mongo-indexes";
 import { encryptSecret } from "../src/server/crypto";
 import { createBusiness, setMember } from "../src/modules/business/service";
 import { recordInbound } from "../src/modules/messages/inbound";
@@ -10,6 +11,7 @@ describe.skipIf(!enabled)("replying to customers", () => {
   let owner: string, viewer: string, stranger: string, biz: string, conv: string; let calls: { path: string; body: any }[];
   const respond = (handler: (body: any) => Response) => vi.stubGlobal("fetch", vi.fn(async (url: string, init: RequestInit) => { const body = JSON.parse(String(init.body)); calls.push({ path: new URL(url).pathname, body }); return handler(body); }));
   beforeAll(async () => {
+    await ensureMongoIndexes();
     process.env.LUMIA_API_URL = "http://api.test"; process.env.INTERNAL_API_KEY = "k".repeat(32); process.env.WHATSAPP_LINK_TEST_MODE = "false"; process.env.WHATSAPP_TOKEN_ENCRYPTION_KEY = Buffer.alloc(32, 9).toString("base64");
     const mk = (n: string, i: number) => db.user.create({ data: { name: n, email: `${n}-${suffix}@test.invalid`, phoneNumber: `+97150888${String(1000 + i)}`, phoneNumberVerified: true } });
     [owner, viewer, stranger] = (await Promise.all([mk("own", 1), mk("vie", 2), mk("str", 3)])).map(u => u.id);

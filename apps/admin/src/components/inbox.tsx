@@ -1,9 +1,9 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-type Conv = { id: string; lastMessageAt: string; customer: { name: string; phone: string }; lastMessage: { direction: string; text: string; type: string } | null };
+type Conv = { id: string; needsHuman?: boolean; lastMessageAt: string; customer: { name: string; phone: string }; lastMessage: { direction: string; text: string; type: string } | null };
 type Msg = { id: string; direction: string; senderType: string; type: string; text: string; status: string; createdAt: string };
-type Thread = { id: string; customer: { name: string; phone: string }; canReply: boolean; windowEndsAt: string | null; messages: Msg[] };
+type Thread = { id: string; needsHuman?: boolean; customer: { name: string; phone: string }; canReply: boolean; windowEndsAt: string | null; messages: Msg[] };
 
 async function call(path: string, method = "GET", body?: unknown) {
   const res = await fetch(path, { method, headers: { "Content-Type": "application/json" }, ...(method !== "GET" ? { body: JSON.stringify(body ?? {}) } : {}) });
@@ -44,13 +44,13 @@ export function Inbox({ businessId, canReply }: { businessId: string; canReply: 
   return <div className="inbox panel">
     <aside className="inbox-list" aria-label="Conversations">{list.map(c => <button key={c.id} type="button" className={`inbox-row${c.id === selected ? " on" : ""}`} onClick={() => setSelected(c.id)}>
       <span className="inbox-avatar">{title(c.customer).slice(0, 1).toUpperCase()}</span>
-      <span className="inbox-meta"><b>{title(c.customer)}</b><small>{c.lastMessage ? `${c.lastMessage.direction === "OUTBOUND" ? "You: " : ""}${c.lastMessage.text || `[${c.lastMessage.type.toLowerCase()}]`}` : ""}</small></span>
+      <span className="inbox-meta"><b>{title(c.customer)}{c.needsHuman && <i className="inbox-flag">Needs you</i>}</b><small>{c.lastMessage ? `${c.lastMessage.direction === "OUTBOUND" ? "You: " : ""}${c.lastMessage.text || `[${c.lastMessage.type.toLowerCase()}]`}` : ""}</small></span>
       <time>{time(c.lastMessageAt)}</time>
     </button>)}</aside>
     <section className="inbox-thread" aria-label="Conversation">
       {!open ? <p className="muted inbox-pad">Loading…</p> : <>
-        <header><b>{title(open.customer)}</b><span className="muted">{open.customer.phone}</span></header>
-        <div className="inbox-msgs" role="log" aria-live="polite">{open.messages.map(m => <div key={m.id} className={`inbox-msg ${m.direction === "OUTBOUND" ? "out" : "in"}`}><p>{m.text || `[${m.type.toLowerCase()} message]`}</p><small>{time(m.createdAt)}{m.direction === "OUTBOUND" ? ` · ${m.status.toLowerCase()}` : ""}</small></div>)}<div ref={end}/></div>
+        <header><b>{title(open.customer)}</b><span className="muted">{open.customer.phone}</span>{open.needsHuman && <i className="inbox-flag">Needs you</i>}</header>
+        <div className="inbox-msgs" role="log" aria-live="polite">{open.messages.map(m => <div key={m.id} className={`inbox-msg ${m.direction === "OUTBOUND" ? "out" : "in"}`}><p>{m.text || `[${m.type.toLowerCase()} message]`}</p><small>{time(m.createdAt)}{m.senderType === "AI" ? " · AI" : m.direction === "OUTBOUND" ? " · You" : ""}{m.direction === "OUTBOUND" ? ` · ${m.status.toLowerCase()}` : ""}</small></div>)}<div ref={end}/></div>
         {canReply && open.canReply ? <form className="inbox-compose" onSubmit={send}>
           <textarea className="input" rows={2} maxLength={4096} value={text} onChange={e => setText(e.target.value)} placeholder="Write a reply…" aria-label="Reply" onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); e.currentTarget.form?.requestSubmit(); } }}/>
           <button className="button button-primary" disabled={sending || !text.trim()}>{sending ? "Sending…" : "Send"}</button>

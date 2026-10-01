@@ -399,6 +399,7 @@ model Conversation {
   channel String @default("WHATSAPP")
   status String @default("OPEN")
   assignedUserId String?
+  needsHuman Boolean?
   lastMessageAt DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
