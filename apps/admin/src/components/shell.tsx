@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 type BusinessOption = { id: string; name: string };
-const icons = { Orders: "M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0", Menu: "M5 4.5h10M5 10h10M5 15.5h6", Customers: "M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5", Delivery: "M10 17s-5.5-4.6-5.5-9a5.5 5.5 0 0 1 11 0c0 4.4-5.5 9-5.5 9zM10 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z", Settings: "M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4" };
+const icons = { Orders: "M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0", Menu: "M5 4.5h10M5 10h10M5 15.5h6", Messages: "M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z", Customers: "M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5", Delivery: "M10 17s-5.5-4.6-5.5-9a5.5 5.5 0 0 1 11 0c0 4.4-5.5 9-5.5 9zM10 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z", Settings: "M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4" };
 function Mark() {
   const id = useId();
   return <svg width="28" height="28" viewBox="0 0 100 100" fill="none" aria-hidden="true"><defs><linearGradient id={id} x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse"><stop stopColor="#FF5577"/><stop offset="1" stopColor="#C93DFF"/></linearGradient></defs><path d="M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z" stroke={`url(#${id})`} strokeWidth="8" strokeLinejoin="round"/><path d="M28 30V66H40" stroke="#1A0815" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/><circle cx="64" cy="55" r="11" stroke={`url(#${id})`} strokeWidth="10"/></svg>;
@@ -14,7 +14,7 @@ const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2)
 export function Shell({ children, business }: { children: React.ReactNode; business: BusinessOption & { logoUrl?: string | null; locations?: unknown }; businesses?: BusinessOption[]; user?: { name: string }; role?: string }) {
   const pathname = usePathname(); const router = useRouter(); const [error, setError] = useState("");
   const query = `?businessId=${business.id}`;
-  const nav = [["Orders", null], ["Menu", "/dashboard"], ["Customers", null], ["Delivery", null], ["Settings", "/dashboard/settings"]] as const;
+  const nav = [["Orders", null], ["Menu", "/dashboard"], ["Messages", "/dashboard/messages"], ["Customers", null], ["Delivery", null], ["Settings", "/dashboard/settings"]] as const;
   const active = (href: string | null) => href !== null && pathname === href;
   async function logout() { try { const result = await authClient.signOut(); if (result.error) throw Error(); router.push("/login"); router.refresh(); } catch { setError("Unable to sign out. Try again."); } }
   const item = ([label, href]: typeof nav[number], tab: boolean) => {

@@ -5,6 +5,7 @@ import { setLanguage } from "@/modules/auth/profile";
 import { connectWhatsApp, getWhatsAppStatus, getImportInfo, applyImport, useCatalog, disconnectWhatsApp } from "@/modules/whatsapp/link";
 import { createMessageTemplate } from "@/modules/whatsapp/templates";
 import { getMessageStats, listConversations } from "@/modules/messages/inbound";
+import { getConversation, sendReply } from "@/modules/messages/reply";
 import { AppError } from "@/server/errors";
 import { createBusiness, getBusiness, listBusinesses, updateBusiness, updateLocation, readiness, completeOnboarding, members, setMember } from "@/modules/business/service";
 export const dynamic = "force-dynamic";
@@ -47,7 +48,11 @@ async function handle(request: Request, context: Context) {
       if (method === "POST" && subId === "disconnect" && path.length === 4) return disconnectWhatsApp(userId, businessId, requestId);
       if (method === "POST" && subId === "templates" && path.length === 4) return createMessageTemplate(userId, businessId, await jsonBody(request), requestId);
     }
-    if (section === "conversations" && method === "GET" && path.length === 3) return listConversations(userId, businessId);
+    if (section === "conversations") {
+      if (method === "GET" && path.length === 3) return listConversations(userId, businessId);
+      if (method === "GET" && path.length === 4) return getConversation(userId, businessId, subId);
+      if (method === "POST" && subId2 === "messages" && path.length === 5) return sendReply(userId, businessId, subId, await jsonBody(request, 16384), requestId);
+    }
     if (section === "menu") {
       if (method === "GET" && path.length === 3) return getMenu(userId, businessId);
       if (subId === "import" && method === "POST" && path.length === 4) return extractMenu(userId, businessId, await jsonBody(request, 12 * 1048576));
