@@ -5,6 +5,7 @@ import { createBusiness, getBusiness } from "../src/modules/business/service";
 import { connectWhatsApp, getWhatsAppStatus, getImportInfo, applyImport, useCatalog, disconnectWhatsApp } from "../src/modules/whatsapp/link";
 import { decryptSecret } from "../src/server/crypto";
 import { getMenu } from "../src/modules/menu/service";
+import { createMessageTemplate } from "../src/modules/whatsapp/templates";
 const enabled = process.env.RUN_DB_TESTS === "true";
 describe.skipIf(!enabled)("WhatsApp linking", () => {
   const suffix = crypto.randomUUID(); let serial = 500;
@@ -22,7 +23,7 @@ describe.skipIf(!enabled)("WhatsApp linking", () => {
   }));
   beforeAll(async () => {
     await ensureMongoIndexes();
-    process.env.LUMIA_API_URL = "http://api.test"; process.env.INTERNAL_API_KEY = "k".repeat(32); process.env.WHATSAPP_LINK_TEST_MODE = "false";
+    process.env.LUMIA_API_URL = "http://api.test"; process.env.INTERNAL_API_KEY = "k".repeat(32); process.env.WHATSAPP_LINK_TEST_MODE = "false"; process.env.WHATSAPP_DEV_LINK = "false";
     process.env.WHATSAPP_TOKEN_ENCRYPTION_KEY = Buffer.alloc(32, 9).toString("base64");
     const mk = (name: string) => db.user.create({ data: { name, email: `${name}-${suffix}@test.invalid`, phoneNumber: `+97150888${String(serial++).padStart(4, "0")}`, phoneNumberVerified: true } });
     [owner, staff, other] = (await Promise.all(["own", "stf", "oth"].map(mk))).map(u => u.id);
@@ -47,6 +48,19 @@ describe.skipIf(!enabled)("WhatsApp linking", () => {
     await expect(connectWhatsApp(staff, a, meta, "t")).rejects.toMatchObject({ status: 403 });
     await expect(getWhatsAppStatus(other, a)).rejects.toMatchObject({ status: 404 });
     await expect(connectWhatsApp(other, a, meta, "t")).rejects.toMatchObject({ status: 404 });
+  });
+  it("creates a validated message template through the server and audits it", async () => {
+    mockApi({ "/internal/whatsapp/templates": body => {
+      expect(body.accessToken).toBe("biz-token-abc");
+      expect(body.wabaId).toBe(meta.wabaId);
+      expect(body.template).toMatchObject({ name: "lumia_order_confirmation_review_01", category: "UTILITY", language: "en_US", components: [{ type: "BODY", example: { body_text: [["Ahmad", "LO-1001"]] } }] });
+      return Response.json({ id: "template-123", status: "PENDING", category: "UTILITY" });
+    } });
+    const result = await createMessageTemplate(owner, a, { name: "lumia_order_confirmation_review_01", category: "UTILITY", language: "en_US", body: "Hi {{1}}, order {{2}} is confirmed.", examples: ["Ahmad", "LO-1001"] }, "template-request");
+    expect(result).toMatchObject({ id: "template-123", status: "PENDING", name: "lumia_order_confirmation_review_01" });
+    expect(await db.auditLog.findFirst({ where: { businessId: a, action: "whatsapp.template.created", entityId: "template-123" } })).not.toBeNull();
+    await expect(createMessageTemplate(staff, a, { name: "valid_name", body: "Hi there, your order is ready.", examples: [] }, "t")).rejects.toMatchObject({ status: 403 });
+    await expect(createMessageTemplate(owner, a, { name: "valid_name", body: "Hi {{2}}, your order is ready.", examples: ["Ahmad", "LO-1001"] }, "t")).rejects.toMatchObject({ code: "INVALID_TEMPLATE_VARIABLES" });
   });
   it("rejects a number already connected to another restaurant, and maps API failures to friendly errors", async () => {
     await expect(connectWhatsApp(other, b, meta, "t")).rejects.toMatchObject({ code: "WHATSAPP_NUMBER_IN_USE", status: 409 });
@@ -84,6 +98,13 @@ describe.skipIf(!enabled)("WhatsApp linking", () => {
     // the released number can now be linked by another restaurant
     await connectWhatsApp(other, b, meta, "t"); expect((await getWhatsAppStatus(other, b)).status).toBe("connected");
     await disconnectWhatsApp(other, b, "t"); await connectWhatsApp(owner, a, meta, "t"); expect((await getWhatsAppStatus(owner, a)).status).toBe("connected");
+  });
+  it("the dev code is refused unless dev link is on, and works (via the API) when it is", async () => {
+    await expect(connectWhatsApp(other, b, { code: "dev" }, "t")).rejects.toMatchObject({ code: "WHATSAPP_LINK_INVALID_CODE" });
+    await disconnectWhatsApp(owner, a, "t"); // free the number used by earlier tests
+    vi.stubEnv("WHATSAPP_DEV_LINK", "true"); const n = calls.length; const r = await connectWhatsApp(other, b, { code: "dev" }, "t");
+    expect(r.verifiedName).toBe("Real Name"); expect(calls[n]).toMatchObject({ url: "/internal/whatsapp/connect", body: { code: "dev", mode: "existing" } });
+    await disconnectWhatsApp(other, b, "t"); vi.stubEnv("NODE_ENV", "production"); await expect(connectWhatsApp(other, b, { code: "dev" }, "t")).rejects.toMatchObject({ code: "WHATSAPP_LINK_INVALID_CODE" }); vi.unstubAllEnvs();
   });
   it("test mode simulates a full connection without Meta, and is ignored in production", async () => {
     vi.stubEnv("WHATSAPP_LINK_TEST_MODE", "true"); const before = calls.length;

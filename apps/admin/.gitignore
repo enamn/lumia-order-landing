@@ -8,3 +8,6 @@ test-results
 *.tsbuildinfo
 
 .local
+
+# local HTTPS certificates (next dev --experimental-https)
+certificates

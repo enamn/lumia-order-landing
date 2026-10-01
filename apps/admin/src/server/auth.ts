@@ -13,5 +13,10 @@ export const auth = betterAuth({
   session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24 },
   rateLimit: { enabled: true, storage: "database", window: 60, max: 60,
     customRules: { "/whatsapp/send-code": { window: 60, max: 5 }, "/whatsapp/verify-code": { window: 60, max: 15 } } },
-  logger: { level: "error", log: (level) => { console.error(JSON.stringify({ level, code: "AUTH_ERROR" })); } },
+  logger: {
+    level: "error",
+    log: (level, message) => {
+      console.error(JSON.stringify({ level, code: "AUTH_ERROR", message }));
+    },
+  },
 });

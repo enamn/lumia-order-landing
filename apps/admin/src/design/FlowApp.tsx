@@ -15,6 +15,8 @@ export interface FlowProps {
   initialStep: "phone" | "name" | "dash";
   testMode: boolean;
   linkTestMode: boolean;
+  devLink: boolean;
+  linkMode: "existing" | "new";
   userPhone?: string;
   lang: "en" | "ar";
   business?: { id: string; name: string; logoUrl: string | null; address: string };
@@ -52,7 +54,7 @@ declare global { interface Window { FB?: any; fbAsyncInit?: () => void } }
 
 export default class FlowApp extends React.Component<FlowProps, any> {
   phoneRef = React.createRef<HTMLInputElement>(); otpRef = React.createRef<HTMLInputElement>(); nameRef = React.createRef<HTMLInputElement>(); devRef = React.createRef<HTMLDivElement>();
-  timers: any[] = []; tick: any; ro?: ResizeObserver; prevStep?: string; connectToken = 0;
+  timers: any[] = []; tick: any; statsTimer: any; ro?: ResizeObserver; prevStep?: string; connectToken = 0;
   noopFn = () => {};
   constructor(props: FlowProps) {
     super(props);
@@ -63,7 +65,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu)) > 0, cat: "All", menu: toCats(props.menu), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
       page: props.initialPage ?? "Menu", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
-      lang: props.lang, q: "", w: 1200, mounted: false, dashErr: "", dlg: { open: false } as any,
+      lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
     };
   }
   later(ms: number, fn: () => void) { const t = setTimeout(fn, ms); this.timers.push(t); return t; }
@@ -73,9 +75,11 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     window.addEventListener("resize", this.onResize); this.setState({ w: document.documentElement.clientWidth || window.innerWidth, mounted: true }); requestAnimationFrame(this.onResize);
     if (window.ResizeObserver) { this.ro = new ResizeObserver(this.onResize); this.ro.observe(document.documentElement); }
     this.tick = setInterval(() => { if (this.state.step === "otp") this.setState({ now: Date.now() }); }, 1000);
+    this.statsTimer = setInterval(() => { if (this.state.step === "dash" && this.state.page === "WhatsApp" && this.state.waStatus === "connected") this.loadStats(); }, 15000);
+    if (this.state.step === "dash" && this.state.page === "WhatsApp") this.loadStats();
     if (this.state.step === "phone") this.focus(this.phoneRef); if (this.state.step === "name") this.focus(this.nameRef);
   }
-  componentWillUnmount() { window.removeEventListener("resize", this.onResize); this.ro?.disconnect(); clearInterval(this.tick); this.clearTimers(); }
+  componentWillUnmount() { window.removeEventListener("resize", this.onResize); this.ro?.disconnect(); clearInterval(this.tick); clearInterval(this.statsTimer); this.clearTimers(); }
   componentDidUpdate() { if (this.prevStep !== this.state.step) { this.prevStep = this.state.step; if (this.devRef.current) this.devRef.current.scrollTop = 0; window.scrollTo(0, 0); } }
   focus(ref: React.RefObject<HTMLElement | null>) { setTimeout(() => ref.current?.focus(), 60); }
   go(step: string, extra: any = {}) {
@@ -89,6 +93,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const data: MenuCat[] = await api(`/api/v1/businesses/${this.state.businessId}/menu`);
     const menu = toCats(data); this.setState({ menu, menuDone: count(menu) > 0 });
   }
+  loadStats = () => { if (this.state.businessId) api(`/api/v1/businesses/${this.state.businessId}/whatsapp/stats`).then(stats => this.setState({ stats })).catch(() => undefined); };
   async refreshBusiness() {
     const b = await api(`/api/v1/businesses/${this.state.businessId}`);
     this.setState({ name: b.name, logo: b.logoUrl ?? null, address: b.locations?.[0]?.addressLine1 ?? "" });
@@ -196,28 +201,29 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       if (!document.getElementById("facebook-jssdk")) { const s = document.createElement("script"); s.id = "facebook-jssdk"; s.async = true; s.src = "https://connect.facebook.net/en_US/sdk.js"; s.onerror = () => reject(Error("We couldn’t load Meta. Check your connection and try again.")); document.body.appendChild(s); }
     });
   }
-  embeddedSignup(): Promise<{ code: string; wabaId: string; phoneNumberId: string }> {
+  // Opens Meta's popup (Facebook Login for Business with the Embedded Signup configuration). The one-time code is all we need:
+  // the API reads which WhatsApp account and number the owner shared from the token itself. If Meta also posts the ids we pass them along.
+  embeddedSignup(): Promise<{ code: string; wabaId?: string; phoneNumberId?: string }> {
     const { appId, configId } = this.props.meta;
     if (!appId || !configId) return Promise.reject(Object.assign(Error("WhatsApp linking is not available yet. Please try again later."), { code: "WHATSAPP_LINK_NOT_CONFIGURED" }));
     return this.loadFb().then(FB => new Promise((resolve, reject) => {
-      let code = "", ids: { wabaId?: string; phoneNumberId?: string } = {}, done = false;
-      const cancelled = () => Object.assign(Error("Permission was cancelled before setup finished."), { code: "CANCELLED" });
-      const finish = () => { if (done || !code || !ids.wabaId || !ids.phoneNumberId) return; done = true; window.removeEventListener("message", onMessage); resolve({ code, wabaId: ids.wabaId, phoneNumberId: ids.phoneNumberId }); };
+      let ids: { wabaId?: string; phoneNumberId?: string } = {};
       const onMessage = (ev: MessageEvent) => {
         if (!/^https:\/\/(www|web)\.facebook\.com$/.test(ev.origin)) return;
-        try { const d = JSON.parse(ev.data); if (d.type !== "WA_EMBEDDED_SIGNUP") return; if (d.event === "FINISH") { ids = { wabaId: d.data?.waba_id, phoneNumberId: d.data?.phone_number_id }; finish(); } else if (!done) { done = true; window.removeEventListener("message", onMessage); reject(cancelled()); } } catch { /* not ours */ }
+        try { const d = JSON.parse(ev.data); if (d.type === "WA_EMBEDDED_SIGNUP" && d.data?.waba_id && d.data?.phone_number_id) ids = { wabaId: String(d.data.waba_id), phoneNumberId: String(d.data.phone_number_id) }; } catch { /* not ours */ }
       };
       window.addEventListener("message", onMessage);
       FB.login((resp: any) => {
-        if (resp?.authResponse?.code) { code = resp.authResponse.code; finish(); this.later(8000, () => { if (!done) { done = true; window.removeEventListener("message", onMessage); reject(cancelled()); } }); }
-        else if (!done) { done = true; window.removeEventListener("message", onMessage); reject(cancelled()); }
-      }, { config_id: configId, response_type: "code", override_default_response_type: true, extras: { setup: {}, featureType: "", sessionInfoVersion: "3" } });
+        const finish = () => window.removeEventListener("message", onMessage);
+        if (resp?.authResponse?.code) { setTimeout(() => { finish(); resolve({ code: resp.authResponse.code, ...ids }); }, 1200); } // brief grace period for the optional ids message
+        else { finish(); reject(Object.assign(Error("Permission was cancelled before setup finished."), { code: "CANCELLED" })); }
+      }, { config_id: configId, response_type: "code", override_default_response_type: true, extras: { setup: {}, featureType: this.props.linkMode === "existing" ? "whatsapp_business_app_onboarding" : "", sessionInfoVersion: "3" } });
     }));
   }
   startConnect = async () => {
     const token = ++this.connectToken; this.clearTimers(); this.setState({ wa: "connecting", waErrText: "" });
     try {
-      const input = this.props.linkTestMode ? { code: "test" } : await this.embeddedSignup();
+      const input = this.props.linkTestMode ? { code: "test" } : this.props.devLink ? { code: "dev" } : { ...(await this.embeddedSignup()), mode: this.props.linkMode };
       const r = await api(`/api/v1/businesses/${this.state.businessId}/whatsapp/connect`, "POST", input);
       if (token !== this.connectToken) return;
       this.setState({ wa: "success", waStatus: "connected", waName: r.verifiedName, waPhone: r.displayPhoneNumber, waCatalog: r.catalogItems > 0, waInfo: null });
@@ -345,7 +351,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       q: s.q, hasQ: !!s.q, onSearch: (e: any) => this.setState({ q: e.target.value }), clearSearch: () => this.setState({ q: "" }), sections, noResults: sections.length === 0, dashErr: s.dashErr,
       cats: [["All", T.all, count(M)], ...M.map(g => [g.id, catName(g), g.items.length])].map(([k, label, n]: any) => { const on = !q && s.cat === k; return { label, count: n, on, pick: () => this.setState({ cat: k, q: "" }), bg: on ? "#FDEAF2" : "transparent", fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, countFg: on ? "#8A2040" : "#8A5A6E", chipBg: on ? "#1A0815" : "#fff", chipFg: on ? "#fff" : "#3D1C31", chipBd: on ? "#1A0815" : "#ECD9E0" }; }),
       menuDone: s.menuDone && count(M) > 0, menuEmpty: !(s.menuDone && count(M) > 0), dashNarrow: narrow, dashWide: !narrow, openAddItem: p.canEdit ? this.openAddItem : noop, dlg,
-      nav: NAV.map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e: any) => { e?.preventDefault?.(); if (l === "Menu" || l === "WhatsApp") this.setState({ page: l }); else if (l === "Settings") window.location.assign("/dashboard/settings"); else if (l === "Sign out") this.signOut(); }, fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, bg: on ? "#FDEAF2" : "transparent", bd: on ? "#FF5577" : "transparent" }; }),
+      nav: NAV.map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e: any) => { e?.preventDefault?.(); if (l === "Menu" || l === "WhatsApp") { this.setState({ page: l }); if (l === "WhatsApp") this.loadStats(); } else if (l === "Settings") window.location.assign("/dashboard/settings"); else if (l === "Sign out") this.signOut(); }, fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, bg: on ? "#FDEAF2" : "transparent", bd: on ? "#FF5577" : "transparent" }; }),
       setup: setupItems.map(([label0, done, fn], i) => { const lb = T.setup[i]; const label = Array.isArray(lb) ? lb[done ? 1 : 0] : lb; return { label, done, todo: !done, fg: done ? "#1A0815" : "#3D1C31", ul: !done && fn ? "underline" : "none", pick: fn || this.noopFn, bar: i < doneN ? "#16704A" : "rgba(26,8,21,.12)" }; }),
       setupLabel: ar ? `${doneN} من 5 مكتملة` : `${doneN} of 5 completed`, waSetupLabel: `${doneN} of 5 completed`,
       // whatsapp
@@ -356,7 +362,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       waRing: ce("div", { key: "war", style: { position: "absolute", inset: 0, borderRadius: "50%", background: "conic-gradient(from 0deg,rgba(255,85,119,0),#FF5577 40%,#C93DFF 70%,rgba(201,61,255,0) 72%)", WebkitMask: "radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px))", mask: "radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px))", animation: "lo-rot 1.4s linear infinite" } }),
       waSteps: ["Sign in with Meta", "Select your business", "Choose your WhatsApp number", "Approve Lumia access"].map((label, i) => ({ n: i + 1, label })),
       waCatalog: s.waCatalog, waNoCatalog: !s.waCatalog, waName: s.waName, waPhone: s.waPhone, waInitials,
-      successContinue: () => this.setState({ wa: s.waCatalog ? "import" : null }), manageConnection: () => this.setState({ wa: null, page: "WhatsApp" }),
+      successContinue: () => this.setState({ wa: s.waCatalog ? "import" : null }), manageConnection: () => { this.setState({ wa: null, page: "WhatsApp" }); this.loadStats(); },
       waImport, useAll: () => this.applyChoices({ name: "wa", logo: waProfile.hasLogo ? "wa" : "lumia", address: waProfile.address ? "wa" : "lumia" }), toReview: () => this.setState({ wa: "review" }), toImport: () => this.setState({ wa: "import" }),
       waDiffs: diffs.map(([k, label, lv, wv]) => ({ label, opts: [["lumia", "Keep Lumia version", lv], ["wa", "Use WhatsApp version", wv]].map(([v, src, value]) => { const on = ch[k] === v; return { src, value, on, bd: on ? "#FF5577" : "#ECD9E0", bg: on ? "#FFF5F8" : "#fff", dotBd: on ? "5px solid #FF5577" : "1.5px solid #D9BFCB", fg: value === "Not set" || value === "No logo" ? "#8A5A6E" : "#1A0815", pick: () => pickC(k, v as string) }; }) })),
       saveChoices: () => this.applyChoices(ch), lumiaItems: lumiaVals.items, lumiaCats: lumiaVals.categories, catOpen: s.catOpen, catBtn: s.catOpen ? "Hide WhatsApp catalog" : "Review WhatsApp catalog", toggleCat: () => this.setState({ catOpen: !s.catOpen }),
@@ -366,8 +372,9 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       waErrText: s.waErrText || "The business account you selected isn't available right now.",
       waIsConnected: waOn, waIsDisconnected: s.waStatus === "disconnected", waIsNone: s.waStatus === "none", waPagePhone: s.waStatus === "none" ? "Not connected yet" : s.waPhone,
       waStat: waOn ? { label: "Connected", fg: "#16704A", dot: "#25D366", ring: "#25D366" } : s.waStatus === "disconnected" ? { label: "Disconnected", fg: "#3D1C31", dot: "transparent", ring: "#8A5A6E" } : { label: "Not connected", fg: "#3D1C31", dot: "transparent", ring: "#B79AA6" },
-      waShowToday: false, waToday: [], confirmDisc: s.confirmDisc, askDisconnect: () => this.setState({ confirmDisc: true }), cancelDisconnect: () => this.setState({ confirmDisc: false }), doDisconnect: this.doDisconnect,
+      waShowToday: waOn, waToday: [["Messages received", s.stats?.messagesReceived ?? 0], ["AI replies", s.stats?.aiReplies ?? 0], ["Orders created", s.stats?.ordersCreated ?? 0]].map(([label, v], i) => ({ label, v, bt: i ? "1px solid #EFE3E9" : "0" })), confirmDisc: s.confirmDisc, askDisconnect: () => this.setState({ confirmDisc: true }), cancelDisconnect: () => this.setState({ confirmDisc: false }), doDisconnect: this.doDisconnect,
       reconnect: () => { this.openWA(); this.startConnect(); },
+      openTemplates: () => window.location.assign(`/dashboard/whatsapp/templates?businessId=${s.businessId}`),
     };
   }
   render() {

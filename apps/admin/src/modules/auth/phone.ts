@@ -14,3 +14,5 @@ export const TEST_CODE = "111111";
 export const authTestMode = () => process.env.AUTH_TEST_MODE === "true" && process.env.NODE_ENV !== "production";
 // Separate switch for the WhatsApp linking simulation, so login can be in test mode while linking talks to the real Meta.
 export const linkTestMode = () => process.env.WHATSAPP_LINK_TEST_MODE === "true" && process.env.NODE_ENV !== "production";
+// Development only: link to a WhatsApp account you own with the API server token (see lumia-order-api WHATSAPP_DEV_LINK). Never in production.
+export const devLinkMode = () => process.env.WHATSAPP_DEV_LINK === "true" && process.env.NODE_ENV !== "production";

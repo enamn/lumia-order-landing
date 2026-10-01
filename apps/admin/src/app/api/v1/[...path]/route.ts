@@ -3,6 +3,8 @@ import { getMenu, addItem, setItemAvailability } from "@/modules/menu/service";
 import { extractMenu, confirmImport } from "@/modules/menu/import";
 import { setLanguage } from "@/modules/auth/profile";
 import { connectWhatsApp, getWhatsAppStatus, getImportInfo, applyImport, useCatalog, disconnectWhatsApp } from "@/modules/whatsapp/link";
+import { createMessageTemplate } from "@/modules/whatsapp/templates";
+import { getMessageStats, listConversations } from "@/modules/messages/inbound";
 import { AppError } from "@/server/errors";
 import { createBusiness, getBusiness, listBusinesses, updateBusiness, updateLocation, readiness, completeOnboarding, members, setMember } from "@/modules/business/service";
 export const dynamic = "force-dynamic";
@@ -37,12 +39,15 @@ async function handle(request: Request, context: Context) {
     }
     if (section === "whatsapp") {
       if (method === "GET" && path.length === 3) return getWhatsAppStatus(userId, businessId);
+      if (method === "GET" && subId === "stats" && path.length === 4) return getMessageStats(userId, businessId);
       if (method === "POST" && subId === "connect" && path.length === 4) return connectWhatsApp(userId, businessId, await jsonBody(request), requestId);
       if (method === "GET" && subId === "import" && path.length === 4) return getImportInfo(userId, businessId);
       if (method === "POST" && subId === "import" && subId2 === "apply" && path.length === 5) return applyImport(userId, businessId, await jsonBody(request), requestId);
       if (method === "POST" && subId === "catalog" && subId2 === "use" && path.length === 5) return useCatalog(userId, businessId, await jsonBody(request), requestId);
       if (method === "POST" && subId === "disconnect" && path.length === 4) return disconnectWhatsApp(userId, businessId, requestId);
+      if (method === "POST" && subId === "templates" && path.length === 4) return createMessageTemplate(userId, businessId, await jsonBody(request), requestId);
     }
+    if (section === "conversations" && method === "GET" && path.length === 3) return listConversations(userId, businessId);
     if (section === "menu") {
       if (method === "GET" && path.length === 3) return getMenu(userId, businessId);
       if (subId === "import" && method === "POST" && path.length === 4) return extractMenu(userId, businessId, await jsonBody(request, 12 * 1048576));

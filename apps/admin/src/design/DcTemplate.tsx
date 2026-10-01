@@ -963,6 +963,9 @@ export function DcTemplate({ vm }: { vm: any }) {
                               </button>
                               </>
                             )}
+                            <button type="button" onClick={vm.openTemplates} style={S("align-self:flex-start;height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch4">
+                              Manage message templates
+                            </button>
                           </div>
                           {vm.waShowToday && (
                             <>

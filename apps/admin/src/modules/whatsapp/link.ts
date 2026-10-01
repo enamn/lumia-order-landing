@@ -5,13 +5,13 @@ import { authorize } from "@/server/authorization";
 import { AppError } from "@/server/errors";
 import { lumiaApi } from "@/server/lumia-api";
 import { decryptSecret, encryptSecret } from "@/server/crypto";
-import { linkTestMode } from "@/modules/auth/phone";
+import { linkTestMode, devLinkMode } from "@/modules/auth/phone";
 import { saveMenu, type SaveCategory } from "@/modules/menu/import";
 
 // Links the owner's own WhatsApp Business account (Meta Embedded Signup). Meta calls run in lumia-order-api;
 // this module authorizes, stores the encrypted token and applies imports. Nothing here sends or stores customer messages.
 const id = z.string().regex(/^\d{5,30}$/);
-export const connectSchema = z.object({ code: z.string().min(1).max(2048), wabaId: id.optional(), phoneNumberId: id.optional() }).strict();
+export const connectSchema = z.object({ code: z.string().min(1).max(2048), wabaId: id.optional(), phoneNumberId: id.optional(), mode: z.enum(["existing", "new"]).default("existing") }).strict();
 export const applySchema = z.object({ name: z.enum(["lumia", "wa"]).optional(), logo: z.enum(["lumia", "wa"]).optional(), address: z.enum(["lumia", "wa"]).optional() }).strict();
 export const catalogUseSchema = z.object({ mode: z.enum(["use", "replace"]) }).strict();
 
@@ -45,18 +45,20 @@ const linkErrors: Record<string, [string, string, number]> = {
   WHATSAPP_LINK_INVALID_CODE: ["WHATSAPP_LINK_INVALID_CODE", "Permission was cancelled before setup finished.", 400],
   WHATSAPP_LINK_PERMISSIONS_MISSING: ["WHATSAPP_LINK_PERMISSIONS_MISSING", "Permission was cancelled before setup finished.", 403],
   WHATSAPP_LINK_MISMATCH: ["WHATSAPP_LINK_MISMATCH", "The business account you selected isn't available right now.", 403],
+  WHATSAPP_LINK_CHOOSE_ONE: ["WHATSAPP_LINK_CHOOSE_ONE", "Please select exactly one WhatsApp Business account and try again.", 400],
+  WHATSAPP_LINK_NO_NUMBER: ["WHATSAPP_LINK_NO_NUMBER", "That WhatsApp Business account needs exactly one phone number. Select an account with a single number.", 400],
   WHATSAPP_LINK_NOT_CONFIGURED: ["WHATSAPP_LINK_NOT_CONFIGURED", "WhatsApp linking is not available yet. Please try again later.", 503],
 };
 
 export async function connectWhatsApp(userId: string, businessId: string, input: unknown, requestId: string) {
   const data = connectSchema.parse(input);
   await authorize(userId, businessId, "business.manage");
+  if ((data.code === "dev" && !devLinkMode()) || (data.code === "test" && !linkTestMode())) throw new AppError("WHATSAPP_LINK_INVALID_CODE", "Permission was cancelled before setup finished.", 400); // simulated codes only exist in local development modes
   let link: { accessToken: string; wabaId: string; phoneNumberId: string; displayPhoneNumber: string; verifiedName: string; permissions: string[] };
   if (data.code === "test" && linkTestMode()) {
     link = { accessToken: "test-token", wabaId: "100000000000001", phoneNumberId: `test-${businessId}`, displayPhoneNumber: TEST_PROFILE.phone, verifiedName: TEST_PROFILE.name, permissions: ["whatsapp_business_management", "whatsapp_business_messaging"] };
   } else {
-    if (!data.wabaId || !data.phoneNumberId) throw new AppError("WHATSAPP_LINK_INVALID_CODE", "Permission was cancelled before setup finished.", 400);
-    const r = await lumiaApi<typeof link>("/internal/whatsapp/connect", { code: data.code, wabaId: data.wabaId, phoneNumberId: data.phoneNumberId }, 60000);
+    const r = await lumiaApi<typeof link>("/internal/whatsapp/connect", { code: data.code, ...(data.wabaId ? { wabaId: data.wabaId } : {}), ...(data.phoneNumberId ? { phoneNumberId: data.phoneNumberId } : {}), mode: data.mode }, 60000);
     if (!r.ok) { const e = r.code ? linkErrors[r.code] : undefined; throw new AppError(e?.[0] ?? "WHATSAPP_LINK_FAILED", e?.[1] ?? "We couldn't connect WhatsApp. Please try again.", e?.[2] ?? 502); }
     link = r.data;
   }
