@@ -1,0 +1,7 @@
+# Firebase App Hosting settings for the landing site (order.lumia.ae).
+# VITE_ADMIN_URL is read at build time: Sign in -> /login and Start free -> /signup on the restaurant app.
+env:
+  - variable: VITE_ADMIN_URL
+    value: https://app.order.lumia.ae
+    availability:
+      - BUILD
