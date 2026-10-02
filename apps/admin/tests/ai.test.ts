@@ -76,6 +76,17 @@ describe.skipIf(!enabled)("AI replies", () => {
     expect(await db.message.count({ where: { conversation: { businessId: biz } } })).toBe(before + 1);
     expect(calls.some(c => c.path === "/internal/whatsapp/send")).toBe(false);
   });
+  it("a failed delivery does not flag the chat or silence later replies", async () => {
+    await db.conversation.updateMany({ where: { businessId: biz }, data: { needsHuman: false } });
+    await db.message.updateMany({ where: { senderType: "STAFF", conversation: { businessId: biz } }, data: { createdAt: new Date(Date.now() - 3600000) } });
+    calls = []; ai = { intent: "complaint", language: "en", reply: "Sorry about that, a team member will follow up.", needsHuman: true };
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init: RequestInit) => { const path = new URL(url).pathname; calls.push({ path, body: JSON.parse(String(init.body)) }); return path === "/internal/ai/reply" ? Response.json(ai) : Response.json({ error: { code: "WHATSAPP_SEND_FAILED" } }, { status: 502 }); }));
+    await inbound("my food was cold");
+    expect(calls.some(c => c.path === "/internal/whatsapp/send")).toBe(true);
+    expect((await db.conversation.findFirstOrThrow({ where: { businessId: biz } })).needsHuman).not.toBe(true); // nothing was delivered, so nothing is flagged
+    setup(); calls = []; ai = { intent: "greeting", language: "en", reply: "Hi again!", needsHuman: false }; await inbound("hello?");
+    expect(calls.some(c => c.path === "/internal/whatsapp/send")).toBe(true); // it still answers
+  });
   it("stays quiet only if it was explicitly disabled by us", async () => {
     await setAiSettings(owner, biz, { enabled: false }, "t"); await db.conversation.updateMany({ where: { businessId: biz }, data: { needsHuman: false } });
     await db.message.updateMany({ where: { senderType: "STAFF", conversation: { businessId: biz } }, data: { createdAt: new Date(Date.now() - 3600000) } });

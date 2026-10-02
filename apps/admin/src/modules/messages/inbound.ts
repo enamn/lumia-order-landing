@@ -41,7 +41,7 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
     }
   }
   // Messages are stored first and never lost; an AI failure only means no automatic reply.
-  for (const t of toAnswer) await autoReply(t).catch(() => console.error(JSON.stringify({ level: "error", code: "AI_REPLY_FAILED" })));
+  for (const t of toAnswer) await autoReply(t).catch((e: { code?: unknown }) => console.error(JSON.stringify({ level: "error", code: "AI_REPLY_FAILED", reason: typeof e?.code === "string" ? e.code : "UNKNOWN" })));
   return result;
 }
 

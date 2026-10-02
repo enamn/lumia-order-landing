@@ -81,14 +81,14 @@ export async function autoReply(t: { businessId: string; conversationId: string;
       data.draftOrder = { items: resolved.lines.map(l => ({ itemId: l.itemId, quantity: l.quantity, notes: l.notes })), fulfillment: resolved.fulfillment, address: resolved.address, shownKey: key, updatedAt: new Date().toISOString() };
     }
   }
-  if (Object.keys(data).length) await db.conversation.update({ where: { id: t.conversationId }, data: data as never });
   const reply = parts.filter(Boolean).join("\n\n");
-  if (!reply) return "skipped";
+  // Flags and the saved draft change only together with a reply that was really sent, so a failed delivery never leaves the chat stuck as "needs you".
+  if (!reply) { if (Object.keys(data).length) await db.conversation.update({ where: { id: t.conversationId }, data: data as never }); return "skipped"; }
   const messageId = await deliverText(account, conversation.customer.phone, reply);
   const at = new Date();
   await db.$transaction([
     db.message.create({ data: { conversationId: t.conversationId, externalMessageId: messageId, direction: "OUTBOUND", senderType: "AI", messageType: "TEXT", textContent: reply, status: "SENT", createdAt: at } }),
-    db.conversation.update({ where: { id: t.conversationId }, data: { lastMessageAt: at } }),
+    db.conversation.update({ where: { id: t.conversationId }, data: { ...(data as object), lastMessageAt: at } as never }),
   ]);
   return "sent";
 }
