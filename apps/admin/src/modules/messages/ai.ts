@@ -10,12 +10,14 @@ import { createOrderFromDraft } from "@/modules/orders/service";
 // The AI assistant answers customers' WhatsApp messages from the restaurant's own menu. It only replies when the owner turned it on,
 // never keeps talking once a person has taken over, and hands anything it cannot answer (orders, complaints, unknown facts) to staff.
 const HUMAN_ACTIVE_MS = 15 * 60 * 1000; const MAX_AI_PER_HOUR = 20;
-export const aiSettingsSchema = z.object({ enabled: z.boolean().optional(), instructions: z.string().trim().max(1500).optional(), tone: z.enum(["Friendly", "Professional", "Casual"]).optional() }).strict();
+export const aiSettingsSchema = z.object({ enabled: z.boolean().optional(), instructions: z.string().trim().max(1500).optional(), welcome: z.string().trim().max(600).optional(), tone: z.enum(["Friendly", "Professional", "Casual"]).optional() }).strict();
 
 const agentFor = (businessId: string) => db.aiAgent.findFirst({ where: { businessId }, orderBy: { createdAt: "asc" } });
 // The assistant is always on for a connected restaurant. Only an explicit DISABLED status (set by us, not exposed in the app) silences it.
-const isOn = (a: { status: string } | null) => a?.status !== "DISABLED";
-const view = (a: { status: string; instructions: string; tone: string } | null) => ({ enabled: isOn(a), instructions: a?.instructions ?? "", tone: a?.tone ?? "Friendly" });
+export const isOn = (a: { status: string } | null) => a?.status !== "DISABLED";
+export const agentOf = agentFor;
+const welcomeOf = (a: { configuration?: unknown } | null) => { const w = (a?.configuration as { welcome?: unknown } | null)?.welcome; return typeof w === "string" ? w : ""; };
+const view = (a: { status: string; instructions: string; tone: string; configuration?: unknown } | null) => ({ enabled: isOn(a), welcome: welcomeOf(a), instructions: a?.instructions ?? "", tone: a?.tone ?? "Friendly" });
 
 export async function getAiSettings(userId: string, businessId: string) { await authorize(userId, businessId); return view(await agentFor(businessId)); }
 
@@ -24,7 +26,7 @@ export async function setAiSettings(userId: string, businessId: string, input: u
   return transaction(async tx => {
     const { business } = await authorize(userId, businessId, "business.manage", tx);
     const existing = await tx.aiAgent.findFirst({ where: { businessId }, orderBy: { createdAt: "asc" } });
-    const fields = { status: data.enabled === false ? "DISABLED" : "ACTIVE", ...(data.instructions !== undefined ? { instructions: data.instructions } : {}), ...(data.tone ? { tone: data.tone } : {}) };
+    const fields = { status: data.enabled === false ? "DISABLED" : "ACTIVE", ...(data.welcome !== undefined ? { configuration: { ...((existing?.configuration as object | null) ?? {}), welcome: data.welcome } } : {}), ...(data.instructions !== undefined ? { instructions: data.instructions } : {}), ...(data.tone ? { tone: data.tone } : {}) };
     const agent = existing ? await tx.aiAgent.update({ where: { id: existing.id }, data: fields }) : await tx.aiAgent.create({ data: { businessId, ...fields } });
     // Instructions can hold business details, so the audit trail records only that the setting changed.
     await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "AiAgent", entityId: agent.id, action: data.enabled === false ? "ai.disabled" : "ai.settings.updated", requestId } });

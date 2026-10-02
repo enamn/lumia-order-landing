@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
 import { autoReply, replyToUnreadable, UNREADABLE_TYPES } from "./ai";
+import { sendWelcome } from "./welcome";
 
 // Messages customers send to a restaurant's linked WhatsApp number. lumia-order-api receives Meta's webhook and forwards them here;
 // we find the restaurant from the phone number ID, then keep one customer + conversation per person and one message per Meta message ID.
@@ -13,7 +14,7 @@ export const inboundSchema = z.object({ messages: z.array(z.object({
   type: z.string().min(1).max(40), textBody: z.string().max(8192).optional(), senderName: z.string().max(200).optional(),
 }).strict()).min(1).max(100) }).strict();
 
-export type InboundResult = { stored: number; duplicates: number; unmatched: number };
+export type InboundResult = { stored: number; duplicates: number; unmatched: number; welcomed?: number };
 
 export async function recordInbound(input: unknown): Promise<InboundResult> {
   const { messages } = inboundSchema.parse(input);
@@ -22,6 +23,12 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
   for (const m of messages) {
     const account = await db.whatsAppAccount.findFirst({ where: { phoneNumberId: m.phoneNumberId, status: "CONNECTED" }, select: { businessId: true, wabaId: true } });
     if (!account || (account.wabaId && m.wabaId && account.wabaId !== m.wabaId)) { result.unmatched++; continue; }
+    if (m.type === "request_welcome") {
+      // Someone just opened the chat: greet them. A failed greeting must not fail the whole batch.
+      const sent = await sendWelcome({ businessId: account.businessId, messageId: m.messageId, senderId: m.senderId, ...(m.senderName ? { senderName: m.senderName } : {}), timestamp: m.timestamp }).catch((e: { code?: unknown }) => { console.error(JSON.stringify({ level: "error", code: "WELCOME_FAILED", reason: typeof e?.code === "string" ? e.code : "UNKNOWN" })); return "skipped" as const; });
+      if (sent === "sent") result.welcomed = (result.welcomed ?? 0) + 1;
+      continue;
+    }
     const phone = `+${m.senderId}`; const at = new Date(Number(m.timestamp) * 1000);
     let pending: (typeof toAnswer)[number] | undefined;
     try {

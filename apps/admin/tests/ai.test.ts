@@ -5,7 +5,7 @@ import { encryptSecret } from "../src/server/crypto";
 import { createBusiness, setMember } from "../src/modules/business/service";
 import { recordInbound, getMessageStats, listConversations } from "../src/modules/messages/inbound";
 import { getAiSettings, setAiSettings } from "../src/modules/messages/ai";
-import { sendReply } from "../src/modules/messages/reply";
+import { sendReply, getConversation as getConversationFor } from "../src/modules/messages/reply";
 const enabled = process.env.RUN_DB_TESTS === "true";
 describe.skipIf(!enabled)("AI replies", () => {
   const suffix = crypto.randomUUID().slice(0, 8); const PNID = `5570${Date.now().toString().slice(-9)}`;
@@ -33,10 +33,10 @@ describe.skipIf(!enabled)("AI replies", () => {
   afterAll(async () => { vi.unstubAllGlobals(); await db.$disconnect(); });
 
   it("is always on without any setup, and only owners/admins can change the notes", async () => {
-    expect(await getAiSettings(owner, biz)).toEqual({ enabled: true, instructions: "", tone: "Friendly" });
+    expect(await getAiSettings(owner, biz)).toEqual({ enabled: true, welcome: "", instructions: "", tone: "Friendly" });
     await expect(setAiSettings(viewer, biz, { instructions: "x" }, "t")).rejects.toMatchObject({ status: 403 });
     await expect(setAiSettings(owner, biz, { instructions: "x", extra: 1 }, "t")).rejects.toBeDefined();
-    expect(await setAiSettings(owner, biz, { instructions: "Open until midnight." }, "t")).toEqual({ enabled: true, instructions: "Open until midnight.", tone: "Friendly" });
+    expect(await setAiSettings(owner, biz, { instructions: "Open until midnight." }, "t")).toEqual({ enabled: true, welcome: "", instructions: "Open until midnight.", tone: "Friendly" });
     const audit = await db.auditLog.findFirstOrThrow({ where: { businessId: biz, action: "ai.settings.updated" } }); expect(JSON.stringify(audit)).not.toContain("midnight");
   });
   it("answers from the menu and stores the reply as AI", async () => {
@@ -102,5 +102,37 @@ describe.skipIf(!enabled)("AI replies", () => {
     await setAiSettings(owner, biz, { enabled: false }, "t"); await db.conversation.updateMany({ where: { businessId: biz }, data: { needsHuman: false } });
     await db.message.updateMany({ where: { senderType: "STAFF", conversation: { businessId: biz } }, data: { createdAt: new Date(Date.now() - 3600000) } });
     calls = []; ai = { intent: "greeting", language: "en", reply: "Hi!", needsHuman: false }; setup(); await inbound("hello again"); expect(calls).toEqual([]);
+  });
+});
+
+describe.skipIf(!enabled)("welcome message when a chat is opened", () => {
+  const suffix = crypto.randomUUID().slice(0, 8); const PNID = `5590${Date.now().toString().slice(-9)}`;
+  let owner: string, biz: string; let sends: string[]; let n = 0;
+  const open = (extra: object = {}) => recordInbound({ messages: [{ phoneNumberId: PNID, messageId: `wamid.${suffix}.w${++n}`, senderId: "971504074115", timestamp: String(Math.floor(Date.now() / 1000)), type: "request_welcome", senderName: "Ahmad", ...extra }] });
+  beforeAll(async () => {
+    await ensureMongoIndexes();
+    process.env.LUMIA_API_URL = "http://api.test"; process.env.INTERNAL_API_KEY = "k".repeat(32); process.env.WHATSAPP_LINK_TEST_MODE = "false"; process.env.WHATSAPP_TOKEN_ENCRYPTION_KEY = Buffer.alloc(32, 9).toString("base64");
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init: RequestInit) => { const body = JSON.parse(String(init.body)); if (new URL(url).pathname === "/internal/whatsapp/send") sends.push(body.text); return Response.json({ messageId: `wamid.out.${suffix}.${++n}` }); }));
+    owner = (await db.user.create({ data: { name: "own", email: `w-${suffix}@test.invalid`, phoneNumber: "+971509992001", phoneNumberVerified: true } })).id;
+    biz = (await createBusiness(owner, { name: "Welcome Grill", locationName: "Main" }, "t")).id;
+    await db.whatsAppAccount.create({ data: { businessId: biz, phoneNumberId: PNID, wabaId: "9990004", status: "CONNECTED", accessTokenEncrypted: encryptSecret("biz-token"), connectedAt: new Date() } });
+  });
+  afterAll(async () => { vi.unstubAllGlobals(); });
+
+  it("greets in English and Arabic by default, once, and starts the conversation", async () => {
+    sends = []; const r = await open();
+    expect(r).toMatchObject({ welcomed: 1 }); expect(sends).toHaveLength(1); expect(sends[0]).toContain("Welcome to Welcome Grill"); expect(sends[0]).toContain("أهلاً بك في Welcome Grill");
+    const c = await db.conversation.findFirstOrThrow({ where: { businessId: biz }, include: { messages: { orderBy: { createdAt: "asc" } } } });
+    expect(c.messages.map(m => [m.direction, m.messageType])).toEqual([["INBOUND", "REQUEST_WELCOME"], ["OUTBOUND", "TEXT"]]);
+    expect((await getConversationFor(owner, biz, c.id)).canReply).toBe(true); // Meta opens the 24-hour window
+    sends = []; await recordInbound({ messages: [{ phoneNumberId: PNID, messageId: `wamid.${suffix}.w1`, senderId: "971504074115", timestamp: String(Math.floor(Date.now() / 1000)), type: "request_welcome" }] });
+    expect(sends).toEqual([]); // the same event delivered again is ignored
+    expect(await db.customer.count({ where: { businessId: biz } })).toBe(1);
+  });
+  it("uses the owner's own welcome text, and nothing when the assistant is disabled", async () => {
+    await setAiSettings(owner, biz, { welcome: "Hi! Welcome to our kitchen 🍔" }, "t"); await db.customer.deleteMany({ where: { businessId: biz } }).catch(() => undefined);
+    sends = []; await open({ senderId: "971500007777" }); expect(sends).toEqual(["Hi! Welcome to our kitchen 🍔"]);
+    expect((await getAiSettings(owner, biz)).welcome).toBe("Hi! Welcome to our kitchen 🍔");
+    await setAiSettings(owner, biz, { enabled: false }, "t"); sends = []; await open({ senderId: "971500008888" }); expect(sends).toEqual([]);
   });
 });
