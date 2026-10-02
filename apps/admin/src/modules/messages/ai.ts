@@ -92,3 +92,26 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   ]);
   return "sent";
 }
+
+// Voice notes, images, videos and documents can't be read yet, so ask the customer to type instead of staying silent.
+export const UNREADABLE_TYPES = new Set(["AUDIO", "VOICE", "IMAGE", "VIDEO", "DOCUMENT"]);
+const TYPE_ONLY = "Sorry, I can only read text messages for now. Please type your message and I'll help right away 🙏\nعذراً، أستطيع قراءة الرسائل النصية فقط حالياً. فضلاً اكتب رسالتك وسأساعدك فوراً 🙏";
+export async function replyToUnreadable(t: { businessId: string; conversationId: string; externalMessageId: string }): Promise<"sent" | "skipped"> {
+  const agent = await agentFor(t.businessId);
+  if (!isOn(agent)) return "skipped";
+  const account = await db.whatsAppAccount.findFirst({ where: { businessId: t.businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
+  const conversation = await db.conversation.findFirst({ where: { id: t.conversationId, businessId: t.businessId }, include: { customer: { select: { phone: true } } } });
+  if (!account || !conversation || conversation.needsHuman === true) return "skipped";
+  const now = Date.now();
+  const recent = await db.message.findMany({ where: { conversationId: t.conversationId }, orderBy: { createdAt: "desc" }, take: 6, select: { senderType: true, textContent: true, createdAt: true } });
+  if (recent.some(m => m.senderType === "STAFF" && now - m.createdAt.getTime() < HUMAN_ACTIVE_MS)) return "skipped";
+  // One notice per ten minutes, so a stream of voice notes doesn't get a stream of replies.
+  if (recent.some(m => m.senderType === "AI" && m.textContent === TYPE_ONLY && now - m.createdAt.getTime() < 600000)) return "skipped";
+  const messageId = await deliverText(account, conversation.customer.phone, TYPE_ONLY);
+  const at = new Date();
+  await db.$transaction([
+    db.message.create({ data: { conversationId: t.conversationId, externalMessageId: messageId, direction: "OUTBOUND", senderType: "AI", messageType: "TEXT", textContent: TYPE_ONLY, status: "SENT", createdAt: at } }),
+    db.conversation.update({ where: { id: t.conversationId }, data: { lastMessageAt: at } }),
+  ]);
+  return "sent";
+}

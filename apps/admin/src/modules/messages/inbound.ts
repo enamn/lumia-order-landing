@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
-import { autoReply } from "./ai";
+import { autoReply, replyToUnreadable, UNREADABLE_TYPES } from "./ai";
 
 // Messages customers send to a restaurant's linked WhatsApp number. lumia-order-api receives Meta's webhook and forwards them here;
 // we find the restaurant from the phone number ID, then keep one customer + conversation per person and one message per Meta message ID.
@@ -18,7 +18,7 @@ export type InboundResult = { stored: number; duplicates: number; unmatched: num
 export async function recordInbound(input: unknown): Promise<InboundResult> {
   const { messages } = inboundSchema.parse(input);
   const result: InboundResult = { stored: 0, duplicates: 0, unmatched: 0 };
-  const toAnswer: { businessId: string; conversationId: string; externalMessageId: string }[] = [];
+  const toAnswer: { businessId: string; conversationId: string; externalMessageId: string; text: boolean }[] = [];
   for (const m of messages) {
     const account = await db.whatsAppAccount.findFirst({ where: { phoneNumberId: m.phoneNumberId, status: "CONNECTED" }, select: { businessId: true, wabaId: true } });
     if (!account || (account.wabaId && m.wabaId && account.wabaId !== m.wabaId)) { result.unmatched++; continue; }
@@ -31,7 +31,8 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
         const open = await tx.conversation.findFirst({ where: { businessId: account.businessId, customerId: customer.id, status: "OPEN" }, orderBy: { lastMessageAt: "desc" } });
         const conversation = open ?? await tx.conversation.create({ data: { businessId: account.businessId, customerId: customer.id, lastMessageAt: at } });
         await tx.message.create({ data: { conversationId: conversation.id, externalMessageId: m.messageId, direction: "INBOUND", senderType: "CUSTOMER", messageType: m.type.toUpperCase(), textContent: m.textBody ?? null, status: "RECEIVED", createdAt: at } });
-        if (m.type.toLowerCase() === "text" && m.textBody) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId };
+        if (m.type.toLowerCase() === "text" && m.textBody) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, text: true };
+        else if (UNREADABLE_TYPES.has(m.type.toUpperCase())) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, text: false };
         if (at > conversation.lastMessageAt) await tx.conversation.update({ where: { id: conversation.id }, data: { lastMessageAt: at } });
       });
       result.stored++; if (pending) toAnswer.push(pending);
@@ -41,7 +42,7 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
     }
   }
   // Messages are stored first and never lost; an AI failure only means no automatic reply.
-  for (const t of toAnswer) await autoReply(t).catch((e: { code?: unknown }) => console.error(JSON.stringify({ level: "error", code: "AI_REPLY_FAILED", reason: typeof e?.code === "string" ? e.code : "UNKNOWN" })));
+  for (const t of toAnswer) await (t.text ? autoReply(t) : replyToUnreadable(t)).catch((e: { code?: unknown }) => console.error(JSON.stringify({ level: "error", code: "AI_REPLY_FAILED", reason: typeof e?.code === "string" ? e.code : "UNKNOWN" })));
   return result;
 }
 

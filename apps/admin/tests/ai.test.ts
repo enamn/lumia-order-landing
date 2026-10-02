@@ -55,7 +55,7 @@ describe.skipIf(!enabled)("AI replies", () => {
     const id = `wamid.${suffix}.dup`; await inbound("again", { messageId: id }); const first = calls.length; await inbound("again", { messageId: id });
     expect(calls.length).toBe(first);
     calls = []; await inbound("", { type: "image", textBody: undefined });
-    expect(calls).toEqual([]);
+    expect(calls.map(c => c.path)).toEqual(["/internal/whatsapp/send"]); // no text to read: only the "please type" notice, never the AI
   });
   it("sends the holding reply for orders, flags the conversation, then stays quiet until staff handle it", async () => {
     calls = []; ai = { intent: "order_request", language: "en", reply: "One Classic, 28 AED. The team will confirm shortly.", needsHuman: true }; setup();
@@ -86,6 +86,17 @@ describe.skipIf(!enabled)("AI replies", () => {
     expect((await db.conversation.findFirstOrThrow({ where: { businessId: biz } })).needsHuman).not.toBe(true); // nothing was delivered, so nothing is flagged
     setup(); calls = []; ai = { intent: "greeting", language: "en", reply: "Hi again!", needsHuman: false }; await inbound("hello?");
     expect(calls.some(c => c.path === "/internal/whatsapp/send")).toBe(true); // it still answers
+  });
+  it("asks the customer to type when they send a voice note or image, once, without calling the AI", async () => {
+    await db.conversation.updateMany({ where: { businessId: biz }, data: { needsHuman: false } });
+    await db.message.updateMany({ where: { senderType: "STAFF", conversation: { businessId: biz } }, data: { createdAt: new Date(Date.now() - 3600000) } });
+    await db.message.updateMany({ where: { senderType: "AI", conversation: { businessId: biz } }, data: { createdAt: new Date(Date.now() - 3600000) } }); // let earlier notices age out
+    setup(); calls = [];
+    await inbound("", { type: "audio", textBody: undefined });
+    expect(calls.map(c => c.path)).toEqual(["/internal/whatsapp/send"]);
+    expect(calls[0]!.body.text).toContain("only read text messages"); expect(calls[0]!.body.text).toContain("اكتب رسالتك");
+    calls = []; await inbound("", { type: "image", textBody: undefined }); expect(calls).toEqual([]); // already told them a moment ago
+    calls = []; await inbound("", { type: "sticker", textBody: undefined }); expect(calls).toEqual([]); // stickers and reactions are ignored
   });
   it("stays quiet only if it was explicitly disabled by us", async () => {
     await setAiSettings(owner, biz, { enabled: false }, "t"); await db.conversation.updateMany({ where: { businessId: biz }, data: { needsHuman: false } });
