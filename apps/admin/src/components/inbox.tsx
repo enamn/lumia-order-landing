@@ -13,7 +13,7 @@ async function call(path: string, method = "GET", body?: unknown) {
 }
 const time = (iso: string) => new Date(iso).toLocaleString(undefined, { hour: "2-digit", minute: "2-digit", day: "numeric", month: "short" });
 const title = (c: { name: string; phone: string }) => c.name || c.phone;
-const describe = (text: string, type: string) => text || (type.toUpperCase() === "REQUEST_WELCOME" ? "👋 Opened the chat" : `[${type.toLowerCase()} message]`);
+const describe = (text: string, type: string) => type.toUpperCase() === "AUDIO" ? `🎤 ${text || "Voice message"}` : text || (type.toUpperCase() === "REQUEST_WELCOME" ? "👋 Opened the chat" : `[${type.toLowerCase()} message]`);
 
 // Shows what customers send to the restaurant's WhatsApp number and lets staff reply from the same number.
 export function Inbox({ businessId, canReply }: { businessId: string; canReply: boolean }) {

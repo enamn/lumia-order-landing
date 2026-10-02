@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
 import { lumiaApi } from "@/server/lumia-api";
+import { decryptSecret } from "@/server/crypto";
 import { deliverText } from "./reply";
 import { welcomeFor } from "./welcome-text";
 import { DRAFT_TTL_MS, draftKey, isComplete, meetsMinimum, placedText, removedText, resolveDraft, summaryText, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
@@ -50,7 +51,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const conversation = await db.conversation.findFirst({ where: { id: t.conversationId, businessId: t.businessId }, include: { customer: { select: { phone: true, displayName: true } }, business: { select: { name: true } } } });
   if (!conversation || conversation.needsHuman === true) return "skipped";
   const now = Date.now();
-  const recent = await db.message.findMany({ where: { conversationId: t.conversationId }, orderBy: { createdAt: "desc" }, take: 12, select: { externalMessageId: true, direction: true, senderType: true, textContent: true, createdAt: true } });
+  const recent = await db.message.findMany({ where: { conversationId: t.conversationId }, orderBy: { createdAt: "desc" }, take: 12, select: { externalMessageId: true, direction: true, senderType: true, messageType: true, textContent: true, createdAt: true } });
   // Answer only the newest customer message, and stay quiet while a person is actively replying.
   const latestInbound = recent.find(m => m.direction === "INBOUND");
   if (!latestInbound || latestInbound.externalMessageId !== t.externalMessageId || !latestInbound.textContent) return "skipped";
@@ -64,7 +65,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const prev = conversation.draftOrder as StoredDraft | null;
   const stored = prev && Date.now() - new Date(prev.updatedAt).getTime() < DRAFT_TTL_MS ? prev : null;
   const apiDraft = stored ? { items: stored.items.flatMap(l => byItem.has(l.itemId) ? [{ id: byItem.get(l.itemId)!, quantity: l.quantity, notes: l.notes }] : []), fulfillment: stored.fulfillment, address: stored.address, confirmed: false } : null;
-  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent }, 45000);
+  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent, ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
   if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "AI_REPLY_REJECTED", status: r.status, apiCode: r.code })); return "skipped"; }
   const lang = r.data.language; const parts = [r.data.reply];
   const data: { needsHuman?: boolean; draftOrder?: object | null } = {};
@@ -98,10 +99,15 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   return "sent";
 }
 
-// Voice notes, images, videos and documents can't be read yet, so ask the customer to type instead of staying silent.
+// Voice notes are transcribed (Arabic in any dialect, English, or a mix); images, videos and documents can't be read yet.
 export const UNREADABLE_TYPES = new Set(["AUDIO", "VOICE", "IMAGE", "VIDEO", "DOCUMENT"]);
 const TYPE_ONLY = "Sorry, I can only read text messages for now. Please type your message and I'll help right away 🙏\nعذراً، أستطيع قراءة الرسائل النصية فقط حالياً. فضلاً اكتب رسالتك وسأساعدك فوراً 🙏";
-export async function replyToUnreadable(t: { businessId: string; conversationId: string; externalMessageId: string }): Promise<"sent" | "skipped"> {
+const UNSUPPORTED_LANGUAGE = "Sorry, I can only understand voice messages in Arabic or English. Please send your message in Arabic or English, or type it 🙏\nعذراً، أفهم الرسائل الصوتية بالعربية والإنجليزية فقط. فضلاً أرسل رسالتك بالعربية أو الإنجليزية أو اكتبها 🙏";
+const NOT_CLEAR = "Sorry, I couldn't hear that clearly. Could you send it again, or type your message? 🙏\nعذراً، لم أستطع سماع الرسالة بوضوح. هل يمكنك إعادة إرسالها أو كتابتها؟ 🙏";
+type Target = { businessId: string; conversationId: string; externalMessageId: string };
+
+// A fixed notice (not an AI answer): same guards as the assistant, and the same notice is never repeated within ten minutes.
+async function sendNotice(t: Target, text: string): Promise<"sent" | "skipped"> {
   const agent = await agentFor(t.businessId);
   if (!isOn(agent)) return "skipped";
   const account = await db.whatsAppAccount.findFirst({ where: { businessId: t.businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
@@ -110,13 +116,27 @@ export async function replyToUnreadable(t: { businessId: string; conversationId:
   const now = Date.now();
   const recent = await db.message.findMany({ where: { conversationId: t.conversationId }, orderBy: { createdAt: "desc" }, take: 6, select: { senderType: true, textContent: true, createdAt: true } });
   if (recent.some(m => m.senderType === "STAFF" && now - m.createdAt.getTime() < HUMAN_ACTIVE_MS)) return "skipped";
-  // One notice per ten minutes, so a stream of voice notes doesn't get a stream of replies.
-  if (recent.some(m => m.senderType === "AI" && m.textContent === TYPE_ONLY && now - m.createdAt.getTime() < 600000)) return "skipped";
-  const messageId = await deliverText(account, conversation.customer.phone, TYPE_ONLY);
+  if (recent.some(m => m.senderType === "AI" && m.textContent === text && now - m.createdAt.getTime() < 600000)) return "skipped";
+  const messageId = await deliverText(account, conversation.customer.phone, text);
   const at = new Date();
   await db.$transaction([
-    db.message.create({ data: { conversationId: t.conversationId, externalMessageId: messageId, direction: "OUTBOUND", senderType: "AI", messageType: "TEXT", textContent: TYPE_ONLY, status: "SENT", createdAt: at } }),
+    db.message.create({ data: { conversationId: t.conversationId, externalMessageId: messageId, direction: "OUTBOUND", senderType: "AI", messageType: "TEXT", textContent: text, status: "SENT", createdAt: at } }),
     db.conversation.update({ where: { id: t.conversationId }, data: { lastMessageAt: at } }),
   ]);
   return "sent";
+}
+export const replyToUnreadable = (t: Target) => sendNotice(t, TYPE_ONLY);
+
+// A voice note: transcribe it, keep the transcript on the message so staff can read it, refuse other languages, otherwise answer it like typed text.
+export async function handleVoice(t: Target & { mediaId: string }): Promise<"sent" | "skipped"> {
+  const agent = await agentFor(t.businessId);
+  if (!isOn(agent)) return "skipped";
+  const account = await db.whatsAppAccount.findFirst({ where: { businessId: t.businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
+  if (!account?.accessTokenEncrypted) return "skipped";
+  const r = await lumiaApi<{ text: string; language: "ar" | "en" | "mixed" | "other"; usable: boolean }>("/internal/whatsapp/transcribe", { accessToken: decryptSecret(account.accessTokenEncrypted), mediaId: t.mediaId }, 90000);
+  if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "VOICE_TRANSCRIBE_FAILED", status: r.status, apiCode: r.code })); return sendNotice(t, TYPE_ONLY); }
+  if (r.data.text) await db.message.updateMany({ where: { externalMessageId: t.externalMessageId }, data: { textContent: r.data.text, transcription: r.data.text } });
+  if (r.data.language === "other") return sendNotice(t, r.data.text ? UNSUPPORTED_LANGUAGE : NOT_CLEAR);
+  if (!r.data.usable) return sendNotice(t, NOT_CLEAR);
+  return autoReply(t);
 }

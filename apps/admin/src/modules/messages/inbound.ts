@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
-import { autoReply, replyToUnreadable, UNREADABLE_TYPES } from "./ai";
+import { autoReply, handleVoice, replyToUnreadable, UNREADABLE_TYPES } from "./ai";
 import { sendWelcome } from "./welcome";
 
 // Messages customers send to a restaurant's linked WhatsApp number. lumia-order-api receives Meta's webhook and forwards them here;
@@ -11,7 +11,7 @@ import { sendWelcome } from "./welcome";
 export const inboundSchema = z.object({ messages: z.array(z.object({
   phoneNumberId: z.string().regex(/^\d{5,30}$/), wabaId: z.string().regex(/^\d{5,30}$/).optional(),
   messageId: z.string().min(1).max(200), senderId: z.string().regex(/^\d{6,20}$/), timestamp: z.string().regex(/^\d{9,12}$/),
-  type: z.string().min(1).max(40), textBody: z.string().max(8192).optional(), senderName: z.string().max(200).optional(),
+  type: z.string().min(1).max(40), mediaId: z.string().regex(/^\d{5,30}$/).optional(), textBody: z.string().max(8192).optional(), senderName: z.string().max(200).optional(),
 }).strict()).min(1).max(100) }).strict();
 
 export type InboundResult = { stored: number; duplicates: number; unmatched: number; welcomed?: number };
@@ -19,7 +19,7 @@ export type InboundResult = { stored: number; duplicates: number; unmatched: num
 export async function recordInbound(input: unknown): Promise<InboundResult> {
   const { messages } = inboundSchema.parse(input);
   const result: InboundResult = { stored: 0, duplicates: 0, unmatched: 0 };
-  const toAnswer: { businessId: string; conversationId: string; externalMessageId: string; text: boolean }[] = [];
+  const toAnswer: { businessId: string; conversationId: string; externalMessageId: string; kind: "text" | "voice" | "unreadable"; mediaId?: string }[] = [];
   for (const m of messages) {
     const account = await db.whatsAppAccount.findFirst({ where: { phoneNumberId: m.phoneNumberId, status: "CONNECTED" }, select: { businessId: true, wabaId: true } });
     if (!account || (account.wabaId && m.wabaId && account.wabaId !== m.wabaId)) { result.unmatched++; continue; }
@@ -38,8 +38,9 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
         const open = await tx.conversation.findFirst({ where: { businessId: account.businessId, customerId: customer.id, status: "OPEN" }, orderBy: { lastMessageAt: "desc" } });
         const conversation = open ?? await tx.conversation.create({ data: { businessId: account.businessId, customerId: customer.id, lastMessageAt: at } });
         await tx.message.create({ data: { conversationId: conversation.id, externalMessageId: m.messageId, direction: "INBOUND", senderType: "CUSTOMER", messageType: m.type.toUpperCase(), textContent: m.textBody ?? null, status: "RECEIVED", createdAt: at } });
-        if (m.type.toLowerCase() === "text" && m.textBody) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, text: true };
-        else if (UNREADABLE_TYPES.has(m.type.toUpperCase())) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, text: false };
+        if (m.type.toLowerCase() === "text" && m.textBody) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "text" };
+        else if (m.type.toLowerCase() === "audio" && m.mediaId) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "voice", mediaId: m.mediaId };
+        else if (UNREADABLE_TYPES.has(m.type.toUpperCase())) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "unreadable" };
         if (at > conversation.lastMessageAt) await tx.conversation.update({ where: { id: conversation.id }, data: { lastMessageAt: at } });
       });
       result.stored++; if (pending) toAnswer.push(pending);
@@ -49,7 +50,7 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
     }
   }
   // Messages are stored first and never lost; an AI failure only means no automatic reply.
-  for (const t of toAnswer) await (t.text ? autoReply(t) : replyToUnreadable(t)).catch((e: { code?: unknown }) => console.error(JSON.stringify({ level: "error", code: "AI_REPLY_FAILED", reason: typeof e?.code === "string" ? e.code : "UNKNOWN" })));
+  for (const t of toAnswer) await (t.kind === "text" ? autoReply(t) : t.kind === "voice" ? handleVoice({ ...t, mediaId: t.mediaId! }) : replyToUnreadable(t)).catch((e: { code?: unknown }) => console.error(JSON.stringify({ level: "error", code: "AI_REPLY_FAILED", reason: typeof e?.code === "string" ? e.code : "UNKNOWN" })));
   return result;
 }
 
