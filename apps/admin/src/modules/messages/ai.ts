@@ -4,6 +4,7 @@ import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
 import { lumiaApi } from "@/server/lumia-api";
 import { deliverText } from "./reply";
+import { welcomeFor } from "./welcome-text";
 import { DRAFT_TTL_MS, draftKey, isComplete, meetsMinimum, placedText, removedText, resolveDraft, summaryText, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
 import { createOrderFromDraft } from "@/modules/orders/service";
 
@@ -83,6 +84,8 @@ export async function autoReply(t: { businessId: string; conversationId: string;
       data.draftOrder = { items: resolved.lines.map(l => ({ itemId: l.itemId, quantity: l.quantity, notes: l.notes })), fulfillment: resolved.fulfillment, address: resolved.address, shownKey: key, updatedAt: new Date().toISOString() };
     }
   }
+  // First contact: if nobody has answered this customer yet (and Meta's own welcome event didn't already), greet them before answering.
+  if (await db.message.count({ where: { conversationId: t.conversationId, direction: "OUTBOUND" } }) === 0) parts.unshift(welcomeFor(agent, conversation.business.name));
   const reply = parts.filter(Boolean).join("\n\n");
   // Flags and the saved draft change only together with a reply that was really sent, so a failed delivery never leaves the chat stuck as "needs you".
   if (!reply) { if (Object.keys(data).length) await db.conversation.update({ where: { id: t.conversationId }, data: data as never }); return "skipped"; }

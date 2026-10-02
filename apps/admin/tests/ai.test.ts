@@ -46,9 +46,19 @@ describe.skipIf(!enabled)("AI replies", () => {
     expect(ask).toMatchObject({ businessName: "AI Test Burgers", instructions: "Open until midnight.", message: "How much is the classic?" });
     expect(ask.menu.map(({ id, ...m }: any) => ({ ...m, hasId: Boolean(id) }))).toEqual([{ category: "Burgers", name: "Classic", nameAr: "كلاسيك", price: 28, available: true, hasId: true }, { category: "Burgers", name: "Spicy", nameAr: "", price: 32, available: false, hasId: true }]);
     const send = calls.find(c => c.path === "/internal/whatsapp/send")!.body;
-    expect(send).toEqual({ accessToken: "biz-token", phoneNumberId: PNID, to: "+971504074115", text: "The Classic is 28 AED." });
-    expect(await db.message.findFirstOrThrow({ where: { senderType: "AI", conversation: { businessId: biz } } })).toMatchObject({ direction: "OUTBOUND", textContent: "The Classic is 28 AED.", status: "SENT" });
+    expect(send).toMatchObject({ accessToken: "biz-token", phoneNumberId: PNID, to: "+971504074115" });
+    expect(send.text).toMatch(/^Welcome to AI Test Burgers! 👋[\s\S]*أهلاً بك[\s\S]*\n\nThe Classic is 28 AED\.$/); // first contact: greeting, then the answer
+    expect(await db.message.findFirstOrThrow({ where: { senderType: "AI", conversation: { businessId: biz } } })).toMatchObject({ direction: "OUTBOUND", textContent: expect.stringMatching(/The Classic is 28 AED\.$/), status: "SENT" });
     expect((await getMessageStats(owner, biz)).aiReplies).toBe(1);
+  });
+  it("greets only in the first reply of a conversation, never twice", async () => {
+    calls = []; ai = { intent: "greeting", language: "en", reply: "Yes, we are open.", needsHuman: false }; setup();
+    await inbound("are you open?");
+    expect(calls.find(c => c.path === "/internal/whatsapp/send")!.body.text).toBe("Yes, we are open."); // this conversation already has replies
+    calls = []; await inbound("from a brand new number", { senderId: "971500005555" });
+    expect(calls.find(c => c.path === "/internal/whatsapp/send")!.body.text).toBe(`${(await getAiSettings(owner, biz)).welcome || `Welcome to AI Test Burgers! 👋\nI'm the restaurant's assistant. Ask me about the menu, or tell me what you'd like to order and I'll take care of it.\n\nأهلاً بك في AI Test Burgers! 👋\nأنا مساعد المطعم. اسألني عن القائمة أو أخبرني بما تريد طلبه وسأساعدك.`}\n\nYes, we are open.`);
+    calls = []; await inbound("and delivery?", { senderId: "971500005555" });
+    expect(calls.find(c => c.path === "/internal/whatsapp/send")!.body.text).toBe("Yes, we are open."); // greeted once
   });
   it("does not answer redeliveries or non-text messages", async () => {
     calls = []; setup();
