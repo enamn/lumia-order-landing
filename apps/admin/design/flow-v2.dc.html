@@ -276,7 +276,7 @@ input::placeholder{color:#B89AA8}
 
 <!-- Dashboard / menu -->
 <sc-if value="{{ is.dash }}" hint-placeholder-val="{{ false }}">
-<div data-screen-label="06 Dashboard · Menu" dir="{{ dir }}" style="flex:1;display:flex;min-height:100%;background:#fff">
+<div data-screen-label="06 Dashboard · Menu" dir="{{ dir }}" style="flex:none;width:100%;display:flex;height:{{ L.dashH }};overflow:hidden;background:#fff">
   <sc-if value="{{ dashWide }}" hint-placeholder-val="{{ true }}">
     <aside style="flex:0 0 232px;border-inline-end:1px solid #F0E4E8;background:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh">
       <div style="height:64px;padding:0 20px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #F0E4E8">
@@ -303,7 +303,7 @@ input::placeholder{color:#B89AA8}
     </aside>
   </sc-if>
 
-  <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:#fff">
+  <div style="flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:#fff">
     <sc-if value="{{ dashNarrow }}" hint-placeholder-val="{{ false }}">
       <header style="position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #F0E4E8">
         <div style="height:56px;padding:0 16px;display:flex;align-items:center;gap:10px">
@@ -326,7 +326,7 @@ input::placeholder{color:#B89AA8}
     </sc-if>
 
     <div style="flex:1;display:flex;min-height:0">
-    <main style="flex:1;min-width:0;padding:{{ L.dashPad }};display:flex;flex-direction:column;gap:26px">
+    <main style="flex:1;min-width:0;min-height:0;overflow-y:auto;padding:{{ L.dashPad }};display:flex;flex-direction:column;gap:26px">
       <section style="border-radius:20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);padding:22px 24px;display:flex;flex-wrap:wrap;gap:18px 32px;align-items:center">
         <div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:12px">
           <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px">
@@ -368,34 +368,20 @@ input::placeholder{color:#B89AA8}
       </div>
 
       <sc-if value="{{ menuDone }}" hint-placeholder-val="{{ true }}">
-        <div style="display:flex;flex-direction:column;gap:16px;margin-top:-8px">
+        <div style="flex:1;min-height:240px;display:flex;flex-direction:column;gap:16px;margin-top:-8px">
           <label style="display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;max-width:520px">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex:none"><circle cx="7" cy="7" r="4.8" stroke="#8A5A6E" stroke-width="1.5"></circle><path d="m10.6 10.6 3.4 3.4" stroke="#8A5A6E" stroke-width="1.5" stroke-linecap="round"></path></svg>
             <input type="search" value="{{ q }}" onChange="{{ onSearch }}" placeholder="{{ t.search }}" aria-label="{{ t.search }}" style="flex:1;min-width:0;font-size:15px"></input>
             <sc-if value="{{ hasQ }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ clearSearch }}" aria-label="Clear" style="width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none" style-hover="background:#FBF3F8"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="#8A5A6E" stroke-width="1.8" stroke-linecap="round"></path></svg></button></sc-if>
           </label>
 
-          <sc-if value="{{ dashNarrow }}" hint-placeholder-val="{{ false }}">
-            <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin-inline:-20px;padding-inline:20px">
+          <div style="display:flex;gap:8px;overflow-x:auto;flex:none;padding-bottom:2px;scrollbar-width:none">
               <sc-for list="{{ cats }}" as="c" hint-placeholder-count="7">
                 <button type="button" onClick="{{ c.pick }}" style="height:40px;padding:0 14px;border-radius:999px;white-space:nowrap;font-size:14px;font-weight:500;background:{{ c.chipBg }};color:{{ c.chipFg }};border:1.5px solid {{ c.chipBd }};display:flex;align-items:center;gap:8px;flex:none">{{ c.label }}<span style="font-size:13px;opacity:.7;font-variant-numeric:tabular-nums">{{ c.count }}</span></button>
               </sc-for>
             </div>
-          </sc-if>
 
-          <div style="display:flex;gap:20px;align-items:flex-start">
-            <sc-if value="{{ dashWide }}" hint-placeholder-val="{{ true }}">
-              <nav aria-label="{{ t.categories }}" style="flex:0 0 220px;position:sticky;top:20px;display:flex;flex-direction:column;gap:2px;border:1px solid #F0E4E8;border-radius:16px;padding:6px">
-                <sc-for list="{{ cats }}" as="c" hint-placeholder-count="7">
-                  <button type="button" onClick="{{ c.pick }}" aria-current="{{ c.on }}" style="height:44px;padding:0 12px;border-radius:10px;display:flex;align-items:center;gap:10px;text-align:start;background:{{ c.bg }};color:{{ c.fg }};font-weight:{{ c.fw }};font-size:15px" style-hover="background:#FBF3F8">
-                    <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.label }}</span>
-                    <span style="font-size:13px;color:{{ c.countFg }};font-variant-numeric:tabular-nums">{{ c.count }}</span>
-                  </button>
-                </sc-for>
-              </nav>
-            </sc-if>
-
-            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:16px">
+          <div style="flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:16px;border-radius:16px">
               <sc-for list="{{ sections }}" as="g" hint-placeholder-count="2">
                 <section style="border:1px solid #F0E4E8;border-radius:16px;overflow:clip">
                   <header style="position:sticky;top:{{ L.secTop }};z-index:2;background:#FAF6FA;padding:12px 18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;border-bottom:1px solid #F0E4E8">
@@ -426,7 +412,6 @@ input::placeholder{color:#B89AA8}
                 <div style="border-radius:16px;background:#FAF6FA;padding:40px 20px;text-align:center;font-size:15px;color:#3D1C31">{{ t.noResults }}</div>
               </sc-if>
             </div>
-          </div>
         </div>
       </sc-if>
 
@@ -958,7 +943,7 @@ class Component extends DCLogic {
     L.devTf = frame ? 'translateZ(0)' : 'none';
     if (frame && overlay) L.devOv = 'hidden';
     L.drawerW = narrow ? '100%' : '460px';
-    L.secTop = narrow ? '97px' : '0px';
+    L.secTop = '0px'; L.dashH = frame ? '100%' : '100dvh';
     const ring = (err, foc, busy) => err ? { bd: '#B4233B', ring: '0 0 0 4px rgba(180,35,59,.12)', bg: '#fff', op: 1 }
       : foc && !busy ? { bd: '#FF5577', ring: '0 0 0 4px rgba(255,85,119,.14)', bg: '#fff', op: 1 }
       : { bd: '#E3CBD4', ring: 'none', bg: busy ? '#FBF3F8' : '#fff', op: busy ? 0.7 : 1 };
