@@ -133,7 +133,7 @@ export async function handleVoice(t: Target & { mediaId: string }): Promise<"sen
   if (!isOn(agent)) return "skipped";
   const account = await db.whatsAppAccount.findFirst({ where: { businessId: t.businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
   if (!account?.accessTokenEncrypted) return "skipped";
-  const r = await lumiaApi<{ text: string; language: "ar" | "en" | "mixed" | "other"; usable: boolean }>("/internal/whatsapp/transcribe", { accessToken: decryptSecret(account.accessTokenEncrypted), mediaId: t.mediaId }, 90000);
+  const r = await lumiaApi<{ text: string; language: "ar" | "en" | "mixed" | "other"; usable: boolean }>("/internal/whatsapp/transcribe", { accessToken: decryptSecret(account.accessTokenEncrypted), mediaId: t.mediaId, hotwords: (await loadMenu(t.businessId)).flatMap(m => [m.name, m.nameAr]).filter(Boolean).slice(0, 80) }, 90000);
   if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "VOICE_TRANSCRIBE_FAILED", status: r.status, apiCode: r.code })); return sendNotice(t, TYPE_ONLY); }
   if (r.data.text) await db.message.updateMany({ where: { externalMessageId: t.externalMessageId }, data: { textContent: r.data.text, transcription: r.data.text } });
   if (r.data.language === "other") return sendNotice(t, r.data.text ? UNSUPPORTED_LANGUAGE : NOT_CLEAR);

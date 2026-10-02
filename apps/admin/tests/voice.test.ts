@@ -31,7 +31,7 @@ describe.skipIf(!enabled)("voice notes", () => {
   it.each([["Gulf Arabic", "971500001001", "ابغى برجر كلاسيك من فضلك", "ar"], ["Egyptian Arabic", "971500001002", "عايز اتنين برجر كلاسيك لو سمحت", "ar"], ["Levantine Arabic", "971500001003", "بدي برجر كلاسيك بليز", "ar"], ["English", "971500001004", "I would like one classic burger", "en"], ["Arabic and English mixed", "971500001005", "ابي two classic burger please", "mixed"]])("%s: transcribes, keeps the transcript, and answers it like typed text", async (_n, from, text, language) => {
     calls = []; stt = { text, language, usable: true }; ai = { intent: "price_question", language: language === "en" ? "en" : "ar", reply: "Classic Burger is 28 AED.", needsHuman: false };
     await voice(from);
-    expect(calls[0]).toEqual({ path: "/internal/whatsapp/transcribe", body: { accessToken: "biz-token", mediaId: "123456789" } });
+    expect(calls[0]).toEqual({ path: "/internal/whatsapp/transcribe", body: { accessToken: "biz-token", mediaId: "123456789", hotwords: ["Classic Burger", "برجر كلاسيك"] } }); // the menu helps it hear item names
     const ask = calls.find(c => c.path === "/internal/ai/reply")!.body; expect(ask).toMatchObject({ message: text, voice: true });
     expect(sent().at(-1)).toContain("Classic Burger is 28 AED.");
     expect(await stored(from)).toMatchObject({ messageType: "AUDIO", textContent: text, transcription: text });
