@@ -4,6 +4,8 @@ import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
 import { lumiaApi } from "@/server/lumia-api";
 import { deliverText } from "./reply";
+import { DRAFT_TTL_MS, draftKey, isComplete, meetsMinimum, placedText, removedText, resolveDraft, summaryText, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
+import { createOrderFromDraft } from "@/modules/orders/service";
 
 // The AI assistant answers customers' WhatsApp messages from the restaurant's own menu. It only replies when the owner turned it on,
 // never keeps talking once a person has taken over, and hands anything it cannot answer (orders, complaints, unknown facts) to staff.
@@ -28,11 +30,11 @@ export async function setAiSettings(userId: string, businessId: string, input: u
   });
 }
 
-async function menuLines(businessId: string) {
+async function loadMenu(businessId: string): Promise<(MenuEntry & { category: string })[]> {
   const catalog = await db.catalog.findFirst({ where: { businessId, status: "ACTIVE" }, orderBy: { createdAt: "asc" }, include: { categories: true, items: { where: { status: "ACTIVE" }, orderBy: { sortOrder: "asc" }, take: 400 } } });
   if (!catalog) return [];
   const names = new Map(catalog.categories.map(c => [c.id, c.name]));
-  return catalog.items.map(i => ({ category: (i.categoryId && names.get(i.categoryId)) || "Other", name: i.name, nameAr: i.nameAr ?? "", price: i.basePriceMinor / 100, available: i.isAvailable }));
+  return catalog.items.map((i, n) => ({ index: String(n + 1), itemId: i.id, category: (i.categoryId && names.get(i.categoryId)) || "Other", name: i.name, nameAr: i.nameAr ?? "", priceMinor: i.basePriceMinor, available: i.isAvailable }));
 }
 
 export async function autoReply(t: { businessId: string; conversationId: string; externalMessageId: string }): Promise<"sent" | "skipped"> {
@@ -40,7 +42,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   if (agent?.status !== "ACTIVE") return "skipped";
   const account = await db.whatsAppAccount.findFirst({ where: { businessId: t.businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
   if (!account?.phoneNumberId || !account.accessTokenEncrypted) return "skipped";
-  const conversation = await db.conversation.findFirst({ where: { id: t.conversationId, businessId: t.businessId }, include: { customer: { select: { phone: true } }, business: { select: { name: true } } } });
+  const conversation = await db.conversation.findFirst({ where: { id: t.conversationId, businessId: t.businessId }, include: { customer: { select: { phone: true, displayName: true } }, business: { select: { name: true } } } });
   if (!conversation || conversation.needsHuman === true) return "skipped";
   const now = Date.now();
   const recent = await db.message.findMany({ where: { conversationId: t.conversationId }, orderBy: { createdAt: "desc" }, take: 12, select: { externalMessageId: true, direction: true, senderType: true, textContent: true, createdAt: true } });
@@ -50,14 +52,40 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   if (recent.some(m => m.senderType === "STAFF" && now - m.createdAt.getTime() < HUMAN_ACTIVE_MS)) return "skipped";
   if (recent.filter(m => m.senderType === "AI" && now - m.createdAt.getTime() < 3600000).length >= MAX_AI_PER_HOUR) return "skipped";
   const history = recent.slice().reverse().filter(m => m.textContent && m.externalMessageId !== t.externalMessageId).map(m => ({ from: m.direction === "INBOUND" ? "customer" : "restaurant", text: m.textContent! }));
-  const r = await lumiaApi<{ intent: string; language: string; reply: string; needsHuman: boolean }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent.tone, instructions: agent.instructions, menu: await menuLines(t.businessId), history, message: latestInbound.textContent }, 45000);
+  const settings = await db.orderSettings.findUnique({ where: { businessId: t.businessId } });
+  const options: Options = { delivery: settings?.supportsDelivery ?? true, pickup: settings?.supportsPickup ?? true, minimumMinor: settings?.minimumOrderAmountMinor ?? 0 };
+  const menu = await loadMenu(t.businessId);
+  const byItem = new Map(menu.map(m => [m.itemId, m.index]));
+  const prev = conversation.draftOrder as StoredDraft | null;
+  const stored = prev && Date.now() - new Date(prev.updatedAt).getTime() < DRAFT_TTL_MS ? prev : null;
+  const apiDraft = stored ? { items: stored.items.flatMap(l => byItem.has(l.itemId) ? [{ id: byItem.get(l.itemId)!, quantity: l.quantity, notes: l.notes }] : []), fulfillment: stored.fulfillment, address: stored.address, confirmed: false } : null;
+  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent.tone, instructions: agent.instructions, menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent }, 45000);
   if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "AI_REPLY_REJECTED", status: r.status, apiCode: r.code })); return "skipped"; }
-  if (r.data.needsHuman) await db.conversation.update({ where: { id: t.conversationId }, data: { needsHuman: true } });
-  if (!r.data.reply) return "skipped";
-  const messageId = await deliverText(account, conversation.customer.phone, r.data.reply);
+  const lang = r.data.language; const parts = [r.data.reply];
+  const data: { needsHuman?: boolean; draftOrder?: object | null } = {};
+  if (r.data.needsHuman) data.needsHuman = true;
+  const model = r.data.order;
+  if (model) {
+    const resolved = resolveDraft(menu, model, options); const key = draftKey(resolved);
+    // An order is placed only when the customer confirmed the exact summary we showed them (same items, type and address), and it is complete.
+    if (model.confirmed && isComplete(resolved) && meetsMinimum(resolved, options) && stored?.shownKey === key && resolved.fulfillment) {
+      const order = await createOrderFromDraft({ businessId: t.businessId, conversationId: t.conversationId, customerId: conversation.customerId, customerName: conversation.customer.displayName ?? "", customerPhone: conversation.customer.phone, resolved: { ...resolved, fulfillment: resolved.fulfillment } });
+      parts.length = 0; parts.push(placedText(order.orderNumber, order.totalMinor, resolved.fulfillment, lang));
+    } else if (!resolved.lines.length) { data.draftOrder = null as never; if (resolved.removed.length) parts.push(removedText(resolved.removed, lang)); }
+    else {
+      if (resolved.removed.length) parts.push(removedText(resolved.removed, lang));
+      // Show the exact summary whenever it changed, or an item was dropped, so the customer always confirms what we will really place.
+      if (stored?.shownKey !== key || resolved.removed.length) parts.push(summaryText(resolved, lang, options));
+      data.draftOrder = { items: resolved.lines.map(l => ({ itemId: l.itemId, quantity: l.quantity, notes: l.notes })), fulfillment: resolved.fulfillment, address: resolved.address, shownKey: key, updatedAt: new Date().toISOString() };
+    }
+  }
+  if (Object.keys(data).length) await db.conversation.update({ where: { id: t.conversationId }, data: data as never });
+  const reply = parts.filter(Boolean).join("\n\n");
+  if (!reply) return "skipped";
+  const messageId = await deliverText(account, conversation.customer.phone, reply);
   const at = new Date();
   await db.$transaction([
-    db.message.create({ data: { conversationId: t.conversationId, externalMessageId: messageId, direction: "OUTBOUND", senderType: "AI", messageType: "TEXT", textContent: r.data.reply, status: "SENT", createdAt: at } }),
+    db.message.create({ data: { conversationId: t.conversationId, externalMessageId: messageId, direction: "OUTBOUND", senderType: "AI", messageType: "TEXT", textContent: reply, status: "SENT", createdAt: at } }),
     db.conversation.update({ where: { id: t.conversationId }, data: { lastMessageAt: at } }),
   ]);
   return "sent";

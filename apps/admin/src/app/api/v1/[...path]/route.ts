@@ -7,6 +7,7 @@ import { createMessageTemplate } from "@/modules/whatsapp/templates";
 import { getMessageStats, listConversations } from "@/modules/messages/inbound";
 import { getConversation, sendReply } from "@/modules/messages/reply";
 import { getAiSettings, setAiSettings } from "@/modules/messages/ai";
+import { listOrders, setOrderStatus } from "@/modules/orders/service";
 import { AppError } from "@/server/errors";
 import { createBusiness, getBusiness, listBusinesses, updateBusiness, updateLocation, readiness, completeOnboarding, members, setMember } from "@/modules/business/service";
 export const dynamic = "force-dynamic";
@@ -48,6 +49,10 @@ async function handle(request: Request, context: Context) {
       if (method === "POST" && subId === "catalog" && subId2 === "use" && path.length === 5) return useCatalog(userId, businessId, await jsonBody(request), requestId);
       if (method === "POST" && subId === "disconnect" && path.length === 4) return disconnectWhatsApp(userId, businessId, requestId);
       if (method === "POST" && subId === "templates" && path.length === 4) return createMessageTemplate(userId, businessId, await jsonBody(request), requestId);
+    }
+    if (section === "orders") {
+      if (method === "GET" && path.length === 3) return listOrders(userId, businessId);
+      if (method === "POST" && subId2 === "status" && path.length === 5) return setOrderStatus(userId, businessId, subId, await jsonBody(request), requestId);
     }
     if (section === "ai" && path.length === 3) {
       if (method === "GET") return getAiSettings(userId, businessId);

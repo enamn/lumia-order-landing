@@ -400,6 +400,7 @@ model Conversation {
   status String @default("OPEN")
   assignedUserId String?
   needsHuman Boolean?
+  draftOrder Json?
   lastMessageAt DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

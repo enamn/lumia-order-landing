@@ -50,7 +50,8 @@ export async function getMessageStats(userId: string, businessId: string) {
   await authorize(userId, businessId);
   const received = await db.message.count({ where: { direction: "INBOUND", createdAt: { gte: startOfToday() }, conversation: { businessId } } });
   const aiReplies = await db.message.count({ where: { senderType: "AI", createdAt: { gte: startOfToday() }, conversation: { businessId } } });
-  return { messagesReceived: received, aiReplies, ordersCreated: 0 };
+  const ordersCreated = await db.order.count({ where: { businessId, createdAt: { gte: startOfToday() } } });
+  return { messagesReceived: received, aiReplies, ordersCreated };
 }
 
 export async function listConversations(userId: string, businessId: string) {
