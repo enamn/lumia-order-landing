@@ -18,6 +18,7 @@ describe.skipIf(!enabled)("replying to customers", () => {
     biz = (await createBusiness(owner, { name: "Reply Test", locationName: "Main" }, "t")).id;
     await setMember(owner, biz, { phoneNumber: `+97150888${String(1002)}`, role: "VIEWER" }, "t");
     await db.whatsAppAccount.create({ data: { businessId: biz, phoneNumberId: PNID, wabaId: "9990001", status: "CONNECTED", accessTokenEncrypted: encryptSecret("biz-token"), connectedAt: new Date() } });
+    calls = []; respond(() => Response.json({ error: { code: "AI_FAILED" } }, { status: 502 })); // the AI assistant is always on; keep it out of these staff-reply tests
     await recordInbound({ messages: [{ phoneNumberId: PNID, messageId: `wamid.${suffix}.1`, senderId: "971504074115", timestamp: String(Math.floor(Date.now() / 1000)), type: "text", textBody: "Do you deliver?", senderName: "Ahmad" }] });
     conv = (await db.conversation.findFirstOrThrow({ where: { businessId: biz } })).id;
   });

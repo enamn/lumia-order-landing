@@ -32,15 +32,12 @@ describe.skipIf(!enabled)("AI replies", () => {
   });
   afterAll(async () => { vi.unstubAllGlobals(); await db.$disconnect(); });
 
-  it("is off until the owner turns it on, and only owners/admins can change it", async () => {
-    expect(await getAiSettings(owner, biz)).toEqual({ enabled: false, instructions: "", tone: "Friendly" });
-    calls = []; ai = { intent: "greeting", language: "en", reply: "Hi!", needsHuman: false }; setup();
-    await inbound("hello");
-    expect(calls).toEqual([]); // AI is off: nothing is called, no reply is sent
-    await expect(setAiSettings(viewer, biz, { enabled: true }, "t")).rejects.toMatchObject({ status: 403 });
-    await expect(setAiSettings(owner, biz, { enabled: true, extra: 1 }, "t")).rejects.toBeDefined();
-    expect(await setAiSettings(owner, biz, { enabled: true, instructions: "Open until midnight." }, "t")).toEqual({ enabled: true, instructions: "Open until midnight.", tone: "Friendly" });
-    const audit = await db.auditLog.findFirstOrThrow({ where: { businessId: biz, action: "ai.enabled" } }); expect(JSON.stringify(audit)).not.toContain("midnight");
+  it("is always on without any setup, and only owners/admins can change the notes", async () => {
+    expect(await getAiSettings(owner, biz)).toEqual({ enabled: true, instructions: "", tone: "Friendly" });
+    await expect(setAiSettings(viewer, biz, { instructions: "x" }, "t")).rejects.toMatchObject({ status: 403 });
+    await expect(setAiSettings(owner, biz, { instructions: "x", extra: 1 }, "t")).rejects.toBeDefined();
+    expect(await setAiSettings(owner, biz, { instructions: "Open until midnight." }, "t")).toEqual({ enabled: true, instructions: "Open until midnight.", tone: "Friendly" });
+    const audit = await db.auditLog.findFirstOrThrow({ where: { businessId: biz, action: "ai.settings.updated" } }); expect(JSON.stringify(audit)).not.toContain("midnight");
   });
   it("answers from the menu and stores the reply as AI", async () => {
     calls = []; ai = { intent: "price_question", language: "en", reply: "The Classic is 28 AED.", needsHuman: false }; setup();
@@ -79,7 +76,7 @@ describe.skipIf(!enabled)("AI replies", () => {
     expect(await db.message.count({ where: { conversation: { businessId: biz } } })).toBe(before + 1);
     expect(calls.some(c => c.path === "/internal/whatsapp/send")).toBe(false);
   });
-  it("turning it off stops replies", async () => {
+  it("stays quiet only if it was explicitly disabled by us", async () => {
     await setAiSettings(owner, biz, { enabled: false }, "t"); await db.conversation.updateMany({ where: { businessId: biz }, data: { needsHuman: false } });
     await db.message.updateMany({ where: { senderType: "STAFF", conversation: { businessId: biz } }, data: { createdAt: new Date(Date.now() - 3600000) } });
     calls = []; ai = { intent: "greeting", language: "en", reply: "Hi!", needsHuman: false }; setup(); await inbound("hello again"); expect(calls).toEqual([]);

@@ -10,10 +10,12 @@ import { createOrderFromDraft } from "@/modules/orders/service";
 // The AI assistant answers customers' WhatsApp messages from the restaurant's own menu. It only replies when the owner turned it on,
 // never keeps talking once a person has taken over, and hands anything it cannot answer (orders, complaints, unknown facts) to staff.
 const HUMAN_ACTIVE_MS = 15 * 60 * 1000; const MAX_AI_PER_HOUR = 20;
-export const aiSettingsSchema = z.object({ enabled: z.boolean(), instructions: z.string().trim().max(1500).optional(), tone: z.enum(["Friendly", "Professional", "Casual"]).optional() }).strict();
+export const aiSettingsSchema = z.object({ enabled: z.boolean().optional(), instructions: z.string().trim().max(1500).optional(), tone: z.enum(["Friendly", "Professional", "Casual"]).optional() }).strict();
 
 const agentFor = (businessId: string) => db.aiAgent.findFirst({ where: { businessId }, orderBy: { createdAt: "asc" } });
-const view = (a: { status: string; instructions: string; tone: string } | null) => ({ enabled: a?.status === "ACTIVE", instructions: a?.instructions ?? "", tone: a?.tone ?? "Friendly" });
+// The assistant is always on for a connected restaurant. Only an explicit DISABLED status (set by us, not exposed in the app) silences it.
+const isOn = (a: { status: string } | null) => a?.status !== "DISABLED";
+const view = (a: { status: string; instructions: string; tone: string } | null) => ({ enabled: isOn(a), instructions: a?.instructions ?? "", tone: a?.tone ?? "Friendly" });
 
 export async function getAiSettings(userId: string, businessId: string) { await authorize(userId, businessId); return view(await agentFor(businessId)); }
 
@@ -22,10 +24,10 @@ export async function setAiSettings(userId: string, businessId: string, input: u
   return transaction(async tx => {
     const { business } = await authorize(userId, businessId, "business.manage", tx);
     const existing = await tx.aiAgent.findFirst({ where: { businessId }, orderBy: { createdAt: "asc" } });
-    const fields = { status: data.enabled ? "ACTIVE" : "DRAFT", ...(data.instructions !== undefined ? { instructions: data.instructions } : {}), ...(data.tone ? { tone: data.tone } : {}) };
+    const fields = { status: data.enabled === false ? "DISABLED" : "ACTIVE", ...(data.instructions !== undefined ? { instructions: data.instructions } : {}), ...(data.tone ? { tone: data.tone } : {}) };
     const agent = existing ? await tx.aiAgent.update({ where: { id: existing.id }, data: fields }) : await tx.aiAgent.create({ data: { businessId, ...fields } });
     // Instructions can hold business details, so the audit trail records only that the setting changed.
-    await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "AiAgent", entityId: agent.id, action: data.enabled ? "ai.enabled" : "ai.disabled", requestId } });
+    await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "AiAgent", entityId: agent.id, action: data.enabled === false ? "ai.disabled" : "ai.settings.updated", requestId } });
     return view(agent);
   });
 }
@@ -39,7 +41,7 @@ async function loadMenu(businessId: string): Promise<(MenuEntry & { category: st
 
 export async function autoReply(t: { businessId: string; conversationId: string; externalMessageId: string }): Promise<"sent" | "skipped"> {
   const agent = await agentFor(t.businessId);
-  if (agent?.status !== "ACTIVE") return "skipped";
+  if (!isOn(agent)) return "skipped";
   const account = await db.whatsAppAccount.findFirst({ where: { businessId: t.businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
   if (!account?.phoneNumberId || !account.accessTokenEncrypted) return "skipped";
   const conversation = await db.conversation.findFirst({ where: { id: t.conversationId, businessId: t.businessId }, include: { customer: { select: { phone: true, displayName: true } }, business: { select: { name: true } } } });
@@ -59,7 +61,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const prev = conversation.draftOrder as StoredDraft | null;
   const stored = prev && Date.now() - new Date(prev.updatedAt).getTime() < DRAFT_TTL_MS ? prev : null;
   const apiDraft = stored ? { items: stored.items.flatMap(l => byItem.has(l.itemId) ? [{ id: byItem.get(l.itemId)!, quantity: l.quantity, notes: l.notes }] : []), fulfillment: stored.fulfillment, address: stored.address, confirmed: false } : null;
-  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent.tone, instructions: agent.instructions, menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent }, 45000);
+  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent }, 45000);
   if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "AI_REPLY_REJECTED", status: r.status, apiCode: r.code })); return "skipped"; }
   const lang = r.data.language; const parts = [r.data.reply];
   const data: { needsHuman?: boolean; draftOrder?: object | null } = {};
