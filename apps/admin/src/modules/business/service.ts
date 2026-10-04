@@ -35,7 +35,7 @@ export async function getBusiness(userId: string, id: string) {
 function profileComplete(b: { name: string; phone: string | null }, locations: Array<{ status: string; addressLine1: string; city: string; hours: unknown[] }>) {
   return Boolean(b.name && b.phone && locations.some(l => l.status === "ACTIVE" && l.addressLine1 && l.city && l.hours.length === 7));
 }
-async function updateProgress(tx: Prisma.TransactionClient, id: string) {
+export async function updateProgress(tx: Prisma.TransactionClient, id: string) {
   const b = await tx.business.findUniqueOrThrow({ where: { id }, include: profileInclude });
   const complete = profileComplete(b, b.locations);
   await tx.onboardingSession.update({ where: { businessId: id }, data: { lastActivityAt: new Date(), currentStep: complete ? "WHATSAPP" : "BUSINESS", steps: { updateMany: { where: { stepKey: "BUSINESS" }, data: { status: complete ? "COMPLETED" : "IN_PROGRESS", completedAt: complete ? new Date() : null } } } } });

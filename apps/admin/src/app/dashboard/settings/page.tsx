@@ -1,9 +1,9 @@
 import { pageContext } from "@/server/page-context";
-import { members } from "@/modules/business/service";
-import { can } from "@/server/authorization";
-import { toProfile } from "@/modules/business/presenter";
-import { Shell } from "@/components/shell";
-import { BusinessForm } from "@/components/business-form";
-import { Members } from "@/components/members";
+import { getSettings } from "@/modules/settings/service";
+import SettingsApp from "@/design/SettingsApp";
 export const dynamic = "force-dynamic";
-export default async function Settings({ searchParams }: { searchParams: Promise<{ businessId?: string }> }) { const ctx = await pageContext((await searchParams).businessId); const b = ctx.business; const team = can(b.role, "users.manage") ? await members(ctx.user.id, b.id) : null; return <Shell {...ctx} role={b.role}><div className="page-heading"><div><h1>Settings</h1><p className="muted">Keep your details up to date and your team connected.</p></div><span className="pill">{b.role.toLowerCase()}</span></div><BusinessForm key={b.id} businessId={b.id} initial={toProfile(b)} role={b.role}/>{team && <Members businessId={b.id} initial={team} owner={b.role === "OWNER"}/>}</Shell>; }
+export default async function Settings({ searchParams }: { searchParams: Promise<{ businessId?: string }> }) {
+  const { business, user } = await pageContext((await searchParams).businessId);
+  const s = await getSettings(user.id, business.id);
+  return <SettingsApp businessId={business.id} query={`?businessId=${business.id}`} initial={{ sections: s.sections, menu: { ...s.menu, updatedAt: s.menu.updatedAt?.toISOString() ?? null }, whatsapp: s.whatsapp }}/>;
+}

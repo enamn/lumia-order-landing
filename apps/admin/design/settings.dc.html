@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<!-- LUMIA-EXT settings --><!-- LUMIA-EXT logo -->
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#fff;color:#1A0815;font-family:'Geist','IBM Plex Sans Arabic',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#1A0815;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px}a:hover{color:#FF5577}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+button:disabled{cursor:default}
+input,select,textarea{font:inherit;color:inherit;outline:none}
+input::placeholder,textarea::placeholder{color:#B89AA8}
+</style>
+</helmet>
+<div ref="{{ rootRef }}" style="height:100vh;height:100dvh;display:flex;overflow:hidden;background:#fff;color:#1A0815;font-family:'Geist','IBM Plex Sans Arabic',system-ui,sans-serif">
+
+  <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+    <aside style="flex:0 0 248px;border-right:1px solid #F0E4E8;display:flex;flex-direction:column;min-height:0">
+      <div style="height:64px;flex:none;padding:0 20px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #F0E4E8">
+        <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style="display:block;flex:none"><defs><linearGradient id="gRS" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF5577"></stop><stop offset="1" stop-color="#C93DFF"></stop></linearGradient></defs><path d="M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z" stroke="url(#gRS)" stroke-width="8" stroke-linejoin="round"></path><path d="M28 30V66H40" stroke="#1A0815" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="64" cy="55" r="11" stroke="url(#gRS)" stroke-width="10"></circle></svg>
+        <span style="display:flex;flex-direction:column;line-height:.92"><span style="font-size:16px;font-weight:700;letter-spacing:-0.035em">Lumia</span><span style="font-size:12px;letter-spacing:-0.01em">Order</span></span>
+      </div>
+      <nav style="flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:2px">
+        <sc-for list="{{ navGroups }}" as="g" hint-placeholder-count="2">
+        <sc-if value="{{ g.hasLabel }}" hint-placeholder-val="{{ false }}"><div style="padding:16px 12px 6px;font-size:14px;font-weight:600;color:#8A5A6E;display:flex;justify-content:space-between;gap:8px"><span>{{ g.label }}</span><span style="font-variant-numeric:tabular-nums">{{ g.count }}</span></div></sc-if>
+        <sc-for list="{{ g.items }}" as="n" hint-placeholder-count="5">
+          <button type="button" onClick="{{ n.pick }}" style="height:40px;padding:0 12px;border-radius:10px;display:flex;align-items:center;gap:12px;font-size:15px;text-align:left;font-weight:{{ n.fw }};color:{{ n.fg }};background:{{ n.bg }}" style-hover="background:#FBF3F8;color:#1A0815">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none"><path d="{{ n.icon }}" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            <span style="flex:1">{{ n.label }}</span>
+            <sc-if value="{{ n.flag }}" hint-placeholder-val="{{ false }}"><span title="Needs attention" style="width:8px;height:8px;border-radius:50%;background:{{ n.dot }};flex:none"></span></sc-if>
+          </button>
+        </sc-for>
+        </sc-for>
+      </nav>
+      <div style="padding:12px;border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:6px">
+        <a href="{{ dashUrl }}" style="height:36px;padding:0 12px;border-radius:10px;display:flex;align-items:center;gap:10px;font-size:14px;color:#8A5A6E;text-decoration:none" style-hover="background:#FBF3F8;color:#1A0815"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M12 5l-5 5 5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>Back to dashboard</a>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px">
+          <span style="width:32px;height:32px;border-radius:9px;flex:none;background:linear-gradient(135deg,#FF5577,#C93DFF);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ initials }}</span>
+          <span style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ brand }}</span>
+        </div>
+      </div>
+    </aside>
+  </sc-if>
+
+  <div style="flex:1;min-width:0;min-height:0;display:flex;flex-direction:column">
+    <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
+      <header style="flex:none;background:#fff;border-bottom:1px solid #F0E4E8">
+        <div style="height:56px;padding:0 16px;display:flex;align-items:center;gap:10px">
+          <a href="{{ dashUrl }}" aria-label="Back to dashboard" style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none;color:#1A0815" style-hover="background:#FBF3F8"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M12 5l-5 5 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
+          <span style="font-size:16px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Settings</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap;background:{{ ready.bg }};color:{{ ready.fg }}"><span style="width:7px;height:7px;border-radius:50%;background:currentColor"></span>{{ ready.short }}</span>
+        </div>
+        <nav style="display:flex;gap:20px;overflow-x:auto;padding:0 16px;scrollbar-width:none">
+          <sc-for list="{{ nav }}" as="n" hint-placeholder-count="9">
+            <button type="button" onClick="{{ n.pick }}" style="padding:8px 0 10px;white-space:nowrap;font-size:15px;display:flex;align-items:center;gap:6px;flex:none;font-weight:{{ n.fw }};color:{{ n.fg }};border-bottom:2px solid {{ n.bd }}">{{ n.label }}<sc-if value="{{ n.flag }}" hint-placeholder-val="{{ false }}"><span style="width:7px;height:7px;border-radius:50%;background:{{ n.dot }}"></span></sc-if></button>
+          </sc-for>
+        </nav>
+      </header>
+    </sc-if>
+
+    <main ref="{{ mainRef }}" style="flex:1;min-height:0;overflow-y:auto">
+      <div style="max-width:960px;margin:0 auto;padding:{{ L.pad }};display:flex;flex-direction:column;gap:20px">
+
+        <!-- Profile -->
+        <sc-if value="{{ pg.profile }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="02 Restaurant profile" style="display:flex;flex-direction:column;gap:20px">
+            <div>
+              <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Restaurant profile</h1>
+              <p style="font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty">How your restaurant appears to customers on WhatsApp and on receipts.</p>
+            </div>
+            <div style="display:grid;grid-template-columns:{{ L.split }};gap:20px;align-items:start">
+              <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px">
+                  <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Basics</h2>
+                  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+                    <span style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#FF5577,#C93DFF);color:#fff;font-size:20px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden">{{ logoNode }}</span>
+                    <div style="display:flex;flex-direction:column;gap:6px">
+                      <span style="font-size:14px;font-weight:500;color:#3D1C31">Logo</span>
+                      <button type="button" onClick="{{ pickLogo }}" style="align-self:flex-start;height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px" style-hover="background:#FBF3F8">Upload logo</button>
+                      <span style="font-size:13px;color:#8A5A6E">Square PNG or JPG, at least 400 px.</span>
+                    </div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px 20px">
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Restaurant name</span><input value="{{ prof.name.v }}" onChange="{{ prof.name.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input><span style="font-size:13px;color:#8A5A6E">Legal or registered name.</span></label>
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Brand name shown to customers</span><input value="{{ prof.brand.v }}" onChange="{{ prof.brand.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input><span style="font-size:13px;color:#8A5A6E">Used in greetings and order summaries.</span></label>
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Cuisine type</span><input value="{{ prof.cuisine.v }}" onChange="{{ prof.cuisine.set }}" placeholder="e.g. Burgers, Lebanese, Pizza" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input></label>
+                  </div>
+                </section>
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px">
+                  <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Contact</h2>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px 20px">
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Business phone</span><input value="{{ prof.phone.v }}" onChange="{{ prof.phone.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Support WhatsApp number</span><input value="{{ prof.support.v }}" onChange="{{ prof.support.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input><span style="font-size:13px;color:#8A5A6E">Customers are sent here if they ask for a person.</span></label>
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Email</span><input type="email" value="{{ prof.email.v }}" onChange="{{ prof.email.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input></label>
+                  </div>
+                </section>
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+                    <div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">VAT registered</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px;line-height:1.5">Lumia adds 5% VAT to order totals and shows your TRN on receipts.</p></div>
+                    <button type="button" role="switch" aria-checked="{{ vatSw.on }}" aria-label="VAT registered" onClick="{{ vatSw.toggle }}" style="width:48px;height:28px;border-radius:999px;flex:none;background:{{ vatSw.tBg }};position:relative;transition:background .15s"><span style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX({{ vatSw.knob }});transition:transform .18s"></span></button>
+                  </div>
+                  <sc-if value="{{ vatSw.on }}" hint-placeholder-val="{{ true }}">
+                    <label style="display:flex;flex-direction:column;gap:6px;max-width:360px"><span style="font-size:14px;font-weight:500;color:#3D1C31">TRN number</span><input value="{{ prof.trn.v }}" onChange="{{ prof.trn.set }}" inputmode="numeric" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid {{ trnBd }};background:#fff;font-size:15px;font-variant-numeric:tabular-nums;letter-spacing:.02em" style-focus="border-color:#C93DFF"></input><span style="font-size:13px;color:{{ trnHintFg }}">{{ trnHint }}</span></label>
+                  </sc-if>
+                </section>
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px">
+                  <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Customer messages</h2>
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <span style="font-size:14px;font-weight:500;color:#3D1C31">Default language</span>
+                    <div role="radiogroup" aria-label="Default language" style="display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;align-self:flex-start">
+                      <sc-for list="{{ langSeg }}" as="o" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="height:34px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for>
+                    </div>
+                    <span style="font-size:13px;color:#8A5A6E">With Both, Lumia replies in the language the customer writes in.</span>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <span style="font-size:14px;font-weight:500;color:#3D1C31">Greeting style</span>
+                    <div role="radiogroup" aria-label="Greeting style" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px">
+                      <sc-for list="{{ greetOpts }}" as="o" hint-placeholder-count="3">
+                        <button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid {{ o.bd }};background:{{ o.bg }}">
+                          <span style="width:18px;height:18px;border-radius:50%;border:1.5px solid {{ o.ring }};flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center"><span style="width:8px;height:8px;border-radius:50%;background:{{ o.dotBg }}"></span></span>
+                          <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:15px;font-weight:500">{{ o.label }}</span><span style="font-size:13px;color:#8A5A6E;line-height:1.4">{{ o.desc }}</span></span>
+                        </button>
+                      </sc-for>
+                    </div>
+                  </div>
+                </section>
+              </div>
+              <div style="position:sticky;top:12px;border-radius:16px;background:#EFE7DE;padding:16px;display:flex;flex-direction:column;gap:8px">
+                <span style="font-size:14px;font-weight:600;color:#6B5B4E">Customer preview</span>
+                <sc-for list="{{ greetBubbles }}" as="b" hint-placeholder-count="1">
+                  <div dir="{{ b.dir }}" style="align-self:flex-start;max-width:92%;background:#fff;border-radius:4px 14px 14px 14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.06)">{{ b.text }}</div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- Branches -->
+        <sc-if value="{{ pg.branches }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="03 Branches" style="display:flex;flex-direction:column;gap:20px">
+            <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
+              <div>
+                <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Branches &amp; locations</h1>
+                <p style="font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty">Lumia uses each branch's location to pick the nearest branch and calculate delivery.</p>
+              </div>
+              <sc-if value="{{ notAdding }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ startAdd }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">+ Add branch</button></sc-if>
+            </div>
+            <sc-if value="{{ pinMissing }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#FFF6E8;color:#6B3A00;font-size:14px;line-height:1.45"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;margin-top:1px"><path d="M10 3 18 17H2L10 3zM10 8.5v3.5M10 14.6v.01" stroke="#B25E00" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Add a branch location pin so Lumia can calculate delivery distance and fees.</span></div>
+            </sc-if>
+
+            <sc-if value="{{ adding }}" hint-placeholder-val="{{ false }}">
+              <section style="border:1.5px solid #E3CBD4;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px">
+                <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">New branch</h2>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px 20px">
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Branch name</span><input value="{{ nb.name.v }}" onChange="{{ nb.name.set }}" placeholder="e.g. Dubai Marina Branch" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input></label>
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Emirate</span>{{ nb.emSel }}</label>
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Area</span><input value="{{ nb.area.v }}" onChange="{{ nb.area.set }}" placeholder="e.g. Dubai Marina" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input></label>
+                  <label style="display:flex;flex-direction:column;gap:6px;grid-column:1/-1"><span style="font-size:14px;font-weight:500;color:#3D1C31">Full address</span><input value="{{ nb.address.v }}" onChange="{{ nb.address.set }}" placeholder="Street, building, shop number" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input></label>
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Phone number</span><input value="{{ nb.phone.v }}" onChange="{{ nb.phone.set }}" placeholder="+971 4 000 0000" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input></label>
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Default ETA (minutes)</span><input inputmode="numeric" value="{{ nb.eta.v }}" onChange="{{ nb.eta.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input></label>
+                  <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Branch status</span>
+                    <div role="radiogroup" aria-label="Branch status" style="display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;align-self:flex-start">
+                      <sc-for list="{{ nbStatus }}" as="o" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="height:38px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for>
+                    </div>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <div><span style="font-size:14px;font-weight:500;color:#3D1C31">Location pin</span><p style="font-size:13px;color:#8A5A6E;margin-top:2px">Required for distance-based delivery pricing.</p></div>
+                  <div style="display:flex;flex-wrap:wrap;gap:8px">
+                    <sc-for list="{{ pinModes }}" as="o" hint-placeholder-count="4"><button type="button" onClick="{{ o.pick }}" style="height:38px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;background:{{ o.bg }};color:{{ o.fg }};border:1.5px solid {{ o.bd }}">{{ o.label }}</button></sc-for>
+                  </div>
+                  <sc-if value="{{ pm.search }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex;gap:8px;flex-wrap:wrap"><input value="{{ pinQ }}" onChange="{{ onPinQ }}" placeholder="Search address or building" style="flex:1 1 240px;height:44px;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input><button type="button" onClick="{{ setPin }}" style="height:44px;padding:0 16px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px" style-hover="background:#FBF3F8">Use this address</button></div>
+                  </sc-if>
+                  <sc-if value="{{ pm.paste }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;gap:8px;flex-wrap:wrap"><input value="{{ pinQ }}" onChange="{{ onPinQ }}" placeholder="https://maps.app.goo.gl/…" style="flex:1 1 240px;height:44px;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input><button type="button" onClick="{{ setPin }}" style="height:44px;padding:0 16px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px" style-hover="background:#FBF3F8">Use link</button></div>
+                  </sc-if>
+                  <sc-if value="{{ pm.current }}" hint-placeholder-val="{{ false }}">
+                    <button type="button" onClick="{{ setPin }}" style="align-self:flex-start;height:44px;padding:0 16px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px" style-hover="background:#FBF3F8">Use my current location</button>
+                    <span style="font-size:13px;color:#8A5A6E">Do this from inside the branch for the most accurate pin.</span>
+                  </sc-if>
+                  <div onClick="{{ mapClick }}" style="height:200px;border-radius:14px;border:1px solid #ECEAEB;background-color:#F4F2EF;background-image:repeating-linear-gradient(0deg,transparent 0 39px,#E7E3DE 39px 40px),repeating-linear-gradient(90deg,transparent 0 39px,#E7E3DE 39px 40px);display:flex;align-items:center;justify-content:center;cursor:{{ mapCursor }};position:relative">
+                    <sc-if value="{{ nbPinned }}" hint-placeholder-val="{{ false }}"><svg width="34" height="34" viewBox="0 0 20 20" fill="none"><path d="M10 18s6-5.2 6-9.6A6 6 0 0 0 4 8.4C4 12.8 10 18 10 18z" fill="#FF5577"></path><circle cx="10" cy="8.4" r="2.3" fill="#fff"></circle></svg></sc-if>
+                    <sc-if value="{{ nbNoPin }}" hint-placeholder-val="{{ true }}"><span style="font-size:14px;color:#6E6468;background:#fff;padding:6px 12px;border-radius:999px">{{ mapHint }}</span></sc-if>
+                  </div>
+                  <sc-if value="{{ nbPinned }}" hint-placeholder-val="{{ false }}"><span style="font-size:14px;color:#16704A;font-weight:500;font-variant-numeric:tabular-nums">Pin set · {{ nbCoords }}</span></sc-if>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;border-top:1px solid #F3EEF1;padding-top:16px">
+                  <button type="button" onClick="{{ cancelAdd }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Cancel</button>
+                  <button type="button" onClick="{{ confirmAdd }}" disabled="{{ nbInvalid }}" style="height:44px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;opacity:{{ nbOp }}">Add branch</button>
+                </div>
+              </section>
+            </sc-if>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:16px">
+              <sc-for list="{{ branchCards }}" as="b" hint-placeholder-count="2">
+                <article style="border:1px solid #F0E4E8;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+                    <div style="min-width:0"><h3 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">{{ b.name }}</h3><span style="font-size:14px;color:#8A5A6E">{{ b.addr }}</span></div>
+                    <span style="display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:500;white-space:nowrap;background:{{ b.sbg }};color:{{ b.sfg }}">{{ b.status }}</span>
+                  </div>
+                  <dl style="display:flex;flex-direction:column">
+                    <sc-for list="{{ b.rows }}" as="r" hint-placeholder-count="5">
+                      <div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid #F3EEF1;font-size:14px"><dt style="color:#8A5A6E">{{ r.k }}</dt><dd style="font-weight:500;text-align:right;color:{{ r.fg }};font-variant-numeric:tabular-nums">{{ r.v }}</dd></div>
+                    </sc-for>
+                  </dl>
+                  <sc-if value="{{ b.noPin }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ b.addPin }}" style="height:40px;border-radius:10px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:14px">Add location pin</button></sc-if>
+                </article>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- WhatsApp -->
+        <sc-if value="{{ pg.whatsapp }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="04 WhatsApp" style="display:flex;flex-direction:column;gap:20px">
+            <div>
+              <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">WhatsApp connection</h1>
+              <p style="font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty">The WhatsApp Business number your customers message to order.</p>
+            </div>
+            <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+                <span style="width:48px;height:48px;border-radius:14px;background:#fff;border:1px solid #ECD9E0;display:flex;align-items:center;justify-content:center;flex:none"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366"></path><path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff"></path></svg></span>
+                <div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em">+971 50 123 4567</div><div style="font-size:14px;color:#8A5A6E">{{ brand }}</div></div>
+                <span style="display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:600;background:#E6F4EC;color:#16704A"><span style="width:7px;height:7px;border-radius:50%;background:currentColor"></span>Connected</span>
+              </div>
+              <dl style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px 20px;border-top:1px solid #F3EEF1;padding-top:14px">
+                <div><dt style="font-size:13px;color:#8A5A6E">Display name</dt><dd style="font-size:15px;font-weight:500;margin-top:2px">{{ brand }}</dd></div>
+                <div><dt style="font-size:13px;color:#8A5A6E">Takes orders for</dt><dd style="font-size:15px;font-weight:500;margin-top:2px">{{ waFor }}</dd></div>
+                <div><dt style="font-size:13px;color:#8A5A6E">Last message received</dt><dd style="font-size:15px;font-weight:500;margin-top:2px">4 minutes ago</dd></div>
+              </dl>
+            </section>
+            <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+              <div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Which branches does this number take orders for?</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px;line-height:1.5">Matters when you have more than one branch.</p></div>
+              <div role="radiogroup" aria-label="Branch routing" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px">
+                <sc-for list="{{ routeOpts }}" as="o" hint-placeholder-count="3">
+                  <button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid {{ o.bd }};background:{{ o.bg }}">
+                    <span style="width:18px;height:18px;border-radius:50%;border:1.5px solid {{ o.ring }};flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center"><span style="width:8px;height:8px;border-radius:50%;background:{{ o.dotBg }}"></span></span>
+                    <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:15px;font-weight:500">{{ o.label }}</span><span style="font-size:13px;color:#8A5A6E;line-height:1.4">{{ o.desc }}</span></span>
+                  </button>
+                </sc-for>
+              </div>
+              <sc-if value="{{ route.pickBranches }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <span style="font-size:14px;font-weight:500;color:#3D1C31">{{ route.pickLabel }}</span>
+                  <div style="display:flex;flex-wrap:wrap;gap:8px">
+                    <sc-for list="{{ routeBranches }}" as="o" hint-placeholder-count="2"><button type="button" onClick="{{ o.pick }}" style="height:38px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;background:{{ o.bg }};color:{{ o.fg }};border:1.5px solid {{ o.bd }}">{{ o.label }}</button></sc-for>
+                  </div>
+                </div>
+              </sc-if>
+              <div style="border-radius:12px;background:#FAF6FA;padding:14px 16px;display:flex;flex-direction:column;gap:6px">
+                <sc-for list="{{ waMap }}" as="m" hint-placeholder-count="1"><div style="font-size:15px;font-variant-numeric:tabular-nums;display:flex;flex-wrap:wrap;gap:4px 10px"><span style="font-weight:500">+971 50 123 4567</span><span style="color:#8A5A6E">→</span><span style="font-weight:500">{{ m }}</span></div></sc-for>
+                <span style="font-size:14px;color:#8A5A6E">{{ route.note }}</span>
+              </div>
+              <button type="button" onClick="{{ markDirty }}" style="align-self:flex-start;font-size:14px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px" style-hover="color:#FF5577">+ Add another WhatsApp number for a different branch</button>
+            </section>
+          </div>
+        </sc-if>
+
+        <!-- Delivery -->
+        <sc-if value="{{ pg.delivery }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="05 Delivery" style="display:flex;flex-direction:column;gap:20px">
+            <div>
+              <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Delivery settings</h1>
+              <p style="font-size:15px;color:#8A5A6E;margin-top:6px;max-width:640px;line-height:1.5;text-wrap:pretty">Where you deliver and what customers pay. Your restaurant does the delivery. Lumia calculates the fee and includes it in the order summary.</p>
+            </div>
+            <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+              <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Delivery status</h2>
+              <div role="radiogroup" aria-label="Delivery status" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px">
+                <sc-for list="{{ dStatusOpts }}" as="o" hint-placeholder-count="3">
+                  <button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid {{ o.bd }};background:{{ o.bg }}">
+                    <span style="width:18px;height:18px;border-radius:50%;border:1.5px solid {{ o.ring }};flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center"><span style="width:8px;height:8px;border-radius:50%;background:{{ o.dotBg }}"></span></span>
+                    <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:15px;font-weight:500">{{ o.label }}</span><span style="font-size:13px;color:#8A5A6E;line-height:1.4">{{ o.desc }}</span></span>
+                  </button>
+                </sc-for>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;border-top:1px solid #F3EEF1;padding-top:14px;font-size:14px"><span style="color:#8A5A6E">Delivery handled by</span><span style="font-weight:600">Your restaurant</span><span style="color:#8A5A6E">· Lumia doesn't provide drivers yet.</span></div>
+            </section>
+
+            <sc-if value="{{ dl.pickup }}" hint-placeholder-val="{{ false }}">
+              <div style="border-radius:12px;background:#FAF6FA;padding:14px 16px;font-size:14px;color:#3D1C31;line-height:1.5">Customers can only order for pickup. Lumia will share the branch address in the order summary.</div>
+            </sc-if>
+            <sc-if value="{{ dl.paused }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#FFF6E8;color:#6B3A00;font-size:14px;line-height:1.45"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;margin-top:1px"><path d="M10 3 18 17H2L10 3zM10 8.5v3.5M10 14.6v.01" stroke="#B25E00" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Delivery is paused. Lumia will offer pickup until you switch delivery back on.</span></div>
+            </sc-if>
+
+            <sc-if value="{{ dl.on }}" hint-placeholder-val="{{ true }}">
+              <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+                <div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">How is the delivery fee calculated?</h2></div>
+                <div role="radiogroup" aria-label="Pricing method" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px">
+                  <sc-for list="{{ methodOpts }}" as="o" hint-placeholder-count="4">
+                    <button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid {{ o.bd }};background:{{ o.bg }}">
+                      <span style="width:18px;height:18px;border-radius:50%;border:1.5px solid {{ o.ring }};flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center"><span style="width:8px;height:8px;border-radius:50%;background:{{ o.dotBg }}"></span></span>
+                      <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:15px;font-weight:500">{{ o.label }}</span><span style="font-size:13px;color:#8A5A6E;line-height:1.4">{{ o.desc }}</span></span>
+                    </button>
+                  </sc-for>
+                </div>
+                <sc-if value="{{ dl.noMethod }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#FFF6E8;color:#6B3A00;font-size:14px;line-height:1.45"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;margin-top:1px"><path d="M10 3 18 17H2L10 3zM10 8.5v3.5M10 14.6v.01" stroke="#B25E00" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Delivery settings are missing. Lumia AI cannot calculate delivery fees yet.</span></div>
+                </sc-if>
+              </section>
+
+              <sc-if value="{{ dl.area }}" hint-placeholder-val="{{ false }}">
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:12px">
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px"><div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Delivery areas</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px">Turn an area off to stop delivering there.</p></div><button type="button" onClick="{{ addArea }}" style="height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px" style-hover="background:#FBF3F8">+ Add area</button></div>
+                  <div style="display:flex;flex-direction:column">
+                    <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+                      <div style="display:grid;grid-template-columns:{{ L.areaCols }};gap:10px;padding-bottom:8px;font-size:13px;font-weight:500;color:#8A5A6E"><span>Emirate</span><span>Area</span><span>Fee (AED)</span><span>Min. order</span><span>ETA (min)</span><span>Branch</span><span>Active</span><span></span></div>
+                    </sc-if>
+                    <sc-for list="{{ areas }}" as="r" hint-placeholder-count="3">
+                      <div style="display:grid;grid-template-columns:{{ L.areaCols }};gap:10px;align-items:end;padding:{{ L.rowPad }};border-top:1px solid #F3EEF1">
+                        <label style="display:flex;flex-direction:column;gap:4px;min-width:0;opacity:{{ r.op }}"><span style="display:{{ L.cellLbl }};font-size:12px;color:#8A5A6E">Emirate</span>{{ r.emSel }}</label>
+                        <label style="display:flex;flex-direction:column;gap:4px;min-width:0;opacity:{{ r.op }}"><span style="display:{{ L.cellLbl }};font-size:12px;color:#8A5A6E">Area</span><input value="{{ r.area }}" onChange="{{ r.set.area }}" style="height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px" style-focus="border-color:#C93DFF"></input></label>
+                        <label style="display:flex;flex-direction:column;gap:4px;min-width:0;opacity:{{ r.op }}"><span style="display:{{ L.cellLbl }};font-size:12px;color:#8A5A6E">Fee (AED)</span><input inputmode="decimal" value="{{ r.fee }}" placeholder="{{ r.feePh }}" onChange="{{ r.set.fee }}" style="height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
+                        <label style="display:flex;flex-direction:column;gap:4px;min-width:0;opacity:{{ r.op }}"><span style="display:{{ L.cellLbl }};font-size:12px;color:#8A5A6E">Min. order</span><input inputmode="decimal" value="{{ r.min }}" onChange="{{ r.set.min }}" style="height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
+                        <label style="display:flex;flex-direction:column;gap:4px;min-width:0;opacity:{{ r.op }}"><span style="display:{{ L.cellLbl }};font-size:12px;color:#8A5A6E">ETA (min)</span><input inputmode="numeric" value="{{ r.eta }}" onChange="{{ r.set.eta }}" style="height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
+                        <label style="display:flex;flex-direction:column;gap:4px;min-width:0;opacity:{{ r.op }}"><span style="display:{{ L.cellLbl }};font-size:12px;color:#8A5A6E">Branch</span>{{ r.brSel }}</label>
+                        <div style="height:40px;display:flex;align-items:center;gap:8px"><button type="button" role="switch" aria-checked="{{ r.sw.on }}" aria-label="Area active" onClick="{{ r.sw.toggle }}" style="width:48px;height:28px;border-radius:999px;flex:none;background:{{ r.sw.tBg }};position:relative;transition:background .15s"><span style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX({{ r.sw.knob }});transition:transform .18s"></span></button><span style="display:{{ L.cellLbl }};font-size:13px;color:#8A5A6E">{{ r.onLabel }}</span></div>
+                        <button type="button" onClick="{{ r.remove }}" aria-label="Remove area" style="width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;justify-self:end;color:#8A5A6E" style-hover="background:#FBF3F8;color:#B42318"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+                      </div>
+                    </sc-for>
+                  </div>
+                </section>
+              </sc-if>
+
+              <sc-if value="{{ dl.distance }}" hint-placeholder-val="{{ false }}">
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:12px">
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px"><div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Distance ranges</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px">Measured from the branch to the customer. Leave "To" empty for no limit.</p></div><button type="button" onClick="{{ addRange }}" style="height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px" style-hover="background:#FBF3F8">+ Add range</button></div>
+                  <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#FFF6E8;color:#6B3A00;font-size:14px;line-height:1.45"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;margin-top:1px"><path d="M10 3 18 17H2L10 3zM10 8.5v3.5M10 14.6v.01" stroke="#B25E00" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Distance pricing needs a branch location pin and customer location pin.</span></div>
+                  <div style="display:flex;flex-direction:column">
+                    <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+                      <div style="display:grid;grid-template-columns:{{ L.rangeCols }};gap:10px;padding-bottom:8px;font-size:13px;font-weight:500;color:#8A5A6E"><span>From (km)</span><span>To (km)</span><span>Fee (AED)</span><span>Min. order</span><span>ETA (min)</span><span>Active</span><span></span></div>
+                    </sc-if>
+                    <sc-for list="{{ ranges }}" as="r" hint-placeholder-count="3">
+                      <div style="display:grid;grid-template-columns:{{ L.rangeCols }};gap:10px;align-items:end;padding:{{ L.rowPad }};border-top:1px solid #F3EEF1">
+                        <label style="display:flex;flex-direction:column;gap:4px;min-width:0;opacity:{{ r.op }}"><span style="display:{{ L.cellLbl }};font-size:12px;color:#8A5A6E">From (km)</span><input inputmode="decimal" value="{{ r.from }}" onChange="{{ r.set.from }}" style="height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid {{ r.bd }};background:#fff;font-size:14px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
+                        <label style="display:flex;flex-direction:column;gap:4px;min-width:0;opacity:{{ r.op }}"><span style="display:{{ L.cellLbl }};font-size:12px;color:#8A5A6E">To (km)</span><input inputmode="decimal" value="{{ r.to }}" placeholder="No limit" onChange="{{ r.set.to }}" style="height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid {{ r.bd }};background:#fff;font-size:14px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
+                        <label style="display:flex;flex-direction:column;gap:4px;min-width:0;opacity:{{ r.op }}"><span style="display:{{ L.cellLbl }};font-size:12px;color:#8A5A6E">Fee (AED)</span><input inputmode="decimal" value="{{ r.fee }}" onChange="{{ r.set.fee }}" style="height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
+                        <label style="display:flex;flex-direction:column;gap:4px;min-width:0;opacity:{{ r.op }}"><span style="display:{{ L.cellLbl }};font-size:12px;color:#8A5A6E">Min. order</span><input inputmode="decimal" value="{{ r.min }}" onChange="{{ r.set.min }}" style="height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
+                        <label style="display:flex;flex-direction:column;gap:4px;min-width:0;opacity:{{ r.op }}"><span style="display:{{ L.cellLbl }};font-size:12px;color:#8A5A6E">ETA (min)</span><input inputmode="numeric" value="{{ r.eta }}" onChange="{{ r.set.eta }}" style="height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
+                        <div style="height:40px;display:flex;align-items:center;gap:8px"><button type="button" role="switch" aria-checked="{{ r.sw.on }}" aria-label="Range active" onClick="{{ r.sw.toggle }}" style="width:48px;height:28px;border-radius:999px;flex:none;background:{{ r.sw.tBg }};position:relative;transition:background .15s"><span style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX({{ r.sw.knob }});transition:transform .18s"></span></button><span style="display:{{ L.cellLbl }};font-size:13px;color:#8A5A6E">{{ r.onLabel }}</span></div>
+                        <button type="button" onClick="{{ r.remove }}" aria-label="Remove range" style="width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;justify-self:end;color:#8A5A6E" style-hover="background:#FBF3F8;color:#B42318"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+                      </div>
+                    </sc-for>
+                  </div>
+                </section>
+              </sc-if>
+
+              <sc-if value="{{ dl.free }}" hint-placeholder-val="{{ false }}">
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+                  <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Where you deliver for free</h2>
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <span style="font-size:14px;font-weight:500;color:#3D1C31">Served emirates</span>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ freeEm }}" as="o" hint-placeholder-count="7"><button type="button" onClick="{{ o.pick }}" style="height:38px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;background:{{ o.bg }};color:{{ o.fg }};border:1.5px solid {{ o.bd }}">{{ o.label }}</button></sc-for></div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px 20px">
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Served areas</span><input value="{{ dlf.freeAreas.v }}" onChange="{{ dlf.freeAreas.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input><span style="font-size:13px;color:#8A5A6E">e.g. All areas, or Al Majaz, Al Nahda</span></label>
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Branch</span>{{ freeBrSel }}</label>
+                  </div>
+                </section>
+              </sc-if>
+
+              <sc-if value="{{ dl.manual }}" hint-placeholder-val="{{ false }}">
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+                  <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Manual confirmation</h2>
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Message shown to customer</span><textarea value="{{ dlf.manualMsg.v }}" onChange="{{ dlf.manualMsg.set }}" rows="3" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;line-height:1.45;resize:vertical" style-focus="border-color:#C93DFF"></textarea></label>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+                    <div><span style="font-size:15px;font-weight:500">Send order to restaurant before final confirmation</span><p style="font-size:13px;color:#8A5A6E;margin-top:2px">You set the fee on the device, then Lumia sends the customer the final total.</p></div>
+                    <button type="button" role="switch" aria-checked="{{ confirmSw.on }}" aria-label="Send before confirmation" onClick="{{ confirmSw.toggle }}" style="width:48px;height:28px;border-radius:999px;flex:none;background:{{ confirmSw.tBg }};position:relative;transition:background .15s"><span style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX({{ confirmSw.knob }});transition:transform .18s"></span></button>
+                  </div>
+                </section>
+              </sc-if>
+
+              <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+                <div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Order rules</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px">Defaults used when an area or range doesn't set its own.</p></div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:16px 20px">
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Minimum order (AED)</span><input inputmode="decimal" value="{{ dlf.minOrder.v }}" onChange="{{ dlf.minOrder.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Free delivery above (AED)</span><input inputmode="decimal" value="{{ dlf.freeAbove.v }}" onChange="{{ dlf.freeAbove.set }}" placeholder="Off" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Default ETA (minutes)</span><input inputmode="numeric" value="{{ dlf.eta.v }}" onChange="{{ dlf.eta.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid #F3EEF1;padding-top:14px">
+                  <div><span style="font-size:15px;font-weight:500">Ask customers to share their location pin</span><p style="font-size:13px;color:{{ pinReqHintFg }};margin-top:2px">{{ pinReqHint }}</p></div>
+                  <button type="button" role="switch" aria-checked="{{ pinSw.on }}" aria-label="Require customer location pin" onClick="{{ pinSw.toggle }}" disabled="{{ pinSw.locked }}" style="width:48px;height:28px;border-radius:999px;flex:none;background:{{ pinSw.tBg }};position:relative;transition:background .15s;opacity:{{ pinSw.op }}"><span style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX({{ pinSw.knob }});transition:transform .18s"></span></button>
+                </div>
+              </section>
+
+              <div style="display:grid;grid-template-columns:{{ L.split }};gap:20px;align-items:start">
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px;min-width:0">
+                  <div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Test delivery fee</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px">Uses your unsaved changes.</p></div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px 14px">
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500;color:#3D1C31">Branch</span>{{ calc.brSel }}</label>
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500;color:#3D1C31">Emirate</span>{{ calc.emSel }}</label>
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500;color:#3D1C31">Area</span><input value="{{ calc.area }}" onChange="{{ calc.setArea }}" placeholder="Any" style="height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px" style-focus="border-color:#C93DFF"></input></label>
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500;color:#3D1C31">Distance (km)</span><input inputmode="decimal" value="{{ calc.dist }}" onChange="{{ calc.setDist }}" style="height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500;color:#3D1C31">Order subtotal (AED)</span><input inputmode="decimal" value="{{ calc.sub }}" onChange="{{ calc.setSub }}" style="height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
+                  </div>
+                  <div style="border-radius:12px;background:#FAF6FA;padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+                    <span style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:{{ res.fg }}"><span style="width:8px;height:8px;border-radius:50%;background:currentColor"></span>{{ res.head }}</span>
+                    <sc-for list="{{ res.rows }}" as="r" hint-placeholder-count="3"><div style="display:flex;justify-content:space-between;gap:12px;font-size:14px"><span style="color:#8A5A6E">{{ r.k }}</span><span style="font-weight:500;font-variant-numeric:tabular-nums">{{ r.v }}</span></div></sc-for>
+                  </div>
+                </section>
+                <div style="position:sticky;top:12px;border-radius:16px;background:#EFE7DE;padding:16px;display:flex;flex-direction:column;gap:8px">
+                  <span style="font-size:14px;font-weight:600;color:#6B5B4E">Customer preview</span>
+                  <div style="align-self:flex-start;max-width:92%;background:#fff;border-radius:4px 14px 14px 14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.06);white-space:pre-line">{{ res.msg }}</div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <!-- Hours -->
+        <sc-if value="{{ pg.hours }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="06 Working hours" style="display:flex;flex-direction:column;gap:20px">
+            <div>
+              <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Working hours</h1>
+              <p style="font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty">Lumia AI only takes orders while you're open. Outside these hours it tells customers when you open next.</p>
+            </div>
+            <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+              <div role="radiogroup" aria-label="Hours mode" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px">
+                <sc-for list="{{ hModeOpts }}" as="o" hint-placeholder-count="3">
+                  <button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid {{ o.bd }};background:{{ o.bg }}">
+                    <span style="width:18px;height:18px;border-radius:50%;border:1.5px solid {{ o.ring }};flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center"><span style="width:8px;height:8px;border-radius:50%;background:{{ o.dotBg }}"></span></span>
+                    <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:15px;font-weight:500">{{ o.label }}</span><span style="font-size:13px;color:#8A5A6E;line-height:1.4">{{ o.desc }}</span></span>
+                  </button>
+                </sc-for>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;border-top:1px solid #F3EEF1;padding-top:14px">
+                <span style="font-size:14px;font-weight:500;color:#3D1C31">Branches</span>
+                <div role="radiogroup" aria-label="Branch hours" style="display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px">
+                  <sc-for list="{{ scopeSeg }}" as="o" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="height:34px;padding:0 14px;border-radius:8px;font-size:14px;white-space:nowrap;font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for>
+                </div>
+                <sc-if value="{{ perBranch }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ hBranchSeg }}" as="o" hint-placeholder-count="2"><button type="button" onClick="{{ o.pick }}" style="height:34px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;background:{{ o.bg }};color:{{ o.fg }};border:1.5px solid {{ o.bd }}">{{ o.label }}</button></sc-for></div>
+                </sc-if>
+              </div>
+            </section>
+
+            <div style="display:grid;grid-template-columns:{{ L.split }};gap:20px;align-items:start">
+              <section style="border:1px solid #F0E4E8;border-radius:16px;padding:8px 22px;display:flex;flex-direction:column;min-width:0">
+                <sc-if value="{{ hm.closed }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:12px 0 14px;display:flex;flex-direction:column;gap:14px">
+                    <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Temporarily closed</h2>
+                    <label style="display:flex;flex-direction:column;gap:6px;max-width:260px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Reopen on</span><input type="date" value="{{ hf.closedUntil.v }}" onChange="{{ hf.closedUntil.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input><span style="font-size:13px;color:#8A5A6E">Leave empty to stay closed until you switch it back.</span></label>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ hm.rows }}" hint-placeholder-val="{{ true }}">
+                  <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:grid;grid-template-columns:{{ L.dayCols }};gap:14px;padding:10px 0 6px;font-size:13px;font-weight:500;color:#8A5A6E"><span>Day</span><div style="display:grid;grid-template-columns:{{ L.dayInner }};gap:10px"><span>Opens</span><span>Closes</span><span>Last order</span><span></span></div></div>
+                  </sc-if>
+                  <sc-for list="{{ dayRows }}" as="d" hint-placeholder-count="7">
+                    <div style="display:grid;grid-template-columns:{{ L.dayCols }};gap:10px 14px;align-items:center;padding:12px 0;border-top:{{ d.bt }}">
+                      <div style="display:flex;align-items:center;gap:12px">
+                        <sc-if value="{{ d.canToggle }}" hint-placeholder-val="{{ true }}"><button type="button" role="switch" aria-checked="{{ d.sw.on }}" aria-label="{{ d.day }} open" onClick="{{ d.sw.toggle }}" style="width:48px;height:28px;border-radius:999px;flex:none;background:{{ d.sw.tBg }};position:relative;transition:background .15s"><span style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX({{ d.sw.knob }});transition:transform .18s"></span></button></sc-if>
+                        <span style="font-size:15px;font-weight:500">{{ d.day }}</span>
+                      </div>
+                      <sc-if value="{{ d.open }}" hint-placeholder-val="{{ true }}">
+                        <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+                          <div style="display:grid;grid-template-columns:{{ L.dayInner }};gap:10px;align-items:end">
+                            <label style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="display:{{ L.cellLbl }};font-size:12px;color:#8A5A6E">Opens</span><input type="time" value="{{ d.from }}" onChange="{{ d.set.from }}" style="height:40px;width:100%;min-width:0;padding:0 8px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px" style-focus="border-color:#C93DFF"></input></label>
+                            <label style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="display:{{ L.cellLbl }};font-size:12px;color:#8A5A6E">Closes</span><input type="time" value="{{ d.to }}" onChange="{{ d.set.to }}" style="height:40px;width:100%;min-width:0;padding:0 8px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px" style-focus="border-color:#C93DFF"></input></label>
+                            <label style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="display:{{ L.cellLbl }};font-size:12px;color:#8A5A6E">Last order</span><input type="time" value="{{ d.last }}" onChange="{{ d.set.last }}" style="height:40px;width:100%;min-width:0;padding:0 8px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px" style-focus="border-color:#C93DFF"></input></label>
+                            <sc-if value="{{ d.noBreak }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ d.toggleBreak }}" style="height:40px;padding:0 4px;font-size:14px;font-weight:500;color:#8A2040;white-space:nowrap;justify-self:start" style-hover="color:#FF5577">+ Break</button></sc-if>
+                            <sc-if value="{{ d.hasBreak }}" hint-placeholder-val="{{ false }}"><span></span></sc-if>
+                          </div>
+                          <sc-if value="{{ d.hasBreak }}" hint-placeholder-val="{{ false }}">
+                            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px;color:#3D1C31">
+                              <span style="color:#8A5A6E">Break</span>
+                              <input type="time" value="{{ d.bFrom }}" onChange="{{ d.set.bFrom }}" aria-label="Break starts" style="height:36px;width:120px;padding:0 8px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px"></input>
+                              <span>to</span>
+                              <input type="time" value="{{ d.bTo }}" onChange="{{ d.set.bTo }}" aria-label="Break ends" style="height:36px;width:120px;padding:0 8px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px"></input>
+                              <button type="button" onClick="{{ d.toggleBreak }}" style="font-size:13px;color:#8A5A6E;text-decoration:underline;text-underline-offset:3px" style-hover="color:#B42318">Remove</button>
+                            </div>
+                          </sc-if>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ d.closed }}" hint-placeholder-val="{{ false }}"><span style="font-size:14px;color:#8A5A6E">Closed all day</span></sc-if>
+                    </div>
+                  </sc-for>
+                </sc-if>
+              </section>
+              <div style="position:sticky;top:12px;border-radius:16px;background:#EFE7DE;padding:16px;display:flex;flex-direction:column;gap:10px">
+                <span style="font-size:14px;font-weight:600;color:#6B5B4E">Customer preview</span>
+                <sc-for list="{{ hoursBubbles }}" as="b" hint-placeholder-count="3">
+                  <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;color:#6B5B4E">{{ b.when }}</span><div style="align-self:flex-start;max-width:96%;background:#fff;border-radius:4px 14px 14px 14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.06)">{{ b.text }}</div></div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- Menu -->
+        <sc-if value="{{ pg.menu }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="07 Menu setup" style="display:flex;flex-direction:column;gap:20px">
+            <div>
+              <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Menu setup</h1>
+              <p style="font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty">Lumia AI answers from your approved menu: items, prices and what's available.</p>
+            </div>
+            <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px">
+              <ol style="list-style:none;display:grid;grid-template-columns:{{ L.stepCols }};gap:10px">
+                <sc-for list="{{ menuSteps }}" as="m" hint-placeholder-count="5">
+                  <li style="display:flex;flex-direction:column;gap:8px"><span style="height:5px;border-radius:3px;background:{{ m.bar }}"></span><span style="font-size:13px;font-weight:{{ m.fw }};color:{{ m.fg }}">{{ m.label }}</span></li>
+                </sc-for>
+              </ol>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:10px">
+                <sc-for list="{{ menuStats }}" as="m" hint-placeholder-count="5">
+                  <div style="border-radius:12px;background:{{ m.bg }};padding:12px 14px;display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;color:{{ m.lfg }}">{{ m.k }}</span><span style="font-size:20px;font-weight:600;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;color:{{ m.fg }}">{{ m.v }}</span></div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ menuNotApproved }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#FFF6E8;color:#6B3A00;font-size:14px;line-height:1.45"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;margin-top:1px"><path d="M10 3 18 17H2L10 3zM10 8.5v3.5M10 14.6v.01" stroke="#B25E00" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Menu must be approved before Lumia AI can take orders. 3 items have no price yet.</span></div>
+              </sc-if>
+              <div style="display:flex;flex-wrap:wrap;gap:10px">
+                <sc-if value="{{ menuPrimary.show }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ menuPrimary.go }}" style="height:44px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">{{ menuPrimary.label }}</button></sc-if>
+                <sc-if value="{{ menuLive }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:7px;height:44px;padding:0 16px;border-radius:12px;background:#E6F4EC;color:#16704A;font-size:15px;font-weight:600"><span style="width:8px;height:8px;border-radius:50%;background:currentColor"></span>Menu is live</span></sc-if>
+                <a href="{{ menuUrl }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px;display:inline-flex;align-items:center;text-decoration:none" style-hover="background:#FBF3F8;color:#1A0815">Edit items</a>
+              </div>
+            </section>
+            <div style="max-width:440px;border-radius:16px;background:#EFE7DE;padding:16px;display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:14px;font-weight:600;color:#6B5B4E">Customer preview</span>
+              <div style="align-self:flex-end;max-width:85%;background:#D9FDD3;border-radius:14px 4px 14px 14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.06)">Do you have chicken burger?</div>
+              <div style="align-self:flex-start;max-width:85%;background:#fff;border-radius:4px 14px 14px 14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.06)">Yes, we have Chicken Burger for AED 24.</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- Devices -->
+        <sc-if value="{{ pg.devices }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="08 Order devices" style="display:flex;flex-direction:column;gap:20px">
+            <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
+              <div>
+                <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Lumia Order devices</h1>
+                <p style="font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty">Devices inside the restaurant that receive and print orders.</p>
+              </div>
+              <sc-if value="{{ hasDevices }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ startPair }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">+ Connect device</button></sc-if>
+            </div>
+            <sc-if value="{{ pairing }}" hint-placeholder-val="{{ false }}">
+              <section style="border:1.5px solid #E3CBD4;border-radius:16px;padding:22px;display:flex;flex-wrap:wrap;gap:20px;align-items:center">
+                <div style="flex:1 1 260px;display:flex;flex-direction:column;gap:6px">
+                  <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Connect a device</h2>
+                  <p style="font-size:14px;color:#3D1C31;line-height:1.5">Open the Lumia Order app on the device and enter this code.</p>
+                  <span style="font-size:13px;color:#8A5A6E">Code expires in 10 minutes.</span>
+                </div>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:500;letter-spacing:.12em;padding:12px 18px;border-radius:12px;background:#FAF6FA">482 913</span>
+                <div style="display:flex;gap:10px;flex-basis:100%;justify-content:flex-end">
+                  <button type="button" onClick="{{ cancelPair }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Cancel</button>
+                  <button type="button" onClick="{{ finishPair }}" style="height:44px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px">Simulate: device connected</button>
+                </div>
+              </section>
+            </sc-if>
+            <sc-if value="{{ noDevicesIdle }}" hint-placeholder-val="{{ true }}">
+              <div style="border-radius:20px;background:#FAF6FA;padding:48px 24px;display:flex;flex-direction:column;align-items:center;text-align:center">
+                <span style="width:56px;height:56px;border-radius:16px;background:#FDEAF2;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 20 20" fill="none"><path d="M5 8V3h10v5M5 14H3V8h14v6h-2M6 11h8v6H6z" stroke="#C93DFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+                <h2 style="font-size:19px;font-weight:600;letter-spacing:-0.02em;margin-top:16px">No Lumia Order device connected yet.</h2>
+                <p style="font-size:15px;color:#3D1C31;margin-top:6px;max-width:380px;line-height:1.5">Connect a device so orders can appear and print inside the restaurant.</p>
+                <button type="button" onClick="{{ startPair }}" style="margin-top:20px;height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Connect device</button>
+              </div>
+            </sc-if>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:16px">
+              <sc-for list="{{ deviceCards }}" as="v" hint-placeholder-count="0">
+                <article style="border:1px solid #F0E4E8;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <input value="{{ v.name }}" onChange="{{ v.rename }}" aria-label="Device name" style="flex:1;min-width:0;height:36px;padding:0 8px;margin-left:-8px;border-radius:8px;border:1.5px solid transparent;font-size:17px;font-weight:600;background:transparent" style-hover="border-color:#ECD9E0" style-focus="border-color:#C93DFF;background:#fff"></input>
+                    <span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:500;background:#E6F4EC;color:#16704A"><span style="width:7px;height:7px;border-radius:50%;background:currentColor"></span>Online</span>
+                  </div>
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:#8A5A6E">Assigned branch</span>{{ v.brSel }}</label>
+                  <dl style="display:flex;flex-direction:column">
+                    <sc-for list="{{ v.rows }}" as="r" hint-placeholder-count="4"><div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid #F3EEF1;font-size:14px"><dt style="color:#8A5A6E">{{ r.k }}</dt><dd style="font-weight:500;font-variant-numeric:tabular-nums">{{ r.v }}</dd></div></sc-for>
+                  </dl>
+                  <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <button type="button" onClick="{{ v.testPrint }}" style="height:40px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px" style-hover="background:#FBF3F8">Test print</button>
+                    <button type="button" onClick="{{ v.disconnect }}" style="height:40px;padding:0 14px;border-radius:10px;font-weight:500;font-size:14px;color:#B42318" style-hover="background:#FDECEC">Disconnect</button>
+                  </div>
+                </article>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- Payments -->
+        <sc-if value="{{ pg.payments }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="09 Payments" style="display:flex;flex-direction:column;gap:20px">
+            <div>
+              <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Payment settings</h1>
+              <p style="font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty">How customers pay for WhatsApp orders.</p>
+            </div>
+            <section style="border:1px solid #F0E4E8;border-radius:16px;padding:6px 22px;display:flex;flex-direction:column">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0">
+                <div><span style="font-size:15px;font-weight:500">Cash on delivery</span><p style="font-size:13px;color:#8A5A6E;margin-top:2px">Customers pay the driver in cash or by card on arrival.</p></div>
+                <button type="button" role="switch" aria-checked="{{ codSw.on }}" aria-label="Cash on delivery" onClick="{{ codSw.toggle }}" style="width:48px;height:28px;border-radius:999px;flex:none;background:{{ codSw.tBg }};position:relative;transition:background .15s"><span style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX({{ codSw.knob }});transition:transform .18s"></span></button>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-top:1px solid #F3EEF1">
+                <div><span style="font-size:15px;font-weight:500;color:#8A5A6E">Payment link</span><p style="font-size:13px;color:#8A5A6E;margin-top:2px">Online payment by link, sent in the order summary.</p></div>
+                <span style="display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:500;white-space:nowrap;background:#F6EEF2;color:#3D1C31">Coming later</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:12px;padding:14px 0;border-top:1px solid #F3EEF1">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+                  <div><span style="font-size:15px;font-weight:500">Verify phone for high-value orders</span><p style="font-size:13px;color:#8A5A6E;margin-top:2px">{{ verifyHint }}</p></div>
+                  <button type="button" role="switch" aria-checked="{{ verifySw.on }}" aria-label="Verify high-value orders" onClick="{{ verifySw.toggle }}" style="width:48px;height:28px;border-radius:999px;flex:none;background:{{ verifySw.tBg }};position:relative;transition:background .15s"><span style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX({{ verifySw.knob }});transition:transform .18s"></span></button>
+                </div>
+                <sc-if value="{{ verifySw.on }}" hint-placeholder-val="{{ true }}">
+                  <label style="display:flex;flex-direction:column;gap:6px;max-width:240px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Orders above (AED)</span><input inputmode="decimal" value="{{ payf.threshold.v }}" onChange="{{ payf.threshold.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
+                </sc-if>
+              </div>
+            </section>
+            <sc-if value="{{ noCod }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#FFF6E8;color:#6B3A00;font-size:14px;line-height:1.45"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;margin-top:1px"><path d="M10 3 18 17H2L10 3zM10 8.5v3.5M10 14.6v.01" stroke="#B25E00" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Turn on at least one payment method so customers can complete an order.</span></div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+      </div>
+    </main>
+
+    <sc-if value="{{ bar.show }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:none;border-top:1px solid #F0E4E8;background:#fff;padding:12px 16px;box-shadow:0 -10px 24px -18px rgba(26,8,21,.3)">
+        <div style="max-width:880px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px">
+          <sc-if value="{{ bar.err }}" hint-placeholder-val="{{ false }}">
+            <div role="alert" style="flex-basis:100%;display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:#FDECEC;color:#9B1C1C;font-size:14px;line-height:1.45"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;margin-top:1px"><circle cx="10" cy="10" r="7.5" stroke="#B42318" stroke-width="1.6"></circle><path d="M10 6.5v4M10 13.4v.01" stroke="#B42318" stroke-width="1.8" stroke-linecap="round"></path></svg>{{ bar.errText }}</div>
+          </sc-if>
+          <sc-if value="{{ bar.ok }}" hint-placeholder-val="{{ false }}">
+            <span role="status" style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;color:#16704A;min-height:44px"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="#16704A"></circle><path d="M6 10.2 8.6 12.8 14 7.4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>{{ bar.okText }}</span>
+          </sc-if>
+          <sc-if value="{{ bar.dirty }}" hint-placeholder-val="{{ false }}">
+            <span style="flex:1 1 220px;font-size:15px;font-weight:500;color:{{ bar.fg }}">{{ bar.dirtyText }}</span>
+            <button type="button" onClick="{{ bar.discard }}" style="height:44px;padding:0 16px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">{{ bar.discardLabel }}</button>
+            <button type="button" onClick="{{ bar.save }}" style="height:44px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Save changes</button>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Setup in progress&quot;,&quot;Ready to receive orders&quot;],&quot;default&quot;:&quot;Setup in progress&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const EM = ['Sharjah', 'Ajman', 'Dubai', 'Abu Dhabi', 'Umm Al Quwain', 'Ras Al Khaimah', 'Fujairah'];
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const PAGES = [
+  ['profile', 'Profile', 'M4 8h12l-1.2-4H5.2zM5 8v8.5h10V8M8.5 16.5v-4h3v4'],
+  ['branches', 'Branches', 'M10 17.5s5.5-4.8 5.5-9a5.5 5.5 0 0 0-11 0c0 4.2 5.5 9 5.5 9zM10 10.3a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6z'],
+  ['whatsapp', 'WhatsApp', 'M3.5 16.5 4.6 13A7 7 0 1 1 7.3 15.6z'],
+  ['delivery', 'Delivery', 'M2.5 5.5h9v8h-9zM11.5 8.5h3l3 3v2h-6M7 15a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM16 15a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z'],
+  ['hours', 'Hours', 'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM10 6.5V10l2.5 1.5'],
+  ['menu', 'Menu', 'M7 5.5h10M7 10h10M7 14.5h10M3.5 5.5h.01M3.5 10h.01M3.5 14.5h.01'],
+  ['devices', 'Devices', 'M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z'],
+  ['payments', 'Payments', 'M2.5 5.5h15v9h-15zM10 12.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4zM5.5 8v4M14.5 8v4'],
+];
+const KEY = { profile: 'profile', branches: 'branches', whatsapp: 'wa', delivery: 'delivery', hours: 'hours', payments: 'pay' };
+const OK = { profile: 'Restaurant profile saved.', branches: 'Branches saved.', whatsapp: 'WhatsApp settings saved.', delivery: 'Delivery settings saved.', hours: 'Working hours saved.', payments: 'Payment settings saved.' };
+const TONE = { ok: ['#E6F4EC', '#16704A'], warn: ['#FFF1DC', '#8A4B00'], bad: ['#FDECEC', '#B42318'], neutral: ['#F6EEF2', '#3D1C31'] };
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const fmt12 = (t) => { if (!t) return ''; let [h, m] = t.split(':').map(Number); const ap = h >= 12 && h < 24 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${String(m).padStart(2, '0')} ${ap}`; };
+const mkDays = () => DAYS.map(d => ({ day: d, open: true, from: d === 'Friday' ? '13:30' : '12:00', to: '23:30', last: '23:15', brk: false, bFrom: '16:00', bTo: '17:00' }));
+const seed = (ready) => ({
+  profile: { name: 'Burger House LLC', brand: 'Burger House', cuisine: 'Burgers', phone: '+971 6 555 0142', support: '+971 50 123 4567', email: 'hello@burgerhouse.ae', vat: true, trn: '100234567800003', lang: 'both', greet: 'friendly' },
+  branches: [
+    { id: '1', name: 'Sharjah Branch', emirate: 'Sharjah', area: 'Al Majaz', address: 'Corniche St, Building 14', phone: '+971 6 555 0142', eta: '45', active: true, pin: true, coords: '25.3302, 55.3901' },
+    { id: '2', name: 'Ajman Branch', emirate: 'Ajman', area: 'Al Nuaimiya', address: 'Sheikh Khalifa St', phone: '+971 6 744 0198', eta: '60', active: true, pin: ready, coords: ready ? '25.4052, 55.4467' : '' },
+  ],
+  wa: { routing: 'all', one: '1', sel: ['1', '2'] },
+  delivery: { status: 'available', method: ready ? 'area' : null, minOrder: '30', freeAbove: '', eta: '45', pinReq: true,
+    areas: [
+      { emirate: 'Sharjah', area: 'All areas', fee: '0', min: '30', eta: '45', branch: '1', on: true },
+      { emirate: 'Ajman', area: 'All areas', fee: '0', min: '30', eta: '60', branch: '2', on: true },
+      { emirate: 'Dubai', area: 'All areas', fee: '', min: '', eta: '', branch: '', on: false }],
+    ranges: [
+      { from: '0', to: '5', fee: '5', min: '30', eta: '35', on: true },
+      { from: '5', to: '10', fee: '10', min: '40', eta: '50', on: true },
+      { from: '10', to: '', fee: '15', min: '50', eta: '70', on: true }],
+    freeEm: ['Sharjah', 'Ajman'], freeAreas: 'All areas', freeBranch: '1',
+    manualMsg: 'Delivery fee will be confirmed by the restaurant after checking your location.', confirmFirst: true },
+  hours: { mode: 'custom', scope: 'same', sel: '1', every: { day: 'Every day', open: true, from: '12:00', to: '23:30', last: '23:15', brk: false, bFrom: '16:00', bTo: '17:00' }, closedUntil: '', same: mkDays(), per: { '1': mkDays(), '2': mkDays() } },
+  pay: { cod: true, verify: true, threshold: '150' },
+});
+const newBranch = () => ({ name: '', emirate: 'Dubai', area: '', address: '', phone: '', eta: '45', active: true, pin: false, coords: '' });
+const initState = (ready) => { const d = seed(!!ready); const hp = (typeof location !== 'undefined' && location.hash.slice(1)) || ''; return { page: PAGES.some(p => p[0] === hp) ? hp : 'profile', draft: d, saved: clone(d), menu: ready ? 4 : 2, devices: ready ? [{ id: 1, name: 'Kitchen tablet', branch: '1' }] : [], toast: '', error: '', blocked: null, period: 'week', adding: false, nb: newBranch(), pinMode: 'search', pinQ: '', pairing: false, calc: { branch: '1', emirate: 'Sharjah', area: '', dist: '7', sub: '45' } }; };
+
+class Component extends DCLogic {
+  rootRef = React.createRef();
+  mainRef = React.createRef();
+  state = { ...initState(this.props.scenario === 'Ready to receive orders'), w: 1200 };
+
+  componentDidMount() {
+    const el = this.rootRef.current;
+    if (el && window.ResizeObserver) { this.ro = new ResizeObserver(([e]) => this.setState({ w: e.contentRect.width })); this.ro.observe(el); }
+  }
+  componentDidUpdate(pp) {
+    if (this._lastScenario === undefined) this._lastScenario = this.props.scenario;
+    if (this._lastScenario !== this.props.scenario) { this._lastScenario = this.props.scenario; this.setState(initState(this.props.scenario === 'Ready to receive orders')); }
+    if (this._lastPage !== this.state.page) { this._lastPage = this.state.page; if (this.mainRef.current) this.mainRef.current.scrollTop = 0; }
+  }
+  componentWillUnmount() { this.ro && this.ro.disconnect(); clearTimeout(this.tt); }
+
+  upd(k, fn) { this.setState(s => { const v = clone(s.draft[k]); fn(v); return { draft: { ...s.draft, [k]: v }, toast: '', error: '' }; }); }
+  dirtyOf(s, page) { const k = KEY[page]; return !!k && JSON.stringify(s.draft[k]) !== JSON.stringify(s.saved[k]); }
+  go(p) { const s = this.state; if (p === s.page) return; if (this.dirtyOf(s, s.page)) { this.setState({ blocked: p }); return; } this.setState({ page: p, blocked: null, toast: '', error: '', adding: false, pairing: false }); }
+  flash(msg) { clearTimeout(this.tt); this.setState({ toast: msg }); this.tt = setTimeout(() => this.setState({ toast: '' }), 3000); }
+  save() {
+    const s = this.state, k = KEY[s.page]; if (!k) return;
+    if (k === 'delivery' && s.draft.delivery.method === 'distance') {
+      const r = s.draft.delivery.ranges.filter(x => x.on), hi = (x) => x.to === '' ? Infinity : +x.to;
+      for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++) if (+r[i].from < hi(r[j]) && +r[j].from < hi(r[i])) {
+        const lb = (x) => `${x.from}-${x.to === '' ? '∞' : x.to} km`;
+        this.setState({ error: `Distance ranges cannot overlap. Please check ${lb(r[i])} and ${lb(r[j])}.` }); return;
+      }
+    }
+    const next = s.blocked;
+    this.setState(st => ({ saved: { ...st.saved, [k]: clone(st.draft[k]) }, error: '', blocked: null, ...(next ? { page: next } : {}) }));
+    this.flash(OK[s.page]);
+  }
+  discard() { const s = this.state, k = KEY[s.page]; const next = s.blocked; this.setState(st => ({ draft: { ...st.draft, [k]: clone(st.saved[k]) }, error: '', blocked: null, adding: false, ...(next ? { page: next } : {}) })); }
+
+  renderVals() {
+    const s = this.state, d = s.draft, sv = s.saved, wide = s.w >= 900;
+    const ce = React.createElement;
+    const selStyle = (sm) => ({ height: sm ? 40 : 44, width: '100%', minWidth: 0, padding: '0 10px', borderRadius: sm ? 9 : 10, border: '1.5px solid #ECD9E0', background: '#fff', fontSize: sm ? 14 : 15 });
+    const sel = (value, opts, onChange, sm = true, label) => ce('select', { value, onChange, style: selStyle(sm), 'aria-label': label }, opts.map(o => ce('option', { key: o.v, value: o.v }, o.l)));
+    const emOpts = EM.map(e => ({ v: e, l: e }));
+    const brOpts = d.branches.map(b => ({ v: b.id, l: b.name }));
+    const bName = (id) => (d.branches.find(b => b.id === id) || {}).name || '—';
+    const sw = (on, toggle, extra = {}) => ({ on, toggle, tBg: on ? 'linear-gradient(90deg,#FF5577,#C93DFF)' : '#EAD9E1', knob: on ? '20px' : '0px', ...extra });
+    const radio = (list, cur, set) => list.map(([v, label, desc]) => { const on = cur === v; return { label, desc, on, bd: on ? '#C93DFF' : '#ECD9E0', bg: on ? '#FCF5FD' : '#fff', ring: on ? '#C93DFF' : '#D9BFCB', dotBg: on ? '#C93DFF' : 'transparent', pick: () => set(v) }; });
+    const seg = (list, cur, set) => list.map(([v, label]) => { const on = cur === v; return { label, on, fw: on ? 600 : 500, bg: on ? '#fff' : 'transparent', fg: on ? '#1A0815' : '#8A5A6E', sh: on ? '0 1px 3px rgba(26,8,21,.12)' : 'none', pick: () => set(v) }; });
+    const chip = (label, on, pick) => ({ label, on, pick, bg: on ? '#FDEAF2' : '#fff', fg: on ? '#8A2040' : '#3D1C31', bd: on ? '#F3B8CC' : '#ECD9E0' });
+    const bind = (k, keys) => Object.fromEntries(keys.map(key => [key, { v: d[k][key] ?? '', set: (e) => { const v = e.target.value; this.upd(k, x => { x[key] = v; }); } }]));
+
+    // completion (saved state)
+    const P = sv.profile, profDone = !!(P.name && P.brand && P.phone && (!P.vat || P.trn.replace(/\D/g, '').length === 15));
+    const act = sv.branches.filter(b => b.active), locDone = act.length > 0 && act.every(b => b.pin);
+    const delDone = sv.delivery.status !== 'available' || !!sv.delivery.method;
+    const menuDone = s.menu >= 3, devDone = s.devices.length > 0, payDone = sv.pay.cod;
+    const MENU_ST = ['No menu uploaded', 'AI extraction in progress', 'Needs review', 'Approved', 'Live'];
+    const stepDefs = [
+      ['Restaurant profile', profDone, profDone ? ['Complete', 'ok', 'Edit'] : ['Missing', 'bad', 'Complete profile'], 'profile'],
+      ['Branch location', locDone, locDone ? ['Complete', 'ok', 'Edit'] : ['Missing', 'bad', 'Add location'], 'branches'],
+      ['WhatsApp number', true, ['Connected', 'ok', 'Manage'], 'whatsapp'],
+      ['Menu', menuDone, menuDone ? [MENU_ST[s.menu], 'ok', 'Edit menu'] : [MENU_ST[s.menu], 'warn', 'Review menu'], 'menu'],
+      ['Delivery settings', delDone, delDone ? ['Complete', 'ok', 'Edit'] : ['Missing', 'bad', 'Configure'], 'delivery'],
+      ['Working hours', true, ['Complete', 'ok', 'Edit'], 'hours'],
+      ['Order device', devDone, devDone ? ['Connected', 'ok', 'Manage'] : ['Not connected', 'warn', 'Connect device'], 'devices'],
+      ['Payment method', payDone, payDone ? ['Complete', 'ok', 'Edit'] : ['Missing', 'bad', 'Turn on'], 'payments'],
+    ];
+    const steps = stepDefs.map(([label, done, [status, tone, action], page]) => ({ label, done, todo: !done, status, action, tbg: TONE[tone][0], tfg: TONE[tone][1], ring: tone === 'bad' ? '#E8A0A0' : '#E5B97A',
+      bar: done ? '#16704A' : 'rgba(26,8,21,.12)', abd: done ? '#ECD9E0' : 'transparent', abg: done ? '#fff' : '#1A0815', afg: done ? '#1A0815' : '#fff', go: () => this.go(page) }));
+    const doneN = steps.filter(x => x.done).length;
+    const NOTE = { 'Branch location': 'Needed to calculate delivery distance and fees.', 'Delivery settings': 'Lumia AI cannot calculate delivery fees yet.', 'Menu': 'Lumia AI answers only from an approved menu.', 'Order device': 'Orders still appear in the dashboard, but they will not print.', 'Restaurant profile': 'Name, phone and VAT details.', 'Payment method': 'Customers need a way to pay.' };
+    const todo = steps.filter(x => !x.done), todoSteps = todo.map((x, i) => ({ ...x, note: NOTE[x.label] || '', hasNote: !!NOTE[x.label], bt: i ? '1px solid #F3EEF1' : '0' }));
+    const doneSteps = steps.filter(x => x.done);
+    const PER = { today: { k: 'Today', o: 18, r: 1124, a: 62, c: 41, d: ['+4', '+12%', '−3%', '+9'], bars: [['12 PM', 1], ['2 PM', 3], ['4 PM', 2], ['6 PM', 4], ['8 PM', 6], ['10 PM', 2]], note: 'By hour, today' },
+      week: { k: '7 days', o: 126, r: 8240, a: 65, c: 298, d: ['+18%', '+21%', '+3%', '+14%'], bars: [['Mon', 14], ['Tue', 12], ['Wed', 16], ['Thu', 21], ['Fri', 26], ['Sat', 22], ['Sun', 15]], note: 'Last 7 days' },
+      month: { k: '30 days', o: 512, r: 32950, a: 64, c: 1210, d: ['+9%', '+11%', '+2%', '+6%'], bars: [['Wk 1', 112], ['Wk 2', 121], ['Wk 3', 134], ['Wk 4', 145]], note: 'By week, last 30 days' } };
+    const per = PER[s.period], mx = Math.max(...per.bars.map(b => b[1]));
+    const fmtN = (n) => n.toLocaleString('en-US');
+    const stats = [['Orders', fmtN(per.o)], ['Revenue', 'AED ' + fmtN(per.r)], ['Average order', 'AED ' + per.a], ['WhatsApp chats', fmtN(per.c)]].map(([k, v], i) => { const dv = per.d[i], neg = dv.startsWith('−'); return { k, v, d: dv + ' vs previous ' + (s.period === 'today' ? 'day' : 'period'), dfg: neg ? '#B42318' : '#16704A' }; });
+    const bars = per.bars.map(([l, n], i) => ({ l, h: Math.max(4, Math.round(n / mx * 128)) + 'px', bg: i === per.bars.length - 1 ? 'linear-gradient(180deg,#FF5577,#C93DFF)' : '#F3D6E2', tip: n + ' orders' }));
+    const topItems = [['Classic Burger', 38], ['Chicken Burger', 31], ['Cheese Fries', 24], ['Burger Meal', 19]].map(([name, q], i) => ({ n: i + 1, name, q: Math.round(q * per.o / 126) + ' sold', bt: i ? '1px solid #F3EEF1' : '0' }));
+    const isReady = profDone && locDone && menuDone && delDone;
+    const ready = isReady ? { label: 'Ready to receive orders', short: 'Ready', bg: TONE.ok[0], fg: TONE.ok[1] } : { label: 'Not ready to receive orders', short: 'Not ready', bg: TONE.bad[0], fg: TONE.bad[1] };
+    const warnings = [
+      !delDone && ['Delivery settings are missing. Lumia AI cannot calculate delivery fees yet.', 'Configure', 'delivery'],
+      !locDone && ['Add a branch location pin so Lumia can calculate delivery distance and fees.', 'Add location', 'branches'],
+      !menuDone && ['Menu must be approved before Lumia AI can take orders.', 'Review menu', 'menu'],
+      !devDone && ['No order device is connected. Orders can still appear in the dashboard, but they will not print.', 'Connect', 'devices'],
+    ].filter(Boolean).map(([text, action, p]) => ({ text, action, go: () => this.go(p) }));
+    const flagOf = { profile: !profDone, branches: !locDone, delivery: !delDone, menu: !menuDone, devices: !devDone, payments: !payDone };
+    const navAll = PAGES.map(([k, label, icon]) => { const on = s.page === k; const f = flagOf[k]; return { label, icon, flag: !!f, dot: k === 'devices' || k === 'menu' ? '#E39A2B' : '#E5484D', fw: on ? 600 : 500, fg: on ? '#1A0815' : '#3D1C31', bg: on ? '#FDEAF2' : 'transparent', bd: on ? '#FF5577' : 'transparent', pick: (e) => { e && e.preventDefault && e.preventDefault(); this.go(k); } }; });
+
+    const nav = navAll;
+    const navGroups = [{ hasLabel: true, label: 'Settings', count: '', items: navAll }];
+    // profile
+    const pr = d.profile, brand = pr.brand.trim() || 'Your restaurant';
+    const initials = brand.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+    const GREET = { friendly: `Hi, welcome to ${brand}. What would you like to order today?`, formal: `Welcome to ${brand}. How may we help you with your order today?`, short: `Hi! What can we get you from ${brand}?` };
+    const GREET_AR = { friendly: `أهلاً بك في ${brand}. ماذا تحب أن تطلب اليوم؟`, formal: `مرحباً بكم في ${brand}. كيف يمكننا مساعدتكم في طلبكم اليوم؟`, short: `أهلاً! ماذا نحضّر لك من ${brand}؟` };
+    const greetBubbles = [pr.lang !== 'ar' && { text: GREET[pr.greet], dir: 'ltr' }, pr.lang !== 'en' && { text: GREET_AR[pr.greet], dir: 'rtl' }].filter(Boolean);
+    const trnOk = pr.trn.replace(/\D/g, '').length === 15;
+
+    // branches
+    const pinMissing = d.branches.some(b => b.active && !b.pin);
+    const branchCards = d.branches.map(b => ({ name: b.name, addr: `${b.area}, ${b.emirate}`, status: b.active ? 'Active' : 'Inactive', sbg: b.active ? TONE.ok[0] : TONE.neutral[0], sfg: b.active ? TONE.ok[1] : TONE.neutral[1], noPin: !b.pin,
+      addPin: () => this.upd('branches', x => { const t = x.find(y => y.id === b.id); t.pin = true; t.coords = '25.4052, 55.4467'; }),
+      rows: [
+        { k: 'Location pin', v: b.pin ? 'Added' : 'Missing', fg: b.pin ? '#16704A' : '#B42318' },
+        { k: 'WhatsApp', v: '+971 50 123 4567', fg: '#1A0815' },
+        { k: 'Delivery', v: d.delivery.status === 'available' ? 'Active' : d.delivery.status === 'pickup' ? 'Pickup only' : 'Paused', fg: '#1A0815' },
+        { k: 'Working hours', v: 'Set', fg: '#1A0815' },
+        { k: 'Device', v: s.devices.some(v => v.branch === b.id) ? 'Connected' : 'Not connected', fg: s.devices.some(v => v.branch === b.id) ? '#16704A' : '#8A4B00' },
+      ] }));
+    const nbS = s.nb, setNb = (key, v) => this.setState(st => ({ nb: { ...st.nb, [key]: v } }));
+    const nb = Object.fromEntries(['name', 'area', 'address', 'phone', 'eta'].map(k => [k, { v: nbS[k], set: (e) => setNb(k, e.target.value) }]));
+    nb.emSel = sel(nbS.emirate, emOpts, (e) => setNb('emirate', e.target.value), false, 'Emirate');
+    const setPin = () => this.setState(st => ({ nb: { ...st.nb, pin: true, coords: '25.0805, 55.1403' } }));
+
+    // whatsapp
+    const W = d.wa;
+    const routeOpts = radio([['one', 'This number belongs to one branch', 'All orders go to the branch you choose.'], ['all', 'This number handles all branches', "Lumia picks the branch from the customer's location."], ['selected', 'This number is for selected branches', 'Lumia picks between the branches you select.']], W.routing, (v) => this.upd('wa', x => { x.routing = v; }));
+    const routeBranches = d.branches.map(b => W.routing === 'one' ? chip(b.name, W.one === b.id, () => this.upd('wa', x => { x.one = b.id; })) : chip(b.name, W.sel.includes(b.id), () => this.upd('wa', x => { x.sel = x.sel.includes(b.id) ? x.sel.filter(i => i !== b.id) : [...x.sel, b.id]; })));
+    const waMap = W.routing === 'one' ? [bName(W.one)] : W.routing === 'all' ? ['All branches'] : [W.sel.map(bName).join(', ') || 'No branches selected'];
+    const route = { pickBranches: W.routing !== 'all', pickLabel: W.routing === 'one' ? 'Branch' : 'Branches', note: W.routing === 'one' ? 'Customers outside this branch\'s delivery area are offered pickup.' : "AI will choose branch based on customer location." };
+
+    // delivery
+    const D = d.delivery, setD = (key, v) => this.upd('delivery', x => { x[key] = v; });
+    const rowSet = (list, i, keys) => Object.fromEntries(keys.map(k => [k, (e) => { const v = e.target.value; this.upd('delivery', x => { x[list][i][k] = v; }); }]));
+    const areas = D.areas.map((r, i) => ({ ...r, op: r.on ? 1 : 0.5, feePh: r.on ? '0' : 'Not served', onLabel: r.on ? 'Active' : 'Inactive',
+      set: rowSet('areas', i, ['area', 'fee', 'min', 'eta']),
+      emSel: sel(r.emirate, emOpts, (e) => { const v = e.target.value; this.upd('delivery', x => { x.areas[i].emirate = v; }); }, true, 'Emirate'),
+      brSel: sel(r.branch, [{ v: '', l: 'Choose…' }, ...brOpts], (e) => { const v = e.target.value; this.upd('delivery', x => { x.areas[i].branch = v; }); }, true, 'Branch'),
+      sw: sw(r.on, () => this.upd('delivery', x => { x.areas[i].on = !x.areas[i].on; })),
+      remove: () => this.upd('delivery', x => { x.areas.splice(i, 1); }) }));
+    const badRange = new Set(); { const r = D.ranges, hi = (x) => x.to === '' ? Infinity : +x.to; for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++) if (r[i].on && r[j].on && +r[i].from < hi(r[j]) && +r[j].from < hi(r[i])) { badRange.add(i); badRange.add(j); } }
+    const ranges = D.ranges.map((r, i) => ({ ...r, op: r.on ? 1 : 0.5, bd: badRange.has(i) ? '#E5484D' : '#ECD9E0', onLabel: r.on ? 'Active' : 'Inactive', set: rowSet('ranges', i, ['from', 'to', 'fee', 'min', 'eta']),
+      sw: sw(r.on, () => this.upd('delivery', x => { x.ranges[i].on = !x.ranges[i].on; })), remove: () => this.upd('delivery', x => { x.ranges.splice(i, 1); }) }));
+    const C = s.calc, setC = (k) => (e) => { const v = e.target.value; this.setState(st => ({ calc: { ...st.calc, [k]: v } })); };
+    const calc = { ...C, setArea: setC('area'), setDist: setC('dist'), setSub: setC('sub'), brSel: sel(C.branch, brOpts, setC('branch'), true, 'Branch'), emSel: sel(C.emirate, emOpts, setC('emirate'), true, 'Emirate') };
+    const res = (() => {
+      const sub = +C.sub || 0, dist = +C.dist || 0, bad = (head, msg) => ({ ok: false, head, msg, rows: [], fg: '#B42318' });
+      const nope = `Sorry, we don't deliver to ${C.emirate} yet. You can order for pickup from ${bName(C.branch)}.`;
+      if (!D.method) return bad('Choose a pricing method first', 'Lumia can\'t quote a delivery fee until a pricing method is set.');
+      let fee, eta, br, min;
+      if (D.method === 'area') { const r = D.areas.find(r => r.on && r.emirate === C.emirate && (/^all/i.test(r.area) || !C.area.trim() || r.area.toLowerCase() === C.area.trim().toLowerCase())); if (!r) return bad(`No delivery to ${C.emirate}`, nope); fee = +r.fee || 0; eta = r.eta || D.eta; br = r.branch || C.branch; min = +(r.min || D.minOrder) || 0; }
+      else if (D.method === 'distance') { const r = D.ranges.find(r => r.on && dist >= +r.from && (r.to === '' || dist < +r.to)); if (!r) return bad(`No delivery at ${dist} km`, `Sorry, you're outside our delivery range. You can order for pickup from ${bName(C.branch)}.`); fee = +r.fee || 0; eta = r.eta || D.eta; br = C.branch; min = +(r.min || D.minOrder) || 0; }
+      else if (D.method === 'free') { if (!D.freeEm.includes(C.emirate)) return bad(`No delivery to ${C.emirate}`, nope); fee = 0; eta = D.eta; br = D.freeBranch; min = +D.minOrder || 0; }
+      else return { ok: true, head: 'Delivery available', fg: '#16704A', rows: [{ k: 'Fee', v: 'Confirmed by restaurant' }, { k: 'Branch', v: bName(C.branch) }], msg: D.manualMsg };
+      if (sub < min) return bad(`Below minimum order (AED ${min})`, `The minimum order for delivery is AED ${min}. Add AED ${min - sub} more to continue.`);
+      if (D.freeAbove && sub >= +D.freeAbove) fee = 0;
+      return { ok: true, head: 'Delivery available', fg: '#16704A', rows: [{ k: 'Fee', v: fee ? `AED ${fee}` : 'Free' }, { k: 'ETA', v: `${eta} minutes` }, { k: 'Branch', v: bName(br) }],
+        msg: `${fee ? `Delivery to ${C.emirate} is AED ${fee}.` : `Delivery to ${C.emirate} is free.`}\nEstimated delivery time: ${eta} minutes.\nMinimum order: AED ${min}.` };
+    })();
+    const distLock = D.method === 'distance';
+
+    // hours
+    const H = d.hours, setH = (fn) => this.upd('hours', fn);
+    const list = H.mode === 'every' ? [H.every] : (H.scope === 'same' ? H.same : H.per[H.sel]);
+    const pathOf = (x) => H.mode === 'every' ? [x.every] : (H.scope === 'same' ? x.same : x.per[x.sel]);
+    const dayRows = list.map((r, i) => ({ ...r, closed: !r.open, hasBreak: r.open && r.brk, noBreak: !r.brk, canToggle: H.mode !== 'every', bt: i ? '1px solid #F3EEF1' : '0',
+      sw: sw(r.open, () => setH(x => { const t = pathOf(x)[i]; t.open = !t.open; })),
+      toggleBreak: () => setH(x => { const t = pathOf(x)[i]; t.brk = !t.brk; }),
+      set: Object.fromEntries(['from', 'to', 'last', 'bFrom', 'bTo'].map(k => [k, (e) => { const v = e.target.value; setH(x => { pathOf(x)[i][k] = v; }); }])) }));
+    const todayIdx = (new Date().getDay() + 6) % 7, today = H.mode === 'every' ? H.every : list[todayIdx];
+    const nextOpen = (() => { if (H.mode === 'every') return `today at ${fmt12(H.every.from)}`; for (let k = 0; k < 7; k++) { const r = list[(todayIdx + k) % 7]; if (r.open) return k === 0 ? `today at ${fmt12(r.from)}` : `${k === 1 ? 'tomorrow' : 'on ' + r.day} at ${fmt12(r.from)}`; } return 'soon'; })();
+    const hoursBubbles = H.mode === 'closed'
+      ? [{ when: 'While temporarily closed', text: `Sorry, ${brand} is temporarily closed${H.closedUntil ? ` and reopens on ${new Date(H.closedUntil + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}` : ''}. We can't take orders right now.` }]
+      : [
+        today && today.open ? { when: 'When a customer asks today', text: `We are open today until ${fmt12(today.to)}.` } : { when: 'Today', text: 'We are closed today.' },
+        { when: 'Outside opening hours', text: `Sorry, the restaurant is currently closed. It opens ${nextOpen}.` },
+        today && today.open && { when: 'Near closing time', text: `The restaurant closes at ${fmt12(today.to)}. Please confirm your order now.` },
+      ].filter(Boolean);
+
+    // menu
+    const menuSteps = ['No menu', 'Extracting', 'Needs review', 'Approved', 'Live'].map((label, i) => ({ label, bar: i <= s.menu ? 'linear-gradient(90deg,#FF5577,#C93DFF)' : '#F0E4E8', fw: i === s.menu ? 600 : 500, fg: i === s.menu ? '#1A0815' : '#8A5A6E' }));
+    const miss = s.menu >= 3 ? 0 : 3;
+    const menuStats = [['Categories', '7'], ['Items', '42'], ['Missing prices', String(miss)], ['Out of stock', '2'], ['Last updated', 'Today, 10:42']].map(([k, v]) => { const hot = k === 'Missing prices' && miss; return { k, v, bg: hot ? '#FFF1DC' : '#FAF6FA', fg: hot ? '#8A4B00' : '#1A0815', lfg: hot ? '#8A4B00' : '#8A5A6E' }; });
+    const menuPrimary = s.menu === 2 ? { show: true, label: 'Approve menu', go: () => this.setState({ menu: 3 }) } : s.menu === 3 ? { show: true, label: 'Publish menu', go: () => this.setState({ menu: 4 }) } : { show: false };
+
+    // devices
+    const deviceCards = s.devices.map((v, i) => ({ name: v.name,
+      rename: (e) => { const n = e.target.value; this.setState(st => ({ devices: st.devices.map((x, j) => j === i ? { ...x, name: n } : x) })); },
+      brSel: sel(v.branch, brOpts, (e) => { const b = e.target.value; this.setState(st => ({ devices: st.devices.map((x, j) => j === i ? { ...x, branch: b } : x) })); }, true, 'Assigned branch'),
+      rows: [{ k: 'Printer', v: 'Ready' }, { k: 'Battery', v: '84%' }, { k: 'Last order received', v: '12 min ago' }, { k: 'App version', v: '2.4.1' }],
+      testPrint: () => this.flash(`Test print sent to ${v.name || 'device'}.`),
+      disconnect: () => this.setState(st => ({ devices: st.devices.filter((_, j) => j !== i) })) }));
+
+    // save bar
+    const dirty = this.dirtyOf(s, s.page);
+    const pageLabel = (PAGES.find(p => p[0] === s.page) || [])[1];
+    const bar = { show: dirty || !!s.toast || !!s.error, dirty, ok: !!s.toast && !dirty, okText: s.toast, err: !!s.error, errText: s.error,
+      fg: s.blocked ? '#8A4B00' : '#3D1C31',
+      dirtyText: s.blocked ? `Save or discard your ${pageLabel.toLowerCase()} changes before leaving.` : 'You have unsaved changes.',
+      discardLabel: s.blocked ? 'Leave without saving' : 'Discard', save: () => this.save(), discard: () => this.discard() };
+
+    const PV = d.pay;
+    return {
+      rootRef: this.rootRef, mainRef: this.mainRef, wide, narrow: !wide,
+      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', barGap: s.period === 'month' ? '20px' : '10px', pad: wide ? '32px 40px 64px' : '20px 16px 48px', split: wide ? 'minmax(0,1fr) 300px' : 'minmax(0,1fr)',
+        areaCols: wide ? '1.2fr 1.1fr .8fr .8fr .7fr 1.3fr 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
+        rangeCols: wide ? 'repeat(5,minmax(0,1fr)) 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
+        rowPad: wide ? '10px 0' : '14px 0', cellLbl: wide ? 'none' : 'block',
+        dayCols: wide ? '160px minmax(0,1fr)' : 'minmax(0,1fr)', dayInner: wide ? 'repeat(3,minmax(0,1fr)) 80px' : 'minmax(0,1fr) minmax(0,1fr)',
+        stepCols: wide ? 'repeat(5,minmax(0,1fr))' : 'repeat(5,minmax(0,1fr))' },
+      pg: Object.fromEntries(PAGES.map(([k]) => [k, s.page === k])),
+      nav, navGroups, steps, ready, todoSteps, doneSteps, hasDone: doneSteps.length > 0, setupOpen: todo.length > 0, setupDone: todo.length === 0,
+      periodSeg: seg([['today', 'Today'], ['week', '7 days'], ['month', '30 days']], s.period, (v) => this.setState({ period: v })), stats, bars, topItems, chartNote: per.note, warnings, hasWarnings: warnings.length > 0, progressLabel: `${doneN} of ${steps.length} steps completed`,
+      brand, initials, markDirty: () => {},
+      prof: bind('profile', ['name', 'brand', 'cuisine', 'phone', 'support', 'email', 'trn']),
+      vatSw: sw(pr.vat, () => this.upd('profile', x => { x.vat = !x.vat; })),
+      trnBd: trnOk ? '#ECD9E0' : '#E5484D', trnHint: trnOk ? 'Shown on receipts.' : 'TRN must be 15 digits.', trnHintFg: trnOk ? '#8A5A6E' : '#B42318',
+      langSeg: seg([['ar', 'Arabic'], ['en', 'English'], ['both', 'Both']], pr.lang, (v) => this.upd('profile', x => { x.lang = v; })),
+      greetOpts: radio([['friendly', 'Friendly', 'Warm and casual'], ['formal', 'Formal', 'Polite and professional'], ['short', 'Short', 'Straight to the order']], pr.greet, (v) => this.upd('profile', x => { x.greet = v; })),
+      greetBubbles,
+      pinMissing, branchCards, adding: s.adding, notAdding: !s.adding,
+      startAdd: () => this.setState({ adding: true, nb: newBranch(), pinQ: '', pinMode: 'search' }), cancelAdd: () => this.setState({ adding: false }),
+      confirmAdd: () => { const b = { ...s.nb, id: String(Date.now()) }; this.upd('branches', x => { x.push(b); }); this.setState({ adding: false }); },
+      nb, nbStatus: seg([[true, 'Active'], [false, 'Inactive']], nbS.active, (v) => setNb('active', v)),
+      pinModes: [['search', 'Search address'], ['map', 'Drop pin on map'], ['current', 'Use current location'], ['paste', 'Paste Google Maps link']].map(([k, l]) => ({ ...chip(l, s.pinMode === k, () => this.setState({ pinMode: k })) })),
+      pm: { search: s.pinMode === 'search', paste: s.pinMode === 'paste', current: s.pinMode === 'current', map: s.pinMode === 'map' },
+      pinQ: s.pinQ, onPinQ: (e) => this.setState({ pinQ: e.target.value }), setPin,
+      mapClick: () => { if (s.pinMode === 'map') setPin(); }, mapCursor: s.pinMode === 'map' ? 'crosshair' : 'default',
+      mapHint: s.pinMode === 'map' ? 'Click the map to drop a pin' : 'No pin yet',
+      nbPinned: nbS.pin, nbNoPin: !nbS.pin, nbCoords: nbS.coords, nbInvalid: !nbS.name.trim(), nbOp: nbS.name.trim() ? 1 : 0.45,
+      routeOpts, routeBranches, waMap, route, waFor: waMap[0],
+      dStatusOpts: radio([['available', 'Delivery available', 'Lumia offers delivery and pickup.'], ['pickup', 'Pickup only', 'No delivery. Customers collect from the branch.'], ['paused', 'Delivery temporarily paused', 'Use when you are short on drivers.']], D.status, (v) => setD('status', v)),
+      dl: { on: D.status === 'available', pickup: D.status === 'pickup', paused: D.status === 'paused', noMethod: !D.method, area: D.method === 'area', distance: D.method === 'distance', free: D.method === 'free', manual: D.method === 'manual' },
+      methodOpts: radio([['area', 'By area / emirate', 'A fixed fee for each emirate or area.'], ['distance', 'By distance range', 'Fee grows with distance from the branch.'], ['free', 'Free delivery only', 'Free in the areas you choose.'], ['manual', 'Manual confirmation', 'You confirm the fee for each order.']], D.method, (v) => this.upd('delivery', x => { x.method = v; if (v === 'distance') x.pinReq = true; })),
+      areas, ranges,
+      addArea: () => this.upd('delivery', x => { x.areas.push({ emirate: 'Dubai', area: 'All areas', fee: '', min: x.minOrder, eta: x.eta, branch: '', on: true }); }),
+      addRange: () => this.upd('delivery', x => { const last = x.ranges[x.ranges.length - 1]; x.ranges.push({ from: last ? (last.to || '') : '0', to: '', fee: '', min: x.minOrder, eta: x.eta, on: true }); }),
+      freeEm: EM.map(e => chip(e, D.freeEm.includes(e), () => this.upd('delivery', x => { x.freeEm = x.freeEm.includes(e) ? x.freeEm.filter(i => i !== e) : [...x.freeEm, e]; }))),
+      freeBrSel: sel(D.freeBranch, brOpts, (e) => setD('freeBranch', e.target.value), false, 'Branch'),
+      dlf: bind('delivery', ['freeAreas', 'manualMsg', 'minOrder', 'freeAbove', 'eta']),
+      confirmSw: sw(D.confirmFirst, () => setD('confirmFirst', !D.confirmFirst)),
+      pinSw: sw(D.pinReq || distLock, () => !distLock && setD('pinReq', !D.pinReq), { locked: distLock, op: distLock ? 0.6 : 1 }),
+      pinReqHint: distLock ? 'Required for distance pricing.' : 'Lumia asks for a WhatsApp location before confirming the address.', pinReqHintFg: '#8A5A6E',
+      calc, res,
+      hModeOpts: radio([['every', 'Same hours every day', 'One set of hours for the whole week.'], ['custom', 'Custom hours per day', 'Different hours or days off.'], ['closed', 'Temporarily closed', 'Lumia stops taking orders.']], H.mode, (v) => setH(x => { x.mode = v; })),
+      scopeSeg: seg([['same', 'Same for all branches'], ['per', 'Different per branch']], H.scope, (v) => setH(x => { x.scope = v; })),
+      perBranch: H.scope === 'per' && H.mode === 'custom',
+      hBranchSeg: d.branches.filter(b => H.per[b.id]).map(b => chip(b.name, H.sel === b.id, () => setH(x => { x.sel = b.id; }))),
+      hm: { closed: H.mode === 'closed', rows: H.mode !== 'closed' }, hf: bind('hours', ['closedUntil']), dayRows, hoursBubbles,
+      menuSteps, menuStats, menuNotApproved: s.menu < 3, menuPrimary, menuLive: s.menu === 4,
+      hasDevices: s.devices.length > 0 && !s.pairing, pairing: s.pairing, noDevicesIdle: !s.devices.length && !s.pairing, deviceCards,
+      startPair: () => this.setState({ pairing: true }), cancelPair: () => this.setState({ pairing: false }),
+      finishPair: () => { this.setState(st => ({ pairing: false, devices: [...st.devices, { id: Date.now(), name: st.devices.length ? `Device ${st.devices.length + 1}` : 'Kitchen tablet', branch: '1' }] })); this.flash('Device connected.'); },
+      codSw: sw(PV.cod, () => this.upd('pay', x => { x.cod = !x.cod; })), noCod: !PV.cod,
+      verifySw: sw(PV.verify, () => this.upd('pay', x => { x.verify = !x.verify; })),
+      verifyHint: `Require phone verification for orders above AED ${PV.threshold || '…'}.`,
+      payf: bind('pay', ['threshold']),
+      bar,
+    };
+  }
+}
+</script>
+</body>
+</html>

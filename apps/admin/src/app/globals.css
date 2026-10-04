@@ -130,3 +130,22 @@ a.entry-secondary{display:flex;align-items:center;justify-content:center;text-de
 .orders-tabs button{border:1.5px solid #ECD9E0;color:#3D1C31;font-weight:500}.orders-tabs button.on{background:#1A0815;border-color:#1A0815;color:#fff}.order-card.new{border-color:#FF5577;box-shadow:0 0 0 3px #FF55771A}.order-card li{border-bottom:1px solid #F0E4E8}
 .ds-link.soon{color:#3D1C31;opacity:1;cursor:default}
 .ds-app .button-primary{background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;border:0}.ds-app .button-primary:hover:not(:disabled){background:linear-gradient(90deg,#F2446A,#B52EEA)}.ds-app .button-outline{background:#fff;color:#1A0815;border:1.5px solid #ECD9E0}.ds-app .button-outline:hover:not(:disabled){background:#FBF3F8}
+/* Design palette for every older screen (onboarding steps, templates, errors): same colours, borders and buttons as the Lumia Order design. */
+:root{--background:#fff;--foreground:#1A0815;--primary:#FF5577;--border:#F0E4E8;--ring:#FF5577;--muted:#8A5A6E;font-family:Geist,'IBM Plex Sans Arabic',system-ui,sans-serif}
+body{background:#fff;color:#1A0815;-webkit-font-smoothing:antialiased}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #FF557733}
+.eyebrow{color:#8A5A6E}.muted{color:#8A5A6E}label{color:#3D1C31}.helper{color:#8A5A6E}
+.button{border-radius:12px;font-weight:600}
+.button-primary{background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;box-shadow:0 10px 24px -12px #c93dff8c}.button-primary:hover:not(:disabled){background:linear-gradient(90deg,#F2446A,#B52EEA)}
+.button-outline{border:1.5px solid #ECD9E0;background:#fff;color:#1A0815}.button-outline:hover{background:#FBF3F8}.button-ghost{color:#8A2040}
+.input{border:1.5px solid #ECD9E0;border-radius:12px;color:#1A0815}.input:focus{border-color:#FF5577;outline:3px solid #FF55771A;outline-offset:0}.input::placeholder{color:#B89AA8}.input:disabled{background:#FBF6F8;color:#8A5A6E}
+.error-message{background:#FDECEC;border:0;color:#B42318}
+.saved{color:#16704A}.panel{border:1px solid #F0E4E8;border-radius:16px;box-shadow:none}
+.pill{border:0;background:#F6EEF2;color:#3D1C31}.pill-green{background:#E6F4EC;color:#16704A}.pill-amber{background:#FFF1DC;color:#8A4B00}
+.avatar{background:linear-gradient(135deg,#FF5577,#C93DFF);color:#fff}
+.logo-mark{background:linear-gradient(135deg,#FF5577,#C93DFF)}
+.step-number{border:1px solid #ECD9E0;background:#fff;color:#8A5A6E}.step-number.done{background:#E6F4EC;border-color:#E6F4EC;color:#16704A}
+.progress-track{background:#F0E4E8}.progress-track span{background:linear-gradient(90deg,#FF5577,#C93DFF)}
+.text-link{color:#8A2040}.go-live{background:#FBF3F8}.type-option{border:1px solid #ECD9E0;background:#FBF3F8;color:#8A2040}.type-option strong{color:#1A0815}
+.form-aside{background:linear-gradient(135deg,#FFEEF2,#F1E6FF);border:0}.checkbox-label input{accent-color:#C93DFF}
+.auth-story{background:linear-gradient(135deg,#FFEEF2,#F1E6FF)}

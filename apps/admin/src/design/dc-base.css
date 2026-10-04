@@ -17,3 +17,5 @@
 @keyframes lo-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 @keyframes lo-orbit{from{transform:rotate(0) translateX(78px) rotate(0)}to{transform:rotate(360deg) translateX(78px) rotate(-360deg)}}
 @keyframes lo-pulse{0%,100%{transform:scale(.7);opacity:.6}50%{transform:scale(1);opacity:1}}
+.dc select,.dc textarea{font:inherit;color:inherit;outline:none}
+.dc textarea::placeholder{color:#B89AA8}

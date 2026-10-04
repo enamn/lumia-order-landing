@@ -4,6 +4,7 @@ import { extractMenu, confirmImport } from "@/modules/menu/import";
 import { setLanguage } from "@/modules/auth/profile";
 import { connectWhatsApp, getWhatsAppStatus, getImportInfo, applyImport, useCatalog, disconnectWhatsApp } from "@/modules/whatsapp/link";
 import { createMessageTemplate } from "@/modules/whatsapp/templates";
+import { getSettings, saveSettingsSection } from "@/modules/settings/service";
 import { getMessageStats, getOverview, listConversations } from "@/modules/messages/inbound";
 import { getConversation, sendReply } from "@/modules/messages/reply";
 import { getAiSettings, setAiSettings } from "@/modules/messages/ai";
@@ -40,6 +41,10 @@ async function handle(request: Request, context: Context) {
       if (method === "GET") return members(userId, businessId);
       if (method === "POST") return setMember(userId, businessId, await jsonBody(request), requestId);
     }
+    if (section === "settings") {
+      if (method === "GET" && path.length === 3) return getSettings(userId, businessId);
+      if (method === "PUT" && path.length === 4) return saveSettingsSection(userId, businessId, subId, await jsonBody(request, 262144), requestId);
+    }
     if (section === "whatsapp") {
       if (method === "GET" && path.length === 3) return getWhatsAppStatus(userId, businessId);
       if (method === "GET" && subId === "stats" && path.length === 4) return getMessageStats(userId, businessId);
@@ -74,4 +79,4 @@ async function handle(request: Request, context: Context) {
     throw new AppError("NOT_FOUND", "Endpoint not found.", 404);
   });
 }
-export { handle as GET, handle as POST, handle as PATCH };
+export { handle as GET, handle as POST, handle as PATCH, handle as PUT };
