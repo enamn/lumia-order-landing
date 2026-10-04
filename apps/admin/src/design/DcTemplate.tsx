@@ -549,12 +549,61 @@ export function DcTemplate({ vm }: { vm: any }) {
                           <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
                             <path d={n.icon} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
-                          {n.label}
+                          <span style={S("flex:1;min-width:0")}>
+                            {n.label}
+                          </span>
+                          {n.lock && (
+                            <>
+                            <span style={S("font-size:12px;font-weight:600;padding:2px 7px;border-radius:999px;background:#F1E6FF;color:#6A1FA0")}>
+                              Plus
+                            </span>
+                            </>
+                          )}
                         </a>
                       </Fragment>
                     ))}
                   </nav>
                   <div style={S("padding:12px;border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:8px")}>
+                    {vm.sub.onTrial && (
+                      <>
+                      <button type="button" onClick={vm.subOpenPlans} style={S("text-align:start;padding:12px;border-radius:12px;background:#FBF3F8;display:flex;flex-direction:column;gap:9px")} className="dch7">
+                        <span style={S("display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px;font-weight:600")}>
+                          {vm.sub.tag}
+                          <span style={S("font-size:13px;font-weight:500;color:#8A2040;font-variant-numeric:tabular-nums")}>
+                            {vm.sub.leftLabel}
+                          </span>
+                        </span>
+                        <span style={S("height:4px;border-radius:2px;background:#EAD9E1;overflow:hidden;display:block")}>
+                          <span style={S(`display:block;height:100%;width:${vm.sub.barW};border-radius:2px;background:linear-gradient(90deg,#FF5577,#C93DFF)`)} />
+                        </span>
+                        <span style={S("font-size:14px;font-weight:600;color:#C0284F")}>
+                          {vm.sub.choose}
+                        </span>
+                      </button>
+                      </>
+                    )}
+                    {vm.sub.isPaid && (
+                      <>
+                      <div style={S(`display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:12px;background:${vm.sub.paidBg};color:${vm.sub.paidFg};font-size:14px;font-weight:600`)}>
+                        <span style={S("display:flex;align-items:center;gap:8px")}>
+                          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                            <path d="m5 10.5 3.2 3L15 7" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          {vm.sub.paidName}{" plan"}
+                        </span>
+                        <span style={S("font-size:13px;font-weight:500")}>
+                          {vm.sub.renewLine}
+                        </span>
+                        {vm.sub.canPortal && (
+                          <>
+                          <button type="button" onClick={vm.subPortal} style={S("align-self:flex-start;font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px")}>
+                            {vm.sub.portalLabel}
+                          </button>
+                          </>
+                        )}
+                      </div>
+                      </>
+                    )}
                     <div role="radiogroup" aria-label="Dashboard language" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;flex:none")}>
                       {(vm.langs as any[]).map((lg: any, __i: number) => (
                         <Fragment key={__i}>
@@ -635,6 +684,21 @@ export function DcTemplate({ vm }: { vm: any }) {
                         </Fragment>
                       ))}
                     </nav>
+                    {vm.sub.onTrial && (
+                      <>
+                      <div style={S("padding:8px 16px;background:#FBF3F8;border-top:1px solid #F0E4E8;display:flex;align-items:center;gap:10px;font-size:14px")}>
+                        <span style={S("font-weight:600")}>
+                          {vm.sub.tag}
+                        </span>
+                        <span style={S("color:#8A2040;font-variant-numeric:tabular-nums;flex:1;min-width:0")}>
+                          {vm.sub.leftLabel}
+                        </span>
+                        <button type="button" onClick={vm.subOpenPlans} style={S("height:32px;padding:0 12px;border-radius:9px;background:#1A0815;color:#fff;font-size:13px;font-weight:600;flex:none")}>
+                          {vm.sub.choose}
+                        </button>
+                      </div>
+                      </>
+                    )}
                   </header>
                   </>
                 )}
@@ -672,6 +736,88 @@ export function DcTemplate({ vm }: { vm: any }) {
                             ))}
                           </div>
                         </div>
+                        {vm.term.show && (
+                          <>
+                          <section data-screen-label="06d Terminal shipment" dir="ltr" style={S("border:1px solid #F0E4E8;border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:20px")}>
+                            <div style={S("display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px 20px")}>
+                              <div style={S("flex:none;width:44px;height:78px;position:relative;overflow:hidden;border-radius:8px;background:#FBF3F8")}>
+                                <div style={S("width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C0284F")}>
+                                  <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
+                                    <path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                </div>
+                              </div>
+                              <div style={S("flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:6px")}>
+                                <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px")}>
+                                  <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                                    Lumia Order Terminal
+                                  </h2>
+                                  <span style={S(`font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px;background:${vm.term.pillBg};color:${vm.term.pillFg}`)}>
+                                    {vm.term.label}
+                                  </span>
+                                </div>
+                                <p style={S("font-size:14px;line-height:1.5;color:#3D1C31;text-wrap:pretty")}>
+                                  {vm.term.msg}
+                                </p>
+                                <p style={S("font-size:13px;color:#8A5A6E")}>
+                                  {"Order "}{vm.term.no}{" \u00b7 "}{vm.term.qtyLabel}{" \u00b7 "}{vm.term.addr}
+                                </p>
+                              </div>
+                              <div style={S("flex:none;display:flex;flex-direction:column;gap:2px")}>
+                                <span style={S("font-size:13px;color:#8A5A6E")}>
+                                  {vm.term.etaLabel}
+                                </span>
+                                <span style={S("font-size:18px;font-weight:600;letter-spacing:-0.02em;font-variant-numeric:tabular-nums")}>
+                                  {vm.term.eta}
+                                </span>
+                              </div>
+                            </div>
+                            <ol style={S("list-style:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0")}>
+                              {(vm.term.steps as any[]).map((st: any, __i: number) => (
+                                <Fragment key={__i}>
+                                  <li style={S("display:flex;flex-direction:column;gap:8px;min-width:0")}>
+                                    <div style={S("display:flex;align-items:center")}>
+                                      <span style={S(`width:20px;height:20px;border-radius:50%;flex:none;background:${st.dot};border:2px solid ${st.ring};display:flex;align-items:center;justify-content:center`)}>
+                                        {st.done && (
+                                          <>
+                                          <svg width="11" height="11" viewBox="0 0 20 20" fill="none">
+                                            <path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                                          </svg>
+                                          </>
+                                        )}
+                                        {st.now && (
+                                          <>
+                                          <span style={S("width:8px;height:8px;border-radius:50%;background:#FF5577")} />
+                                          </>
+                                        )}
+                                      </span>
+                                      <span style={S(`flex:1;height:3px;margin:0 4px;border-radius:2px;background:${st.line}`)} />
+                                    </div>
+                                    <span style={S(`font-size:13px;line-height:1.3;padding-inline-end:8px;font-weight:${st.fw};color:${st.fg}`)}>
+                                      {st.label}
+                                    </span>
+                                    <span style={S("font-size:12px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                                      {st.date}
+                                    </span>
+                                  </li>
+                                </Fragment>
+                              ))}
+                            </ol>
+                            {vm.term.hasCourier && (
+                              <>
+                              <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:12px 14px;border-radius:12px;background:#FBF3F8;font-size:14px")}>
+                                <span style={S("color:#3D1C31")}>
+                                  {"Tracking no. "}
+                                  <span style={S("font-weight:600;color:#1A0815;font-variant-numeric:tabular-nums")}>
+                                    {vm.term.tracking}
+                                  </span>
+                                </span>
+                              </div>
+                              </>
+                            )}
+                          </section>
+                          </>
+                        )}
                         <section style={S("border-radius:20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);padding:22px 24px;display:flex;flex-wrap:wrap;gap:18px 32px;align-items:center")}>
                           <div style={S("flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:12px")}>
                             <div style={S("display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px")}>
@@ -692,7 +838,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                             <div style={S("display:flex;flex-wrap:wrap;gap:8px 18px")}>
                               {(vm.setup as any[]).map((s: any, __i: number) => (
                                 <Fragment key={__i}>
-                                  <button type="button" onClick={s.pick} disabled={!!s.done} style={S(`display:flex;align-items:center;gap:7px;font-size:14px;color:${s.fg};text-decoration:${s.ul};text-decoration-color:#D9BFCB;text-underline-offset:3px`)} className="dch7">
+                                  <button type="button" onClick={s.pick} disabled={!!s.done} style={S(`display:flex;align-items:center;gap:7px;font-size:14px;color:${s.fg};text-decoration:${s.ul};text-decoration-color:#D9BFCB;text-underline-offset:3px`)} className="dch8">
                                     {s.done && (
                                       <>
                                       <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
@@ -868,7 +1014,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     </header>
                                     {(g.items as any[]).map((it: any, __i: number) => (
                                       <Fragment key={__i}>
-                                        <div style={S(`display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:16px;min-height:60px;padding:9px 18px;border-top:${it.bt}`)} className="dch8">
+                                        <div style={S(`display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:16px;min-height:60px;padding:9px 18px;border-top:${it.bt}`)} className="dch9">
                                           <div style={S("min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px")}>
                                             <span style={S(`font-size:15px;font-weight:500;color:${it.nameFg}`)}>
                                               {it.main}
@@ -1222,7 +1368,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                               </div>
                                             </div>
                                             <div style={S("display:flex;gap:8px;margin-inline-start:auto")}>
-                                              <button type="button" onClick={r.d.startReject} style={S("height:44px;padding:0 16px;border-radius:12px;color:#B42318;font-weight:500;font-size:15px")} className="dch9">
+                                              <button type="button" onClick={r.d.startReject} style={S("height:44px;padding:0 16px;border-radius:12px;color:#B42318;font-weight:500;font-size:15px")} className="dch10">
                                                 {r.t.reject}
                                               </button>
                                               <button type="button" onClick={r.d.accept} style={S("height:44px;padding:0 24px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")}>
@@ -1262,7 +1408,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                         {r.d.hasNext && (
                                           <>
                                           <div style={S("display:flex;justify-content:flex-end")}>
-                                            <button type="button" onClick={r.d.next} style={S("height:44px;padding:0 24px;border-radius:12px;background:#1A0815;color:#fff;font-weight:600;font-size:15px")} className="dch10">
+                                            <button type="button" onClick={r.d.next} style={S("height:44px;padding:0 24px;border-radius:12px;background:#1A0815;color:#fff;font-weight:600;font-size:15px")} className="dch11">
                                               {r.d.nextLabel}
                                             </button>
                                           </div>
@@ -1301,6 +1447,283 @@ export function DcTemplate({ vm }: { vm: any }) {
                             </div>
                             </>
                           )}
+                        </div>
+                        </>
+                      )}
+                      {vm.pagePlans && (
+                        <>
+                        <div dir="ltr" style={S("position:fixed;inset:0;z-index:55;background:#fff;display:flex;flex-direction:column")}>
+                          <header style={S("height:64px;flex:none;padding:0 16px 0 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F0E4E8")}>
+                            <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style={S("display:block;flex:none")}>
+                              <defs>
+                                <linearGradient id="gPD3" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+                                  <stop offset="0" stopColor="#FF5577" />
+                                  <stop offset="1" stopColor="#C93DFF" />
+                                </linearGradient>
+                              </defs>
+                              <path d="M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z" stroke="url(#gPD3)" strokeWidth="8" strokeLinejoin="round" />
+                              <path d="M28 30V66H40" stroke="#1A0815" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+                              <circle cx="64" cy="55" r="11" stroke="url(#gPD3)" strokeWidth="10" />
+                            </svg>
+                            <span style={S("font-size:16px;font-weight:600;flex:1;min-width:0")}>
+                              Subscribe to Lumia Order
+                            </span>
+                            <span style={S("font-size:14px;color:#8A5A6E;flex:none")}>
+                              {vm.sub.stepLabel}
+                            </span>
+                            <button type="button" onClick={vm.subClosePlans} aria-label="Close" style={S("width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
+                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="m4 4 8 8M12 4l-8 8" stroke="#1A0815" strokeWidth="1.7" strokeLinecap="round" />
+                              </svg>
+                            </button>
+                          </header>
+                          <div style={S("flex:1;min-height:0;overflow-y:auto")}>
+                            <div style={S(`max-width:1100px;margin:0 auto;padding:${vm.sub.pad};display:flex;flex-direction:column;gap:22px;align-items:center`)}>
+                              {vm.sub.stepPlans && (
+                                <>
+                                <div data-screen-label="11 Choose a plan" style={S("display:flex;flex-direction:column;gap:22px;width:100%")}>
+                                  <div style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
+                                    <div style={S("flex:1 1 280px;min-width:0")}>
+                                      <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                                        Choose your plan
+                                      </h1>
+                                      <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5;text-wrap:pretty")}>
+                                        {vm.sub.trialLine}
+                                      </p>
+                                    </div>
+                                    <div role="radiogroup" aria-label="Billing" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px")}>
+                                      {(vm.sub.bills as any[]).map((b: any, __i: number) => (
+                                        <Fragment key={__i}>
+                                          <button type="button" role="radio" aria-checked={b.on} onClick={b.pick} style={S(`height:34px;padding:0 14px;border-radius:8px;font-size:14px;white-space:nowrap;font-weight:${b.fw};background:${b.bg};color:${b.fg};box-shadow:${b.sh}`)}>
+                                            {b.label}
+                                          </button>
+                                        </Fragment>
+                                      ))}
+                                      <span style={S("align-self:center;font-size:12px;font-weight:600;padding:3px 8px;margin:0 4px;border-radius:999px;background:#E4F4EC;color:#16704A;white-space:nowrap")}>
+                                        Yearly saves 2 months
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px;align-items:stretch")}>
+                                    {(vm.sub.plans as any[]).map((p: any, __i: number) => (
+                                      <Fragment key={__i}>
+                                        <button type="button" onClick={p.choose} aria-label={p.cta} style={S(`text-align:start;border:2px solid ${p.bd};background:${p.bg};border-radius:20px;padding:22px;display:flex;flex-direction:column;transition:border-color .15s,box-shadow .15s,transform .15s`)} className="dch12">
+                                          <span style={S("font-size:19px;font-weight:600")}>
+                                            {p.name}
+                                          </span>
+                                          <span style={S("font-size:14px;line-height:1.45;color:#8A5A6E;margin-top:6px")}>
+                                            {p.desc}
+                                          </span>
+                                          <div style={S("display:flex;flex-direction:column;margin-top:16px;font-variant-numeric:tabular-nums")}>
+                                            <span style={S("font-size:14px;color:#8A5A6E;text-decoration:line-through;min-height:20px")}>
+                                              {p.strike}
+                                            </span>
+                                            <span style={S("display:flex;align-items:baseline;gap:6px")}>
+                                              <span style={S("font-size:30px;font-weight:600;letter-spacing:-0.04em")}>
+                                                {p.price}
+                                              </span>
+                                              <span style={S("font-size:14px;color:#8A5A6E")}>
+                                                {p.per}
+                                              </span>
+                                            </span>
+                                            <span style={S("font-size:13px;color:#3D1C31;margin-top:4px")}>
+                                              {p.eq}
+                                            </span>
+                                            <span style={S("font-size:13px;color:#8A2040;margin-top:8px;padding:6px 10px;border-radius:8px;background:#FDEAF2;align-self:flex-start")}>
+                                              {"+ Terminal "}{p.term}{" one-time"}
+                                            </span>
+                                          </div>
+                                          <span style={S("height:1px;background:#F0E4E8;margin:18px 0 14px;display:block")} />
+                                          {p.hasInc && (
+                                            <>
+                                            <span style={S("font-size:13px;font-weight:600;color:#3D1C31;margin-bottom:10px")}>
+                                              {p.inc}
+                                            </span>
+                                            </>
+                                          )}
+                                          <div style={S("display:flex;flex-direction:column;gap:7px;font-size:14px")}>
+                                            {(p.feats as any[]).map((f: any, __i: number) => (
+                                              <Fragment key={__i}>
+                                                <span style={S("display:flex;gap:8px")}>
+                                                  <span style={S("color:#FF5577;flex:none")}>
+                                                    ✓
+                                                  </span>
+                                                  <span>
+                                                    {f}
+                                                  </span>
+                                                </span>
+                                              </Fragment>
+                                            ))}
+                                          </div>
+                                        </button>
+                                      </Fragment>
+                                    ))}
+                                  </div>
+                                </div>
+                                </>
+                              )}
+                              {vm.sub.stepPay && (
+                                <>
+                                <div data-screen-label="12 Payment" style={S("display:flex;flex-direction:column;gap:20px;max-width:900px;width:100%")}>
+                                  <button type="button" onClick={vm.subBackPlans} style={S("align-self:flex-start;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px 0 8px;border-radius:10px;font-size:14px;font-weight:500;color:#3D1C31")} className="dch6">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                      <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                    Plans
+                                  </button>
+                                  <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                                    Payment
+                                  </h1>
+                                  <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:20px;align-items:start")}>
+                                    <form onSubmit={vm.subPay} noValidate={true} style={S("display:flex;flex-direction:column;gap:16px")}>
+                                      <section style={S("border:2px solid #FF5577;background:#FFF7FA;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px")}>
+                                        <div style={S("display:flex;gap:14px;align-items:flex-start")}>
+                                          <div style={S("flex:none;width:64px;height:112px;position:relative;overflow:hidden;border-radius:10px;background:#fff")}>
+                                            <div style={S("width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C0284F")}>
+                                              <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
+                                                <path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                              </svg>
+                                            </div>
+                                          </div>
+                                          <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:4px")}>
+                                            <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px")}>
+                                              <span style={S("font-size:16px;font-weight:600")}>
+                                                Lumia Order Terminal
+                                              </span>
+                                              <span style={S("font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#1A0815;color:#fff")}>
+                                                Required
+                                              </span>
+                                            </div>
+                                            <span style={S("font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty")}>
+                                              Receives, accepts and prints your orders. Every subscription includes at least one terminal.
+                                            </span>
+                                            <span style={S("display:flex;align-items:baseline;gap:8px;margin-top:4px;font-variant-numeric:tabular-nums")}>
+                                              <span style={S("font-size:14px;color:#8A5A6E;text-decoration:line-through")}>
+                                                AED 699
+                                              </span>
+                                              <span style={S("font-size:18px;font-weight:600")}>
+                                                {vm.sub.termPrice}
+                                              </span>
+                                              <span style={S("font-size:13px;color:#8A5A6E")}>
+                                                one-time
+                                              </span>
+                                            </span>
+                                          </div>
+                                        </div>
+                                        <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding-top:12px;border-top:1px solid #F3D6E2")}>
+                                          <span style={S("font-size:14px;color:#3D1C31")}>
+                                            {vm.sub.termQtyNote}
+                                          </span>
+                                          <div style={S("display:flex;align-items:center;border:1.5px solid #ECD9E0;border-radius:10px;background:#fff")}>
+                                            <button type="button" onClick={vm.termDec} disabled={!!vm.sub.termMin} aria-label="Fewer terminals" style={S(`width:36px;height:36px;font-size:18px;opacity:${vm.sub.decOp}`)}>
+                                              −
+                                            </button>
+                                            <span style={S("min-width:28px;text-align:center;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums")}>
+                                              {vm.sub.termQty}
+                                            </span>
+                                            <button type="button" onClick={vm.termInc} aria-label="More terminals" style={S("width:36px;height:36px;font-size:18px")}>
+                                              +
+                                            </button>
+                                          </div>
+                                        </div>
+                                        <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                            Delivery address for the terminal
+                                          </span>
+                                          <input autoComplete="street-address" placeholder="Building, street, area, emirate" value={vm.sub.addr} onChange={vm.onAddr} style={S(`height:48px;padding:0 14px;border-radius:12px;border:1.5px solid ${vm.sub.addrBd};background:#fff;font-size:15px`)} className="dch13" />
+                                        </label>
+                                        {vm.sub.addrErr && (
+                                          <>
+                                          <span style={S("font-size:13px;color:#B42318;margin-top:-6px")}>
+                                            Add a delivery address for your terminal to continue.
+                                          </span>
+                                          </>
+                                        )}
+                                        <span style={S("font-size:13px;color:#8A5A6E;margin-top:-4px")}>
+                                          Estimated delivery: 10–15 business days.
+                                        </span>
+                                      </section>
+                                      <button type="submit" disabled={!!vm.sub.invalid} style={S(`height:54px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;opacity:${vm.sub.payOp};display:flex;align-items:center;justify-content:center;gap:10px;font-variant-numeric:tabular-nums`)}>
+                                        {vm.sub.paying && (
+                                          <>
+                                          <span style={S("width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:lo-spin .8s linear infinite")} />
+                                          </>
+                                        )}
+                                        {vm.sub.payLabel}
+                                      </button>
+                                      <p style={S("display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:1.45;color:#8A5A6E")}>
+                                        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style={S("flex:none;margin-top:2px")}>
+                                          <rect x="4.5" y="9" width="11" height="8" rx="2" stroke="currentColor" strokeWidth="1.6" />
+                                          <path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" strokeWidth="1.6" />
+                                        </svg>
+                                        You pay on Stripe’s secure page, so Lumia never sees your card. Cancel anytime from Manage billing.
+                                      </p>
+                                      {vm.sub.err && (
+                                        <>
+                                        <div role="alert" style={S("font-size:14px;color:#B4233B")}>
+                                          {vm.sub.err}
+                                        </div>
+                                        </>
+                                      )}
+                                    </form>
+                                    <aside style={S("background:#FBF3F8;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:14px")}>
+                                      <div style={S("display:flex;align-items:flex-start;justify-content:space-between;gap:12px")}>
+                                        <div style={S("display:flex;flex-direction:column;gap:3px")}>
+                                          <span style={S("font-size:19px;font-weight:600;letter-spacing:-0.02em")}>
+                                            {vm.sub.selName}
+                                          </span>
+                                          <span style={S("font-size:14px;color:#3D1C31")}>
+                                            {vm.sub.selBilling}
+                                          </span>
+                                        </div>
+                                        <button type="button" onClick={vm.subBackPlans} style={S("font-size:14px;font-weight:500;color:#1A0815;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px")} className="dch2">
+                                          Change
+                                        </button>
+                                      </div>
+                                      <div style={S("display:flex;flex-direction:column;gap:10px;font-size:15px;font-variant-numeric:tabular-nums;padding-top:14px;border-top:1px solid #ECD9E0")}>
+                                        <div style={S("display:flex;justify-content:space-between;gap:12px;color:#3D1C31")}>
+                                          <span>
+                                            {vm.sub.selName}
+                                          </span>
+                                          <span>
+                                            {vm.sub.planAmt}
+                                          </span>
+                                        </div>
+                                        <div style={S("display:flex;justify-content:space-between;gap:12px;color:#3D1C31")}>
+                                          <span>
+                                            {vm.sub.termLine}
+                                          </span>
+                                          <span>
+                                            {vm.sub.termAmt}
+                                          </span>
+                                        </div>
+                                        <div style={S("display:flex;justify-content:space-between;gap:12px;color:#3D1C31")}>
+                                          <span>
+                                            VAT (5%)
+                                          </span>
+                                          <span>
+                                            {vm.sub.vat}
+                                          </span>
+                                        </div>
+                                        <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:18px;font-weight:600;padding-top:10px;border-top:1px solid #ECD9E0")}>
+                                          <span>
+                                            Total today
+                                          </span>
+                                          <span>
+                                            {vm.sub.total}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <p style={S("font-size:13px;color:#8A5A6E")}>
+                                        {"Renews on "}{vm.sub.renew}.
+                                      </p>
+                                    </aside>
+                                  </div>
+                                </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
                         </>
                       )}
@@ -1435,7 +1858,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                               <button type="button" onClick={vm.cancelDisconnect} style={S("flex:1 1 140px;height:48px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
                                 Cancel
                               </button>
-                              <button type="button" onClick={vm.doDisconnect} style={S("flex:1 1 180px;height:48px;padding:0 18px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px")} className="dch11">
+                              <button type="button" onClick={vm.doDisconnect} style={S("flex:1 1 180px;height:48px;padding:0 18px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px")} className="dch14">
                                 Disconnect WhatsApp
                               </button>
                             </div>
@@ -1753,7 +2176,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           <div style={S("display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px")}>
                                             {(d.opts as any[]).map((o: any, __i: number) => (
                                               <Fragment key={__i}>
-                                                <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`text-align:start;border-radius:14px;border:1.5px solid ${o.bd};background:${o.bg};padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-height:88px`)} className="dch12">
+                                                <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`text-align:start;border-radius:14px;border:1.5px solid ${o.bd};background:${o.bg};padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-height:88px`)} className="dch15">
                                                   <span style={S("display:flex;align-items:center;gap:8px;font-size:12px;color:#8A5A6E")}>
                                                     <span style={S(`width:16px;height:16px;border-radius:50%;border:${o.dotBd};background:#fff;flex:none`)} />
                                                     {o.src}
@@ -1860,7 +2283,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     <button type="button" onClick={vm.toggleCat} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
                                       {vm.catBtn}
                                     </button>
-                                    <button type="button" onClick={vm.askReplace} style={S("height:40px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch13">
+                                    <button type="button" onClick={vm.askReplace} style={S("height:40px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch16">
                                       Replace current menu
                                     </button>
                                   </div>
@@ -1895,7 +2318,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                         <button type="button" onClick={vm.cancelReplace} style={S("flex:1 1 120px;height:48px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
                                           Cancel
                                         </button>
-                                        <button type="button" onClick={vm.useCatalog} style={S("flex:1 1 140px;height:48px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px")} className="dch11">
+                                        <button type="button" onClick={vm.useCatalog} style={S("flex:1 1 140px;height:48px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px")} className="dch14">
                                           Replace menu
                                         </button>
                                       </div>
@@ -1986,6 +2409,115 @@ export function DcTemplate({ vm }: { vm: any }) {
                   )}
                 </div>
               </div>
+              {vm.sub.panel && (
+                <>
+                <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
+                  <div onClick={vm.subLater} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
+                  <div role="dialog" aria-modal="true" aria-labelledby="tr-h" data-screen-label="10 Free trial" style={S("position:relative;width:100%;max-width:440px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)")}>
+                    <div style={S("padding:26px 26px 22px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);display:flex;flex-direction:column;gap:14px")}>
+                      <span style={S("align-self:flex-start;height:28px;padding:0 11px;border-radius:999px;background:#fff;font-size:13px;font-weight:600;color:#8A2040;display:flex;align-items:center")}>
+                        Free trial
+                      </span>
+                      <h2 id="tr-h" style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;line-height:1.15;text-wrap:balance")}>
+                        {vm.sub.title}
+                      </h2>
+                      <div style={S("display:flex;flex-direction:column;gap:8px")}>
+                        <span style={S("height:6px;border-radius:3px;background:rgba(26,8,21,.1);overflow:hidden;display:block")}>
+                          <span style={S(`display:block;height:100%;width:${vm.sub.barW};border-radius:3px;background:linear-gradient(90deg,#FF5577,#C93DFF)`)} />
+                        </span>
+                        <span style={S("font-size:14px;font-weight:500;color:#8A2040;font-variant-numeric:tabular-nums")}>
+                          {vm.sub.leftLabel}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={S("padding:22px 26px 24px;display:flex;flex-direction:column;gap:20px")}>
+                      <p style={S("font-size:15px;line-height:1.55;color:#3D1C31;text-wrap:pretty")}>
+                        {vm.sub.body}
+                      </p>
+                      <div style={S("display:flex;flex-direction:column;gap:6px")}>
+                        <button type="button" onClick={vm.subOpenPlans} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px")} className="dch1">
+                          Choose a plan
+                        </button>
+                        <button type="button" onClick={vm.subLater} style={S("height:44px;font-size:15px;font-weight:500;color:#3D1C31")} className="dch8">
+                          {vm.sub.later}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                </>
+              )}
+              {vm.lockOpen && (
+                <>
+                <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
+                  <div onClick={vm.lockClose} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
+                  <div role="dialog" aria-modal="true" aria-labelledby="lk-h" data-screen-label="14 Premium feature" style={S("position:relative;width:100%;max-width:420px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)")}>
+                    <div style={S("padding:24px 24px 20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);display:flex;flex-direction:column;gap:14px")}>
+                      <span style={S("align-self:flex-start;height:28px;padding:0 11px;border-radius:999px;background:#fff;font-size:13px;font-weight:600;color:#8A2040;display:flex;align-items:center;gap:6px")}>
+                        <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+                          <rect x="4.5" y="9" width="11" height="8" rx="2" stroke="currentColor" strokeWidth="1.8" />
+                          <path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" strokeWidth="1.8" />
+                        </svg>
+                        {vm.lock.tag}
+                      </span>
+                      <h2 id="lk-h" style={S("font-size:23px;font-weight:600;letter-spacing:-0.03em;line-height:1.15;text-wrap:balance")}>
+                        {vm.lock.title}
+                      </h2>
+                    </div>
+                    <div style={S("padding:20px 24px 22px;display:flex;flex-direction:column;gap:18px")}>
+                      <p style={S("font-size:15px;line-height:1.55;color:#3D1C31;text-wrap:pretty")}>
+                        {vm.lock.body}
+                      </p>
+                      <div style={S("display:flex;flex-direction:column;gap:8px;font-size:15px")}>
+                        {(vm.lock.feats as any[]).map((f: any, __i: number) => (
+                          <Fragment key={__i}>
+                            <div style={S("display:flex;gap:10px")}>
+                              <span style={S("color:#FF5577;flex:none")}>
+                                ✓
+                              </span>
+                              <span>
+                                {f}
+                              </span>
+                            </div>
+                          </Fragment>
+                        ))}
+                      </div>
+                      <div style={S("display:flex;flex-direction:column;gap:6px")}>
+                        <button type="button" onClick={vm.lockUpgrade} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px")} className="dch1">
+                          {vm.lock.cta}
+                        </button>
+                        <button type="button" onClick={vm.lockClose} style={S("height:44px;font-size:15px;font-weight:500;color:#3D1C31")} className="dch8">
+                          Not now
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                </>
+              )}
+              {vm.sub.done && (
+                <>
+                <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
+                  <div onClick={vm.subLater} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
+                  <div role="dialog" aria-modal="true" data-screen-label="13 Subscribed" style={S("position:relative;width:100%;max-width:420px;background:#fff;border-radius:24px;padding:32px 26px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)")}>
+                    <span style={S("width:64px;height:64px;border-radius:50%;background:#E4F4EC;display:flex;align-items:center;justify-content:center")}>
+                      <svg width="30" height="30" viewBox="0 0 20 20" fill="none">
+                        <path d="m5 10.5 3.2 3L15 7" stroke="#16704A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                    <h2 style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;margin-top:18px")}>
+                      {"You\u2019re on the "}{vm.sub.paidName}{" plan"}
+                    </h2>
+                    <p style={S("font-size:15px;line-height:1.55;color:#3D1C31;margin-top:8px;text-wrap:pretty")}>
+                      Lumia will keep receiving WhatsApp orders without interruption. Your terminal arrives in 10–15 business days, and you can track it from Overview.
+                    </p>
+                    <button type="button" onClick={vm.subLater} style={S("margin-top:24px;width:100%;height:52px;border-radius:14px;background:#1A0815;color:#fff;font-weight:600;font-size:16px")} className="dch11">
+                      Back to dashboard
+                    </button>
+                  </div>
+                </div>
+                </>
+              )}
             </div>
             </>
           )}

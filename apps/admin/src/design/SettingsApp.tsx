@@ -13,7 +13,8 @@ import { ContentLoader } from "@/components/lumia-loader";
 export interface SettingsProps {
   businessId: string;
   query: string;
-  initial: { sections: any; menu: { categories: number; items: number; missingPrices: number; soldOut: number; updatedAt: string | null }; whatsapp: { connected: boolean; displayPhoneNumber: string } };
+  onPremium?: () => void;
+  initial: { sections: any; branchLimit?: number; menu: { categories: number; items: number; missingPrices: number; soldOut: number; updatedAt: string | null }; whatsapp: { connected: boolean; displayPhoneNumber: string } };
 }
 type Props = SettingsProps;
 
@@ -269,7 +270,7 @@ class SettingsApp extends React.Component<Props, any> {
       greetOpts: radio([['friendly', 'Friendly', 'Warm and casual'], ['formal', 'Formal', 'Polite and professional'], ['short', 'Short', 'Straight to the order']], pr.greet, (v) => this.upd('profile', x => { x.greet = v; })),
       greetBubbles,
       pinMissing, branchCards, adding: s.adding, notAdding: !s.adding,
-      startAdd: () => this.setState({ adding: true, nb: newBranch(), pinQ: '', pinMode: 'current' }), cancelAdd: () => this.setState({ adding: false }),
+      startAdd: () => (this.props.onPremium && d.branches.length >= (this.props.initial.branchLimit ?? 1)) ? this.props.onPremium() : this.setState({ adding: true, nb: newBranch(), pinQ: '', pinMode: 'current' }), cancelAdd: () => this.setState({ adding: false }),
       confirmAdd: () => { const b = { ...s.nb, id: String(Date.now()) }; this.upd('branches', x => { x.push(b); }); this.setState({ adding: false }); },
       nb, nbStatus: seg([[true, 'Active'], [false, 'Inactive']], nbS.active, (v) => setNb('active', v)),
       pinModes: [['current', 'Use current location'], ['paste', 'Paste Google Maps link']].map(([k, l]) => ({ ...chip(l, s.pinMode === k, () => this.setState({ pinMode: k })) })),
@@ -330,14 +331,14 @@ const FRESH_MS = 60_000;
 export function prefetchSettings(businessId: string) {
   const hit = cache.get(businessId);
   if (hit && Date.now() - hit.at < FRESH_MS) return hit;
-  const entry: { at: number; promise: Promise<Loaded>; data?: Loaded } = { at: Date.now(), promise: api(`/api/v1/businesses/${businessId}/settings`).then((r: any) => ({ sections: r.sections, menu: r.menu, whatsapp: r.whatsapp })) };
+  const entry: { at: number; promise: Promise<Loaded>; data?: Loaded } = { at: Date.now(), promise: api(`/api/v1/businesses/${businessId}/settings`).then((r: any) => ({ sections: r.sections, menu: r.menu, whatsapp: r.whatsapp, branchLimit: r.branchLimit })) };
   entry.promise.then(d => { entry.data = d; }, () => { if (cache.get(businessId) === entry) cache.delete(businessId); });
   cache.set(businessId, entry);
   return entry;
 }
 function rememberSaved(businessId: string, key: string, value: unknown) { const d = cache.get(businessId)?.data; if (d) { d.sections[key] = value; const e = cache.get(businessId)!; e.at = Date.now(); } }
 
-export function SettingsLoader({ businessId, query }: { businessId: string; query: string }) {
+export function SettingsLoader({ businessId, query, onPremium }: { businessId: string; query: string; onPremium?: () => void }) {
   const [initial, setInitial] = React.useState<Loaded | null>(() => prefetchSettings(businessId).data ?? null);
   const [error, setError] = React.useState("");
   const [slow, setSlow] = React.useState(false);
@@ -349,5 +350,5 @@ export function SettingsLoader({ businessId, query }: { businessId: string; quer
   }, [businessId]);
   if (error) return <div className="dc" style={{ padding: 32, color: "#B42318", fontSize: 15 }}>{error}</div>;
   if (!initial) return <div className="dc" style={{ opacity: slow ? 1 : 0, transition: "opacity .2s" }}><ContentLoader/></div>;
-  return <SettingsApp businessId={businessId} query={query} initial={initial}/>;
+  return <SettingsApp businessId={businessId} query={query} initial={initial} onPremium={onPremium}/>;
 }

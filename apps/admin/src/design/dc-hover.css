@@ -6,10 +6,13 @@
 .dch4:hover{background:#FBF3F8 !important;border-color:#D9BFCB !important}
 .dch5:hover{border-color:#FF5577 !important}
 .dch6:hover{background:#FBF3F8 !important;color:#1A0815 !important}
-.dch7:hover{color:#1A0815 !important}
-.dch8:hover{background:#FFFBFC !important}
-.dch9:hover{background:#FDECEC !important}
-.dch10:hover{background:#3D1C31 !important}
-.dch11:hover{background:#981B30 !important}
-.dch12:hover{border-color:#D9BFCB !important}
-.dch13:hover{color:#B4233B !important}
+.dch7:hover{background:#FDEAF2 !important}
+.dch8:hover{color:#1A0815 !important}
+.dch9:hover{background:#FFFBFC !important}
+.dch10:hover{background:#FDECEC !important}
+.dch11:hover{background:#3D1C31 !important}
+.dch12:hover{border-color:#FF5577 !important;box-shadow:0 24px 48px -30px rgba(201,61,255,.55) !important;transform:translateY(-2px) !important}
+.dch13:focus{border-color:#FF5577 !important;box-shadow:0 0 0 4px #FDEAF2 !important}
+.dch14:hover{background:#981B30 !important}
+.dch15:hover{border-color:#D9BFCB !important}
+.dch16:hover{color:#B4233B !important}

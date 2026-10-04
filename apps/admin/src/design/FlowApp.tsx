@@ -64,6 +64,18 @@ function toDesignOrder(o: any) {
     items: (o.items ?? []).map((i: any) => [i.name, i.quantity, i.quantity ? i.total / i.quantity : i.total, i.notes || ""]), t };
 }
 
+// Plan cards. The amounts shown here mirror lumia-order-api, which is the only place charges are made from.
+const SUB_PLANS = [
+  { id: "starter", name: "Starter", desc: "For small restaurants and home kitchens starting with AI-powered WhatsApp ordering.", m: 149, y: 1490, sy: 1788, inc: "", feats: ["1 restaurant / branch", "1 WhatsApp Business number", "AI text ordering", "AI voice ordering", "Menu management", "Order dashboard", "Delivery zones and delivery fees", "Opening hours", "Basic customer history", "1 staff account", "Basic analytics", "0% commission on orders"] },
+  { id: "plus", name: "Plus", desc: "For growing restaurants that need more staff access and better customer insights.", m: 249, y: 2490, sy: 2988, inc: "Everything in Starter, plus:", feats: ["Up to 3 staff accounts", "Full customer history", "Advanced analytics", "Promotions / customer campaigns", "Basic automation", "0% commission on orders"] },
+  { id: "pro", name: "Pro", desc: "For established restaurants and multi-branch operations.", m: 399, y: 3990, sy: 4788, inc: "Everything in Plus, plus:", feats: ["Up to 3 branches", "Up to 3 WhatsApp Business numbers", "Up to 10 staff accounts", "Advanced automation", "Multi-branch management", "Priority support", "Assisted onboarding", "0% commission on orders"] },
+];
+const TERM: Record<string, number> = { starter: 549, plus: 499, pro: 399 };
+const LOCKS: Record<string, { id: string; tag: string; title: string; body: string; feats: string[]; cta: string }> = {
+  customers: { id: "plus", tag: "Plus feature", title: "Customers is available on Plus and Pro", body: "See everyone who ordered from you on WhatsApp, what they ordered and how often they come back.", feats: ["Full customer history", "Advanced analytics", "Promotions / customer campaigns"], cta: "Upgrade to Plus" },
+  branches: { id: "pro", tag: "Pro feature", title: "Add more branches with Pro", body: "Your plan includes 1 branch. Pro lets you run up to 3 branches from one dashboard.", feats: ["Up to 3 branches", "Up to 3 WhatsApp Business numbers", "Multi-branch management"], cta: "Upgrade to Pro" },
+};
+
 declare global { interface Window { FB?: any; fbAsyncInit?: () => void } }
 
 export default class FlowApp extends React.Component<FlowProps, any> {
@@ -78,7 +90,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu)) > 0, cat: "All", menu: toCats(props.menu), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
-      page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
+      page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: "", addrTry: false, subErr: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
       lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
     };
   }
@@ -91,6 +103,11 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     this.tick = setInterval(() => { if (this.state.step === "otp") this.setState({ now: Date.now() }); }, 1000);
     this.statsTimer = setInterval(() => { if (this.state.step === "dash" && this.state.page === "WhatsApp" && this.state.waStatus === "connected") this.loadStats(); }, 15000);
     if (this.state.step === "dash" && this.state.page === "WhatsApp") this.loadStats();
+    if (this.state.step === "dash" && this.state.businessId) {
+      const q = new URLSearchParams(window.location.search), billing = q.get("billing");
+      this.loadSub();
+      if (billing) { q.delete("billing"); history.replaceState(null, "", `${window.location.pathname}${q.toString() ? "?" + q.toString() : ""}`); if (billing === "success") this.confirmPayment(); }
+    }
     if (this.state.step === "dash" && this.state.page === "Overview") { this.loadOverview(); this.showOverviewLoader(); }
     if (this.state.step === "dash" && this.state.page === "Orders") { this.loadOrders(); this.showOrdersLoader(); }
     if (this.state.step === "dash" && this.state.page !== "Orders") this.later(1500, () => { if (this.state.orders === null) this.loadOrders(); }); // ready before the first visit
@@ -115,6 +132,19 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   // The loader only appears if the first load is slow, so fast loads never flash it.
   showOrdersLoader = () => { if (this.state.orders === null) { this.setState({ ordSlow: false }); this.later(350, () => { if (this.state.orders === null) this.setState({ ordSlow: true }); }); } };
   showOverviewLoader = () => { if (this.state.overview === null) { this.setState({ ovSlow: false }); this.later(350, () => { if (this.state.overview === null) this.setState({ ovSlow: true }); }); } };
+  loadSub = () => (this.state.businessId ? api(`/api/v1/businesses/${this.state.businessId}/subscription`).then((subData: any) => { this.setState({ subData }); return subData; }).catch(() => null) : Promise.resolve(null));
+  // Back from Stripe: the webhook may take a few seconds to arrive, so check until the plan shows as active.
+  confirmPayment = async () => {
+    this.setState({ sub: "confirming" });
+    for (let i = 0; i < 15; i++) { const d = await this.loadSub(); if (d && (d.status === "ACTIVE" || d.status === "PAST_DUE")) { this.setState({ sub: "done", page: "Overview" }); return; } await new Promise(r => setTimeout(r, 2000)); }
+    this.setState({ sub: null, subErr: "" }); // still processing: it will appear on its own
+  };
+  startPay = async (plan: string, bill: string, terminals: number, address: string) => {
+    this.setState({ sub: "paying", subErr: "" });
+    try { const r = await api(`/api/v1/businesses/${this.state.businessId}/subscription/checkout`, "POST", { plan, billing: bill, terminals, address }); window.location.assign(r.url); }
+    catch (e: any) { this.setState({ sub: null, subErr: e?.message ?? "We couldn’t open the payment page. Please try again." }); }
+  };
+  openPortal = async () => { try { const r = await api(`/api/v1/businesses/${this.state.businessId}/subscription/portal`, "POST", {}); window.location.assign(r.url); } catch (e: any) { this.setState({ dashErr: e?.message ?? "We couldn’t open billing." }); } };
   loadOrders = () => { if (!this.state.businessId) return; api(`/api/v1/businesses/${this.state.businessId}/orders`).then((rows: any[]) => this.setState((st: any) => ({ orders: rows.map(toDesignOrder), ordSel: st.ordSel ?? null }))).catch((e: any) => this.setState({ ordErr: e?.message ?? "We couldn’t load the orders." })); };
   loadOverview = (period = this.state.period) => { if (this.state.businessId) api(`/api/v1/businesses/${this.state.businessId}/whatsapp/overview?period=${period}&tz=${new Date().getTimezoneOffset()}`).then(overview => { if (this.state.period === period) this.setState({ overview }); }).catch(() => undefined); };
   // Calls the status endpoint one step after another (an accepted order passes through "preparing" before "ready"), then refreshes the list.
@@ -202,6 +232,52 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     };
     rows.forEach(r => { if (r.oid === o.id) r.d = od; });
     return { ord, od, ordErr: s.ordErr };
+  }
+  subVals(ar: boolean, narrow: boolean) {
+    const s = this.state, A = (e: string, a: string) => (ar ? a : e), d = s.subData;
+    const left = d?.trial?.daysLeft ?? 14, active = !!d && (d.status === "ACTIVE" || d.status === "PAST_DUE");
+    const fd = (x: Date) => x.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+    const money = (n: number) => "AED " + n.toLocaleString("en-US", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
+    const yr = s.bill === "yearly", sel = SUB_PLANS.find(p => p.id === s.plan) || SUB_PLANS[1];
+    const tPrice = (id: string) => (yr ? TERM[id] : 599), qty = s.termQty || 1, termAmt = tPrice(sel.id) + (qty - 1) * 599;
+    const planAmt = yr ? sel.y : sel.m, base = planAmt + termAmt, vat = Math.round(base * 5) / 100, tot = base + vat, addrOk = s.addr.trim().length > 5, paying = s.sub === "paying";
+    const paidPlan = active ? SUB_PLANS.find(p => p.id === d.plan) : undefined, endDate = fd(new Date(d?.trial?.endsAt ?? Date.now()));
+    const periodEnd = d?.currentPeriodEnd ? new Date(d.currentPeriodEnd) : null, pastDue = d?.status === "PAST_DUE";
+    const tab = (v: string, label: string) => { const on = s.bill === v; return { label, on, fw: on ? 600 : 500, bg: on ? "#fff" : "transparent", fg: on ? "#1A0815" : "#8A5A6E", sh: on ? "0 1px 3px rgba(26,8,21,.12)" : "none", pick: () => this.setState({ bill: v }) }; };
+    const lk = s.lock ? LOCKS[s.lock] : null;
+    const T = d?.terminal, st = Math.max(0, Math.min(4, T?.stage ?? 0)), placed = d?.startedAt ? new Date(d.startedAt) : new Date();
+    const short = (x?: string | Date) => (x ? new Date(x).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "");
+    const STEPS = [A("Order placed", "تم الطلب"), A("Preparing", "قيد التحضير"), A("Shipped", "تم الشحن"), A("Out for delivery", "خرج للتوصيل"), A("Delivered", "تم التسليم")];
+    const MSG = ["We received your order and will start preparing your terminal shortly.", "Your terminal is being prepared and tested before it ships.", "Your terminal is on its way.", "Your terminal is out for delivery today. Someone at the restaurant will need to receive it.", "Your terminal was delivered. Turn it on and sign in with your Lumia number to start receiving orders."];
+    const pill = st >= 4 ? ["#E4F4EC", "#16704A"] : st >= 2 ? ["#F1E6FF", "#6A1FA0"] : ["#FFF1DC", "#8A4B00"];
+    const eta = (n: number) => short(new Date(placed.getTime() + n * 86_400_000));
+    return {
+      sub: {
+        panel: false, done: s.sub === "done", paying, stepPlans: s.planStep !== "pay", stepPay: s.planStep === "pay", stepLabel: s.planStep === "pay" ? "Step 2 of 2" : "Step 1 of 2", pad: narrow ? "24px 16px 32px" : "40px 32px 48px",
+        onTrial: d !== null && !active, isPaid: active, paidName: paidPlan?.name ?? "", paidBg: pastDue ? "#FFF1DC" : "#E4F4EC", paidFg: pastDue ? "#8A4B00" : "#16704A",
+        renewLine: pastDue ? A("Payment failed · update your card", "فشل الدفع · حدّث بطاقتك") : d?.cancelAtPeriodEnd && periodEnd ? A(`Ends ${fd(periodEnd)}`, `ينتهي في ${fd(periodEnd)}`) : periodEnd ? A(`Renews ${fd(periodEnd)}`, `يتجدد في ${fd(periodEnd)}`) : "",
+        canPortal: !!d?.canManage && !!d?.hasCustomer, portalLabel: pastDue ? A("Update payment", "تحديث الدفع") : A("Manage billing", "إدارة الفوترة"),
+        tag: A("Free trial", "تجربة مجانية"), choose: A("Choose a plan", "اختر باقة"), leftLabel: left === 1 ? A("1 day left", "متبقٍ يوم واحد") : A(`${left} days left`, `متبقٍ ${left} يوماً`), barW: Math.round(left / 14 * 100) + "%",
+        title: left ? "You’re on a 14-day free trial" : "Your free trial has ended", body: left ? `Your trial ends on ${endDate}. Subscribe to a plan to keep receiving WhatsApp orders after that.` : "Subscribe to a plan to keep receiving WhatsApp orders.", later: left ? "Maybe later" : "Not now",
+        trialLine: paidPlan ? `You’re on the ${paidPlan.name} plan.` : left ? `Your free trial ends on ${endDate}. Pick a plan to keep receiving WhatsApp orders.` : "Your free trial has ended. Pick a plan to keep receiving WhatsApp orders.",
+        bills: [tab("monthly", "Monthly"), tab("yearly", "Yearly")],
+        plans: SUB_PLANS.map(p => { const on = p.id === sel.id; return { name: p.name, desc: p.desc, inc: p.inc, hasInc: !!p.inc, feats: p.feats, on, price: money(yr ? p.y : p.m), per: yr ? "/ year" : "/ month", strike: yr ? money(p.sy) : "", eq: yr ? `≈ ${money(Math.round(p.y / 12))}/month, billed annually` : "Billed monthly",
+          cta: "Choose " + p.name, term: money(tPrice(p.id)), ctaBg: on ? "linear-gradient(90deg,#FF5577,#C93DFF)" : "#1A0815", choose: () => this.setState({ plan: p.id, planStep: "pay", subErr: "" }), bd: on ? "#FF5577" : "#F0E4E8", bg: on ? "#FFF7FA" : "#fff", ring: on ? "#FF5577" : "#D9BFCB", dot: on ? "#FF5577" : "transparent", pick: () => this.setState({ plan: p.id }) }; }),
+        selName: sel.name + " plan", selBilling: yr ? "Billed yearly" : "Billed monthly", planAmt: money(planAmt), termAmt: money(termAmt), termLine: qty > 1 ? `Terminal × ${qty}` : "Terminal", termPrice: money(tPrice(sel.id)), termQty: qty, termMin: qty <= 1, decOp: qty <= 1 ? 0.3 : 1,
+        termQtyNote: qty > 1 ? "Extra terminals AED 599 each" : "Need one per branch?", addr: s.addr, addrErr: s.addrTry && !addrOk, addrBd: s.addrTry && !addrOk ? "#B42318" : "#ECD9E0",
+        subtotal: money(base), vat: money(vat), total: money(tot), payLabel: paying ? "Opening secure payment…" : "Continue to payment · " + money(tot), renew: fd(new Date(Date.now() + (yr ? 365 : 30) * 86_400_000)), invalid: paying, payOp: paying ? 0.7 : 1,
+        cols: narrow || s.w < 1100 ? "minmax(0,1fr)" : "minmax(0,1.5fr) minmax(340px,1fr)", err: s.subErr,
+      },
+      term: { show: active && !!T, label: STEPS[st], pillBg: pill[0], pillFg: pill[1], msg: MSG[st], no: "#LT-" + String(d?.terminalNo ?? d?.startedAt ?? "").replace(/\D/g, "").slice(-5).padStart(5, "0"), qtyLabel: (d?.terminals ?? 1) === 1 ? "1 terminal" : (d?.terminals ?? 1) + " terminals", addr: d?.terminalAddress ?? "",
+        etaLabel: st >= 4 ? "Delivered on" : "Estimated delivery", eta: st >= 4 ? short(T?.dates?.[4]) : st === 3 ? "Today" : `${eta(10)}–${eta(17)}`, hasCourier: st >= 2 && st < 4 && !!T?.tracking, tracking: T?.tracking ?? "",
+        steps: STEPS.map((label, i) => { const done = i < st || (i === st && st === 4), now = i === st && st < 4; return { label, done, now, date: i <= st ? short(T?.dates?.[i] ?? (i === 0 ? placed : undefined)) : i === 4 ? "Expected" : "", dot: done ? "#FF5577" : "#fff", ring: done || now ? "#FF5577" : "#E3CBD4", line: i === 4 ? "transparent" : i < st ? "#FF5577" : "#F0E4E8", fw: now ? 600 : done ? 500 : 400, fg: done || now ? "#1A0815" : "#8A5A6E" }; }) },
+      noopPrevent: (e: any) => e?.preventDefault?.(),
+      lockOpen: !!lk, lock: lk || LOCKS.customers, lockClose: () => this.setState({ lock: null }), lockUpgrade: () => this.setState({ lock: null, sub: null, plan: lk ? lk.id : s.plan, page: "Plans", planStep: "plans" }),
+      subLater: () => this.setState({ sub: null }), subOpenPlans: () => this.setState({ sub: null, lock: null, page: "Plans", planStep: "plans", subErr: "" }), subClosePlans: () => { if (!paying) this.setState({ page: "Overview", planStep: "plans" }); }, subBackPlans: () => { if (!paying) this.setState({ planStep: "plans" }); },
+      subPay: (e: any) => { e?.preventDefault?.(); if (!addrOk) { this.setState({ addrTry: true }); return; } if (!paying) this.startPay(sel.id, s.bill, qty, s.addr.trim()); },
+      subPortal: this.openPortal, onAddr: (e: any) => this.setState({ addr: e.target.value }), termInc: () => this.setState({ termQty: Math.min(10, qty + 1) }), termDec: () => this.setState({ termQty: Math.max(1, qty - 1) }),
+      pagePlans: s.page === "Plans",
+    };
   }
   overviewVm(ar: boolean, narrow: boolean) {
     const s = this.state, o = s.overview, loc = ar ? "ar" : "en-US", f = (n: number) => n.toLocaleString(loc), cur = o?.currency ?? "AED", money = (m: number) => `${cur} ${f(Math.round(m / 100))}`;
@@ -481,11 +557,11 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       q: s.q, hasQ: !!s.q, onSearch: (e: any) => this.setState({ q: e.target.value }), clearSearch: () => this.setState({ q: "" }), sections, noResults: sections.length === 0, dashErr: s.dashErr,
       cats: [["All", T.all, count(M)], ...M.map(g => [g.id, catName(g), g.items.length])].map(([k, label, n]: any) => { const on = !q && s.cat === k; return { label, count: n, on, pick: () => this.setState({ cat: k, q: "" }), bg: on ? "#FDEAF2" : "transparent", fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, countFg: on ? "#8A2040" : "#8A5A6E", chipBg: on ? "#1A0815" : "#fff", chipFg: on ? "#fff" : "#3D1C31", chipBd: on ? "#1A0815" : "#ECD9E0" }; }),
       menuDone: s.menuDone && count(M) > 0, menuEmpty: !(s.menuDone && count(M) > 0), dashNarrow: narrow, dashWide: !narrow, openAddItem: p.canEdit ? this.openAddItem : noop, dlg,
-      nav: NAV.map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e: any) => { e?.preventDefault?.(); if (l === "Overview" || l === "Orders" || l === "Menu" || l === "WhatsApp" || l === "Settings") { this.setState({ page: l }); if (l === "WhatsApp") this.loadStats(); if (l === "Overview") { this.loadOverview(); this.showOverviewLoader(); } if (l === "Orders") { this.loadOrders(); this.showOrdersLoader(); } history.replaceState(null, "", `/dashboard?page=${l.toLowerCase()}&businessId=${this.state.businessId}`); } else if (l === "Sign out") this.signOut(); }, fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, bg: on ? "#FDEAF2" : "transparent", bd: on ? "#FF5577" : "transparent" }; }),
+      nav: NAV.map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e: any) => { e?.preventDefault?.(); if (l === "Overview" || l === "Orders" || l === "Menu" || l === "WhatsApp" || l === "Settings") { this.setState({ page: l }); if (l === "WhatsApp") this.loadStats(); if (l === "Overview") { this.loadOverview(); this.showOverviewLoader(); } if (l === "Orders") { this.loadOrders(); this.showOrdersLoader(); } history.replaceState(null, "", `/dashboard?page=${l.toLowerCase()}&businessId=${this.state.businessId}`); } else if (l === "Customers") { if (!this.state.subData?.entitlements?.customers) this.setState({ lock: "customers" }); } else if (l === "Sign out") this.signOut(); }, fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, bg: on ? "#FDEAF2" : "transparent", bd: on ? "#FF5577" : "transparent" }; }),
       setup: setupItems.map(([label0, done, fn], i) => { const lb = T.setup[i]; const label = Array.isArray(lb) ? lb[done ? 1 : 0] : lb; return { label, done, todo: !done, fg: done ? "#1A0815" : "#3D1C31", ul: !done && fn ? "underline" : "none", pick: fn || this.noopFn, bar: i < doneN ? "#16704A" : "rgba(26,8,21,.12)" }; }),
       setupLabel: ar ? `${doneN} من 5 مكتملة` : `${doneN} of 5 completed`, waSetupLabel: `${doneN} of 5 completed`,
       // whatsapp
-      pageMenu: s.page === "Menu", pageOverview: s.page === "Overview", pageOrders: s.page === "Orders", ordLoading: s.orders === null && !s.ordErr && s.ordSlow, loaderNode: <ContentLoader/>, ovLoading: s.overview === null && s.ovSlow, ovReady: s.overview !== null, pageSettings: s.page === "Settings", notSettings: s.page !== "Settings", settingsNode: s.page === "Settings" ? <SettingsLoader businessId={s.businessId} query={`?businessId=${s.businessId}`}/> : null, ...this.overviewVm(ar, narrow), ...this.ordersVals(ar, narrow), pageWA: s.page === "WhatsApp", waOpen: !!s.wa, wa: { intro: s.wa === "intro", connecting: s.wa === "connecting", success: s.wa === "success", import: s.wa === "import", review: s.wa === "review", catalog: s.wa === "catalog", error: s.wa === "error", inUse: s.wa === "inUse" },
+      pageMenu: s.page === "Menu", pageOverview: s.page === "Overview", pageOrders: s.page === "Orders", ...this.subVals(ar, narrow), ordLoading: s.orders === null && !s.ordErr && s.ordSlow, loaderNode: <ContentLoader/>, ovLoading: s.overview === null && s.ovSlow, ovReady: s.overview !== null, pageSettings: s.page === "Settings", notSettings: s.page !== "Settings", settingsNode: s.page === "Settings" ? <SettingsLoader businessId={s.businessId} query={`?businessId=${s.businessId}`} onPremium={() => this.setState({ lock: "branches" })}/> : null, ...this.overviewVm(ar, narrow), ...this.ordersVals(ar, narrow), pageWA: s.page === "WhatsApp", waOpen: !!s.wa, wa: { intro: s.wa === "intro", connecting: s.wa === "connecting", success: s.wa === "success", import: s.wa === "import", review: s.wa === "review", catalog: s.wa === "catalog", error: s.wa === "error", inUse: s.wa === "inUse" },
       waLabel: ({ intro: "08 WhatsApp · Connect", connecting: "08a WhatsApp · Connecting", success: "08b WhatsApp · Connected", import: "08c WhatsApp · Import info", review: "08d WhatsApp · Review differences", catalog: "08e WhatsApp · Catalog found", error: "08g WhatsApp · Error", inUse: "08h WhatsApp · Number in use" } as any)[s.wa] || "08 WhatsApp",
       waClose: () => { this.connectToken++; this.clearTimers(); this.setState({ wa: null, confirmReplace: false }); }, openWA: this.openWA, startConnect: this.startConnect, continueSetup: () => { if (!waOn) this.openWA(); },
       cancelConnect: () => { this.connectToken++; this.setState({ wa: "intro" }); },
@@ -511,6 +587,6 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     // The layout depends on the viewport width, so render only once it is known (avoids a flash of the wide layout on phones).
     if (!this.state.mounted) return <div className="dc" style={{ minHeight: "100vh" }}/>;
     const vm = this.renderVals();
-    return <div className="dc" lang={this.state.step === "dash" ? this.state.lang : "en"}><DcTemplate vm={vm}/><PageLoader show={this.state.sending || this.state.verifying || this.state.busy} label={this.state.sending ? "Sending code…" : this.state.verifying ? "Verifying…" : "Saving…"}/></div>;
+    return <div className="dc" lang={this.state.step === "dash" ? this.state.lang : "en"}><DcTemplate vm={vm}/><PageLoader show={this.state.sending || this.state.verifying || this.state.busy || this.state.sub === "confirming" || this.state.sub === "paying"} label={this.state.sending ? "Sending code…" : this.state.verifying ? "Verifying…" : this.state.sub === "confirming" ? "Confirming your payment…" : this.state.sub === "paying" ? "Opening secure payment…" : "Saving…"}/></div>;
   }
 }

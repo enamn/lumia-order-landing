@@ -91,7 +91,7 @@ input::placeholder{color:#B89AA8}
     <div style="display:flex;flex-direction:column;gap:10px">
       <button type="submit" disabled="{{ sending }}" style="height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">{{ spinnerSend }}<span>{{ sendLabel }}</span></button>
     </div>
-    <p style="margin-top:20px;font-size:13px;line-height:1.5;color:#8A5A6E;text-align:center;text-wrap:pretty">By continuing, you agree to Lumia's <a href="#terms" style="color:#3D1C31">Terms of Service</a> and <a href="Lumia Order Privacy.dc.html" style="color:#3D1C31">Privacy Policy</a>.</p>
+    <p style="margin-top:20px;font-size:13px;line-height:1.5;color:#8A5A6E;text-align:center;text-wrap:pretty">By continuing, you agree to Lumia's <a href="{{ termsUrl }}" style="color:#3D1C31">Terms of Service</a> and <a href="Lumia Order Privacy.dc.html" style="color:#3D1C31">Privacy Policy</a>.</p>
   </form>
   </sc-if>
 
@@ -143,7 +143,7 @@ input::placeholder{color:#B89AA8}
     <label for="pd-name" style="display:block;font-size:14px;font-weight:500;color:#3D1C31;margin-top:28px">Restaurant name</label>
     <input id="pd-name" ref="{{ nameRef }}" type="text" autoComplete="organization" placeholder="Burger House" value="{{ name }}" onChange="{{ onName }}" onFocus="{{ nameFocus }}" onBlur="{{ nameBlur }}" style="margin-top:8px;height:56px;border-radius:14px;border:1.5px solid {{ nf.bd }};box-shadow:{{ nf.ring }};padding:0 16px;font-size:17px;background:#fff;transition:border-color .15s,box-shadow .15s"></input>
     <sc-if value="{{ nameErr }}" hint-placeholder-val="{{ false }}">
-      <div role="alert" style="margin-top:10px;font-size:14px;color:#B4233B">Enter your restaurant name to continue</div>
+      <div role="alert" style="margin-top:10px;font-size:14px;color:#B4233B">{{ nameErrText }}</div>
     </sc-if>
     <div style="display:flex;align-items:center;gap:8px;margin-top:26px">
       <span style="font-size:14px;font-weight:500;color:#3D1C31">Logo</span>
@@ -179,6 +179,8 @@ input::placeholder{color:#B89AA8}
       <span style="margin-top:20px;display:inline-flex;align-items:center;height:48px;padding:0 24px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)">Choose file</span>
       <input type="file" accept="application/pdf,image/png,image/jpeg" onChange="{{ onMenuFile }}" style="display:none"></input>
     </label>
+    <!-- LUMIA-EXT menu error -->
+    <sc-if value="{{ menuErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="margin-top:12px;font-size:14px;color:#B4233B">{{ menuErr }}</div></sc-if>
     <div style="flex:{{ L.spacer }};min-height:28px"></div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <button type="button" onClick="{{ manual }}" style="height:52px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px" style-hover="border-color:#D9BFCB;background:#FBF3F8">Add menu manually</button>
@@ -259,6 +261,7 @@ input::placeholder{color:#B89AA8}
         </div>
       </sc-for>
     </div>
+    <sc-if value="{{ readyErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="margin-top:12px;font-size:14px;color:#B4233B">{{ readyErr }}</div></sc-if>
     <div style="flex:{{ L.spacer }};min-height:24px"></div>
     <div style="position:{{ L.stick }};bottom:0;background:#fff;padding-top:12px;display:flex;flex-direction:column;gap:10px;box-shadow:{{ L.stickSh }}">
       <button type="button" onClick="{{ confirmMenu }}" disabled="{{ hasFlags }}" style="height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;opacity:{{ confirmOp }};box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Confirm menu</button>
@@ -294,7 +297,7 @@ input::placeholder{color:#B89AA8}
             </button>
           </sc-if>
           <sc-if value="{{ sub.isPaid }}" hint-placeholder-val="{{ false }}">
-            <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:#E4F4EC;color:#16704A;font-size:14px;font-weight:600"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="m5 10.5 3.2 3L15 7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path></svg>{{ sub.paidName }} plan</div>
+            <div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:12px;background:{{ sub.paidBg }};color:{{ sub.paidFg }};font-size:14px;font-weight:600"><span style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="m5 10.5 3.2 3L15 7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path></svg>{{ sub.paidName }} plan</span><span style="font-size:13px;font-weight:500">{{ sub.renewLine }}</span><sc-if value="{{ sub.canPortal }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ subPortal }}" style="align-self:flex-start;font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px">{{ sub.portalLabel }}</button></sc-if></div>
           </sc-if>
           <div role="radiogroup" aria-label="Dashboard language" style="display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;flex:none">
             <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{ lg.on }}" onClick="{{ lg.pick }}" style="flex:1;height:30px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:{{ lg.fw }};background:{{ lg.bg }};color:{{ lg.fg }};box-shadow:{{ lg.sh }}">{{ lg.label }}</button></sc-for>
@@ -341,7 +344,7 @@ input::placeholder{color:#B89AA8}
     <div style="flex:1;display:flex;min-height:0">
     <sc-if value="{{ pageSettings }}" hint-placeholder-val="{{ false }}">
       <div data-screen-label="09 Dashboard · Settings" style="flex:1;min-width:0;min-height:0;display:flex">
-        <dc-import name="Lumia Order Restaurant Settings" embedded="{{ true }}" start-page="{{ settingsPage }}" on-premium="{{ premiumBranch }}" style="flex:1;min-width:0;height:100%" hint-size="100%,100%"></dc-import>
+        <div style="flex:1;min-width:0;height:100%">{{ settingsNode }}</div>
       </div>
     </sc-if>
     <sc-if value="{{ notSettings }}" hint-placeholder-val="{{ true }}">
@@ -359,7 +362,7 @@ input::placeholder{color:#B89AA8}
       <sc-if value="{{ term.show }}" hint-placeholder-val="{{ false }}">
       <section data-screen-label="06d Terminal shipment" dir="ltr" style="border:1px solid #F0E4E8;border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:20px">
         <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px 20px">
-          <div style="flex:none;width:44px;height:78px;position:relative;overflow:hidden;border-radius:8px;background:#FBF3F8"><div style="position:absolute;top:-6px;left:50%;margin-left:-150px;transform:scale(.145);transform-origin:top center;height:704px"><dc-import name="LumiaTerminal" screen="new2" hint-size="300px,704px"></dc-import></div></div>
+          <div style="flex:none;width:44px;height:78px;position:relative;overflow:hidden;border-radius:8px;background:#FBF3F8"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C0284F"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div></div>
           <div style="flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:6px">
             <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px"><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Lumia Order Terminal</h2><span style="font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px;background:{{ term.pillBg }};color:{{ term.pillFg }}">{{ term.label }}</span></div>
             <p style="font-size:14px;line-height:1.5;color:#3D1C31;text-wrap:pretty">{{ term.msg }}</p>
@@ -387,8 +390,8 @@ input::placeholder{color:#B89AA8}
         </ol>
         <sc-if value="{{ term.hasCourier }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:12px 14px;border-radius:12px;background:#FBF3F8;font-size:14px">
-            <span style="color:#3D1C31">Aramex · Tracking no. <span style="font-weight:600;color:#1A0815;font-variant-numeric:tabular-nums">4419 2071 553</span></span>
-            <a href="#" onClick="{{ noopPrevent }}" style="font-weight:500">Track with courier</a>
+            <span style="color:#3D1C31">Tracking no. <span style="font-weight:600;color:#1A0815;font-variant-numeric:tabular-nums">{{ term.tracking }}</span></span>
+            
           </div>
         </sc-if>
       </section>
@@ -414,6 +417,8 @@ input::placeholder{color:#B89AA8}
         </div>
         <button type="button" onClick="{{ continueSetup }}" style="height:48px;padding:0 22px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;flex:none;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">{{ t.continueSetup }}</button>
       </section>
+      <sc-if value="{{ ovLoading }}" hint-placeholder-val="{{ false }}">{{ loaderNode }}</sc-if>
+      <sc-if value="{{ ovReady }}" hint-placeholder-val="{{ true }}">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px">
         <sc-for list="{{ stats }}" as="m" hint-placeholder-count="4">
           <div style="border:1px solid #F0E4E8;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
@@ -447,7 +452,10 @@ input::placeholder{color:#B89AA8}
         </section>
       </div>
       </sc-if>
+      </sc-if>
 
+      <!-- LUMIA-EXT dash error -->
+      <sc-if value="{{ dashErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:14px;color:#B4233B">{{ dashErr }}</div></sc-if>
       <sc-if value="{{ pageMenu }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
         <div>
@@ -460,7 +468,7 @@ input::placeholder{color:#B89AA8}
           </sc-if>
         </div>
         <sc-if value="{{ menuDone }}" hint-placeholder-val="{{ true }}">
-          <button type="button" onClick="{{ noop }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">{{ t.addItem }}</button>
+          <button type="button" onClick="{{ openAddItem }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">{{ t.addItem }}</button>
         </sc-if>
       </div>
 
@@ -492,7 +500,7 @@ input::placeholder{color:#B89AA8}
                       <div style="min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px">
                         <span style="font-size:15px;font-weight:500;color:{{ it.nameFg }}">{{ it.main }}</span>
                         <sc-if value="{{ it.hasAlt }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;color:#8A5A6E">{{ it.alt }}</span></sc-if>
-                        <sc-if value="{{ it.noAlt }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ noop }}" style="font-size:13px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px" style-hover="color:#FF5577">+ {{ t.addAr }}</button></sc-if>
+                        <sc-if value="{{ it.noAlt }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ it.editAr }}" style="font-size:13px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px" style-hover="color:#FF5577">+ {{ t.addAr }}</button></sc-if>
                       </div>
                       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
                         <span style="font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap">{{ it.price }}</span>
@@ -519,7 +527,7 @@ input::placeholder{color:#B89AA8}
           <p style="font-size:15px;color:#3D1C31;margin-top:6px;max-width:360px;line-height:1.5">Upload your existing menu and Lumia AI will create it for you.</p>
           <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px">
             <button type="button" onClick="{{ toMenuUpload }}" style="height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Upload menu</button>
-            <button type="button" onClick="{{ noop }}" style="height:46px;padding:0 20px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Add item manually</button>
+            <button type="button" onClick="{{ openAddItem }}" style="height:46px;padding:0 20px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Add item manually</button>
           </div>
         </div>
       </sc-if>
@@ -554,6 +562,7 @@ input::placeholder{color:#B89AA8}
           </div>
         </sc-if>
         <sc-if value="{{ ord.hasAny }}" hint-placeholder-val="{{ true }}">
+        <sc-if value="{{ ordErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:14px;color:#B4233B">{{ ordErr }}</div></sc-if>
         <div style="display:flex;gap:8px;overflow-x:auto;flex:none;padding-bottom:2px;scrollbar-width:none">
           <sc-for list="{{ ord.tabs }}" as="tb" hint-placeholder-count="5">
             <button type="button" onClick="{{ tb.pick }}" style="height:40px;padding:0 14px;border-radius:999px;display:flex;align-items:center;gap:8px;white-space:nowrap;flex:none;font-size:14px;font-weight:500;background:{{ tb.bg }};color:{{ tb.fg }};border:1.5px solid {{ tb.bd }}">{{ tb.label }}<sc-if value="{{ tb.hasCount }}" hint-placeholder-val="{{ true }}"><span style="min-width:22px;height:22px;padding:0 6px;border-radius:999px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;background:{{ tb.cbg }};color:{{ tb.cfg }}">{{ tb.count }}</span></sc-if></button>
@@ -676,6 +685,7 @@ input::placeholder{color:#B89AA8}
               </sc-if>
             </div>
           </sc-for>
+          <sc-if value="{{ ordLoading }}" hint-placeholder-val="{{ false }}">{{ loaderNode }}</sc-if>
           <sc-if value="{{ ord.empty }}" hint-placeholder-val="{{ false }}">
             <div style="padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;border:1px dashed #ECD9E0;border-radius:14px">
               <span style="font-size:15px;font-weight:600">{{ ord.tabEmpty.title }}</span>
@@ -740,7 +750,7 @@ input::placeholder{color:#B89AA8}
             <form onSubmit="{{ subPay }}" noValidate="{{ true }}" style="display:flex;flex-direction:column;gap:16px">
               <section style="border:2px solid #FF5577;background:#FFF7FA;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px">
                 <div style="display:flex;gap:14px;align-items:flex-start">
-                  <div style="flex:none;width:64px;height:112px;position:relative;overflow:hidden;border-radius:10px;background:#fff"><div style="position:absolute;top:-10px;left:50%;margin-left:-150px;transform:scale(.21);transform-origin:top center;height:704px"><dc-import name="LumiaTerminal" screen="new2" hint-size="300px,704px"></dc-import></div></div>
+                  <div style="flex:none;width:64px;height:112px;position:relative;overflow:hidden;border-radius:10px;background:#fff"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C0284F"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div></div>
                   <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
                     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><span style="font-size:16px;font-weight:600">Lumia Order Terminal</span><span style="font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#1A0815;color:#fff">Required</span></div>
                     <span style="font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty">Receives, accepts and prints your orders. Every subscription includes at least one terminal.</span>
@@ -760,23 +770,12 @@ input::placeholder{color:#B89AA8}
                 <sc-if value="{{ sub.addrErr }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#B42318;margin-top:-6px">Add a delivery address for your terminal to continue.</span></sc-if>
                 <span style="font-size:13px;color:#8A5A6E;margin-top:-4px">Estimated delivery: 10–15 business days.</span>
               </section>
-              <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">
-                <button type="button" onClick="{{ subQuick }}" style="height:50px;border-radius:12px;background:#1A0815;color:#fff;font-size:15px;font-weight:600" style-hover="background:#3D1C31">Apple Pay</button>
-                <button type="button" onClick="{{ subQuick }}" style="height:50px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-weight:600" style-hover="background:#FBF3F8">Google Pay</button>
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#8A5A6E"><span style="flex:1;height:1px;background:#F0E4E8"></span>or pay by card<span style="flex:1;height:1px;background:#F0E4E8"></span></div>
-              <div style="border:1.5px solid #ECD9E0;border-radius:14px;display:flex;flex-direction:column;overflow:hidden">
-                <input aria-label="Card number" inputMode="numeric" autoComplete="cc-number" placeholder="Card number" value="{{ sub.card }}" onChange="{{ onCard }}" style="height:52px;padding:0 16px;font-size:16px;font-variant-numeric:tabular-nums;border-bottom:1.5px solid #ECD9E0" style-focus="background:#FFF7FA">
-                <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
-                  <input aria-label="Expiry date" inputMode="numeric" autoComplete="cc-exp" placeholder="MM/YY" value="{{ sub.exp }}" onChange="{{ onExp }}" style="height:52px;padding:0 16px;font-size:16px;font-variant-numeric:tabular-nums;border-inline-end:1.5px solid #ECD9E0;min-width:0" style-focus="background:#FFF7FA">
-                  <input aria-label="Security code" inputMode="numeric" autoComplete="cc-csc" placeholder="CVC" value="{{ sub.cvc }}" onChange="{{ onCvc }}" style="height:52px;padding:0 16px;font-size:16px;font-variant-numeric:tabular-nums;min-width:0" style-focus="background:#FFF7FA">
-                </div>
-              </div>
               <button type="submit" disabled="{{ sub.invalid }}" style="height:54px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;opacity:{{ sub.payOp }};display:flex;align-items:center;justify-content:center;gap:10px;font-variant-numeric:tabular-nums">
                 <sc-if value="{{ sub.paying }}" hint-placeholder-val="{{ false }}"><span style="width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:lo-spin .8s linear infinite"></span></sc-if>
                 {{ sub.payLabel }}
               </button>
-              <p style="display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:1.45;color:#8A5A6E"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="flex:none;margin-top:2px"><rect x="4.5" y="9" width="11" height="8" rx="2" stroke="currentColor" stroke-width="1.6"></rect><path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" stroke-width="1.6"></path></svg>Secure payment. Cancel anytime from Settings.</p>
+              <p style="display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:1.45;color:#8A5A6E"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="flex:none;margin-top:2px"><rect x="4.5" y="9" width="11" height="8" rx="2" stroke="currentColor" stroke-width="1.6"></rect><path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" stroke-width="1.6"></path></svg>You pay on Stripe’s secure page, so Lumia never sees your card. Cancel anytime from Manage billing.</p>
+              <sc-if value="{{ sub.err }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:14px;color:#B4233B">{{ sub.err }}</div></sc-if>
             </form>
             <aside style="background:#FBF3F8;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:14px">
               <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
@@ -838,7 +837,7 @@ input::placeholder{color:#B89AA8}
               <button type="button" onClick="{{ openWA }}" style="align-self:flex-start;height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Connect WhatsApp</button>
             </sc-if>
           </div>
-          <sc-if value="{{ waIsConnected }}" hint-placeholder-val="{{ true }}">
+          <!-- LUMIA-EXT today hidden --><sc-if value="{{ waShowToday }}" hint-placeholder-val="{{ true }}">
             <div style="background:#FAF6FA;border-radius:20px;padding:20px 22px 8px;display:flex;flex-direction:column">
               <span style="font-size:14px;font-weight:600;color:#8A5A6E;padding-bottom:6px">Today</span>
               <sc-for list="{{ waToday }}" as="t" hint-placeholder-count="3">
@@ -868,7 +867,29 @@ input::placeholder{color:#B89AA8}
       </div>
       </sc-if>
 
-      <!-- WhatsApp connection drawer -->
+      
+<!-- LUMIA-EXT edit dialog -->
+<sc-if value="{{ dlg.open }}" hint-placeholder-val="{{ false }}">
+<div dir="ltr" style="position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div onClick="{{ dlg.cancel }}" style="position:absolute;inset:0;background:rgba(26,8,21,.36)"></div>
+  <form role="dialog" aria-modal="true" aria-label="{{ dlg.title }}" data-screen-label="09 Edit dialog" onSubmit="{{ dlg.submit }}" noValidate="{{ true }}" style="position:relative;width:100%;max-width:420px;background:#fff;border-radius:20px;padding:26px 24px 22px;box-shadow:0 30px 80px -30px rgba(26,8,21,.45);display:flex;flex-direction:column">
+    <h2 style="font-size:22px;font-weight:600;letter-spacing:-0.03em">{{ dlg.title }}</h2>
+    <p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;text-wrap:pretty">{{ dlg.hint }}</p>
+    <sc-for list="{{ dlg.fields }}" as="f" hint-placeholder-count="3">
+      <label style="display:block;font-size:14px;font-weight:500;color:#3D1C31;margin-top:16px">{{ f.label }}
+        <input type="text" value="{{ f.value }}" onChange="{{ f.onChange }}" placeholder="{{ f.placeholder }}" dir="{{ f.dir }}" inputMode="{{ f.mode }}" autoFocus="{{ f.focus }}" style="display:block;margin-top:8px;height:48px;width:100%;border-radius:12px;border:1.5px solid #E3CBD4;padding:0 14px;font-size:16px;background:#fff"></input>
+      </label>
+    </sc-for>
+    <sc-if value="{{ dlg.error }}" hint-placeholder-val="{{ false }}"><div role="alert" style="margin-top:12px;font-size:14px;color:#B4233B">{{ dlg.error }}</div></sc-if>
+    <div style="display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:24px">
+      <button type="button" onClick="{{ dlg.cancel }}" style="flex:1 1 120px;height:48px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Cancel</button>
+      <button type="submit" disabled="{{ dlg.busy }}" style="flex:1 1 160px;height:48px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;opacity:{{ dlg.op }}">{{ dlg.saveLabel }}</button>
+    </div>
+  </form>
+</div>
+</sc-if>
+
+<!-- WhatsApp connection drawer -->
       <sc-if value="{{ waOpen }}" hint-placeholder-val="{{ false }}">
       <div dir="ltr" style="position:fixed;inset:0;z-index:40;display:flex;justify-content:flex-end">
         <div onClick="{{ waClose }}" style="position:absolute;inset:0;background:rgba(26,8,21,.32)"></div>
@@ -1013,8 +1034,8 @@ input::placeholder{color:#B89AA8}
               <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:20px">
                 <div style="border-radius:16px;border:1px solid #ECD9E0;padding:14px 16px;display:flex;flex-direction:column;gap:4px">
                   <span style="display:flex;align-items:center;gap:7px;font-size:13px;color:#8A5A6E"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block;flex:none"><path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366"></path></svg>WhatsApp catalog</span>
-                  <span style="font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">37</span>
-                  <span style="font-size:14px;color:#3D1C31">products · 5 categories</span>
+                  <span style="font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">{{ waCatTotal }}</span>
+                  <span style="font-size:14px;color:#3D1C31">products · {{ waCatCount }} categories</span>
                 </div>
                 <sc-if value="{{ menuDone }}" hint-placeholder-val="{{ true }}">
                 <div style="border-radius:16px;background:#FAF6FA;padding:14px 16px;display:flex;flex-direction:column;gap:4px">
@@ -1053,7 +1074,7 @@ input::placeholder{color:#B89AA8}
             <div style="position:absolute;inset:0;background:rgba(26,8,21,.32);display:flex;align-items:flex-end;padding:16px">
               <div role="alertdialog" aria-modal="true" data-screen-label="08f Replace menu confirm" style="width:100%;background:#fff;border-radius:20px;padding:22px 20px 18px;box-shadow:0 20px 50px -20px rgba(26,8,21,.45);display:flex;flex-direction:column">
                 <h3 style="font-size:20px;font-weight:600;letter-spacing:-0.025em">Replace current menu?</h3>
-                <p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;text-wrap:pretty">Your {{ lumiaItems }} Lumia menu items will be replaced by 37 products from your WhatsApp catalog. Prices and availability you set in Lumia won't be kept.</p>
+                <p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;text-wrap:pretty">Your {{ lumiaItems }} Lumia menu items will be replaced by {{ waCatTotal }} products from your WhatsApp catalog. Prices and availability you set in Lumia won't be kept.</p>
                 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:20px">
                   <button type="button" onClick="{{ cancelReplace }}" style="flex:1 1 120px;height:48px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Cancel</button>
                   <button type="button" onClick="{{ useCatalog }}" style="flex:1 1 140px;height:48px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px" style-hover="background:#981B30">Replace menu</button>
