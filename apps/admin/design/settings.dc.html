@@ -151,7 +151,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
 
         <!-- Branches -->
         <sc-if value="{{ pg.branches }}" hint-placeholder-val="{{ false }}">
-          <div data-screen-label="03 Branches" style="display:flex;flex-direction:column;gap:20px">
+          <div data-screen-label="03 Branches" style="display:flex;flex-direction:column;gap:20px;padding-inline-end:{{ L.reserve }}">
             <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
               <div>
                 <h1 style="font-size:22px;font-weight:600;letter-spacing:-0.025em">Branches &amp; locations</h1>
@@ -228,7 +228,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
 
         <!-- WhatsApp -->
         <sc-if value="{{ pg.whatsapp }}" hint-placeholder-val="{{ false }}">
-          <div data-screen-label="04 WhatsApp" style="display:flex;flex-direction:column;gap:20px">
+          <div data-screen-label="04 WhatsApp" style="display:flex;flex-direction:column;gap:20px;padding-inline-end:{{ L.reserve }}">
             <div>
               <h1 style="font-size:22px;font-weight:600;letter-spacing:-0.025em">WhatsApp connection</h1>
               <p style="font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty">The WhatsApp Business number your customers message to order.</p>
@@ -563,7 +563,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
 
         <!-- Devices -->
         <sc-if value="{{ pg.devices }}" hint-placeholder-val="{{ false }}">
-          <div data-screen-label="08 Order devices" style="display:flex;flex-direction:column;gap:20px">
+          <div data-screen-label="08 Order devices" style="display:flex;flex-direction:column;gap:20px;padding-inline-end:{{ L.reserve }}">
             <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
               <div>
                 <h1 style="font-size:22px;font-weight:600;letter-spacing:-0.025em">Lumia Order devices</h1>
@@ -618,7 +618,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
 
         <!-- Payments -->
         <sc-if value="{{ pg.payments }}" hint-placeholder-val="{{ false }}">
-          <div data-screen-label="09 Payments" style="display:flex;flex-direction:column;gap:20px">
+          <div data-screen-label="09 Payments" style="display:flex;flex-direction:column;gap:20px;padding-inline-end:{{ L.reserve }}">
             <div>
               <h1 style="font-size:22px;font-weight:600;letter-spacing:-0.025em">Payment settings</h1>
               <p style="font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty">How customers pay for WhatsApp orders.</p>

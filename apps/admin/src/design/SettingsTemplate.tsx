@@ -359,7 +359,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
               )}
               {vm.pg.branches && (
                 <>
-                <div data-screen-label="03 Branches" style={S("display:flex;flex-direction:column;gap:20px")}>
+                <div data-screen-label="03 Branches" style={S(`display:flex;flex-direction:column;gap:20px;padding-inline-end:${vm.L.reserve}`)}>
                   <div style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
                     <div>
                       <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
@@ -578,7 +578,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
               )}
               {vm.pg.whatsapp && (
                 <>
-                <div data-screen-label="04 WhatsApp" style={S("display:flex;flex-direction:column;gap:20px")}>
+                <div data-screen-label="04 WhatsApp" style={S(`display:flex;flex-direction:column;gap:20px;padding-inline-end:${vm.L.reserve}`)}>
                   <div>
                     <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                       WhatsApp connection
@@ -1622,7 +1622,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
               )}
               {vm.pg.devices && (
                 <>
-                <div data-screen-label="08 Order devices" style={S("display:flex;flex-direction:column;gap:20px")}>
+                <div data-screen-label="08 Order devices" style={S(`display:flex;flex-direction:column;gap:20px;padding-inline-end:${vm.L.reserve}`)}>
                   <div style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
                     <div>
                       <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
@@ -1749,7 +1749,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
               )}
               {vm.pg.payments && (
                 <>
-                <div data-screen-label="09 Payments" style={S("display:flex;flex-direction:column;gap:20px")}>
+                <div data-screen-label="09 Payments" style={S(`display:flex;flex-direction:column;gap:20px;padding-inline-end:${vm.L.reserve}`)}>
                   <div>
                     <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                       Payment settings

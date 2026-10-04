@@ -252,7 +252,7 @@ class SettingsApp extends React.Component<Props, any> {
         rangeCols: tblWide ? 'repeat(5,minmax(0,1fr)) 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
         rowPad: tblWide ? '10px 0' : '14px 0', cellLbl: tblWide ? 'none' : 'block',
         dayCols: tblWide ? '160px minmax(0,1fr)' : 'minmax(0,1fr)', dayInner: tblWide ? 'repeat(3,minmax(0,1fr)) 80px' : 'minmax(0,1fr) minmax(0,1fr)',
-        stepCols: 'repeat(5,minmax(0,1fr))' },
+        stepCols: 'repeat(5,minmax(0,1fr))', reserve: s.w >= 560 ? `${(s.w >= 1000 ? 340 : 260) + 20}px` : '0px' },
       acc: Object.fromEntries(Object.keys(SEC_PAGE).map(k => { const pgK = SEC_PAGE[k], first = Object.keys(SEC_PAGE).find(x => SEC_PAGE[x] === pgK); const cur = (s.openSec || {})[pgK]; const open = cur === undefined ? k === first : cur === k;
         return [k, { open, chev: open ? '180deg' : '0deg', toggle: (e) => { if (e && e.target && e.target.closest && e.target.closest('[role=switch]')) return; this.setState(st => ({ openSec: { ...(st.openSec || {}), [pgK]: open ? null : k } })); } }]; })),
       pg: Object.fromEntries(PAGES.map(([k]) => [k, s.page === k])),

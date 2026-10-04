@@ -25,5 +25,8 @@ s = s[:j] + 'onClick="{{ pickLogo }}"' + s[j + len('onClick="{{ markDirty }}"'):
 once('<x-dc>', '<x-dc>\n<!-- LUMIA-EXT settings --><!-- LUMIA-EXT logo -->')
 # wider than the design's centred 960px column but capped at 1240px and left aligned; the customer preview stays pinned on the right
 once('<div style="max-width:960px;margin:0 auto;padding:{{ L.pad }};', '<div style="max-width:1240px;margin:0;padding:{{ L.pad }};')
+# pages without a customer preview still reserve its column, so every page has the same content width
+for label in ('03 Branches', '04 WhatsApp', '08 Order devices', '09 Payments'):
+    once('data-screen-label="%s" style="display:flex;flex-direction:column;gap:20px"' % label, 'data-screen-label="%s" style="display:flex;flex-direction:column;gap:20px;padding-inline-end:{{ L.reserve }}"' % label)
 s = s.replace('<!-- LUMIA-EXT settings -->', '<!-- LUMIA-EXT settings --><!-- LUMIA-EXT embedded -->', 1)
 p.write_text(s); print("settings extensions applied")
