@@ -59,14 +59,17 @@ class SettingsApp extends React.Component<Props, any> {
   }
 
   componentDidMount() {
-    this.setState({ w: window.innerWidth, mounted: true });
+    this.measure(true);
     window.addEventListener('resize', this.onResize);
     history.replaceState(null, '', location.pathname + location.search + '#' + this.state.page);
   }
   componentDidUpdate() {
     if (this._lastPage !== this.state.page) { this._lastPage = this.state.page; if (this.mainRef.current) this.mainRef.current.scrollTop = 0; }
   }
-  onResize = () => this.setState({ w: window.innerWidth });
+  wrap = React.createRef<HTMLDivElement>();
+  // Width of the area Settings fills inside the dashboard (not the whole window).
+  measure = (first = false) => { const w = this.wrap.current?.clientWidth || window.innerWidth; if (first || w !== this.state.w) this.setState({ w, ...(first ? { mounted: true } : {}) }); };
+  onResize = () => this.measure();
   componentWillUnmount() {
     window.removeEventListener('resize', this.onResize); this.ro && this.ro.disconnect(); clearTimeout(this.tt); }
 
@@ -95,7 +98,7 @@ class SettingsApp extends React.Component<Props, any> {
   discard() { const s = this.state, k = KEY[s.page]; const next = s.blocked; this.setState(st => ({ draft: { ...st.draft, [k]: clone(st.saved[k]) }, error: '', blocked: null, adding: false, ...(next ? { page: next } : {}) })); }
 
   renderVals() {
-    const s = this.state, d = s.draft, sv = s.saved, wide = s.w >= 900, M = s.menu, menuLevel = M.items === 0 ? 0 : M.missingPrices > 0 ? 2 : 4;
+    const s = this.state, d = s.draft, sv = s.saved, wide = s.w >= 880, split = s.w >= 1180, formW = s.w - (wide ? 238 : 0) - (split ? 320 : 0), M = s.menu, menuLevel = M.items === 0 ? 0 : M.missingPrices > 0 ? 2 : 4;
     const ce = React.createElement;
     const selStyle = (sm) => ({ height: sm ? 40 : 44, width: '100%', minWidth: 0, padding: '0 10px', borderRadius: sm ? 9 : 10, border: '1.5px solid #ECD9E0', background: '#fff', fontSize: sm ? 14 : 15 });
     const sel = (value, opts, onChange, sm = true, label) => ce('select', { value, onChange, style: selStyle(sm), 'aria-label': label }, opts.map(o => ce('option', { key: o.v, value: o.v }, o.l)));
@@ -243,11 +246,11 @@ class SettingsApp extends React.Component<Props, any> {
     const PV = d.pay;
     return {
       rootRef: this.rootRef, mainRef: this.mainRef, wide, narrow: !wide,
-      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', pad: wide ? '32px 40px 64px' : '20px 16px 48px', split: s.w >= 1240 ? 'minmax(0,1fr) 300px' : 'minmax(0,1fr)',
+      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', pad: '0 0 24px', split: split ? 'minmax(0,1fr) 300px' : 'minmax(0,1fr)',
         areaCols: wide ? '1.2fr 1.1fr .8fr .8fr .7fr 1.3fr 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
         rangeCols: wide ? 'repeat(5,minmax(0,1fr)) 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
-        rowPad: wide ? '10px 0' : '14px 0', cellLbl: s.w >= 1480 ? 'none' : 'block', hoursHead: s.w >= 1480,
-        dayCols: s.w >= 1480 ? '160px minmax(0,1fr)' : 'minmax(0,1fr)', dayInner: s.w >= 1480 || (wide && s.w >= 760) ? 'repeat(3,minmax(132px,1fr)) 80px' : 'minmax(0,1fr) minmax(0,1fr)',
+        rowPad: wide ? '10px 0' : '14px 0', cellLbl: formW >= 760 ? 'none' : 'block', hoursHead: formW >= 760,
+        dayCols: formW >= 760 ? '160px minmax(0,1fr)' : 'minmax(0,1fr)', dayInner: formW >= 580 ? 'repeat(3,minmax(132px,1fr)) 80px' : 'minmax(0,1fr) minmax(0,1fr)',
         stepCols: wide ? 'repeat(5,minmax(0,1fr))' : 'repeat(5,minmax(0,1fr))' },
       pg: Object.fromEntries(PAGES.map(([k]) => [k, s.page === k])),
       nav, navGroups, steps, ready, todoSteps, doneSteps, hasDone: doneSteps.length > 0, setupOpen: todo.length > 0, setupDone: todo.length === 0,
@@ -310,8 +313,7 @@ class SettingsApp extends React.Component<Props, any> {
 
   render() {
     // The layout depends on the width, so render only once it is known.
-    if (!this.state.mounted) return <div className="dc" style={{ minHeight: '100vh' }}/>;
-    return <div className="dc"><SettingsTemplate vm={this.renderVals()}/></div>;
+    return <div className="dc" ref={this.wrap}>{this.state.mounted ? <SettingsTemplate vm={this.renderVals()}/> : <div style={{ minHeight: '60vh' }}/>}</div>;
   }
 }
 

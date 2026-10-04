@@ -6,32 +6,11 @@ import { S } from "./style";
 export function SettingsTemplate({ vm }: { vm: any }) {
   return (
     <>
-      <div ref={vm.rootRef} style={S("height:100vh;height:100dvh;display:flex;overflow:hidden;background:#fff;color:#1A0815;font-family:'Geist','IBM Plex Sans Arabic',system-ui,sans-serif")}>
+      <div ref={vm.rootRef} style={S("display:flex;gap:28px;align-items:flex-start;background:#fff;color:#1A0815;font-family:'Geist','IBM Plex Sans Arabic',system-ui,sans-serif")}>
         {vm.wide && (
           <>
-          <aside style={S("flex:0 0 248px;border-right:1px solid #F0E4E8;display:flex;flex-direction:column;min-height:0")}>
-            <div style={S("height:64px;flex:none;padding:0 20px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #F0E4E8")}>
-              <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style={S("display:block;flex:none")}>
-                <defs>
-                  <linearGradient id="gRS" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
-                    <stop offset="0" stopColor="#FF5577" />
-                    <stop offset="1" stopColor="#C93DFF" />
-                  </linearGradient>
-                </defs>
-                <path d="M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z" stroke="url(#gRS)" strokeWidth="8" strokeLinejoin="round" />
-                <path d="M28 30V66H40" stroke="#1A0815" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
-                <circle cx="64" cy="55" r="11" stroke="url(#gRS)" strokeWidth="10" />
-              </svg>
-              <span style={S("display:flex;flex-direction:column;line-height:.92")}>
-                <span style={S("font-size:16px;font-weight:700;letter-spacing:-0.035em")}>
-                  Lumia
-                </span>
-                <span style={S("font-size:12px;letter-spacing:-0.01em")}>
-                  Order
-                </span>
-              </span>
-            </div>
-            <nav style={S("flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:2px")}>
+          <aside style={S("flex:0 0 210px;position:sticky;top:24px;align-self:flex-start;display:flex;flex-direction:column")}>
+            <nav style={S("padding:0;display:flex;flex-direction:column;gap:2px")}>
               {(vm.navGroups as any[]).map((g: any, __i: number) => (
                 <Fragment key={__i}>
                   {g.hasLabel && (
@@ -66,35 +45,14 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                 </Fragment>
               ))}
             </nav>
-            <div style={S("padding:12px;border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:6px")}>
-              <a href={vm.dashUrl} style={S("height:36px;padding:0 12px;border-radius:10px;display:flex;align-items:center;gap:10px;font-size:14px;color:#8A5A6E;text-decoration:none")} className="dcs0">
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                  <path d="M12 5l-5 5 5 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                Back to dashboard
-              </a>
-              <div style={S("display:flex;align-items:center;gap:10px;padding:8px")}>
-                <span style={S("width:32px;height:32px;border-radius:9px;flex:none;background:linear-gradient(135deg,#FF5577,#C93DFF);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center")}>
-                  {vm.initials}
-                </span>
-                <span style={S("font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0")}>
-                  {vm.brand}
-                </span>
-              </div>
-            </div>
           </aside>
           </>
         )}
-        <div style={S("flex:1;min-width:0;min-height:0;display:flex;flex-direction:column")}>
+        <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:16px")}>
           {vm.narrow && (
             <>
-            <header style={S("flex:none;background:#fff;border-bottom:1px solid #F0E4E8")}>
-              <div style={S("height:56px;padding:0 16px;display:flex;align-items:center;gap:10px")}>
-                <a href={vm.dashUrl} aria-label="Back to dashboard" style={S("width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none;color:#1A0815")} className="dcs1">
-                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                    <path d="M12 5l-5 5 5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </a>
+            <header style={S("flex:none;background:#fff;border-bottom:1px solid #F0E4E8;margin:0 -4px")}>
+              <div style={S("height:48px;padding:0 4px;display:flex;align-items:center;gap:10px")}>
                 <span style={S("font-size:16px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>
                   Settings
                 </span>
@@ -120,8 +78,8 @@ export function SettingsTemplate({ vm }: { vm: any }) {
             </header>
             </>
           )}
-          <main ref={vm.mainRef} style={S("flex:1;min-height:0;overflow-y:auto")}>
-            <div style={S(`max-width:960px;margin:0 auto;padding:${vm.L.pad};display:flex;flex-direction:column;gap:20px`)}>
+          <main ref={vm.mainRef} style={S("flex:1;min-width:0")}>
+            <div style={S(`max-width:960px;padding:${vm.L.pad};display:flex;flex-direction:column;gap:20px`)}>
               {vm.pg.profile && (
                 <>
                 <div data-screen-label="02 Restaurant profile" style={S("display:flex;flex-direction:column;gap:20px")}>
@@ -1638,8 +1596,8 @@ export function SettingsTemplate({ vm }: { vm: any }) {
           </main>
           {vm.bar.show && (
             <>
-            <div style={S("flex:none;border-top:1px solid #F0E4E8;background:#fff;padding:12px 16px;box-shadow:0 -10px 24px -18px rgba(26,8,21,.3)")}>
-              <div style={S("max-width:880px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px")}>
+            <div style={S("position:sticky;bottom:12px;z-index:5;border:1px solid #F0E4E8;border-radius:16px;background:#fff;padding:12px 16px;box-shadow:0 10px 30px -12px rgba(26,8,21,.28)")}>
+              <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px")}>
                 {vm.bar.err && (
                   <>
                   <div role="alert" style={S("flex-basis:100%;display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:10px;background:#FDECEC;color:#9B1C1C;font-size:14px;line-height:1.45")}>
