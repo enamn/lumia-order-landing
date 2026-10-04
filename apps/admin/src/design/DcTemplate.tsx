@@ -1242,6 +1242,13 @@ export function DcTemplate({ vm }: { vm: any }) {
                                 </div>
                               </Fragment>
                             ))}
+                            {vm.ordLoading && (
+                              <>
+                              <div style={S("display:flex;justify-content:center;padding:48px 0")}>
+                                {vm.ordLoaderNode}
+                              </div>
+                              </>
+                            )}
                             {vm.ord.empty && (
                               <>
                               <div style={S("padding:40px 20px;text-align:center;font-size:15px;color:#8A5A6E;border:1px dashed #ECD9E0;border-radius:14px")}>

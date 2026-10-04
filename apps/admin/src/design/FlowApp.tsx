@@ -6,7 +6,7 @@ import React from "react";
 import "./dc-base.css";
 import "./dc-hover.css";
 import { DcTemplate } from "./DcTemplate";
-import { PageLoader } from "@/components/lumia-loader";
+import { PageLoader, LumiaLoader } from "@/components/lumia-loader";
 import { SettingsLoader, prefetchSettings } from "./SettingsApp";
 import { authClient } from "@/lib/auth-client";
 import { logoToDataUrl } from "@/lib/logo";
@@ -78,7 +78,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu)) > 0, cat: "All", menu: toCats(props.menu), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
-      page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, settingsPage: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
+      page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, settingsPage: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
       lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
     };
   }
@@ -92,7 +92,8 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     this.statsTimer = setInterval(() => { if (this.state.step === "dash" && this.state.page === "WhatsApp" && this.state.waStatus === "connected") this.loadStats(); }, 15000);
     if (this.state.step === "dash" && this.state.page === "WhatsApp") this.loadStats();
     if (this.state.step === "dash" && this.state.page === "Overview") this.loadOverview();
-    if (this.state.step === "dash" && this.state.page === "Orders") this.loadOrders();
+    if (this.state.step === "dash" && this.state.page === "Orders") { this.loadOrders(); this.showOrdersLoader(); }
+    if (this.state.step === "dash" && this.state.page !== "Orders") this.later(1500, () => { if (this.state.orders === null) this.loadOrders(); }); // ready before the first visit
     if (this.state.step === "dash" && this.state.businessId) this.later(1500, () => prefetchSettings(this.state.businessId)); // so Settings opens instantly
     this.ordersTimer = setInterval(() => { if (this.state.step === "dash" && this.state.page === "Orders" && !this.state.ordBusy) this.loadOrders(); }, 15000);
     if (this.state.step === "phone") this.focus(this.phoneRef); if (this.state.step === "name") this.focus(this.nameRef);
@@ -111,6 +112,8 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const data: MenuCat[] = await api(`/api/v1/businesses/${this.state.businessId}/menu`);
     const menu = toCats(data); this.setState({ menu, menuDone: count(menu) > 0 });
   }
+  // The loader only appears if the first load is slow, so fast loads never flash it.
+  showOrdersLoader = () => { if (this.state.orders === null) { this.setState({ ordSlow: false }); this.later(350, () => { if (this.state.orders === null) this.setState({ ordSlow: true }); }); } };
   loadOrders = () => { if (!this.state.businessId) return; api(`/api/v1/businesses/${this.state.businessId}/orders`).then((rows: any[]) => this.setState((st: any) => ({ orders: rows.map(toDesignOrder), ordSel: st.ordSel ?? null }))).catch((e: any) => this.setState({ ordErr: e?.message ?? "We couldn’t load the orders." })); };
   loadOverview = (period = this.state.period) => { if (this.state.businessId) api(`/api/v1/businesses/${this.state.businessId}/whatsapp/overview?period=${period}&tz=${new Date().getTimezoneOffset()}`).then(overview => { if (this.state.period === period) this.setState({ overview }); }).catch(() => undefined); };
   // Calls the status endpoint one step after another (an accepted order passes through "preparing" before "ready"), then refreshes the list.
@@ -474,11 +477,11 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       q: s.q, hasQ: !!s.q, onSearch: (e: any) => this.setState({ q: e.target.value }), clearSearch: () => this.setState({ q: "" }), sections, noResults: sections.length === 0, dashErr: s.dashErr,
       cats: [["All", T.all, count(M)], ...M.map(g => [g.id, catName(g), g.items.length])].map(([k, label, n]: any) => { const on = !q && s.cat === k; return { label, count: n, on, pick: () => this.setState({ cat: k, q: "" }), bg: on ? "#FDEAF2" : "transparent", fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, countFg: on ? "#8A2040" : "#8A5A6E", chipBg: on ? "#1A0815" : "#fff", chipFg: on ? "#fff" : "#3D1C31", chipBd: on ? "#1A0815" : "#ECD9E0" }; }),
       menuDone: s.menuDone && count(M) > 0, menuEmpty: !(s.menuDone && count(M) > 0), dashNarrow: narrow, dashWide: !narrow, openAddItem: p.canEdit ? this.openAddItem : noop, dlg,
-      nav: NAV.map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e: any) => { e?.preventDefault?.(); if (l === "Overview" || l === "Orders" || l === "Menu" || l === "WhatsApp" || l === "Settings") { this.setState({ page: l }); if (l === "WhatsApp") this.loadStats(); if (l === "Overview") this.loadOverview(); if (l === "Orders") this.loadOrders(); history.replaceState(null, "", `/dashboard?page=${l.toLowerCase()}&businessId=${this.state.businessId}`); } else if (l === "Sign out") this.signOut(); }, fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, bg: on ? "#FDEAF2" : "transparent", bd: on ? "#FF5577" : "transparent" }; }),
+      nav: NAV.map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e: any) => { e?.preventDefault?.(); if (l === "Overview" || l === "Orders" || l === "Menu" || l === "WhatsApp" || l === "Settings") { this.setState({ page: l }); if (l === "WhatsApp") this.loadStats(); if (l === "Overview") this.loadOverview(); if (l === "Orders") { this.loadOrders(); this.showOrdersLoader(); } history.replaceState(null, "", `/dashboard?page=${l.toLowerCase()}&businessId=${this.state.businessId}`); } else if (l === "Sign out") this.signOut(); }, fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, bg: on ? "#FDEAF2" : "transparent", bd: on ? "#FF5577" : "transparent" }; }),
       setup: setupItems.map(([label0, done, fn], i) => { const lb = T.setup[i]; const label = Array.isArray(lb) ? lb[done ? 1 : 0] : lb; return { label, done, todo: !done, fg: done ? "#1A0815" : "#3D1C31", ul: !done && fn ? "underline" : "none", pick: fn || this.noopFn, bar: i < doneN ? "#16704A" : "rgba(26,8,21,.12)" }; }),
       setupLabel: ar ? `${doneN} من 5 مكتملة` : `${doneN} of 5 completed`, waSetupLabel: `${doneN} of 5 completed`,
       // whatsapp
-      pageMenu: s.page === "Menu", pageOverview: s.page === "Overview", pageOrders: s.page === "Orders", pageSettings: s.page === "Settings", notSettings: s.page !== "Settings", settingsNode: s.page === "Settings" ? <SettingsLoader businessId={s.businessId} query={`?businessId=${s.businessId}`}/> : null, ...this.overviewVm(ar, narrow), ...this.ordersVals(ar, narrow), pageWA: s.page === "WhatsApp", waOpen: !!s.wa, wa: { intro: s.wa === "intro", connecting: s.wa === "connecting", success: s.wa === "success", import: s.wa === "import", review: s.wa === "review", catalog: s.wa === "catalog", error: s.wa === "error", inUse: s.wa === "inUse" },
+      pageMenu: s.page === "Menu", pageOverview: s.page === "Overview", pageOrders: s.page === "Orders", ordLoading: s.orders === null && !s.ordErr && s.ordSlow, ordLoaderNode: <LumiaLoader size={48} label="Loading orders"/>, pageSettings: s.page === "Settings", notSettings: s.page !== "Settings", settingsNode: s.page === "Settings" ? <SettingsLoader businessId={s.businessId} query={`?businessId=${s.businessId}`}/> : null, ...this.overviewVm(ar, narrow), ...this.ordersVals(ar, narrow), pageWA: s.page === "WhatsApp", waOpen: !!s.wa, wa: { intro: s.wa === "intro", connecting: s.wa === "connecting", success: s.wa === "success", import: s.wa === "import", review: s.wa === "review", catalog: s.wa === "catalog", error: s.wa === "error", inUse: s.wa === "inUse" },
       waLabel: ({ intro: "08 WhatsApp · Connect", connecting: "08a WhatsApp · Connecting", success: "08b WhatsApp · Connected", import: "08c WhatsApp · Import info", review: "08d WhatsApp · Review differences", catalog: "08e WhatsApp · Catalog found", error: "08g WhatsApp · Error", inUse: "08h WhatsApp · Number in use" } as any)[s.wa] || "08 WhatsApp",
       waClose: () => { this.connectToken++; this.clearTimers(); this.setState({ wa: null, confirmReplace: false }); }, openWA: this.openWA, startConnect: this.startConnect, continueSetup: () => { if (!waOn) this.openWA(); },
       cancelConnect: () => { this.connectToken++; this.setState({ wa: "intro" }); },
