@@ -7,7 +7,7 @@ import "./dc-base.css";
 import "./dc-hover.css";
 import { DcTemplate } from "./DcTemplate";
 import { PageLoader } from "@/components/lumia-loader";
-import { SettingsLoader } from "./SettingsApp";
+import { SettingsLoader, prefetchSettings } from "./SettingsApp";
 import { authClient } from "@/lib/auth-client";
 import { logoToDataUrl } from "@/lib/logo";
 import { COUNTRIES, groupDigits as fmt, maskPhone } from "@/modules/auth/countries";
@@ -93,6 +93,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     if (this.state.step === "dash" && this.state.page === "WhatsApp") this.loadStats();
     if (this.state.step === "dash" && this.state.page === "Overview") this.loadOverview();
     if (this.state.step === "dash" && this.state.page === "Orders") this.loadOrders();
+    if (this.state.step === "dash" && this.state.businessId) this.later(1500, () => prefetchSettings(this.state.businessId)); // so Settings opens instantly
     this.ordersTimer = setInterval(() => { if (this.state.step === "dash" && this.state.page === "Orders" && !this.state.ordBusy) this.loadOrders(); }, 15000);
     if (this.state.step === "phone") this.focus(this.phoneRef); if (this.state.step === "name") this.focus(this.nameRef);
   }

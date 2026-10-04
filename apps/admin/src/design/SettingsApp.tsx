@@ -8,6 +8,7 @@ import "./dc-base.css";
 import "./settings-hover.css";
 import { SettingsTemplate } from "./SettingsTemplate";
 import { logoToDataUrl } from "@/lib/logo";
+import { LumiaLoader } from "@/components/lumia-loader";
 
 export interface SettingsProps {
   businessId: string;
@@ -85,7 +86,7 @@ class SettingsApp extends React.Component<Props, any> {
       const res = await api(`/api/v1/businesses/${this.props.businessId}/settings/${k}`, 'PUT', s.draft[k]);
       const next = s.blocked;
       this.setState((st: any) => ({ draft: { ...st.draft, [k]: clone(res.value) }, saved: { ...st.saved, [k]: clone(res.value) }, error: '', blocked: null, saving: false, ...(next ? { page: next } : {}) }));
-      this.flash(OK[s.page]);
+      this.flash(OK[s.page]); rememberSaved(this.props.businessId, k, res.value);
       if (k === 'branches') this.refreshAfterBranches();
     } catch (e: any) { this.setState({ error: e?.message ?? 'We couldn’t save. Please try again.', saving: false }); }
   }
@@ -322,12 +323,31 @@ class SettingsApp extends React.Component<Props, any> {
 
 export default SettingsApp;
 
-// Loads the settings when the page is opened (not with the dashboard), then shows the editor.
+// Settings are fetched ahead of time (see prefetchSettings) so opening the page is instant; a loader only appears if the fetch is slow.
+type Loaded = SettingsProps["initial"];
+const cache = new Map<string, { at: number; promise: Promise<Loaded>; data?: Loaded }>();
+const FRESH_MS = 60_000;
+export function prefetchSettings(businessId: string) {
+  const hit = cache.get(businessId);
+  if (hit && Date.now() - hit.at < FRESH_MS) return hit;
+  const entry: { at: number; promise: Promise<Loaded>; data?: Loaded } = { at: Date.now(), promise: api(`/api/v1/businesses/${businessId}/settings`).then((r: any) => ({ sections: r.sections, menu: r.menu, whatsapp: r.whatsapp })) };
+  entry.promise.then(d => { entry.data = d; }, () => { if (cache.get(businessId) === entry) cache.delete(businessId); });
+  cache.set(businessId, entry);
+  return entry;
+}
+function rememberSaved(businessId: string, key: string, value: unknown) { const d = cache.get(businessId)?.data; if (d) { d.sections[key] = value; const e = cache.get(businessId)!; e.at = Date.now(); } }
+
 export function SettingsLoader({ businessId, query }: { businessId: string; query: string }) {
-  const [initial, setInitial] = React.useState<SettingsProps["initial"] | null>(null);
+  const [initial, setInitial] = React.useState<Loaded | null>(() => prefetchSettings(businessId).data ?? null);
   const [error, setError] = React.useState("");
-  React.useEffect(() => { let live = true; api(`/api/v1/businesses/${businessId}/settings`).then(r => { if (live) setInitial({ sections: r.sections, menu: r.menu, whatsapp: r.whatsapp }); }).catch(e => { if (live) setError(e?.message ?? "We couldn’t load your settings."); }); return () => { live = false; }; }, [businessId]);
+  const [slow, setSlow] = React.useState(false);
+  React.useEffect(() => {
+    let live = true; const entry = prefetchSettings(businessId);
+    entry.promise.then(d => { if (live) setInitial(d); }).catch(e => { if (live) setError(e?.message ?? "We couldn’t load your settings."); });
+    const t = setTimeout(() => { if (live) setSlow(true); }, 350); // no flash of a loader for fast loads
+    return () => { live = false; clearTimeout(t); };
+  }, [businessId]);
   if (error) return <div className="dc" style={{ padding: 32, color: "#B42318", fontSize: 15 }}>{error}</div>;
-  if (!initial) return <div className="dc" style={{ padding: 32, color: "#8A5A6E", fontSize: 15 }}>Loading settings…</div>;
+  if (!initial) return <div className="dc" style={{ height: "100%", minHeight: 240, display: "flex", alignItems: "center", justifyContent: "center", opacity: slow ? 1 : 0, transition: "opacity .2s" }}><LumiaLoader size={56} label="Loading"/></div>;
   return <SettingsApp businessId={businessId} query={query} initial={initial}/>;
 }
