@@ -1,4 +1,6 @@
-import { useId } from "react";
+"use client";
+import { useId, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 // Loading animation: the Lumia "Lo" mark. Its bubble outline draws itself and the ring breathes (keyframes in globals.css).
 // Use `light` on the pink→violet buttons, where the colored mark would disappear.
 export function LumiaLoader({ size = 24, light = false, label }: { size?: number; light?: boolean; label?: string }) {
@@ -14,12 +16,16 @@ export function LumiaLoader({ size = 24, light = false, label }: { size?: number
 }
 
 // Page-loading loader: the Lumia mark in the centre of the screen on a soft pink-to-violet glow (same look as PageLoader).
+// Rendered into <body> so it is centred on the screen and above everything, whatever transforms the surrounding layout has.
+function useBody() { const [el, setEl] = useState<HTMLElement | null>(null); useEffect(() => setEl(document.body), []); return el; }
 export function ContentLoader({ label = "Loading" }: { label?: string }) {
-  return <div className="content-loader" role="status" aria-live="polite" aria-label={label}><LumiaLoader size={64}/></div>;
+  const body = useBody(); if (!body) return null;
+  return createPortal(<div className="content-loader" role="status" aria-live="polite" aria-label={label}><LumiaLoader size={72}/></div>, body);
 }
 
 // Full-screen loader: the Lumia mark centred on the screen while an action runs. Blocks interaction underneath.
 export function PageLoader({ show, label }: { show: boolean; label?: string }) {
-  if (!show) return null;
-  return <div className="page-loader" role="status" aria-live="polite" aria-label={label ?? "Loading"}><LumiaLoader size={72}/>{label && <p>{label}</p>}</div>;
+  const body = useBody();
+  if (!show || !body) return null;
+  return createPortal(<div className="page-loader" role="status" aria-live="polite" aria-label={label ?? "Loading"}><LumiaLoader size={72}/>{label && <p>{label}</p>}</div>, body);
 }
