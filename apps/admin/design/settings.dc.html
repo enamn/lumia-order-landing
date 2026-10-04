@@ -120,7 +120,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                   <sc-if value="{{ acc.s3.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:18px;padding-top:18px">
                   <div style="display:flex;flex-direction:column;gap:8px">
                     <span style="font-size:14px;font-weight:500;color:#3D1C31">Default language</span>
-                    <div role="radiogroup" aria-label="Default language" style="display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;align-self:flex-start">
+                    <div role="radiogroup" aria-label="Default language" style="display:flex;flex-wrap:wrap;max-width:100%;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;align-self:flex-start">
                       <sc-for list="{{ langSeg }}" as="o" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="height:34px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for>
                     </div>
                     <span style="font-size:13px;color:#8A5A6E">With Both, Lumia replies in the language the customer writes in.</span>
@@ -174,7 +174,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                   <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Phone number</span><input value="{{ nb.phone.v }}" onChange="{{ nb.phone.set }}" placeholder="+971 4 000 0000" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input></label>
                   <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Default ETA (minutes)</span><input inputmode="numeric" value="{{ nb.eta.v }}" onChange="{{ nb.eta.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input></label>
                   <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Branch status</span>
-                    <div role="radiogroup" aria-label="Branch status" style="display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;align-self:flex-start">
+                    <div role="radiogroup" aria-label="Branch status" style="display:flex;flex-wrap:wrap;max-width:100%;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;align-self:flex-start">
                       <sc-for list="{{ nbStatus }}" as="o" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="height:38px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for>
                     </div>
                   </div>
@@ -460,7 +460,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
               </div>
               <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;border-top:1px solid #F3EEF1;padding-top:14px">
                 <span style="font-size:14px;font-weight:500;color:#3D1C31">Branches</span>
-                <div role="radiogroup" aria-label="Branch hours" style="display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px">
+                <div role="radiogroup" aria-label="Branch hours" style="display:flex;flex-wrap:wrap;max-width:100%;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px">
                   <sc-for list="{{ scopeSeg }}" as="o" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="height:34px;padding:0 14px;border-radius:8px;font-size:14px;white-space:nowrap;font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for>
                 </div>
                 <sc-if value="{{ perBranch }}" hint-placeholder-val="{{ false }}">

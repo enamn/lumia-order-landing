@@ -960,310 +960,347 @@ export function DcTemplate({ vm }: { vm: any }) {
                                 {vm.ord.t.sub}
                               </p>
                             </div>
-                            <label style={S("flex:0 1 300px;min-width:200px;height:44px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px")}>
-                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
-                                <circle cx="9" cy="9" r="5.5" stroke="#8A5A6E" strokeWidth="1.7" />
-                                <path d="m13.2 13.2 3.3 3.3" stroke="#8A5A6E" strokeWidth="1.7" strokeLinecap="round" />
-                              </svg>
-                              <input value={vm.ord.q} onChange={vm.ord.onQ} placeholder={vm.ord.t.search} aria-label={vm.ord.t.search} style={S("flex:1;min-width:0;border:0;background:transparent;font-size:15px;height:100%")} />
-                            </label>
+                            {vm.ord.hasAny && (
+                              <>
+                              <label style={S("flex:0 1 300px;min-width:200px;height:44px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px")}>
+                                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
+                                  <circle cx="9" cy="9" r="5.5" stroke="#8A5A6E" strokeWidth="1.7" />
+                                  <path d="m13.2 13.2 3.3 3.3" stroke="#8A5A6E" strokeWidth="1.7" strokeLinecap="round" />
+                                </svg>
+                                <input value={vm.ord.q} onChange={vm.ord.onQ} placeholder={vm.ord.t.search} aria-label={vm.ord.t.search} style={S("flex:1;min-width:0;border:0;background:transparent;font-size:15px;height:100%")} />
+                              </label>
+                              </>
+                            )}
                           </div>
-                          {vm.ordErr && (
+                          {vm.ord.noOrders && (
                             <>
-                            <div role="alert" style={S("font-size:14px;color:#B4233B")}>
-                              {vm.ordErr}
+                            <div data-screen-label="06c Orders \u00b7 empty" style={S("border:1px solid #F0E4E8;border-radius:20px;padding:56px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px")}>
+                              <span style={S("width:56px;height:56px;border-radius:16px;background:#FDEAF2;color:#C0284F;display:flex;align-items:center;justify-content:center")}>
+                                <svg width="26" height="26" viewBox="0 0 20 20" fill="none">
+                                  <path d="M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </span>
+                              <div style={S("display:flex;flex-direction:column;gap:6px;max-width:420px")}>
+                                <h2 style={S("font-size:20px;font-weight:600;letter-spacing:-0.02em")}>
+                                  {vm.ord.e.title}
+                                </h2>
+                                <p style={S("font-size:15px;color:#8A5A6E;line-height:1.5;text-wrap:pretty")}>
+                                  {vm.ord.e.body}
+                                </p>
+                              </div>
+                              <div style={S("display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:4px")}>
+                                <button type="button" onClick={vm.ord.e.go} style={S("height:44px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")} className="dch1">
+                                  {vm.ord.e.cta}
+                                </button>
+                              </div>
                             </div>
                             </>
                           )}
-                          <div style={S("display:flex;gap:8px;overflow-x:auto;flex:none;padding-bottom:2px;scrollbar-width:none")}>
-                            {(vm.ord.tabs as any[]).map((tb: any, __i: number) => (
-                              <Fragment key={__i}>
-                                <button type="button" onClick={tb.pick} style={S(`height:40px;padding:0 14px;border-radius:999px;display:flex;align-items:center;gap:8px;white-space:nowrap;flex:none;font-size:14px;font-weight:500;background:${tb.bg};color:${tb.fg};border:1.5px solid ${tb.bd}`)}>
-                                  {tb.label}
-                                  {tb.hasCount && (
-                                    <>
-                                    <span style={S(`min-width:22px;height:22px;padding:0 6px;border-radius:999px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;background:${tb.cbg};color:${tb.cfg}`)}>
-                                      {tb.count}
-                                    </span>
-                                    </>
-                                  )}
-                                </button>
-                              </Fragment>
-                            ))}
-                          </div>
-                          <div style={S("display:flex;flex-direction:column;gap:10px;min-width:0")}>
-                            {(vm.ord.rows as any[]).map((r: any, __i: number) => (
-                              <Fragment key={__i}>
-                                <div style={S(`border-radius:14px;background:#fff;border:1px solid ${r.cbd};box-shadow:${r.csh};overflow:clip`)}>
-                                  <div style={S(`display:flex;align-items:center;gap:10px;padding-inline-end:${r.qPad}`)}>
-                                    <button type="button" onClick={r.pick} aria-expanded={r.open} style={S("flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:start;padding:14px 18px;flex-wrap:wrap")}>
-                                      <div style={S("flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:4px")}>
-                                        <div style={S("display:flex;align-items:center;gap:10px;min-width:0")}>
-                                          {r.isNew && (
-                                            <>
-                                            <span style={S("width:8px;height:8px;border-radius:50%;background:#FF5577;flex:none")} />
-                                            </>
-                                          )}
-                                          <span style={S("font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;flex:none")}>
-                                            {r.id}
-                                          </span>
-                                          <span style={S("font-size:15px;font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>
-                                            {r.name}
-                                          </span>
-                                        </div>
-                                        <span style={S("font-size:14px;color:#8A5A6E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>
-                                          {r.summary}
-                                        </span>
-                                      </div>
-                                      <div style={S("display:flex;align-items:center;gap:12px;flex:none;margin-inline-start:auto")}>
-                                        <span style={S(`display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:${r.sbg};color:${r.sfg}`)}>
-                                          {r.stLabel}
-                                        </span>
-                                        <span style={S("font-size:13px;color:#8A5A6E;white-space:nowrap")}>
-                                          {r.type}
-                                        </span>
-                                        <span style={S(`font-size:13px;font-weight:500;color:${r.whenFg};font-variant-numeric:tabular-nums;white-space:nowrap`)}>
-                                          {r.when}
-                                        </span>
-                                        <span dir="ltr" style={S("font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:72px;text-align:end")}>
-                                          {r.total}
-                                        </span>
-                                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${r.chev})`)}>
-                                          <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                      </div>
-                                    </button>
-                                    {r.hasQuick && (
+                          {vm.ord.hasAny && (
+                            <>
+                            {vm.ordErr && (
+                              <>
+                              <div role="alert" style={S("font-size:14px;color:#B4233B")}>
+                                {vm.ordErr}
+                              </div>
+                              </>
+                            )}
+                            <div style={S("display:flex;gap:8px;overflow-x:auto;flex:none;padding-bottom:2px;scrollbar-width:none")}>
+                              {(vm.ord.tabs as any[]).map((tb: any, __i: number) => (
+                                <Fragment key={__i}>
+                                  <button type="button" onClick={tb.pick} style={S(`height:40px;padding:0 14px;border-radius:999px;display:flex;align-items:center;gap:8px;white-space:nowrap;flex:none;font-size:14px;font-weight:500;background:${tb.bg};color:${tb.fg};border:1.5px solid ${tb.bd}`)}>
+                                    {tb.label}
+                                    {tb.hasCount && (
                                       <>
-                                      <button type="button" onClick={r.quick} style={S(`height:38px;padding:0 14px;border-radius:10px;font-size:14px;font-weight:600;white-space:nowrap;flex:none;background:${r.qBg};color:#fff`)}>
-                                        {r.qLabel}
-                                      </button>
+                                      <span style={S(`min-width:22px;height:22px;padding:0 6px;border-radius:999px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;background:${tb.cbg};color:${tb.cfg}`)}>
+                                        {tb.count}
+                                      </span>
                                       </>
                                     )}
-                                  </div>
-                                  {r.open && (
-                                    <>
-                                    <div style={S(`margin:0 18px;padding:16px 0;border-top:1px solid #F3EEF1;display:grid;grid-template-columns:${r.d.stepCols}`)}>
-                                      {(r.d.steps as any[]).map((sp: any, __i: number) => (
-                                        <Fragment key={__i}>
-                                          <div style={S("display:flex;flex-direction:column;gap:6px;min-width:0")}>
-                                            <div style={S("display:flex;align-items:center")}>
-                                              <span style={S(`width:10px;height:10px;border-radius:50%;flex:none;background:${sp.dot};border:2px solid ${sp.ring}`)} />
-                                              <span style={S(`flex:1;height:2px;margin:0 6px;border-radius:2px;background:${sp.line}`)} />
-                                            </div>
-                                            <span style={S(`font-size:13px;line-height:1.3;padding-inline-end:8px;font-weight:${sp.fw};color:${sp.fg}`)}>
-                                              {sp.label}
-                                              <span style={S("display:block;font-weight:400;font-size:12px;color:#8A5A6E;font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:2px")}>
-                                                {sp.time}
-                                              </span>
+                                  </button>
+                                </Fragment>
+                              ))}
+                            </div>
+                            <div style={S("display:flex;flex-direction:column;gap:10px;min-width:0")}>
+                              {(vm.ord.rows as any[]).map((r: any, __i: number) => (
+                                <Fragment key={__i}>
+                                  <div style={S(`border-radius:14px;background:#fff;border:1px solid ${r.cbd};box-shadow:${r.csh};overflow:clip`)}>
+                                    <div style={S(`display:flex;align-items:center;gap:10px;padding-inline-end:${r.qPad}`)}>
+                                      <button type="button" onClick={r.pick} aria-expanded={r.open} style={S("flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:start;padding:14px 18px;flex-wrap:wrap")}>
+                                        <div style={S("flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:4px")}>
+                                          <div style={S("display:flex;align-items:center;gap:10px;min-width:0")}>
+                                            {r.isNew && (
+                                              <>
+                                              <span style={S("width:8px;height:8px;border-radius:50%;background:#FF5577;flex:none")} />
+                                              </>
+                                            )}
+                                            <span style={S("font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;flex:none")}>
+                                              {r.id}
+                                            </span>
+                                            <span style={S("font-size:15px;font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>
+                                              {r.name}
                                             </span>
                                           </div>
-                                        </Fragment>
-                                      ))}
+                                          <span style={S("font-size:14px;color:#8A5A6E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>
+                                            {r.summary}
+                                          </span>
+                                        </div>
+                                        <div style={S("display:flex;align-items:center;gap:12px;flex:none;margin-inline-start:auto")}>
+                                          <span style={S(`display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:${r.sbg};color:${r.sfg}`)}>
+                                            {r.stLabel}
+                                          </span>
+                                          <span style={S("font-size:13px;color:#8A5A6E;white-space:nowrap")}>
+                                            {r.type}
+                                          </span>
+                                          <span style={S(`font-size:13px;font-weight:500;color:${r.whenFg};font-variant-numeric:tabular-nums;white-space:nowrap`)}>
+                                            {r.when}
+                                          </span>
+                                          <span dir="ltr" style={S("font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:72px;text-align:end")}>
+                                            {r.total}
+                                          </span>
+                                          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${r.chev})`)}>
+                                            <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                          </svg>
+                                        </div>
+                                      </button>
+                                      {r.hasQuick && (
+                                        <>
+                                        <button type="button" onClick={r.quick} style={S(`height:38px;padding:0 14px;border-radius:10px;font-size:14px;font-weight:600;white-space:nowrap;flex:none;background:${r.qBg};color:#fff`)}>
+                                          {r.qLabel}
+                                        </button>
+                                        </>
+                                      )}
                                     </div>
-                                    <div style={S(`margin:0 18px;border-top:1px solid #F3EEF1;display:grid;grid-template-columns:${r.L.dcols};gap:0 32px`)}>
-                                      <div style={S("padding:16px 0;display:flex;flex-direction:column;min-width:0")}>
-                                        <span style={S("font-size:14px;font-weight:600;margin-bottom:6px")}>
-                                          {r.t.items}
-                                        </span>
-                                        {(r.d.items as any[]).map((it: any, __i: number) => (
+                                    {r.open && (
+                                      <>
+                                      <div style={S(`margin:0 18px;padding:16px 0;border-top:1px solid #F3EEF1;display:grid;grid-template-columns:${r.d.stepCols}`)}>
+                                        {(r.d.steps as any[]).map((sp: any, __i: number) => (
                                           <Fragment key={__i}>
-                                            <div style={S("display:flex;gap:10px;padding:6px 0;align-items:flex-start")}>
-                                              <span style={S("width:26px;flex:none;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums")}>
-                                                {it.q}
-                                              </span>
-                                              <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:2px")}>
-                                                <span style={S("font-size:15px")}>
-                                                  {it.name}
-                                                </span>
-                                                {it.hasNote && (
-                                                  <>
-                                                  <span style={S("font-size:13px;font-weight:500;color:#8A4B00")}>
-                                                    {it.note}
-                                                  </span>
-                                                  </>
-                                                )}
+                                            <div style={S("display:flex;flex-direction:column;gap:6px;min-width:0")}>
+                                              <div style={S("display:flex;align-items:center")}>
+                                                <span style={S(`width:10px;height:10px;border-radius:50%;flex:none;background:${sp.dot};border:2px solid ${sp.ring}`)} />
+                                                <span style={S(`flex:1;height:2px;margin:0 6px;border-radius:2px;background:${sp.line}`)} />
                                               </div>
-                                              <span dir="ltr" style={S("font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap")}>
-                                                {it.price}
+                                              <span style={S(`font-size:13px;line-height:1.3;padding-inline-end:8px;font-weight:${sp.fw};color:${sp.fg}`)}>
+                                                {sp.label}
+                                                <span style={S("display:block;font-weight:400;font-size:12px;color:#8A5A6E;font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:2px")}>
+                                                  {sp.time}
+                                                </span>
                                               </span>
                                             </div>
                                           </Fragment>
                                         ))}
-                                        <div style={S("border-top:1px dashed #ECD9E0;margin-top:8px;padding-top:10px;display:flex;flex-direction:column;gap:5px")}>
-                                          {(r.d.totals as any[]).map((tt: any, __i: number) => (
+                                      </div>
+                                      <div style={S(`margin:0 18px;border-top:1px solid #F3EEF1;display:grid;grid-template-columns:${r.L.dcols};gap:0 32px`)}>
+                                        <div style={S("padding:16px 0;display:flex;flex-direction:column;min-width:0")}>
+                                          <span style={S("font-size:14px;font-weight:600;margin-bottom:6px")}>
+                                            {r.t.items}
+                                          </span>
+                                          {(r.d.items as any[]).map((it: any, __i: number) => (
                                             <Fragment key={__i}>
-                                              <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:14px;color:#8A5A6E")}>
-                                                <span>
-                                                  {tt.k}
+                                              <div style={S("display:flex;gap:10px;padding:6px 0;align-items:flex-start")}>
+                                                <span style={S("width:26px;flex:none;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums")}>
+                                                  {it.q}
                                                 </span>
-                                                <span dir="ltr" style={S("font-variant-numeric:tabular-nums")}>
-                                                  {tt.v}
+                                                <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:2px")}>
+                                                  <span style={S("font-size:15px")}>
+                                                    {it.name}
+                                                  </span>
+                                                  {it.hasNote && (
+                                                    <>
+                                                    <span style={S("font-size:13px;font-weight:500;color:#8A4B00")}>
+                                                      {it.note}
+                                                    </span>
+                                                    </>
+                                                  )}
+                                                </div>
+                                                <span dir="ltr" style={S("font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap")}>
+                                                  {it.price}
                                                 </span>
                                               </div>
                                             </Fragment>
                                           ))}
-                                          <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:16px;font-weight:600")}>
-                                            <span>
-                                              {r.t.total}
-                                            </span>
-                                            <span dir="ltr" style={S("font-variant-numeric:tabular-nums")}>
-                                              {r.d.total}
-                                            </span>
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <div style={S(`padding:16px 0;display:flex;flex-direction:column;gap:4px;min-width:0;border-top:${r.L.dsepTop}`)}>
-                                        <span style={S("font-size:14px;font-weight:600;margin-bottom:6px")}>
-                                          {r.t.customer}
-                                        </span>
-                                        <span style={S("font-size:15px;font-weight:500")}>
-                                          {r.d.name}
-                                        </span>
-                                        <span dir="ltr" style={S("font-size:14px;color:#3D1C31;font-variant-numeric:tabular-nums;text-align:start")}>
-                                          {r.d.phone}
-                                        </span>
-                                        {r.d.isDelivery && (
-                                          <>
-                                          <span style={S("font-size:14px;color:#3D1C31;line-height:1.45;margin-top:4px")}>
-                                            {r.d.addr}
-                                          </span>
-                                          </>
-                                        )}
-                                        {r.d.hasNote && (
-                                          <>
-                                          <span style={S("font-size:14px;line-height:1.45;margin-top:8px;color:#8A4B00")}>
-                                            <span style={S("font-weight:600")}>
-                                              {r.t.note}:
-                                            </span>
-                                            {r.d.note}
-                                          </span>
-                                          </>
-                                        )}
-                                        <div style={S("display:flex;flex-wrap:wrap;gap:8px;margin-top:12px")}>
-                                          <button type="button" onClick={r.d.message} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
-                                            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                              <path d="M3.5 16.5 4.6 13A7 7 0 1 1 7.3 15.6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                                            </svg>
-                                            {r.t.msg}
-                                          </button>
-                                          <a href={r.d.tel} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
-                                            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                              <path d="M4 3.5h3l1.5 3.5-2 1.3a9 9 0 0 0 5.2 5.2l1.3-2 3.5 1.5v3a1.5 1.5 0 0 1-1.6 1.5A14 14 0 0 1 2.5 5.1 1.5 1.5 0 0 1 4 3.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                                            </svg>
-                                            {r.t.call}
-                                          </a>
-                                          <button type="button" onClick={r.d.print} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
-                                            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                              <path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                                            </svg>
-                                            {r.t.print}
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div style={S("padding:14px 18px;border-top:1px solid #F3EEF1;display:flex;flex-direction:column;gap:12px")}>
-                                      {r.d.hasFlash && (
-                                        <>
-                                        <span role="status" style={S("display:flex;align-items:center;gap:8px;font-size:14px;color:#16704A;font-weight:500")}>
-                                          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
-                                            <circle cx="10" cy="10" r="9" fill="#16704A" />
-                                            <path d="M6 10.2 8.6 12.8 14 7.4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                          </svg>
-                                          {r.d.flash}
-                                        </span>
-                                        </>
-                                      )}
-                                      {r.d.isNew && (
-                                        <>
-                                        <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:12px")}>
-                                          <div style={S("display:flex;align-items:center;gap:10px;flex-wrap:wrap")}>
-                                            <span style={S("font-size:14px;color:#3D1C31")}>
-                                              {r.t.prep}
-                                            </span>
-                                            <div role="radiogroup" aria-label={r.t.prep} style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px")}>
-                                              {(r.d.prepSeg as any[]).map((ps: any, __i: number) => (
-                                                <Fragment key={__i}>
-                                                  <button type="button" role="radio" aria-checked={ps.on} onClick={ps.pick} style={S(`height:32px;padding:0 11px;border-radius:8px;font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:${ps.fw};background:${ps.bg};color:${ps.fg}`)}>
-                                                    {ps.label}
-                                                  </button>
-                                                </Fragment>
-                                              ))}
+                                          <div style={S("border-top:1px dashed #ECD9E0;margin-top:8px;padding-top:10px;display:flex;flex-direction:column;gap:5px")}>
+                                            {(r.d.totals as any[]).map((tt: any, __i: number) => (
+                                              <Fragment key={__i}>
+                                                <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:14px;color:#8A5A6E")}>
+                                                  <span>
+                                                    {tt.k}
+                                                  </span>
+                                                  <span dir="ltr" style={S("font-variant-numeric:tabular-nums")}>
+                                                    {tt.v}
+                                                  </span>
+                                                </div>
+                                              </Fragment>
+                                            ))}
+                                            <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:16px;font-weight:600")}>
+                                              <span>
+                                                {r.t.total}
+                                              </span>
+                                              <span dir="ltr" style={S("font-variant-numeric:tabular-nums")}>
+                                                {r.d.total}
+                                              </span>
                                             </div>
                                           </div>
-                                          <div style={S("display:flex;gap:8px;margin-inline-start:auto")}>
-                                            <button type="button" onClick={r.d.startReject} style={S("height:44px;padding:0 16px;border-radius:12px;color:#B42318;font-weight:500;font-size:15px")} className="dch9">
-                                              {r.t.reject}
+                                        </div>
+                                        <div style={S(`padding:16px 0;display:flex;flex-direction:column;gap:4px;min-width:0;border-top:${r.L.dsepTop}`)}>
+                                          <span style={S("font-size:14px;font-weight:600;margin-bottom:6px")}>
+                                            {r.t.customer}
+                                          </span>
+                                          <span style={S("font-size:15px;font-weight:500")}>
+                                            {r.d.name}
+                                          </span>
+                                          <span dir="ltr" style={S("font-size:14px;color:#3D1C31;font-variant-numeric:tabular-nums;text-align:start")}>
+                                            {r.d.phone}
+                                          </span>
+                                          {r.d.isDelivery && (
+                                            <>
+                                            <span style={S("font-size:14px;color:#3D1C31;line-height:1.45;margin-top:4px")}>
+                                              {r.d.addr}
+                                            </span>
+                                            </>
+                                          )}
+                                          {r.d.hasNote && (
+                                            <>
+                                            <span style={S("font-size:14px;line-height:1.45;margin-top:8px;color:#8A4B00")}>
+                                              <span style={S("font-weight:600")}>
+                                                {r.t.note}:
+                                              </span>
+                                              {r.d.note}
+                                            </span>
+                                            </>
+                                          )}
+                                          <div style={S("display:flex;flex-wrap:wrap;gap:8px;margin-top:12px")}>
+                                            <button type="button" onClick={r.d.message} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
+                                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                                                <path d="M3.5 16.5 4.6 13A7 7 0 1 1 7.3 15.6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                                              </svg>
+                                              {r.t.msg}
                                             </button>
-                                            <button type="button" onClick={r.d.accept} style={S("height:44px;padding:0 24px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")}>
-                                              {r.t.accept}
+                                            <a href={r.d.tel} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
+                                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                                                <path d="M4 3.5h3l1.5 3.5-2 1.3a9 9 0 0 0 5.2 5.2l1.3-2 3.5 1.5v3a1.5 1.5 0 0 1-1.6 1.5A14 14 0 0 1 2.5 5.1 1.5 1.5 0 0 1 4 3.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                                              </svg>
+                                              {r.t.call}
+                                            </a>
+                                            <button type="button" onClick={r.d.print} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
+                                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                                                <path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                                              </svg>
+                                              {r.t.print}
                                             </button>
                                           </div>
                                         </div>
-                                        </>
-                                      )}
-                                      {r.d.rejecting && (
-                                        <>
-                                        <span style={S("font-size:15px;font-weight:600")}>
-                                          {r.t.rejectQ}
-                                        </span>
-                                        <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
-                                          {(r.d.reasons as any[]).map((rs: any, __i: number) => (
-                                            <Fragment key={__i}>
-                                              <button type="button" onClick={rs.pick} style={S(`height:38px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;background:${rs.bg};color:${rs.fg};border:1px solid ${rs.bd}`)}>
-                                                {rs.label}
-                                              </button>
-                                            </Fragment>
-                                          ))}
-                                        </div>
-                                        <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px")}>
-                                          <span style={S("font-size:13px;color:#8A5A6E;flex:1 1 200px")}>
-                                            {r.t.told}
+                                      </div>
+                                      <div style={S("padding:14px 18px;border-top:1px solid #F3EEF1;display:flex;flex-direction:column;gap:12px")}>
+                                        {r.d.hasFlash && (
+                                          <>
+                                          <span role="status" style={S("display:flex;align-items:center;gap:8px;font-size:14px;color:#16704A;font-weight:500")}>
+                                            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
+                                              <circle cx="10" cy="10" r="9" fill="#16704A" />
+                                              <path d="M6 10.2 8.6 12.8 14 7.4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                            {r.d.flash}
                                           </span>
-                                          <button type="button" onClick={r.d.cancelReject} style={S("height:44px;padding:0 16px;border-radius:12px;font-weight:500;font-size:15px")} className="dch0">
-                                            {r.t.cancel}
-                                          </button>
-                                          <button type="button" onClick={r.d.confirmReject} disabled={!!r.d.noReason} style={S(`height:44px;padding:0 18px;border-radius:12px;background:#B42318;color:#fff;font-weight:600;font-size:15px;opacity:${r.d.rejOp}`)}>
-                                            {r.t.confirmReject}
-                                          </button>
-                                        </div>
-                                        </>
-                                      )}
-                                      {r.d.hasNext && (
-                                        <>
-                                        <div style={S("display:flex;justify-content:flex-end")}>
-                                          <button type="button" onClick={r.d.next} style={S("height:44px;padding:0 24px;border-radius:12px;background:#1A0815;color:#fff;font-weight:600;font-size:15px")} className="dch10">
-                                            {r.d.nextLabel}
-                                          </button>
-                                        </div>
-                                        </>
-                                      )}
-                                      {r.d.closed && (
-                                        <>
-                                        <span style={S(`font-size:15px;font-weight:500;color:${r.d.closedFg}`)}>
-                                          {r.d.closedText}
-                                        </span>
-                                        </>
-                                      )}
-                                    </div>
-                                    </>
-                                  )}
+                                          </>
+                                        )}
+                                        {r.d.isNew && (
+                                          <>
+                                          <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:12px")}>
+                                            <div style={S("display:flex;align-items:center;gap:10px;flex-wrap:wrap")}>
+                                              <span style={S("font-size:14px;color:#3D1C31")}>
+                                                {r.t.prep}
+                                              </span>
+                                              <div role="radiogroup" aria-label={r.t.prep} style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px")}>
+                                                {(r.d.prepSeg as any[]).map((ps: any, __i: number) => (
+                                                  <Fragment key={__i}>
+                                                    <button type="button" role="radio" aria-checked={ps.on} onClick={ps.pick} style={S(`height:32px;padding:0 11px;border-radius:8px;font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:${ps.fw};background:${ps.bg};color:${ps.fg}`)}>
+                                                      {ps.label}
+                                                    </button>
+                                                  </Fragment>
+                                                ))}
+                                              </div>
+                                            </div>
+                                            <div style={S("display:flex;gap:8px;margin-inline-start:auto")}>
+                                              <button type="button" onClick={r.d.startReject} style={S("height:44px;padding:0 16px;border-radius:12px;color:#B42318;font-weight:500;font-size:15px")} className="dch9">
+                                                {r.t.reject}
+                                              </button>
+                                              <button type="button" onClick={r.d.accept} style={S("height:44px;padding:0 24px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")}>
+                                                {r.t.accept}
+                                              </button>
+                                            </div>
+                                          </div>
+                                          </>
+                                        )}
+                                        {r.d.rejecting && (
+                                          <>
+                                          <span style={S("font-size:15px;font-weight:600")}>
+                                            {r.t.rejectQ}
+                                          </span>
+                                          <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
+                                            {(r.d.reasons as any[]).map((rs: any, __i: number) => (
+                                              <Fragment key={__i}>
+                                                <button type="button" onClick={rs.pick} style={S(`height:38px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;background:${rs.bg};color:${rs.fg};border:1px solid ${rs.bd}`)}>
+                                                  {rs.label}
+                                                </button>
+                                              </Fragment>
+                                            ))}
+                                          </div>
+                                          <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px")}>
+                                            <span style={S("font-size:13px;color:#8A5A6E;flex:1 1 200px")}>
+                                              {r.t.told}
+                                            </span>
+                                            <button type="button" onClick={r.d.cancelReject} style={S("height:44px;padding:0 16px;border-radius:12px;font-weight:500;font-size:15px")} className="dch0">
+                                              {r.t.cancel}
+                                            </button>
+                                            <button type="button" onClick={r.d.confirmReject} disabled={!!r.d.noReason} style={S(`height:44px;padding:0 18px;border-radius:12px;background:#B42318;color:#fff;font-weight:600;font-size:15px;opacity:${r.d.rejOp}`)}>
+                                              {r.t.confirmReject}
+                                            </button>
+                                          </div>
+                                          </>
+                                        )}
+                                        {r.d.hasNext && (
+                                          <>
+                                          <div style={S("display:flex;justify-content:flex-end")}>
+                                            <button type="button" onClick={r.d.next} style={S("height:44px;padding:0 24px;border-radius:12px;background:#1A0815;color:#fff;font-weight:600;font-size:15px")} className="dch10">
+                                              {r.d.nextLabel}
+                                            </button>
+                                          </div>
+                                          </>
+                                        )}
+                                        {r.d.closed && (
+                                          <>
+                                          <span style={S(`font-size:15px;font-weight:500;color:${r.d.closedFg}`)}>
+                                            {r.d.closedText}
+                                          </span>
+                                          </>
+                                        )}
+                                      </div>
+                                      </>
+                                    )}
+                                  </div>
+                                </Fragment>
+                              ))}
+                              {vm.ordLoading && (
+                                <>
+                                {vm.loaderNode}
+                                </>
+                              )}
+                              {vm.ord.empty && (
+                                <>
+                                <div style={S("padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;border:1px dashed #ECD9E0;border-radius:14px")}>
+                                  <span style={S("font-size:15px;font-weight:600")}>
+                                    {vm.ord.tabEmpty.title}
+                                  </span>
+                                  <span style={S("font-size:14px;color:#8A5A6E;max-width:360px;line-height:1.45")}>
+                                    {vm.ord.tabEmpty.body}
+                                  </span>
                                 </div>
-                              </Fragment>
-                            ))}
-                            {vm.ordLoading && (
-                              <>
-                              {vm.loaderNode}
-                              </>
-                            )}
-                            {vm.ord.empty && (
-                              <>
-                              <div style={S("padding:40px 20px;text-align:center;font-size:15px;color:#8A5A6E;border:1px dashed #ECD9E0;border-radius:14px")}>
-                                {vm.ord.t.empty}
-                              </div>
-                              </>
-                            )}
-                          </div>
+                                </>
+                              )}
+                            </div>
+                            </>
+                          )}
                         </div>
                         </>
                       )}

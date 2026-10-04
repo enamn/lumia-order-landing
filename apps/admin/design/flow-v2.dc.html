@@ -488,12 +488,27 @@ input::placeholder{color:#B89AA8}
             <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">{{ ord.t.title }}</h1>
             <p style="font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5">{{ ord.t.sub }}</p>
           </div>
+          <sc-if value="{{ ord.hasAny }}" hint-placeholder-val="{{ true }}">
           <label style="flex:0 1 300px;min-width:200px;height:44px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px">
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="flex:none"><circle cx="9" cy="9" r="5.5" stroke="#8A5A6E" stroke-width="1.7"></circle><path d="m13.2 13.2 3.3 3.3" stroke="#8A5A6E" stroke-width="1.7" stroke-linecap="round"></path></svg>
             <input value="{{ ord.q }}" onChange="{{ ord.onQ }}" placeholder="{{ ord.t.search }}" aria-label="{{ ord.t.search }}" style="flex:1;min-width:0;border:0;background:transparent;font-size:15px;height:100%"></input>
           </label>
+          </sc-if>
         </div>
 
+        <sc-if value="{{ ord.noOrders }}" hint-placeholder-val="{{ false }}">
+          <div data-screen-label="06c Orders · empty" style="border:1px solid #F0E4E8;border-radius:20px;padding:56px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px">
+            <span style="width:56px;height:56px;border-radius:16px;background:#FDEAF2;color:#C0284F;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 20 20" fill="none"><path d="M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+            <div style="display:flex;flex-direction:column;gap:6px;max-width:420px">
+              <h2 style="font-size:20px;font-weight:600;letter-spacing:-0.02em">{{ ord.e.title }}</h2>
+              <p style="font-size:15px;color:#8A5A6E;line-height:1.5;text-wrap:pretty">{{ ord.e.body }}</p>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:4px">
+              <button type="button" onClick="{{ ord.e.go }}" style="height:44px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">{{ ord.e.cta }}</button>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ ord.hasAny }}" hint-placeholder-val="{{ true }}">
         <sc-if value="{{ ordErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:14px;color:#B4233B">{{ ordErr }}</div></sc-if>
         <div style="display:flex;gap:8px;overflow-x:auto;flex:none;padding-bottom:2px;scrollbar-width:none">
           <sc-for list="{{ ord.tabs }}" as="tb" hint-placeholder-count="5">
@@ -618,8 +633,14 @@ input::placeholder{color:#B89AA8}
             </div>
           </sc-for>
           <sc-if value="{{ ordLoading }}" hint-placeholder-val="{{ false }}">{{ loaderNode }}</sc-if>
-          <sc-if value="{{ ord.empty }}" hint-placeholder-val="{{ false }}"><div style="padding:40px 20px;text-align:center;font-size:15px;color:#8A5A6E;border:1px dashed #ECD9E0;border-radius:14px">{{ ord.t.empty }}</div></sc-if>
+          <sc-if value="{{ ord.empty }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;border:1px dashed #ECD9E0;border-radius:14px">
+              <span style="font-size:15px;font-weight:600">{{ ord.tabEmpty.title }}</span>
+              <span style="font-size:14px;color:#8A5A6E;max-width:360px;line-height:1.45">{{ ord.tabEmpty.body }}</span>
+            </div>
+          </sc-if>
         </div>
+        </sc-if>
       </div>
       </sc-if>
 
@@ -954,7 +975,7 @@ input::placeholder{color:#B89AA8}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Flow&quot;,&quot;1 Mobile number&quot;,&quot;2 OTP&quot;,&quot;2 OTP · incorrect&quot;,&quot;2 OTP · expired&quot;,&quot;2 Number verified&quot;,&quot;3 Restaurant name&quot;,&quot;4 Menu upload&quot;,&quot;5 AI processing&quot;,&quot;5B Menu ready&quot;,&quot;Dashboard · menu&quot;,&quot;Dashboard · empty menu&quot;,&quot;WA · Connect&quot;,&quot;WA · Connecting&quot;,&quot;WA · Connected&quot;,&quot;WA · Connected, no catalog&quot;,&quot;WA · Import info&quot;,&quot;WA · Review differences&quot;,&quot;WA · Catalog found&quot;,&quot;WA · Replace menu confirm&quot;,&quot;WA · Error&quot;,&quot;WA · Number in use&quot;,&quot;Dashboard · WhatsApp connected&quot;,&quot;WhatsApp page · connected&quot;,&quot;WhatsApp page · disconnect&quot;,&quot;WhatsApp page · disconnected&quot;],&quot;default&quot;:&quot;Flow&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screens&quot;},&quot;viewport&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Auto&quot;,&quot;Mobile frame&quot;],&quot;default&quot;:&quot;Auto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screens&quot;},&quot;otpResult&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Correct&quot;,&quot;Incorrect&quot;,&quot;Expired&quot;],&quot;default&quot;:&quot;Correct&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;waResult&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Success · catalog&quot;,&quot;Success · no catalog&quot;,&quot;Permission cancelled&quot;,&quot;Business unavailable&quot;,&quot;Number already connected&quot;],&quot;default&quot;:&quot;Success · catalog&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;dashLanguage&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;English&quot;,&quot;Arabic&quot;],&quot;default&quot;:&quot;English&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Flow&quot;,&quot;1 Mobile number&quot;,&quot;2 OTP&quot;,&quot;2 OTP · incorrect&quot;,&quot;2 OTP · expired&quot;,&quot;2 Number verified&quot;,&quot;3 Restaurant name&quot;,&quot;4 Menu upload&quot;,&quot;5 AI processing&quot;,&quot;5B Menu ready&quot;,&quot;Dashboard · menu&quot;,&quot;Dashboard · empty menu&quot;,&quot;WA · Connect&quot;,&quot;WA · Connecting&quot;,&quot;WA · Connected&quot;,&quot;WA · Connected, no catalog&quot;,&quot;WA · Import info&quot;,&quot;WA · Review differences&quot;,&quot;WA · Catalog found&quot;,&quot;WA · Replace menu confirm&quot;,&quot;WA · Error&quot;,&quot;WA · Number in use&quot;,&quot;Dashboard · WhatsApp connected&quot;,&quot;WhatsApp page · connected&quot;,&quot;WhatsApp page · disconnect&quot;,&quot;WhatsApp page · disconnected&quot;,&quot;Orders · list&quot;,&quot;Orders · no orders yet&quot;,&quot;Orders · no orders, WhatsApp not connected&quot;],&quot;default&quot;:&quot;Flow&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screens&quot;},&quot;viewport&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Auto&quot;,&quot;Mobile frame&quot;],&quot;default&quot;:&quot;Auto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screens&quot;},&quot;otpResult&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Correct&quot;,&quot;Incorrect&quot;,&quot;Expired&quot;],&quot;default&quot;:&quot;Correct&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;waResult&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Success · catalog&quot;,&quot;Success · no catalog&quot;,&quot;Permission cancelled&quot;,&quot;Business unavailable&quot;,&quot;Number already connected&quot;],&quot;default&quot;:&quot;Success · catalog&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;dashLanguage&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;English&quot;,&quot;Arabic&quot;],&quot;default&quot;:&quot;English&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
 const COUNTRIES = [
   { flag: '🇦🇪', name: 'United Arab Emirates', dial: '+971', len: 9, groups: [2,3,4], ex: '50 123 4567', re: /^5[024568]\d{7}$/, label: 'UAE' },
   { flag: '🇸🇦', name: 'Saudi Arabia', dial: '+966', len: 9, groups: [2,3,4], ex: '50 123 4567', re: /^5\d{8}$/, label: 'Saudi' },
@@ -1020,6 +1041,9 @@ const SCREENS = {
   'WhatsApp page · connected': D({ page: 'WhatsApp', waStatus: 'connected' }),
   'WhatsApp page · disconnect': D({ page: 'WhatsApp', waStatus: 'connected', confirmDisc: true }),
   'WhatsApp page · disconnected': D({ page: 'WhatsApp', waStatus: 'disconnected' }),
+  'Orders · list': D({ page: 'Orders', waStatus: 'connected', ordersSet: 'full' }),
+  'Orders · no orders yet': D({ page: 'Orders', waStatus: 'connected', ordersSet: 'none' }),
+  'Orders · no orders, WhatsApp not connected': D({ page: 'Orders', ordersSet: 'none' }),
 };
 const SETTINGS = 'Lumia Order Restaurant Settings.dc.html';
 const goSettings = (hash) => { window.location.href = SETTINGS + (hash ? '#' + hash : ''); };
@@ -1078,7 +1102,7 @@ class Component extends DCLogic {
     if (!sc) { this.setState({ step: 'phone' }); return; }
     const base = { num: '501234567', cc: 0, invalid: false, sending: false, ccOpen: false, digits: '', otpErr: null, verifying: false, note: null, name: 'Burger House', nameErr: false, phase: 0, shown: 0, cat: 'All', fileName: 'burger-house-menu.pdf', ...WA_BASE };
     const resendAt = Date.now() + (sc.resendIn ?? 30) * 1000;
-    this.setState({ ...base, ...sc, resendAt, now: Date.now() });
+    this.setState({ ...base, ...sc, resendAt, now: Date.now(), ...(sc.ordersSet ? { orders: sc.ordersSet === 'none' ? [] : ORDERS, ordTab: 'new', ordSel: sc.ordersSet === 'none' ? null : 1048, ordQ: '' } : {}) });
     if (sc.step === 'otp' && !sc.otpErr) this.focus(this.otpRef);
     if (sc.step === 'phone') this.focus(this.phoneRef);
   }
@@ -1159,7 +1183,11 @@ class Component extends DCLogic {
       t: { title: A('Orders', 'الطلبات'), sub: A('WhatsApp orders, newest first.', 'طلبات واتساب، الأحدث أولاً.'), search: A('Search order # or customer', 'ابحث برقم الطلب أو اسم العميل'), empty: A('No orders here right now.', 'لا توجد طلبات هنا حالياً.'), pick: A('Select an order to see its details.', 'اختر طلباً لعرض تفاصيله.'), back: A('All orders', 'كل الطلبات'),
         prep: A('Ready in', 'جاهز خلال'), accept: A('Accept order', 'قبول الطلب'), reject: A('Reject', 'رفض'), rejectQ: A('Why are you rejecting this order?', 'لماذا ترفض هذا الطلب؟'), told: A('Lumia AI will tell the customer on WhatsApp.', 'سيُبلغ Lumia AI العميل على واتساب.'), confirmReject: A('Reject order', 'تأكيد الرفض'), cancel: A('Cancel', 'إلغاء'),
         print: A('Print receipt', 'طباعة الإيصال'), msg: A('Message', 'مراسلة'), call: A('Call', 'اتصال'), customer: A('Customer', 'العميل'), note: A('Customer note', 'ملاحظة العميل'), items: A('Items', 'الأصناف'), total: A('Total', 'الإجمالي'), progress: A('Progress', 'سير الطلب') },
-      tabs, rows, empty: rows.length === 0, q: s.ordQ, onQ: (e) => this.setState({ ordQ: e.target.value, ordMobile: false }),
+      tabs, rows, empty: rows.length === 0, hasAny: os.length > 0, noOrders: os.length === 0,
+      e: (s.waStatus === 'connected') ? { title: A('No orders yet', 'لا توجد طلبات بعد'), body: A('When a customer orders on WhatsApp, the order shows up here and you get an alert to accept it.', 'عندما يطلب عميل عبر واتساب، يظهر الطلب هنا وتصلك تنبيه لقبوله.'), cta: A('Send a test order', 'أرسل طلباً تجريبياً'), go: () => this.setState({ orders: [{ ...ORDERS[0], min: 0, placed: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) }], ordTab: 'new', ordSel: ORDERS[0].id }) }
+        : { title: A('No orders yet', 'لا توجد طلبات بعد'), body: A('Connect your WhatsApp number so customers can order. New orders will show up here.', 'اربط رقم واتساب ليتمكن العملاء من الطلب. ستظهر الطلبات الجديدة هنا.'), cta: A('Connect WhatsApp', 'ربط واتساب'), go: () => this.openWA() },
+      tabEmpty: q ? { title: A('No matching orders', 'لا توجد نتائج'), body: A('Try another order number, name or phone.', 'جرّب رقم طلب أو اسم أو هاتف آخر.') }
+        : ({ new: [A('No new orders', 'لا توجد طلبات جديدة'), A('New WhatsApp orders appear here for you to accept.', 'تظهر هنا طلبات واتساب الجديدة لقبولها.')], preparing: [A('Nothing in the kitchen', 'لا شيء قيد التحضير'), A('Accepted orders appear here while they are prepared.', 'تظهر هنا الطلبات المقبولة أثناء التحضير.')], ready: [A('No orders ready', 'لا توجد طلبات جاهزة'), A('Orders marked ready wait here for pickup or a driver.', 'تنتظر هنا الطلبات الجاهزة للاستلام أو التوصيل.')], out: [A('No orders on the way', 'لا توجد طلبات في الطريق'), A('Orders sent out for delivery appear here.', 'تظهر هنا الطلبات التي خرجت للتوصيل.')], done: [A('No completed orders yet', 'لا توجد طلبات مكتملة'), A('Delivered, picked up and rejected orders appear here.', 'تظهر هنا الطلبات المسلّمة والمرفوضة.')] }[s.ordTab] || ['', '']).reduce((a, v, i) => (i ? { ...a, body: v } : { title: v }), {}), q: s.ordQ, onQ: (e) => this.setState({ ordQ: e.target.value, ordMobile: false }),
       cols: narrow ? 'minmax(0,1fr)' : 'minmax(260px,320px) minmax(0,1fr)', dcols: narrow ? 'minmax(0,1fr)' : 'minmax(0,1fr) minmax(0,1.25fr)', dsep: narrow ? '0' : '1px solid #F3EEF1', dsepTop: narrow ? '1px solid #F3EEF1' : '0', showList: !narrow || !s.ordMobile, showDetail: !!o && (!narrow || s.ordMobile), noSel: !o && !narrow, backBtn: narrow, back: () => this.setState({ ordMobile: false }), flip: ar ? -1 : 1,
     };
     rows.forEach(r => { r.t = ord.t; r.L = { dcols: ord.dcols, dsep: ord.dsep, dsepTop: ord.dsepTop }; r.d = {}; });

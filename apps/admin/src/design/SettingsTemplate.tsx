@@ -299,7 +299,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                               <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                 Default language
                               </span>
-                              <div role="radiogroup" aria-label="Default language" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;align-self:flex-start")}>
+                              <div role="radiogroup" aria-label="Default language" style={S("display:flex;flex-wrap:wrap;max-width:100%;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;align-self:flex-start")}>
                                 {(vm.langSeg as any[]).map((o: any, __i: number) => (
                                   <Fragment key={__i}>
                                     <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`height:34px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:${o.fw};background:${o.bg};color:${o.fg};box-shadow:${o.sh}`)}>
@@ -436,7 +436,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                             Branch status
                           </span>
-                          <div role="radiogroup" aria-label="Branch status" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;align-self:flex-start")}>
+                          <div role="radiogroup" aria-label="Branch status" style={S("display:flex;flex-wrap:wrap;max-width:100%;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;align-self:flex-start")}>
                             {(vm.nbStatus as any[]).map((o: any, __i: number) => (
                               <Fragment key={__i}>
                                 <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`height:38px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:${o.fw};background:${o.bg};color:${o.fg};box-shadow:${o.sh}`)}>
@@ -1362,7 +1362,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                             Branches
                           </span>
-                          <div role="radiogroup" aria-label="Branch hours" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px")}>
+                          <div role="radiogroup" aria-label="Branch hours" style={S("display:flex;flex-wrap:wrap;max-width:100%;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px")}>
                             {(vm.scopeSeg as any[]).map((o: any, __i: number) => (
                               <Fragment key={__i}>
                                 <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`height:34px;padding:0 14px;border-radius:8px;font-size:14px;white-space:nowrap;font-weight:${o.fw};background:${o.bg};color:${o.fg};box-shadow:${o.sh}`)}>
