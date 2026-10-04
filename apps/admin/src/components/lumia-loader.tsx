@@ -13,7 +13,7 @@ export function LumiaLoader({ size = 24, light = false, label }: { size?: number
   </svg>;
 }
 
-// One loader for every dashboard page: the Lumia mark centred in the content area on a soft pink-to-violet glow.
+// Page-loading loader: the Lumia mark in the centre of the screen on a soft pink-to-violet glow (same look as PageLoader).
 export function ContentLoader({ label = "Loading" }: { label?: string }) {
   return <div className="content-loader" role="status" aria-live="polite" aria-label={label}><LumiaLoader size={64}/></div>;
 }
@@ -21,5 +21,5 @@ export function ContentLoader({ label = "Loading" }: { label?: string }) {
 // Full-screen loader: the Lumia mark centred on the screen while an action runs. Blocks interaction underneath.
 export function PageLoader({ show, label }: { show: boolean; label?: string }) {
   if (!show) return null;
-  return <div className="page-loader" role="status" aria-live="polite" aria-label={label ?? "Loading"}><LumiaLoader size={88}/>{label && <p>{label}</p>}</div>;
+  return <div className="page-loader" role="status" aria-live="polite" aria-label={label ?? "Loading"}><LumiaLoader size={72}/>{label && <p>{label}</p>}</div>;
 }

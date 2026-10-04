@@ -348,6 +348,6 @@ export function SettingsLoader({ businessId, query }: { businessId: string; quer
     return () => { live = false; clearTimeout(t); };
   }, [businessId]);
   if (error) return <div className="dc" style={{ padding: 32, color: "#B42318", fontSize: 15 }}>{error}</div>;
-  if (!initial) return <div className="dc" style={{ height: "100%", display: "flex", opacity: slow ? 1 : 0, transition: "opacity .2s" }}><ContentLoader/></div>;
+  if (!initial) return <div className="dc" style={{ opacity: slow ? 1 : 0, transition: "opacity .2s" }}><ContentLoader/></div>;
   return <SettingsApp businessId={businessId} query={query} initial={initial}/>;
 }
