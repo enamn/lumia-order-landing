@@ -19,7 +19,6 @@ rep('''    </label>
     <sc-if value="{{ menuErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="margin-top:12px;''' + ERR + '''">{{ menuErr }}</div></sc-if>
     <div style="flex:{{ L.spacer }};min-height:28px"></div>''')
 # 3 hide the Today card until messages/orders are stored
-i = s.index('<span style="font-family')  # placeholder to keep linters quiet
 j = s.index('{{ waToday }}'); k = s.rfind('<sc-if value="{{ waIsConnected }}"', 0, j)
 s = s[:k] + '<!-- LUMIA-EXT today hidden --><sc-if value="{{ waShowToday }}"' + s[k + len('<sc-if value="{{ waIsConnected }}"'):]
 # 4 ready step: confirm error

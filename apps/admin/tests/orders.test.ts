@@ -3,7 +3,7 @@ import { db } from "../src/server/db";
 import { ensureMongoIndexes } from "../scripts/mongo-indexes";
 import { encryptSecret } from "../src/server/crypto";
 import { createBusiness, setMember } from "../src/modules/business/service";
-import { recordInbound, getMessageStats } from "../src/modules/messages/inbound";
+import { recordInbound, getMessageStats, getOverview } from "../src/modules/messages/inbound";
 import { setAiSettings } from "../src/modules/messages/ai";
 import { listOrders, setOrderStatus } from "../src/modules/orders/service";
 import { draftKey, resolveDraft, summaryText, type MenuEntry } from "../src/modules/orders/draft";
@@ -117,5 +117,14 @@ describe.skipIf(!enabled)("taking orders over WhatsApp", () => {
     await db.message.updateMany({ where: { direction: "INBOUND", conversation: { orders: { some: { id: o.id } } } }, data: { createdAt: new Date(Date.now() - 30 * 3600 * 1000) } }); calls = [];
     await setOrderStatus(owner, biz, o.id, { status: "ACCEPTED" }, "t"); expect(sent()).toEqual([]);
     expect((await db.order.findFirstOrThrow({ where: { id: o.id } })).status).toBe("ACCEPTED");
+  });
+  it("summarises orders, revenue, chats and top items for the Overview page, only for members", async () => {
+    const week = await getOverview(owner, biz, "week", 0);
+    const total = await db.order.aggregate({ where: { businessId: biz, status: { in: ["AWAITING_BUSINESS_CONFIRMATION", "ACCEPTED", "PREPARING", "READY", "OUT_FOR_DELIVERY", "COMPLETED"] } }, _sum: { totalMinor: true }, _count: true });
+    expect(week.current.orders).toBe(total._count); expect(week.current.revenueMinor).toBe(total._sum.totalMinor ?? 0);
+    expect(week.current.avgMinor).toBe(Math.round((total._sum.totalMinor ?? 0) / Math.max(1, total._count))); expect(week.current.chats).toBeGreaterThan(0);
+    expect(week.buckets).toHaveLength(7); expect(week.buckets.reduce((t, b) => t + b.orders, 0)).toBe(week.current.orders); expect(week.top[0]).toMatchObject({ name: "Classic" });
+    expect((await getOverview(owner, biz, "bogus", 0)).period).toBe("week"); expect((await getOverview(owner, biz, "today", 0)).buckets).toHaveLength(6);
+    await expect(getOverview(crypto.randomUUID(), biz, "week", 0)).rejects.toBeTruthy();
   });
 });

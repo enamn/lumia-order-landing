@@ -4,7 +4,7 @@ import { extractMenu, confirmImport } from "@/modules/menu/import";
 import { setLanguage } from "@/modules/auth/profile";
 import { connectWhatsApp, getWhatsAppStatus, getImportInfo, applyImport, useCatalog, disconnectWhatsApp } from "@/modules/whatsapp/link";
 import { createMessageTemplate } from "@/modules/whatsapp/templates";
-import { getMessageStats, listConversations } from "@/modules/messages/inbound";
+import { getMessageStats, getOverview, listConversations } from "@/modules/messages/inbound";
 import { getConversation, sendReply } from "@/modules/messages/reply";
 import { getAiSettings, setAiSettings } from "@/modules/messages/ai";
 import { listOrders, setOrderStatus } from "@/modules/orders/service";
@@ -43,6 +43,7 @@ async function handle(request: Request, context: Context) {
     if (section === "whatsapp") {
       if (method === "GET" && path.length === 3) return getWhatsAppStatus(userId, businessId);
       if (method === "GET" && subId === "stats" && path.length === 4) return getMessageStats(userId, businessId);
+      if (method === "GET" && subId === "overview" && path.length === 4) { const q = new URL(request.url).searchParams; return getOverview(userId, businessId, q.get("period") ?? "week", Number(q.get("tz") ?? 0)); }
       if (method === "POST" && subId === "connect" && path.length === 4) return connectWhatsApp(userId, businessId, await jsonBody(request), requestId);
       if (method === "GET" && subId === "import" && path.length === 4) return getImportInfo(userId, businessId);
       if (method === "POST" && subId === "import" && subId2 === "apply" && path.length === 5) return applyImport(userId, businessId, await jsonBody(request), requestId);

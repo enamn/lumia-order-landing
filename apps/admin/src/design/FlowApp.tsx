@@ -25,7 +25,7 @@ export interface FlowProps {
   wa: { status: "none" | "connected" | "disconnected"; displayPhoneNumber: string; verifiedName: string };
   meta: { appId: string; configId: string; graphVersion: string };
   marketingUrl: string;
-  initialPage?: "Menu" | "WhatsApp";
+  initialPage?: "Overview" | "Menu" | "WhatsApp";
 }
 export interface MenuCat { id: string; name: string; nameAr: string; items: { id: string; name: string; nameAr: string; priceMinor: number; isAvailable: boolean }[] }
 type Item = { id: string; n: string; ar: string; p: number; on: boolean };
@@ -33,7 +33,7 @@ type Cat = { id: string; cat: string; catAr: string; items: Item[] };
 type Draft = { cat: string; catAr: string; arOnly: boolean; items: { n: string; ar: string; arOnly: boolean; p: string; flag: boolean }[] };
 
 const PHASES = ["Reading your menu", "Finding categories", "Extracting items and prices", "Organizing your menu"];
-const NAV_AR: Record<string, string> = { Orders: "الطلبات", Menu: "القائمة", Messages: "الرسائل", WhatsApp: "واتساب", Customers: "العملاء", Delivery: "التوصيل", Settings: "الإعدادات", "Sign out": "تسجيل الخروج" };
+const NAV_AR: Record<string, string> = { Overview: "نظرة عامة", Orders: "الطلبات", Menu: "القائمة", Messages: "الرسائل", WhatsApp: "واتساب", Customers: "العملاء", Delivery: "التوصيل", Settings: "الإعدادات", "Sign out": "تسجيل الخروج" };
 const T_EN = { menu: "Menu", items: "items", categories: "categories", created: "Created by Lumia AI", addItem: "Add item", search: "Search items", all: "All items", soldOut: "Sold out", addAr: "Add Arabic name", noResults: "No items match your search.", setupTitle: "Get Lumia ready to receive orders", continueSetup: "Continue setup", setup: ["Restaurant created", "Menu added", ["Connect WhatsApp", "WhatsApp connected"], "Set delivery & order settings", "Test Lumia"] as any[] };
 const T_AR = { menu: "القائمة", items: "صنف", categories: "فئات", created: "أنشأتها Lumia AI", addItem: "إضافة صنف", search: "ابحث عن صنف", all: "كل الأصناف", soldOut: "نفد", addAr: "أضف الاسم بالعربية", noResults: "لا توجد أصناف مطابقة لبحثك.", setupTitle: "جهّز Lumia لاستقبال الطلبات", continueSetup: "متابعة الإعداد", setup: ["تم إنشاء المطعم", "تمت إضافة القائمة", ["ربط واتساب", "تم ربط واتساب"], "إعداد التوصيل والطلبات", "تجربة Lumia"] as any[] };
 const aed = (p: number | string) => "AED " + p;
@@ -64,7 +64,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu)) > 0, cat: "All", menu: toCats(props.menu), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
-      page: props.initialPage ?? "Menu", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
+      page: props.initialPage ?? "Overview", period: "week", overview: null as any, wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
       lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
     };
   }
@@ -77,6 +77,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     this.tick = setInterval(() => { if (this.state.step === "otp") this.setState({ now: Date.now() }); }, 1000);
     this.statsTimer = setInterval(() => { if (this.state.step === "dash" && this.state.page === "WhatsApp" && this.state.waStatus === "connected") this.loadStats(); }, 15000);
     if (this.state.step === "dash" && this.state.page === "WhatsApp") this.loadStats();
+    if (this.state.step === "dash" && this.state.page === "Overview") this.loadOverview();
     if (this.state.step === "phone") this.focus(this.phoneRef); if (this.state.step === "name") this.focus(this.nameRef);
   }
   componentWillUnmount() { window.removeEventListener("resize", this.onResize); this.ro?.disconnect(); clearInterval(this.tick); clearInterval(this.statsTimer); this.clearTimers(); }
@@ -92,6 +93,27 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   async refreshMenu() {
     const data: MenuCat[] = await api(`/api/v1/businesses/${this.state.businessId}/menu`);
     const menu = toCats(data); this.setState({ menu, menuDone: count(menu) > 0 });
+  }
+  loadOverview = (period = this.state.period) => { if (this.state.businessId) api(`/api/v1/businesses/${this.state.businessId}/whatsapp/overview?period=${period}&tz=${new Date().getTimezoneOffset()}`).then(overview => { if (this.state.period === period) this.setState({ overview }); }).catch(() => undefined); };
+  overviewVm(ar: boolean, narrow: boolean) {
+    const s = this.state, o = s.overview, loc = ar ? "ar" : "en-US", f = (n: number) => n.toLocaleString(loc), cur = o?.currency ?? "AED", money = (m: number) => `${cur} ${f(Math.round(m / 100))}`;
+    const nm = s.name || "your restaurant", period: string = s.period, cu = o?.current, pv = o?.previous;
+    const pct = (a: number, b: number) => b > 0 ? Math.round((a - b) / b * 100) : null;
+    const vs = ar ? "عن الفترة السابقة" : period === "today" ? "vs yesterday" : "vs previous period";
+    const delta = (a: number, b: number) => { const d = pct(a, b); return d === null ? { d: "—", c: "#8A5A6E" } : { d: `${d > 0 ? "+" : d < 0 ? "−" : ""}${f(Math.abs(d))}%`, c: d < 0 ? "#B42318" : "#16704A" }; };
+    const K = ar ? ["الطلبات", "الإيرادات", "متوسط الطلب", "محادثات واتساب"] : ["Orders", "Revenue", "Average order", "WhatsApp chats"];
+    const vals = cu ? [f(cu.orders), money(cu.revenueMinor), money(cu.avgMinor), f(cu.chats)] : ["–", "–", "–", "–"];
+    const ds = cu && pv ? [delta(cu.orders, pv.orders), delta(cu.revenueMinor, pv.revenueMinor), delta(cu.avgMinor, pv.avgMinor), delta(cu.chats, pv.chats)] : [0, 1, 2, 3].map(() => ({ d: "", c: "#8A5A6E" }));
+    const seg = [["today", ar ? "اليوم" : "Today"], ["week", ar ? "٧ أيام" : "7 days"], ["month", ar ? "٣٠ يوماً" : "30 days"]].map(([v, label]) => { const on = period === v; return { label, on, fw: on ? 600 : 500, bg: on ? "#fff" : "transparent", fg: on ? "#1A0815" : "#8A5A6E", sh: on ? "0 1px 3px rgba(26,8,21,.12)" : "none", pick: () => { this.setState({ period: v, overview: null }); this.loadOverview(v); } }; });
+    const buckets: { start: string; orders: number }[] = o?.buckets ?? [], mx = Math.max(1, ...buckets.map(b => b.orders));
+    const label = (iso: string) => { const d = new Date(iso); return period === "today" ? d.toLocaleTimeString(loc, { hour: "numeric" }) : period === "week" ? d.toLocaleDateString(loc, { weekday: "short" }) : d.toLocaleDateString(loc, { month: "short", day: "numeric" }); };
+    return {
+      ov: ar ? { title: "نظرة عامة", sub: "أداء مطعمك على واتساب.", orders: "الطلبات", top: "الأكثر طلباً" } : { title: "Overview", sub: `How ${nm} is doing on WhatsApp.`, orders: "Orders", top: "Top items" },
+      periodSeg: seg,
+      stats: K.map((k, i) => ({ k, v: vals[i], d: ds[i].d ? `${ds[i].d} ${vs}` : "", dfg: ds[i].c })),
+      bars: buckets.map((b, i) => ({ l: label(b.start), h: Math.max(4, Math.round(b.orders / mx * 128)) + "px", bg: i === buckets.length - 1 ? "linear-gradient(180deg,#FF5577,#C93DFF)" : "#F3D6E2", tip: `${b.orders} ${ar ? "طلب" : "orders"}` })),
+      topItems: (o?.top ?? []).map((t: any, i: number) => ({ n: i + 1, name: t.name, q: f(t.sold) + (ar ? " مباع" : " sold"), bt: i ? "1px solid #F3EEF1" : "0" })),
+    };
   }
   loadStats = () => { if (this.state.businessId) api(`/api/v1/businesses/${this.state.businessId}/whatsapp/stats`).then(stats => this.setState({ stats })).catch(() => undefined); };
   async refreshBusiness() {
@@ -259,7 +281,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const fullCard = { cardW: "100%", cardMinH: "100%", cardBd: "0", cardRadius: "0", cardShadow: "none", spacer: "1", headTop: "36px", stAlign: "stretch", stPad: "0", previewH: "240px", dashPadX: "20px", dashPad: "20px 20px 40px" };
     const L: any = narrow ? { pageBg: "#fff", pageAlign: "stretch", pagePad: "0", devW: "100%", devH: "auto", devMinH: "100dvh", devRadius: "0", devBd: "0", devShadow: "none", devOv: "visible", devBg: "#fff", ...fullCard, cardPad: "20px 20px calc(20px + env(safe-area-inset-bottom))" }
       : { pageBg: isDash ? "#fff" : wash, pageAlign: "stretch", pagePad: "0", devW: "100%", devH: "auto", devMinH: "100vh", devRadius: "0", devBd: "0", devShadow: "none", devOv: "visible", devBg: "transparent", cardW: wide ? "540px" : "448px", cardMinH: s.step === "verified" ? "420px" : "auto", cardBd: "1px solid #ECD9E0", cardRadius: "24px", cardShadow: "0 1px 2px rgba(26,8,21,.04), 0 30px 80px -40px rgba(138,32,64,.28)", cardPad: "40px", spacer: "0", headTop: "32px", stAlign: "center", stPad: "64px 24px", previewH: "260px", dashPadX: "28px", dashPad: "28px 32px 48px" };
-    Object.assign(L, stickL); L.devTf = "none"; L.drawerW = narrow ? "100%" : "460px"; L.secTop = "0px"; L.dashH = "100dvh"; // v2: the dashboard fills the screen and only its content area scrolls
+    Object.assign(L, stickL); L.devTf = "none"; L.drawerW = narrow ? "100%" : "460px"; L.secTop = "0px"; L.split2 = narrow ? "minmax(0,1fr)" : "minmax(0,1.6fr) minmax(0,1fr)"; L.dashH = "100dvh"; // v2: the dashboard fills the screen and only its content area scrolls
     const ring = (err: boolean, foc: boolean, busy: boolean) => err ? { bd: "#B4233B", ring: "0 0 0 4px rgba(180,35,59,.12)", bg: "#fff", op: 1 } : foc && !busy ? { bd: "#FF5577", ring: "0 0 0 4px rgba(255,85,119,.14)", bg: "#fff", op: 1 } : { bd: "#E3CBD4", ring: "none", bg: busy ? "#FBF3F8" : "#fff", op: busy ? 0.7 : 1 };
     const masked = maskPhone(s.e164 || p.userPhone || c.dial + " " + fmt("501234567", c.groups));
     const remain = Math.max(0, Math.ceil((s.resendAt - s.now) / 1000)); const expired = s.otpErr === "expired"; const activeIdx = Math.min(s.digits.length, 5);
@@ -313,7 +335,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       .map((r, i) => ({ ...r, bt: i ? "1px solid #F3EEF1" : "0", tagBg: r.tag === "New" ? "#E4F4EC" : "#FFF4E5", tagFg: r.tag === "New" ? "#16704A" : "#8A4B00" }));
     const dlg = s.dlg.open ? { open: true, title: s.dlg.title, hint: s.dlg.hint, error: s.dlg.error, busy: s.dlg.busy, op: s.dlg.busy ? 0.6 : 1, saveLabel: s.dlg.busy ? "Saving…" : s.dlg.saveLabel, cancel: this.closeDialog, submit: this.submitDialog,
       fields: s.dlg.fields.map((f: any, i: number) => ({ label: f.label, placeholder: f.placeholder, dir: f.dir ?? "ltr", mode: f.mode ?? "text", focus: i === 0, value: s.dlg.values[f.key] ?? "", onChange: (e: any) => this.setState((st: any) => ({ dlg: { ...st.dlg, values: { ...st.dlg.values, [f.key]: e.target.value } } })) })) } : { open: false, fields: [] };
-    const NAV: [string, string][] = [["Orders", "M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0"], ["Menu", "M5 4.5h10M5 10h10M5 15.5h6"], ["WhatsApp", "M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z"], ["Messages", "M4 5.5h12v8H9l-3.5 3v-3H4z"], ["Customers", "M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5"], ["Delivery", "M10 17s-5.5-4.6-5.5-9a5.5 5.5 0 0 1 11 0c0 4.4-5.5 9-5.5 9zM10 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"], ["Settings", "M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4"], ["Sign out", "M8 4.5H5.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H8M12.5 7l3 3-3 3M15.5 10H8.5"]];
+    const NAV: [string, string][] = [["Overview", "M3 10.5 10 4l7 6.5M5 9v7.5h10V9"], ["Orders", "M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0"], ["Menu", "M5 4.5h10M5 10h10M5 15.5h6"], ["WhatsApp", "M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z"], ["Messages", "M4 5.5h12v8H9l-3.5 3v-3H4z"], ["Customers", "M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5"], ["Settings", "M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4"], ["Sign out", "M8 4.5H5.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H8M12.5 7l3 3-3 3M15.5 10H8.5"]];
     const noop = (e?: any) => e?.preventDefault?.();
     return {
       termsUrl: `${p.marketingUrl}/terms`, privacyUrl: `${p.marketingUrl}/privacy`,
@@ -351,11 +373,11 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       q: s.q, hasQ: !!s.q, onSearch: (e: any) => this.setState({ q: e.target.value }), clearSearch: () => this.setState({ q: "" }), sections, noResults: sections.length === 0, dashErr: s.dashErr,
       cats: [["All", T.all, count(M)], ...M.map(g => [g.id, catName(g), g.items.length])].map(([k, label, n]: any) => { const on = !q && s.cat === k; return { label, count: n, on, pick: () => this.setState({ cat: k, q: "" }), bg: on ? "#FDEAF2" : "transparent", fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, countFg: on ? "#8A2040" : "#8A5A6E", chipBg: on ? "#1A0815" : "#fff", chipFg: on ? "#fff" : "#3D1C31", chipBd: on ? "#1A0815" : "#ECD9E0" }; }),
       menuDone: s.menuDone && count(M) > 0, menuEmpty: !(s.menuDone && count(M) > 0), dashNarrow: narrow, dashWide: !narrow, openAddItem: p.canEdit ? this.openAddItem : noop, dlg,
-      nav: NAV.map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e: any) => { e?.preventDefault?.(); if (l === "Menu" || l === "WhatsApp") { this.setState({ page: l }); if (l === "WhatsApp") this.loadStats(); } else if (l === "Orders") window.location.assign(`/dashboard/orders?businessId=${this.state.businessId}`); else if (l === "Messages") window.location.assign(`/dashboard/messages?businessId=${this.state.businessId}`); else if (l === "Settings") window.location.assign("/dashboard/settings"); else if (l === "Sign out") this.signOut(); }, fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, bg: on ? "#FDEAF2" : "transparent", bd: on ? "#FF5577" : "transparent" }; }),
+      nav: NAV.map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e: any) => { e?.preventDefault?.(); if (l === "Overview" || l === "Menu" || l === "WhatsApp") { this.setState({ page: l }); if (l === "WhatsApp") this.loadStats(); if (l === "Overview") this.loadOverview(); } else if (l === "Orders") window.location.assign(`/dashboard/orders?businessId=${this.state.businessId}`); else if (l === "Messages") window.location.assign(`/dashboard/messages?businessId=${this.state.businessId}`); else if (l === "Settings") window.location.assign("/dashboard/settings"); else if (l === "Sign out") this.signOut(); }, fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, bg: on ? "#FDEAF2" : "transparent", bd: on ? "#FF5577" : "transparent" }; }),
       setup: setupItems.map(([label0, done, fn], i) => { const lb = T.setup[i]; const label = Array.isArray(lb) ? lb[done ? 1 : 0] : lb; return { label, done, todo: !done, fg: done ? "#1A0815" : "#3D1C31", ul: !done && fn ? "underline" : "none", pick: fn || this.noopFn, bar: i < doneN ? "#16704A" : "rgba(26,8,21,.12)" }; }),
       setupLabel: ar ? `${doneN} من 5 مكتملة` : `${doneN} of 5 completed`, waSetupLabel: `${doneN} of 5 completed`,
       // whatsapp
-      pageMenu: s.page === "Menu", pageWA: s.page === "WhatsApp", waOpen: !!s.wa, wa: { intro: s.wa === "intro", connecting: s.wa === "connecting", success: s.wa === "success", import: s.wa === "import", review: s.wa === "review", catalog: s.wa === "catalog", error: s.wa === "error", inUse: s.wa === "inUse" },
+      pageMenu: s.page === "Menu", pageOverview: s.page === "Overview", ...this.overviewVm(ar, narrow), pageWA: s.page === "WhatsApp", waOpen: !!s.wa, wa: { intro: s.wa === "intro", connecting: s.wa === "connecting", success: s.wa === "success", import: s.wa === "import", review: s.wa === "review", catalog: s.wa === "catalog", error: s.wa === "error", inUse: s.wa === "inUse" },
       waLabel: ({ intro: "08 WhatsApp · Connect", connecting: "08a WhatsApp · Connecting", success: "08b WhatsApp · Connected", import: "08c WhatsApp · Import info", review: "08d WhatsApp · Review differences", catalog: "08e WhatsApp · Catalog found", error: "08g WhatsApp · Error", inUse: "08h WhatsApp · Number in use" } as any)[s.wa] || "08 WhatsApp",
       waClose: () => { this.connectToken++; this.clearTimers(); this.setState({ wa: null, confirmReplace: false }); }, openWA: this.openWA, startConnect: this.startConnect, continueSetup: () => { if (!waOn) this.openWA(); },
       cancelConnect: () => { this.connectToken++; this.setState({ wa: "intro" }); },

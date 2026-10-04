@@ -327,6 +327,16 @@ input::placeholder{color:#B89AA8}
 
     <div style="flex:1;display:flex;min-height:0">
     <main style="flex:1;min-width:0;min-height:0;overflow-y:auto;padding:{{ L.dashPad }};display:flex;flex-direction:column;gap:26px">
+      <sc-if value="{{ pageOverview }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="06 Dashboard · Overview" style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
+        <div style="flex:1 1 280px;min-width:0">
+          <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">{{ ov.title }}</h1>
+          <p style="font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5">{{ ov.sub }}</p>
+        </div>
+        <div role="radiogroup" aria-label="Period" style="display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px">
+          <sc-for list="{{ periodSeg }}" as="o" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="height:34px;padding:0 14px;border-radius:8px;font-size:14px;white-space:nowrap;font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for>
+        </div>
+      </div>
       <section style="border-radius:20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);padding:22px 24px;display:flex;flex-wrap:wrap;gap:18px 32px;align-items:center">
         <div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:12px">
           <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px">
@@ -348,6 +358,39 @@ input::placeholder{color:#B89AA8}
         </div>
         <button type="button" onClick="{{ continueSetup }}" style="height:48px;padding:0 22px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;flex:none;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">{{ t.continueSetup }}</button>
       </section>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px">
+        <sc-for list="{{ stats }}" as="m" hint-placeholder-count="4">
+          <div style="border:1px solid #F0E4E8;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:14px;color:#8A5A6E">{{ m.k }}</span>
+            <span dir="ltr" style="font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;text-align:start">{{ m.v }}</span>
+            <span style="font-size:13px;font-weight:500;color:{{ m.dfg }};font-variant-numeric:tabular-nums">{{ m.d }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:{{ L.split2 }};gap:20px;align-items:start">
+        <section style="border:1px solid #F0E4E8;border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:14px;min-width:0">
+          <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">{{ ov.orders }}</h2>
+          <div style="height:160px;display:flex;align-items:flex-end;gap:10px">
+            <sc-for list="{{ bars }}" as="b" hint-placeholder-count="7">
+              <div title="{{ b.tip }}" style="flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px">
+                <span style="width:100%;max-width:36px;border-radius:6px 6px 2px 2px;height:{{ b.h }};background:{{ b.bg }}"></span>
+                <span style="font-size:12px;color:#8A5A6E;white-space:nowrap">{{ b.l }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+        <section style="border:1px solid #F0E4E8;border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:6px;min-width:0">
+          <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em;margin-bottom:6px">{{ ov.top }}</h2>
+          <sc-for list="{{ topItems }}" as="t" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-top:{{ t.bt }};font-size:15px">
+              <span style="width:20px;font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums">{{ t.n }}</span>
+              <span style="flex:1;min-width:0;font-weight:500">{{ t.name }}</span>
+              <span style="color:#3D1C31;font-variant-numeric:tabular-nums">{{ t.q }}</span>
+            </div>
+          </sc-for>
+        </section>
+      </div>
+      </sc-if>
 
       <!-- LUMIA-EXT dash error -->
       <sc-if value="{{ dashErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:14px;color:#B4233B">{{ dashErr }}</div></sc-if>
@@ -384,7 +427,7 @@ input::placeholder{color:#B89AA8}
           <div style="flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:16px;border-radius:16px">
               <sc-for list="{{ sections }}" as="g" hint-placeholder-count="2">
                 <section style="border:1px solid #F0E4E8;border-radius:16px;overflow:clip">
-                  <header style="position:sticky;top:{{ L.secTop }};z-index:2;background:#FAF6FA;padding:12px 18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;border-bottom:1px solid #F0E4E8">
+                  <header style="position:sticky;top:{{ L.secTop }};z-index:2;background:#F5F4F4;padding:12px 18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;border-bottom:1px solid #E8E6E7">
                     <span style="font-size:16px;font-weight:600">{{ g.name }}</span>
                     <span style="font-size:14px;color:#8A5A6E">{{ g.alt }}</span>
                     <span style="flex:1"></span>
@@ -434,7 +477,7 @@ input::placeholder{color:#B89AA8}
         <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">WhatsApp</h1>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start">
           <div style="background:#FAF6FA;border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:16px">
-            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#8A5A6E">Connection</span>
+            <span style="font-size:14px;font-weight:600;color:#8A5A6E">Connection</span>
             <div style="display:flex;align-items:center;gap:14px">
               <span style="width:48px;height:48px;border-radius:14px;background:#fff;border:1px solid #ECD9E0;display:flex;align-items:center;justify-content:center;flex:none"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="display:block"><path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366"></path><path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff"></path></svg></span>
               <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
@@ -466,7 +509,7 @@ input::placeholder{color:#B89AA8}
           </div>
           <!-- LUMIA-EXT today hidden --><sc-if value="{{ waShowToday }}" hint-placeholder-val="{{ true }}">
             <div style="background:#FAF6FA;border-radius:20px;padding:20px 22px 8px;display:flex;flex-direction:column">
-              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#8A5A6E;padding-bottom:6px">Today</span>
+              <span style="font-size:14px;font-weight:600;color:#8A5A6E;padding-bottom:6px">Today</span>
               <sc-for list="{{ waToday }}" as="t" hint-placeholder-count="3">
                 <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 0;border-top:{{ t.bt }}">
                   <span style="font-size:15px;color:#3D1C31">{{ t.label }}</span>
@@ -535,7 +578,7 @@ input::placeholder{color:#B89AA8}
             <h2 style="font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px;text-wrap:balance">Connect your WhatsApp Business</h2>
             <p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty">Connect the WhatsApp number your customers use to place orders. Lumia will receive messages and help turn them into orders automatically.</p>
             <button type="button" onClick="{{ startConnect }}" style="margin-top:24px;height:54px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Connect WhatsApp</button>
-            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#8A5A6E;margin-top:26px">What happens next</span>
+            <span style="font-size:14px;font-weight:600;color:#8A5A6E;margin-top:26px">What happens next</span>
             <ol style="list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:12px">
               <sc-for list="{{ waSteps }}" as="st" hint-placeholder-count="4">
                 <li style="display:flex;align-items:center;gap:12px;font-size:15px"><span style="width:24px;height:24px;border-radius:50%;border:1.5px solid #ECD9E0;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#8A2040;font-variant-numeric:tabular-nums">{{ st.n }}</span>{{ st.label }}</li>
@@ -790,7 +833,7 @@ const WA_CAT = [
 const WA_ERR = { 'Permission cancelled': 'Permission was cancelled before setup finished.', 'Business unavailable': "The business account you selected isn't available right now." };
 const AR = { 'Classic Burger':'برجر كلاسيك','Chicken Burger':'برجر دجاج','Cheese Burger':'تشيز برجر','Double Smash':'دبل سماش','Mushroom Swiss':'مشروم سويس','Spicy Jalapeño':'برجر هالبينو حار','Beef Bacon Burger':'برجر لحم بيكون','Veggie Burger':'برجر نباتي','Classic Burger Meal':'وجبة برجر كلاسيك','Chicken Burger Meal':'وجبة برجر دجاج','Cheese Burger Meal':'وجبة تشيز برجر','Double Smash Meal':'وجبة دبل سماش','Mushroom Swiss Meal':'وجبة مشروم سويس','Spicy Jalapeño Meal':'وجبة هالبينو حار','Beef Bacon Meal':'وجبة لحم بيكون','Veggie Meal':'وجبة نباتية','Chicken Strips Meal':'وجبة ستربس دجاج','Kids Meal':'وجبة أطفال','Combo for Two':'كومبو لشخصين','Family Box':'بوكس العائلة','Pepsi':'بيبسي','Diet Pepsi':'بيبسي دايت','7Up':'سفن أب','Mirinda':'ميرندا','Water':'ماء','Sparkling Water':'مياه فوارة','Fresh Orange':'عصير برتقال طازج','Lemon Mint':'ليمون بالنعناع','Iced Tea':'شاي مثلج','Milkshake':'ميلك شيك','Chocolate Brownie':'براوني بالشوكولاتة','Cheesecake':'تشيز كيك','Vanilla Sundae':'صنداي فانيلا','Cookie':'كوكيز','Churros':'تشوروز','Apple Pie':'فطيرة التفاح','Fries':'بطاطس مقلية','Curly Fries':'بطاطس كيرلي','Onion Rings':'حلقات البصل','Coleslaw':'كول سلو','BBQ Burger':'برجر باربكيو','Truffle Burger':'برجر ترافل','Classic Combo':'كومبو كلاسيك','Chicken Combo':'كومبو دجاج','Cheese Combo':'كومبو تشيز','Smash Combo':'كومبو سماش','Kids Combo':'كومبو أطفال','Strips Combo':'كومبو ستربس','Veggie Combo':'كومبو نباتي','Loaded Fries':'بطاطس محمّلة','Nuggets':'ناجتس','Brownie':'براوني','Sundae':'صنداي' };
 const CAT_AR = { Burgers: 'برجر', Meals: 'وجبات', Drinks: 'مشروبات', Desserts: 'حلويات', Sides: 'أطباق جانبية', Other: 'إضافات', Combos: 'كومبو' };
-const NAV_AR = { Orders: 'الطلبات', Menu: 'القائمة', WhatsApp: 'واتساب', Customers: 'العملاء', Delivery: 'التوصيل', Settings: 'الإعدادات' };
+const NAV_AR = { Overview: 'نظرة عامة', Orders: 'الطلبات', Menu: 'القائمة', WhatsApp: 'واتساب', Customers: 'العملاء', Delivery: 'التوصيل', Settings: 'الإعدادات' };
 const T_EN = { menu: 'Menu', items: 'items', categories: 'categories', created: 'Created by Lumia AI', addItem: 'Add item', search: 'Search items', all: 'All items', soldOut: 'Sold out', addAr: 'Add Arabic name', noResults: 'No items match your search.', setupTitle: 'Get Lumia ready to receive orders', continueSetup: 'Continue setup', setup: ['Restaurant created', 'Menu added', ['Connect WhatsApp', 'WhatsApp connected'], 'Set delivery & order settings', 'Test Lumia'] };
 const T_AR = { menu: 'القائمة', items: 'صنف', categories: 'فئات', created: 'أنشأتها Lumia AI', addItem: 'إضافة صنف', search: 'ابحث عن صنف', all: 'كل الأصناف', soldOut: 'نفد', addAr: 'أضف الاسم بالعربية', noResults: 'لا توجد أصناف مطابقة لبحثك.', setupTitle: 'جهّز Lumia لاستقبال الطلبات', continueSetup: 'متابعة الإعداد', setup: ['تم إنشاء المطعم', 'تمت إضافة القائمة', ['ربط واتساب', 'تم ربط واتساب'], 'إعداد التوصيل والطلبات', 'تجربة Lumia'] };
 const count = (m) => m.reduce((a, c) => a + c.items.length, 0);
@@ -825,7 +868,9 @@ const SCREENS = {
   'WhatsApp page · disconnect': D({ page: 'WhatsApp', waStatus: 'connected', confirmDisc: true }),
   'WhatsApp page · disconnected': D({ page: 'WhatsApp', waStatus: 'disconnected' }),
 };
-const WA_BASE = { page: 'Menu', wa: null, waStatus: 'none', waErr: null, waCatalog: true, catOpen: false, confirmReplace: false, confirmDisc: false, menuSrc: 'lumia', address: '', choices: {} };
+const SETTINGS = 'Lumia Order Restaurant Settings.dc.html';
+const goSettings = (hash) => { window.location.href = SETTINGS + (hash ? '#' + hash : ''); };
+const WA_BASE = { page: 'Overview', period: 'week', wa: null, waStatus: 'none', waErr: null, waCatalog: true, catOpen: false, confirmReplace: false, confirmDisc: false, menuSrc: 'lumia', address: '', choices: {} };
 
 class Component extends DCLogic {
   state = {
@@ -848,6 +893,8 @@ class Component extends DCLogic {
     [0, 150, 500].forEach(ms => setTimeout(this.onResize, ms));
     this.tick = setInterval(() => { if (this.state.step === 'otp') this.setState({ now: Date.now() }); }, 1000);
     this.applyScreen();
+    const hs = location.hash.slice(1);
+    if (hs === 'dash' || hs === 'menu') this.setState({ step: 'dash', menuDone: true, name: this.state.name || 'Burger House', page: hs === 'menu' ? 'Menu' : 'Overview' });
   }
   componentWillUnmount() { window.removeEventListener('resize', this.onResize); this.ro && this.ro.disconnect(); clearInterval(this.tick); this.clearTimers(); }
   componentDidUpdate(p) {
@@ -995,7 +1042,7 @@ class Component extends DCLogic {
         onPrice: (e) => { const v = e.target.value.replace(/[^\d.]/g, ''); this.setState(st => ({ edits: { ...st.edits, [n]: v }, flags: { ...st.flags, [n]: false } })); },
         ok: () => this.setState(st => ({ flags: { ...st.flags, [n]: false } })) }; }) }; });
     const waOn = s.waStatus === 'connected';
-    const setupItems = [['Restaurant created', true], ['Menu added', s.menuDone], [waOn ? 'WhatsApp connected' : 'Connect WhatsApp', waOn, this.openWA], ['Set delivery & order settings', false], ['Test Lumia', false]];
+    const setupItems = [['Restaurant created', true], ['Menu added', s.menuDone], [waOn ? 'WhatsApp connected' : 'Connect WhatsApp', waOn, this.openWA], ['Set delivery & order settings', false, () => goSettings('delivery')], ['Test Lumia', false]];
     const M = s.menuSrc === 'wa' ? WA_CAT : MENU;
     const ar = s.lang === 'ar';
     const T = ar ? T_AR : T_EN;
@@ -1129,7 +1176,25 @@ class Component extends DCLogic {
       menuDone: s.menuDone, menuEmpty: !s.menuDone,
       toMenuUpload: () => this.go('menu'),
       dashNarrow: narrow, dashWide: !narrow,
-      nav: [['Orders', 'M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0'], ['Menu', 'M5 4.5h10M5 10h10M5 15.5h6'], ['WhatsApp', 'M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z'], ['Customers', 'M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5'], ['Delivery', 'M10 17s-5.5-4.6-5.5-9a5.5 5.5 0 0 1 11 0c0 4.4-5.5 9-5.5 9zM10 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z'], ['Settings', 'M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4']].map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e) => { e && e.preventDefault && e.preventDefault(); if (l === 'Menu' || l === 'WhatsApp') this.setState({ page: l }); }, fg: on ? '#8A2040' : '#3D1C31', fw: on ? 600 : 400, bg: on ? '#FDEAF2' : 'transparent', bd: on ? '#FF5577' : 'transparent' }; }),
+      pageOverview: s.page === 'Overview',
+      ...(() => {
+        const P = { today: { o: 18, r: 1124, a: 62, c: 41, d: ['+4', '+12%', '−3%', '+9'], bars: [['12 PM', 1], ['2 PM', 3], ['4 PM', 2], ['6 PM', 4], ['8 PM', 6], ['10 PM', 2]] },
+          week: { o: 126, r: 8240, a: 65, c: 298, d: ['+18%', '+21%', '+3%', '+14%'], bars: [['Mon', 14], ['Tue', 12], ['Wed', 16], ['Thu', 21], ['Fri', 26], ['Sat', 22], ['Sun', 15]] },
+          month: { o: 512, r: 32950, a: 64, c: 1210, d: ['+9%', '+11%', '+2%', '+6%'], bars: [['Wk 1', 112], ['Wk 2', 121], ['Wk 3', 134], ['Wk 4', 145]] } };
+        const per = P[s.period || 'week'], mx = Math.max(...per.bars.map(b => b[1])), f = (n) => n.toLocaleString('en-US');
+        const vs = ar ? 'عن الفترة السابقة' : (s.period === 'today' ? 'vs yesterday' : 'vs previous period');
+        const K = ar ? ['الطلبات', 'الإيرادات', 'متوسط الطلب', 'محادثات واتساب'] : ['Orders', 'Revenue', 'Average order', 'WhatsApp chats'];
+        const seg = [['today', ar ? 'اليوم' : 'Today'], ['week', ar ? '٧ أيام' : '7 days'], ['month', ar ? '٣٠ يوماً' : '30 days']].map(([v, label]) => { const on = (s.period || 'week') === v; return { label, on, fw: on ? 600 : 500, bg: on ? '#fff' : 'transparent', fg: on ? '#1A0815' : '#8A5A6E', sh: on ? '0 1px 3px rgba(26,8,21,.12)' : 'none', pick: () => this.setState({ period: v }) }; });
+        return {
+          ov: ar ? { title: 'نظرة عامة', sub: 'أداء مطعمك على واتساب.', orders: 'الطلبات', top: 'الأكثر طلباً' } : { title: 'Overview', sub: `How ${nm} is doing on WhatsApp.`, orders: 'Orders', top: 'Top items' },
+          periodSeg: seg,
+          stats: [f(per.o), 'AED ' + f(per.r), 'AED ' + per.a, f(per.c)].map((v, i) => ({ k: K[i], v, d: per.d[i] + ' ' + vs, dfg: per.d[i].startsWith('−') ? '#B42318' : '#16704A' })),
+          bars: per.bars.map(([l, n], i) => ({ l, h: Math.max(4, Math.round(n / mx * 128)) + 'px', bg: i === per.bars.length - 1 ? 'linear-gradient(180deg,#FF5577,#C93DFF)' : '#F3D6E2', tip: n + ' orders' })),
+          topItems: [['Classic Burger', 38], ['Chicken Burger', 31], ['Cheese Fries', 24], ['Burger Meal', 19]].map(([name, q], i) => ({ n: i + 1, name: ar ? (AR[name] || name) : name, q: Math.round(q * per.o / 126) + (ar ? ' مباع' : ' sold'), bt: i ? '1px solid #F3EEF1' : '0' })),
+          L: { ...L, split2: narrow ? 'minmax(0,1fr)' : 'minmax(0,1.6fr) minmax(0,1fr)' },
+        };
+      })(),
+      nav: [['Overview', 'M3 10.5 10 4l7 6.5M5 9v7.5h10V9'], ['Orders', 'M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0'], ['Menu', 'M5 4.5h10M5 10h10M5 15.5h6'], ['WhatsApp', 'M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z'], ['Customers', 'M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5'], ['Settings', 'M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4']].map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e) => { e && e.preventDefault && e.preventDefault(); if (l === 'Settings') goSettings(); else if (l === 'Overview' || l === 'Menu' || l === 'WhatsApp') this.setState({ page: l }); }, fg: on ? '#1A0815' : '#3D1C31', fw: on ? 600 : 400, bg: on ? '#FDEAF2' : 'transparent', bd: on ? '#FF5577' : 'transparent' }; }),
       setup: setupItems.map(([label0, done, fn], i) => { const lb = T.setup[i]; const label = Array.isArray(lb) ? lb[done ? 1 : 0] : lb; return { label, done, todo: !done, fg: done ? '#1A0815' : '#3D1C31', ul: !done && fn ? 'underline' : 'none', pick: fn || this.noopFn, bar: i < doneN ? '#16704A' : 'rgba(26,8,21,.12)' }; }),
       setupLabel: ar ? `${doneN} من 5 مكتملة` : `${doneN} of 5 completed`, waSetupLabel: `${doneN} of 5 completed`,
       chips: [{ cat: 'All', count: count(M) }, ...M.map(g => ({ cat: g.cat, count: g.items.length }))].map(x => { const on = x.cat === s.cat; return { ...x, bg: on ? '#1A0815' : '#fff', fg: on ? '#fff' : '#3D1C31', bd: on ? '#1A0815' : '#ECD9E0', pick: () => this.setState({ cat: x.cat }) }; }),

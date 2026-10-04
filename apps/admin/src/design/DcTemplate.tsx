@@ -640,50 +640,129 @@ export function DcTemplate({ vm }: { vm: any }) {
                 )}
                 <div style={S("flex:1;display:flex;min-height:0")}>
                   <main style={S(`flex:1;min-width:0;min-height:0;overflow-y:auto;padding:${vm.L.dashPad};display:flex;flex-direction:column;gap:26px`)}>
-                    <section style={S("border-radius:20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);padding:22px 24px;display:flex;flex-wrap:wrap;gap:18px 32px;align-items:center")}>
-                      <div style={S("flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:12px")}>
-                        <div style={S("display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px")}>
-                          <h2 style={S("font-size:19px;font-weight:600;letter-spacing:-0.02em")}>
-                            {vm.t.setupTitle}
-                          </h2>
-                          <span style={S("font-size:14px;font-weight:500;color:#8A2040;font-variant-numeric:tabular-nums")}>
-                            {vm.setupLabel}
-                          </span>
+                    {vm.pageOverview && (
+                      <>
+                      <div data-screen-label="06 Dashboard \u00b7 Overview" style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
+                        <div style={S("flex:1 1 280px;min-width:0")}>
+                          <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                            {vm.ov.title}
+                          </h1>
+                          <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5")}>
+                            {vm.ov.sub}
+                          </p>
                         </div>
-                        <div style={S("display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;max-width:420px")}>
-                          {(vm.setup as any[]).map((s: any, __i: number) => (
+                        <div role="radiogroup" aria-label="Period" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px")}>
+                          {(vm.periodSeg as any[]).map((o: any, __i: number) => (
                             <Fragment key={__i}>
-                              <span style={S(`height:5px;border-radius:3px;background:${s.bar}`)} />
-                            </Fragment>
-                          ))}
-                        </div>
-                        <div style={S("display:flex;flex-wrap:wrap;gap:8px 18px")}>
-                          {(vm.setup as any[]).map((s: any, __i: number) => (
-                            <Fragment key={__i}>
-                              <button type="button" onClick={s.pick} disabled={!!s.done} style={S(`display:flex;align-items:center;gap:7px;font-size:14px;color:${s.fg};text-decoration:${s.ul};text-decoration-color:#D9BFCB;text-underline-offset:3px`)} className="dch7">
-                                {s.done && (
-                                  <>
-                                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                    <circle cx="10" cy="10" r="9" fill="#16704A" />
-                                    <path d="M6 10.2 8.6 12.8 14 7.4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                  </>
-                                )}
-                                {s.todo && (
-                                  <>
-                                  <span style={S("width:14px;height:14px;border-radius:50%;border:1.5px solid #B79AA6;margin:1px")} />
-                                  </>
-                                )}
-                                {s.label}
+                              <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`height:34px;padding:0 14px;border-radius:8px;font-size:14px;white-space:nowrap;font-weight:${o.fw};background:${o.bg};color:${o.fg};box-shadow:${o.sh}`)}>
+                                {o.label}
                               </button>
                             </Fragment>
                           ))}
                         </div>
                       </div>
-                      <button type="button" onClick={vm.continueSetup} style={S("height:48px;padding:0 22px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;flex:none;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
-                        {vm.t.continueSetup}
-                      </button>
-                    </section>
+                      <section style={S("border-radius:20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);padding:22px 24px;display:flex;flex-wrap:wrap;gap:18px 32px;align-items:center")}>
+                        <div style={S("flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:12px")}>
+                          <div style={S("display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px")}>
+                            <h2 style={S("font-size:19px;font-weight:600;letter-spacing:-0.02em")}>
+                              {vm.t.setupTitle}
+                            </h2>
+                            <span style={S("font-size:14px;font-weight:500;color:#8A2040;font-variant-numeric:tabular-nums")}>
+                              {vm.setupLabel}
+                            </span>
+                          </div>
+                          <div style={S("display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;max-width:420px")}>
+                            {(vm.setup as any[]).map((s: any, __i: number) => (
+                              <Fragment key={__i}>
+                                <span style={S(`height:5px;border-radius:3px;background:${s.bar}`)} />
+                              </Fragment>
+                            ))}
+                          </div>
+                          <div style={S("display:flex;flex-wrap:wrap;gap:8px 18px")}>
+                            {(vm.setup as any[]).map((s: any, __i: number) => (
+                              <Fragment key={__i}>
+                                <button type="button" onClick={s.pick} disabled={!!s.done} style={S(`display:flex;align-items:center;gap:7px;font-size:14px;color:${s.fg};text-decoration:${s.ul};text-decoration-color:#D9BFCB;text-underline-offset:3px`)} className="dch7">
+                                  {s.done && (
+                                    <>
+                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                                      <circle cx="10" cy="10" r="9" fill="#16704A" />
+                                      <path d="M6 10.2 8.6 12.8 14 7.4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                    </>
+                                  )}
+                                  {s.todo && (
+                                    <>
+                                    <span style={S("width:14px;height:14px;border-radius:50%;border:1.5px solid #B79AA6;margin:1px")} />
+                                    </>
+                                  )}
+                                  {s.label}
+                                </button>
+                              </Fragment>
+                            ))}
+                          </div>
+                        </div>
+                        <button type="button" onClick={vm.continueSetup} style={S("height:48px;padding:0 22px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;flex:none;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
+                          {vm.t.continueSetup}
+                        </button>
+                      </section>
+                      <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px")}>
+                        {(vm.stats as any[]).map((m: any, __i: number) => (
+                          <Fragment key={__i}>
+                            <div style={S("border:1px solid #F0E4E8;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:6px")}>
+                              <span style={S("font-size:14px;color:#8A5A6E")}>
+                                {m.k}
+                              </span>
+                              <span dir="ltr" style={S("font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;text-align:start")}>
+                                {m.v}
+                              </span>
+                              <span style={S(`font-size:13px;font-weight:500;color:${m.dfg};font-variant-numeric:tabular-nums`)}>
+                                {m.d}
+                              </span>
+                            </div>
+                          </Fragment>
+                        ))}
+                      </div>
+                      <div style={S(`display:grid;grid-template-columns:${vm.L.split2};gap:20px;align-items:start`)}>
+                        <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:14px;min-width:0")}>
+                          <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                            {vm.ov.orders}
+                          </h2>
+                          <div style={S("height:160px;display:flex;align-items:flex-end;gap:10px")}>
+                            {(vm.bars as any[]).map((b: any, __i: number) => (
+                              <Fragment key={__i}>
+                                <div title={b.tip} style={S("flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px")}>
+                                  <span style={S(`width:100%;max-width:36px;border-radius:6px 6px 2px 2px;height:${b.h};background:${b.bg}`)} />
+                                  <span style={S("font-size:12px;color:#8A5A6E;white-space:nowrap")}>
+                                    {b.l}
+                                  </span>
+                                </div>
+                              </Fragment>
+                            ))}
+                          </div>
+                        </section>
+                        <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:6px;min-width:0")}>
+                          <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em;margin-bottom:6px")}>
+                            {vm.ov.top}
+                          </h2>
+                          {(vm.topItems as any[]).map((t: any, __i: number) => (
+                            <Fragment key={__i}>
+                              <div style={S(`display:flex;align-items:center;gap:12px;padding:8px 0;border-top:${t.bt};font-size:15px`)}>
+                                <span style={S("width:20px;font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                                  {t.n}
+                                </span>
+                                <span style={S("flex:1;min-width:0;font-weight:500")}>
+                                  {t.name}
+                                </span>
+                                <span style={S("color:#3D1C31;font-variant-numeric:tabular-nums")}>
+                                  {t.q}
+                                </span>
+                              </div>
+                            </Fragment>
+                          ))}
+                        </section>
+                      </div>
+                      </>
+                    )}
                     {vm.dashErr && (
                       <>
                       <div role="alert" style={S("font-size:14px;color:#B4233B")}>
@@ -755,7 +834,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                             {(vm.sections as any[]).map((g: any, __i: number) => (
                               <Fragment key={__i}>
                                 <section style={S("border:1px solid #F0E4E8;border-radius:16px;overflow:clip")}>
-                                  <header style={S(`position:sticky;top:${vm.L.secTop};z-index:2;background:#FAF6FA;padding:12px 18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;border-bottom:1px solid #F0E4E8`)}>
+                                  <header style={S(`position:sticky;top:${vm.L.secTop};z-index:2;background:#F5F4F4;padding:12px 18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;border-bottom:1px solid #E8E6E7`)}>
                                     <span style={S("font-size:16px;font-weight:600")}>
                                       {g.name}
                                     </span>
@@ -857,7 +936,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                         </h1>
                         <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start")}>
                           <div style={S("background:#FAF6FA;border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:16px")}>
-                            <span style={S("font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#8A5A6E")}>
+                            <span style={S("font-size:14px;font-weight:600;color:#8A5A6E")}>
                               Connection
                             </span>
                             <div style={S("display:flex;align-items:center;gap:14px")}>
@@ -943,7 +1022,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                           {vm.waShowToday && (
                             <>
                             <div style={S("background:#FAF6FA;border-radius:20px;padding:20px 22px 8px;display:flex;flex-direction:column")}>
-                              <span style={S("font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#8A5A6E;padding-bottom:6px")}>
+                              <span style={S("font-size:14px;font-weight:600;color:#8A5A6E;padding-bottom:6px")}>
                                 Today
                               </span>
                               {(vm.waToday as any[]).map((t: any, __i: number) => (
@@ -1066,7 +1145,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                               <button type="button" onClick={vm.startConnect} style={S("margin-top:24px;height:54px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
                                 Connect WhatsApp
                               </button>
-                              <span style={S("font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#8A5A6E;margin-top:26px")}>
+                              <span style={S("font-size:14px;font-weight:600;color:#8A5A6E;margin-top:26px")}>
                                 What happens next
                               </span>
                               <ol style={S("list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:12px")}>
