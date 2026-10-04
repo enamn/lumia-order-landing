@@ -14,7 +14,7 @@ const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2)
 export function Shell({ children, business }: { children: React.ReactNode; business: BusinessOption & { logoUrl?: string | null; locations?: unknown }; businesses?: BusinessOption[]; user?: { name: string }; role?: string }) {
   const pathname = usePathname(); const router = useRouter(); const [error, setError] = useState("");
   const query = `?businessId=${business.id}`;
-  const nav = [["Overview", "/dashboard"], ["Orders", "/dashboard/orders"], ["Menu", "/dashboard?page=menu"], ["WhatsApp", "/dashboard?page=whatsapp"], ["Messages", "/dashboard/messages"], ["Customers", null], ["Settings", "/dashboard/settings"]] as const;
+  const nav = [["Overview", "/dashboard"], ["Orders", "/dashboard/orders"], ["Menu", "/dashboard?page=menu"], ["WhatsApp", "/dashboard?page=whatsapp"], ["Customers", null], ["Settings", "/dashboard/settings"]] as const;
   const active = (href: string | null) => href !== null && !href.includes("?") && pathname === href;
   async function logout() { try { const result = await authClient.signOut(); if (result.error) throw Error(); router.push("/login"); router.refresh(); } catch { setError("Unable to sign out. Try again."); } }
   const item = ([label, href]: typeof nav[number], tab: boolean) => {
