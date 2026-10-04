@@ -8,7 +8,7 @@ import "./dc-base.css";
 import "./settings-hover.css";
 import { SettingsTemplate } from "./SettingsTemplate";
 import { logoToDataUrl } from "@/lib/logo";
-import { LumiaLoader } from "@/components/lumia-loader";
+import { ContentLoader } from "@/components/lumia-loader";
 
 export interface SettingsProps {
   businessId: string;
@@ -348,6 +348,6 @@ export function SettingsLoader({ businessId, query }: { businessId: string; quer
     return () => { live = false; clearTimeout(t); };
   }, [businessId]);
   if (error) return <div className="dc" style={{ padding: 32, color: "#B42318", fontSize: 15 }}>{error}</div>;
-  if (!initial) return <div className="dc" style={{ height: "100%", minHeight: 240, display: "flex", alignItems: "center", justifyContent: "center", opacity: slow ? 1 : 0, transition: "opacity .2s" }}><LumiaLoader size={56} label="Loading"/></div>;
+  if (!initial) return <div className="dc" style={{ height: "100%", display: "flex", opacity: slow ? 1 : 0, transition: "opacity .2s" }}><ContentLoader/></div>;
   return <SettingsApp businessId={businessId} query={query} initial={initial}/>;
 }

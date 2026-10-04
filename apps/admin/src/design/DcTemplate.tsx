@@ -716,62 +716,71 @@ export function DcTemplate({ vm }: { vm: any }) {
                             {vm.t.continueSetup}
                           </button>
                         </section>
-                        <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px")}>
-                          {(vm.stats as any[]).map((m: any, __i: number) => (
-                            <Fragment key={__i}>
-                              <div style={S("border:1px solid #F0E4E8;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:6px")}>
-                                <span style={S("font-size:14px;color:#8A5A6E")}>
-                                  {m.k}
-                                </span>
-                                <span dir="ltr" style={S("font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;text-align:start")}>
-                                  {m.v}
-                                </span>
-                                <span style={S(`font-size:13px;font-weight:500;color:${m.dfg};font-variant-numeric:tabular-nums`)}>
-                                  {m.d}
-                                </span>
-                              </div>
-                            </Fragment>
-                          ))}
-                        </div>
-                        <div style={S(`display:grid;grid-template-columns:${vm.L.split2};gap:20px;align-items:start`)}>
-                          <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:14px;min-width:0")}>
-                            <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                              {vm.ov.orders}
-                            </h2>
-                            <div style={S("height:160px;display:flex;align-items:flex-end;gap:10px")}>
-                              {(vm.bars as any[]).map((b: any, __i: number) => (
-                                <Fragment key={__i}>
-                                  <div title={b.tip} style={S("flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px")}>
-                                    <span style={S(`width:100%;max-width:36px;border-radius:6px 6px 2px 2px;height:${b.h};background:${b.bg}`)} />
-                                    <span style={S("font-size:12px;color:#8A5A6E;white-space:nowrap")}>
-                                      {b.l}
-                                    </span>
-                                  </div>
-                                </Fragment>
-                              ))}
-                            </div>
-                          </section>
-                          <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:6px;min-width:0")}>
-                            <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em;margin-bottom:6px")}>
-                              {vm.ov.top}
-                            </h2>
-                            {(vm.topItems as any[]).map((t: any, __i: number) => (
+                        {vm.ovLoading && (
+                          <>
+                          {vm.loaderNode}
+                          </>
+                        )}
+                        {vm.ovReady && (
+                          <>
+                          <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px")}>
+                            {(vm.stats as any[]).map((m: any, __i: number) => (
                               <Fragment key={__i}>
-                                <div style={S(`display:flex;align-items:center;gap:12px;padding:8px 0;border-top:${t.bt};font-size:15px`)}>
-                                  <span style={S("width:20px;font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
-                                    {t.n}
+                                <div style={S("border:1px solid #F0E4E8;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:6px")}>
+                                  <span style={S("font-size:14px;color:#8A5A6E")}>
+                                    {m.k}
                                   </span>
-                                  <span style={S("flex:1;min-width:0;font-weight:500")}>
-                                    {t.name}
+                                  <span dir="ltr" style={S("font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;text-align:start")}>
+                                    {m.v}
                                   </span>
-                                  <span style={S("color:#3D1C31;font-variant-numeric:tabular-nums")}>
-                                    {t.q}
+                                  <span style={S(`font-size:13px;font-weight:500;color:${m.dfg};font-variant-numeric:tabular-nums`)}>
+                                    {m.d}
                                   </span>
                                 </div>
                               </Fragment>
                             ))}
-                          </section>
-                        </div>
+                          </div>
+                          <div style={S(`display:grid;grid-template-columns:${vm.L.split2};gap:20px;align-items:start`)}>
+                            <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:14px;min-width:0")}>
+                              <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                                {vm.ov.orders}
+                              </h2>
+                              <div style={S("height:160px;display:flex;align-items:flex-end;gap:10px")}>
+                                {(vm.bars as any[]).map((b: any, __i: number) => (
+                                  <Fragment key={__i}>
+                                    <div title={b.tip} style={S("flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px")}>
+                                      <span style={S(`width:100%;max-width:36px;border-radius:6px 6px 2px 2px;height:${b.h};background:${b.bg}`)} />
+                                      <span style={S("font-size:12px;color:#8A5A6E;white-space:nowrap")}>
+                                        {b.l}
+                                      </span>
+                                    </div>
+                                  </Fragment>
+                                ))}
+                              </div>
+                            </section>
+                            <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:6px;min-width:0")}>
+                              <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em;margin-bottom:6px")}>
+                                {vm.ov.top}
+                              </h2>
+                              {(vm.topItems as any[]).map((t: any, __i: number) => (
+                                <Fragment key={__i}>
+                                  <div style={S(`display:flex;align-items:center;gap:12px;padding:8px 0;border-top:${t.bt};font-size:15px`)}>
+                                    <span style={S("width:20px;font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                                      {t.n}
+                                    </span>
+                                    <span style={S("flex:1;min-width:0;font-weight:500")}>
+                                      {t.name}
+                                    </span>
+                                    <span style={S("color:#3D1C31;font-variant-numeric:tabular-nums")}>
+                                      {t.q}
+                                    </span>
+                                  </div>
+                                </Fragment>
+                              ))}
+                            </section>
+                          </div>
+                          </>
+                        )}
                         </>
                       )}
                       {vm.dashErr && (
@@ -1244,9 +1253,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                             ))}
                             {vm.ordLoading && (
                               <>
-                              <div style={S("display:flex;justify-content:center;padding:48px 0")}>
-                                {vm.ordLoaderNode}
-                              </div>
+                              {vm.loaderNode}
                               </>
                             )}
                             {vm.ord.empty && (

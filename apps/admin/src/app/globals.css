@@ -149,3 +149,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 .text-link{color:#8A2040}.go-live{background:#FBF3F8}.type-option{border:1px solid #ECD9E0;background:#FBF3F8;color:#8A2040}.type-option strong{color:#1A0815}
 .form-aside{background:linear-gradient(135deg,#FFEEF2,#F1E6FF);border:0}.checkbox-label input{accent-color:#C93DFF}
 .auth-story{background:linear-gradient(135deg,#FFEEF2,#F1E6FF)}
+
+/* Unified dashboard loader (ContentLoader): centred in the content area with a soft brand-gradient glow. */
+.content-loader{flex:1;width:100%;min-height:calc(100dvh - 200px);display:flex;align-items:center;justify-content:center;position:relative}
+.content-loader::before{content:"";position:absolute;width:220px;height:220px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,85,119,.22),rgba(201,61,255,.14) 55%,transparent 75%);filter:blur(6px);animation:lo-breathe 2.4s ease-in-out infinite}
+.content-loader .lumia-loader{position:relative}
