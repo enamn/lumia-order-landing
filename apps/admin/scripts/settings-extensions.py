@@ -23,7 +23,7 @@ once('flex:none">{{ initials }}</span>', 'flex:none;overflow:hidden">{{ logoNode
 i = s.index('>Upload logo</button>'); j = s.rfind('onClick="{{ markDirty }}"', 0, i)
 s = s[:j] + 'onClick="{{ pickLogo }}"' + s[j + len('onClick="{{ markDirty }}"'):]
 once('<x-dc>', '<x-dc>\n<!-- LUMIA-EXT settings --><!-- LUMIA-EXT logo -->')
-# use the whole width (left aligned) instead of a centred 960px column; the customer preview stays pinned on the right
-once('<div style="max-width:960px;margin:0 auto;padding:{{ L.pad }};', '<div style="max-width:none;margin:0;padding:{{ L.pad }};')
+# wider than the design's centred 960px column but capped at 1240px and left aligned; the customer preview stays pinned on the right
+once('<div style="max-width:960px;margin:0 auto;padding:{{ L.pad }};', '<div style="max-width:1240px;margin:0;padding:{{ L.pad }};')
 s = s.replace('<!-- LUMIA-EXT settings -->', '<!-- LUMIA-EXT settings --><!-- LUMIA-EXT embedded -->', 1)
 p.write_text(s); print("settings extensions applied")

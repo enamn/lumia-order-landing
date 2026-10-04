@@ -125,7 +125,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
             </>
           )}
           <main ref={vm.mainRef} style={S("flex:1;min-height:0;overflow-y:auto")}>
-            <div style={S(`max-width:none;margin:0;padding:${vm.L.pad};display:flex;flex-direction:column;gap:20px`)}>
+            <div style={S(`max-width:1240px;margin:0;padding:${vm.L.pad};display:flex;flex-direction:column;gap:20px`)}>
               {vm.pg.profile && (
                 <>
                 <div data-screen-label="02 Restaurant profile" style={S("display:flex;flex-direction:column;gap:20px")}>
