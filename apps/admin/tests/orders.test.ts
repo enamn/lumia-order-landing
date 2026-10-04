@@ -100,6 +100,8 @@ describe.skipIf(!enabled)("taking orders over WhatsApp", () => {
     expect(first).toMatchObject({ status: "AWAITING_BUSINESS_CONFIRMATION", total: 68, customer: { phone: "+971504074115" } }); expect(first!.items).toHaveLength(2);
     calls = []; await setOrderStatus(owner, biz, first!.id, { status: "ACCEPTED" }, "t");
     expect(sent().at(-1)).toBe("✅ Your order #1001 was accepted. We're getting it ready."); expect(await db.message.findFirst({ where: { senderType: "SYSTEM", textContent: { contains: "#1001" } } })).toBeTruthy();
+    const withHistory = (await listOrders(owner, biz)).find(o => o.number === "1001")!;
+    expect(withHistory.history.map(h => h.status)).toEqual(["AWAITING_BUSINESS_CONFIRMATION", "ACCEPTED"]); expect(withHistory).toMatchObject({ subtotal: 68, deliveryFee: 0, note: "" });
     await expect(setOrderStatus(owner, biz, first!.id, { status: "COMPLETED" }, "t")).rejects.toMatchObject({ status: 409 });
     await expect(setOrderStatus(viewer, biz, first!.id, { status: "PREPARING" }, "t")).rejects.toMatchObject({ status: 403 });
     await expect(setOrderStatus(owner, biz, first!.id, { status: "PREPARING", extra: 1 }, "t")).rejects.toBeDefined();
@@ -126,5 +128,12 @@ describe.skipIf(!enabled)("taking orders over WhatsApp", () => {
     expect(week.buckets).toHaveLength(7); expect(week.buckets.reduce((t, b) => t + b.orders, 0)).toBe(week.current.orders); expect(week.top[0]).toMatchObject({ name: "Classic" });
     expect((await getOverview(owner, biz, "bogus", 0)).period).toBe("week"); expect((await getOverview(owner, biz, "today", 0)).buckets).toHaveLength(6);
     await expect(getOverview(crypto.randomUUID(), biz, "week", 0)).rejects.toBeTruthy();
+  });
+  it("tells the customer how long the order will take when staff pick a preparation time", async () => {
+    const o = await db.order.findFirstOrThrow({ where: { businessId: biz, orderNumber: "1001" } });
+    await db.order.update({ where: { id: o.id }, data: { status: "AWAITING_BUSINESS_CONFIRMATION" } }); // back to new
+    calls = []; await setOrderStatus(owner, biz, o.id, { status: "ACCEPTED", prepMinutes: 25 }, "t");
+    expect(sent().at(-1)).toContain("ready in about 25 minutes");
+    await expect(setOrderStatus(owner, biz, o.id, { status: "PREPARING", prepMinutes: 2 }, "t")).rejects.toBeDefined();
   });
 });

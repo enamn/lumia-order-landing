@@ -98,7 +98,7 @@ class SettingsApp extends React.Component<Props, any> {
   discard() { const s = this.state, k = KEY[s.page]; const next = s.blocked; this.setState(st => ({ draft: { ...st.draft, [k]: clone(st.saved[k]) }, error: '', blocked: null, adding: false, ...(next ? { page: next } : {}) })); }
 
   renderVals() {
-    const s = this.state, d = s.draft, sv = s.saved, wide = s.w >= 880, split = s.w >= 1180, formW = s.w - (wide ? 238 : 0) - (split ? 320 : 0), M = s.menu, menuLevel = M.items === 0 ? 0 : M.missingPrices > 0 ? 2 : 4;
+    const s = this.state, d = s.draft, sv = s.saved, wide = s.w >= 640, split = s.w >= 1000, formW = s.w - (split ? 320 : 0), M = s.menu, menuLevel = M.items === 0 ? 0 : M.missingPrices > 0 ? 2 : 4;
     const ce = React.createElement;
     const selStyle = (sm) => ({ height: sm ? 40 : 44, width: '100%', minWidth: 0, padding: '0 10px', borderRadius: sm ? 9 : 10, border: '1.5px solid #ECD9E0', background: '#fff', fontSize: sm ? 14 : 15 });
     const sel = (value, opts, onChange, sm = true, label) => ce('select', { value, onChange, style: selStyle(sm), 'aria-label': label }, opts.map(o => ce('option', { key: o.v, value: o.v }, o.l)));
@@ -245,8 +245,8 @@ class SettingsApp extends React.Component<Props, any> {
 
     const PV = d.pay;
     return {
-      rootRef: this.rootRef, mainRef: this.mainRef, wide, narrow: !wide,
-      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', pad: '0 0 24px', split: split ? 'minmax(0,1fr) 300px' : 'minmax(0,1fr)',
+      rootRef: this.rootRef, mainRef: this.mainRef, wide, narrow: !wide, showAside: false, showTop: true, standalone: false, rootH: '100%', topTitleSize: wide ? '20px' : '16px',
+      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', pad: wide ? '28px 32px 56px' : '20px 16px 48px', split: split ? 'minmax(0,1fr) 300px' : 'minmax(0,1fr)',
         areaCols: wide ? '1.2fr 1.1fr .8fr .8fr .7fr 1.3fr 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
         rangeCols: wide ? 'repeat(5,minmax(0,1fr)) 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
         rowPad: wide ? '10px 0' : '14px 0', cellLbl: formW >= 760 ? 'none' : 'block', hoursHead: formW >= 760,
@@ -313,8 +313,18 @@ class SettingsApp extends React.Component<Props, any> {
 
   render() {
     // The layout depends on the width, so render only once it is known.
-    return <div className="dc" ref={this.wrap}>{this.state.mounted ? <SettingsTemplate vm={this.renderVals()}/> : <div style={{ minHeight: '60vh' }}/>}</div>;
+    return <div className="dc" ref={this.wrap} style={{ height: '100%' }}>{this.state.mounted ? <SettingsTemplate vm={this.renderVals()}/> : <div style={{ minHeight: '60vh' }}/>}</div>;
   }
 }
 
 export default SettingsApp;
+
+// Loads the settings when the page is opened (not with the dashboard), then shows the editor.
+export function SettingsLoader({ businessId, query }: { businessId: string; query: string }) {
+  const [initial, setInitial] = React.useState<SettingsProps["initial"] | null>(null);
+  const [error, setError] = React.useState("");
+  React.useEffect(() => { let live = true; api(`/api/v1/businesses/${businessId}/settings`).then(r => { if (live) setInitial({ sections: r.sections, menu: r.menu, whatsapp: r.whatsapp }); }).catch(e => { if (live) setError(e?.message ?? "We couldn’t load your settings."); }); return () => { live = false; }; }, [businessId]);
+  if (error) return <div className="dc" style={{ padding: 32, color: "#B42318", fontSize: 15 }}>{error}</div>;
+  if (!initial) return <div className="dc" style={{ padding: 32, color: "#8A5A6E", fontSize: 15 }}>Loading settings…</div>;
+  return <SettingsApp businessId={businessId} query={query} initial={initial}/>;
+}

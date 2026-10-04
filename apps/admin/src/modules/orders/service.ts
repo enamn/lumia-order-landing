@@ -46,18 +46,18 @@ export async function createOrderFromDraft(input: { businessId: string; conversa
 
 export async function listOrders(userId: string, businessId: string) {
   await authorize(userId, businessId);
-  const rows = await db.order.findMany({ where: { businessId }, orderBy: { createdAt: "desc" }, take: 60, include: { items: true, customer: { select: { displayName: true, phone: true } }, deliveryDetails: { select: { addressText: true } } } });
-  return rows.map(o => ({ id: o.id, number: o.orderNumber, status: o.status, fulfillment: o.fulfillmentType, total: o.totalMinor / 100, currency: o.currencyCode, createdAt: o.createdAt, conversationId: o.conversationId, address: o.deliveryDetails?.addressText ?? "", customer: { name: o.customer.displayName ?? "", phone: o.customer.phone }, items: o.items.map(i => ({ name: i.itemNameSnapshot, quantity: i.quantity, notes: i.notes ?? "", total: i.totalMinor / 100 })) }));
+  const rows = await db.order.findMany({ where: { businessId }, orderBy: { createdAt: "desc" }, take: 60, include: { items: true, history: { select: { newStatus: true, createdAt: true, reason: true }, orderBy: { createdAt: "asc" } }, customer: { select: { displayName: true, phone: true } }, deliveryDetails: { select: { addressText: true } } } });
+  return rows.map(o => ({ id: o.id, number: o.orderNumber, status: o.status, fulfillment: o.fulfillmentType, total: o.totalMinor / 100, currency: o.currencyCode, createdAt: o.createdAt, conversationId: o.conversationId, note: o.customerNotes ?? "", subtotal: o.subtotalMinor / 100, deliveryFee: o.deliveryFeeMinor / 100, history: o.history.map(h => ({ status: h.newStatus, at: h.createdAt, reason: h.reason ?? "" })), address: o.deliveryDetails?.addressText ?? "", customer: { name: o.customer.displayName ?? "", phone: o.customer.phone }, items: o.items.map(i => ({ name: i.itemNameSnapshot, quantity: i.quantity, notes: i.notes ?? "", total: i.totalMinor / 100 })) }));
 }
 
 const NEXT: Record<string, OrderStatus[]> = {
   AWAITING_BUSINESS_CONFIRMATION: ["ACCEPTED", "REJECTED"], ACCEPTED: ["PREPARING", "CANCELLED"], PREPARING: ["READY", "CANCELLED"],
   READY: ["OUT_FOR_DELIVERY", "COMPLETED"], OUT_FOR_DELIVERY: ["COMPLETED"],
 };
-export const statusSchema = z.object({ status: z.enum(["ACCEPTED", "REJECTED", "PREPARING", "READY", "OUT_FOR_DELIVERY", "COMPLETED", "CANCELLED"]), reason: z.string().trim().max(300).optional() }).strict();
+export const statusSchema = z.object({ status: z.enum(["ACCEPTED", "REJECTED", "PREPARING", "READY", "OUT_FOR_DELIVERY", "COMPLETED", "CANCELLED"]), reason: z.string().trim().max(300).optional(), prepMinutes: z.number().int().min(5).max(180).optional() }).strict();
 
-const NOTICE: Partial<Record<OrderStatus, Record<Lang, (n: string, pickup: boolean) => string>>> = {
-  ACCEPTED: { en: n => `✅ Your order #${n} was accepted. We're getting it ready.`, ar: n => `✅ تم قبول طلبك رقم ${n}. نقوم بتجهيزه الآن.` },
+const NOTICE: Partial<Record<OrderStatus, Record<Lang, (n: string, pickup: boolean, prep?: number) => string>>> = {
+  ACCEPTED: { en: (n, _p, m) => `✅ Your order #${n} was accepted. ${m ? `It will be ready in about ${m} minutes.` : "We're getting it ready."}`, ar: (n, _p, m) => `✅ تم قبول طلبك رقم ${n}. ${m ? `سيكون جاهزاً خلال ${m} دقيقة تقريباً.` : "نقوم بتجهيزه الآن."}` },
   REJECTED: { en: n => `Sorry, we can't prepare order #${n} right now. Please contact us if you'd like to try again.`, ar: n => `عذراً، لا يمكننا تجهيز طلبك رقم ${n} حالياً. تواصل معنا إن أردت المحاولة مجدداً.` },
   CANCELLED: { en: n => `Your order #${n} was cancelled. Sorry for the trouble.`, ar: n => `تم إلغاء طلبك رقم ${n}. نعتذر عن الإزعاج.` },
   READY: { en: (n, p) => (p ? `🛍️ Your order #${n} is ready for pickup.` : `Your order #${n} is ready and will be on its way shortly.`), ar: (n, p) => (p ? `🛍️ طلبك رقم ${n} جاهز للاستلام.` : `طلبك رقم ${n} جاهز وسيكون في الطريق قريباً.`) },
@@ -65,7 +65,7 @@ const NOTICE: Partial<Record<OrderStatus, Record<Lang, (n: string, pickup: boole
 };
 
 export async function setOrderStatus(userId: string, businessId: string, orderId: string, input: unknown, requestId: string) {
-  const { status, reason } = statusSchema.parse(input);
+  const { status, reason, prepMinutes } = statusSchema.parse(input);
   const updated = await transaction(async tx => {
     const { business } = await authorize(userId, businessId, "operations.manage", tx);
     const order = await tx.order.findFirst({ where: { id: orderId, businessId }, include: { customer: { select: { phone: true } } } });
@@ -75,18 +75,18 @@ export async function setOrderStatus(userId: string, businessId: string, orderId
     await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "Order", entityId: orderId, action: `order.${status.toLowerCase()}`, requestId } });
     return { order: result, phone: order.customer.phone };
   });
-  await notifyCustomer(businessId, updated.order.conversationId, updated.phone, status, updated.order.orderNumber, updated.order.fulfillmentType === "PICKUP");
+  await notifyCustomer(businessId, updated.order.conversationId, updated.phone, status, updated.order.orderNumber, updated.order.fulfillmentType === "PICKUP", prepMinutes);
   return { id: updated.order.id, status: updated.order.status };
 }
 
 // Best effort: WhatsApp only lets us message within 24 hours of the customer's last message, and a failed notice must not undo the status change.
-async function notifyCustomer(businessId: string, conversationId: string | null, phone: string, status: OrderStatus, number: string, pickup: boolean) {
+async function notifyCustomer(businessId: string, conversationId: string | null, phone: string, status: OrderStatus, number: string, pickup: boolean, prep?: number) {
   const notice = NOTICE[status]; if (!notice || !conversationId) return;
   try {
     const account = await db.whatsAppAccount.findFirst({ where: { businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
     const lastInbound = await db.message.findFirst({ where: { conversationId, direction: "INBOUND" }, orderBy: { createdAt: "desc" }, select: { textContent: true, createdAt: true } });
     if (!account || !lastInbound || Date.now() - lastInbound.createdAt.getTime() > 24 * 3600 * 1000) return;
-    const text = notice[langOf(lastInbound.textContent ?? "")](number, pickup);
+    const text = notice[langOf(lastInbound.textContent ?? "")](number, pickup, prep);
     const messageId = await deliverText(account, phone, text); const now = new Date();
     await db.$transaction([
       db.message.create({ data: { conversationId, externalMessageId: messageId, direction: "OUTBOUND", senderType: "SYSTEM", messageType: "TEXT", textContent: text, status: "SENT", createdAt: now } }),

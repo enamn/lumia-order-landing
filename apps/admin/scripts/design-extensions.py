@@ -62,5 +62,10 @@ DLG = '''
 '''
 marker = '<!-- WhatsApp connection drawer -->'
 rep(marker, DLG + '\n' + marker)
+# 9 orders page: error banner above the status tabs
+TABS = '\n        <div style="display:flex;gap:8px;overflow-x:auto;flex:none;padding-bottom:2px;scrollbar-width:none">'
+rep(TABS, '\n        <sc-if value="{{ ordErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:14px;color:#B4233B">{{ ordErr }}</div></sc-if>' + TABS)
+# 8 the design embeds the Settings file with <dc-import>; the app renders its Settings component in that slot
+rep('<dc-import name="Lumia Order Restaurant Settings" embedded="{{ true }}" start-page="{{ settingsPage }}" style="flex:1;min-width:0;height:100%" hint-size="100%,100%"></dc-import>', '<div style="flex:1;min-width:0;height:100%">{{ settingsNode }}</div>')
 p.write_text(s)
 print("extensions applied")

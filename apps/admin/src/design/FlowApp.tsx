@@ -7,6 +7,7 @@ import "./dc-base.css";
 import "./dc-hover.css";
 import { DcTemplate } from "./DcTemplate";
 import { PageLoader } from "@/components/lumia-loader";
+import { SettingsLoader } from "./SettingsApp";
 import { authClient } from "@/lib/auth-client";
 import { logoToDataUrl } from "@/lib/logo";
 import { COUNTRIES, groupDigits as fmt, maskPhone } from "@/modules/auth/countries";
@@ -25,7 +26,7 @@ export interface FlowProps {
   wa: { status: "none" | "connected" | "disconnected"; displayPhoneNumber: string; verifiedName: string };
   meta: { appId: string; configId: string; graphVersion: string };
   marketingUrl: string;
-  initialPage?: "Overview" | "Menu" | "WhatsApp";
+  initialPage?: "Overview" | "Orders" | "Menu" | "WhatsApp" | "Settings";
 }
 export interface MenuCat { id: string; name: string; nameAr: string; items: { id: string; name: string; nameAr: string; priceMinor: number; isAvailable: boolean }[] }
 type Item = { id: string; n: string; ar: string; p: number; on: boolean };
@@ -50,11 +51,24 @@ async function api(path: string, method = "GET", body?: unknown) {
   return json.data ?? json;
 }
 
+// An order from the API in the shape the Orders page draws.
+const tClock = (iso: string) => new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+function toDesignOrder(o: any) {
+  const stOf: Record<string, string> = { AWAITING_BUSINESS_CONFIRMATION: "new", ACCEPTED: "preparing", PREPARING: "preparing", READY: "ready", OUT_FOR_DELIVERY: "out", COMPLETED: "completed", REJECTED: "cancelled", CANCELLED: "cancelled" };
+  const slot: Record<string, string> = { AWAITING_BUSINESS_CONFIRMATION: "new", ACCEPTED: "preparing", READY: "ready", OUT_FOR_DELIVERY: "out", COMPLETED: "completed", REJECTED: "cancelled", CANCELLED: "cancelled" };
+  const t: Record<string, string> = { new: tClock(o.createdAt) };
+  for (const h of o.history ?? []) { const k = slot[h.status]; if (k && !t[k]) t[k] = tClock(h.at); }
+  const why = (o.history ?? []).filter((h: any) => h.reason).at(-1)?.reason ?? "";
+  return { uuid: o.id, raw: o.status, id: Number(o.number) || o.number, st: stOf[o.status] ?? "new", min: Math.max(0, Math.round((Date.now() - new Date(o.createdAt).getTime()) / 60000)), placed: tClock(o.createdAt), type: o.fulfillment === "DELIVERY" ? "delivery" : "pickup",
+    name: o.customer?.name || o.customer?.phone || "Customer", phone: "+" + String(o.customer?.phone ?? "").replace(/^\+/, ""), addr: o.address ?? "", fee: o.deliveryFee ?? 0, sub: o.subtotal ?? 0, total: o.total ?? 0, note: o.note ?? "", reason: why,
+    items: (o.items ?? []).map((i: any) => [i.name, i.quantity, i.quantity ? i.total / i.quantity : i.total, i.notes || ""]), t };
+}
+
 declare global { interface Window { FB?: any; fbAsyncInit?: () => void } }
 
 export default class FlowApp extends React.Component<FlowProps, any> {
   phoneRef = React.createRef<HTMLInputElement>(); otpRef = React.createRef<HTMLInputElement>(); nameRef = React.createRef<HTMLInputElement>(); devRef = React.createRef<HTMLDivElement>();
-  timers: any[] = []; tick: any; statsTimer: any; ro?: ResizeObserver; prevStep?: string; connectToken = 0;
+  timers: any[] = []; tick: any; statsTimer: any; ordersTimer: any; ro?: ResizeObserver; prevStep?: string; connectToken = 0;
   noopFn = () => {};
   constructor(props: FlowProps) {
     super(props);
@@ -64,7 +78,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu)) > 0, cat: "All", menu: toCats(props.menu), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
-      page: props.initialPage ?? "Overview", period: "week", overview: null as any, wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
+      page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, settingsPage: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
       lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
     };
   }
@@ -78,9 +92,11 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     this.statsTimer = setInterval(() => { if (this.state.step === "dash" && this.state.page === "WhatsApp" && this.state.waStatus === "connected") this.loadStats(); }, 15000);
     if (this.state.step === "dash" && this.state.page === "WhatsApp") this.loadStats();
     if (this.state.step === "dash" && this.state.page === "Overview") this.loadOverview();
+    if (this.state.step === "dash" && this.state.page === "Orders") this.loadOrders();
+    this.ordersTimer = setInterval(() => { if (this.state.step === "dash" && this.state.page === "Orders" && !this.state.ordBusy) this.loadOrders(); }, 15000);
     if (this.state.step === "phone") this.focus(this.phoneRef); if (this.state.step === "name") this.focus(this.nameRef);
   }
-  componentWillUnmount() { window.removeEventListener("resize", this.onResize); this.ro?.disconnect(); clearInterval(this.tick); clearInterval(this.statsTimer); this.clearTimers(); }
+  componentWillUnmount() { window.removeEventListener("resize", this.onResize); this.ro?.disconnect(); clearInterval(this.tick); clearInterval(this.statsTimer); clearInterval(this.ordersTimer); this.clearTimers(); }
   componentDidUpdate() { if (this.prevStep !== this.state.step) { this.prevStep = this.state.step; if (this.devRef.current) this.devRef.current.scrollTop = 0; window.scrollTo(0, 0); } }
   focus(ref: React.RefObject<HTMLElement | null>) { setTimeout(() => ref.current?.focus(), 60); }
   go(step: string, extra: any = {}) {
@@ -94,7 +110,91 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const data: MenuCat[] = await api(`/api/v1/businesses/${this.state.businessId}/menu`);
     const menu = toCats(data); this.setState({ menu, menuDone: count(menu) > 0 });
   }
+  loadOrders = () => { if (!this.state.businessId) return; api(`/api/v1/businesses/${this.state.businessId}/orders`).then((rows: any[]) => this.setState((st: any) => ({ orders: rows.map(toDesignOrder), ordSel: st.ordSel ?? null }))).catch((e: any) => this.setState({ ordErr: e?.message ?? "We couldn’t load the orders." })); };
   loadOverview = (period = this.state.period) => { if (this.state.businessId) api(`/api/v1/businesses/${this.state.businessId}/whatsapp/overview?period=${period}&tz=${new Date().getTimezoneOffset()}`).then(overview => { if (this.state.period === period) this.setState({ overview }); }).catch(() => undefined); };
+  // Calls the status endpoint one step after another (an accepted order passes through "preparing" before "ready"), then refreshes the list.
+  orderAct = async (o: any, steps: [string, Record<string, unknown>?][], flash: string) => {
+    if (this.state.ordBusy) return;
+    this.setState({ ordBusy: true, ordErr: "" });
+    try {
+      for (const [status, extra] of steps) await api(`/api/v1/businesses/${this.state.businessId}/orders/${o.uuid}/status`, "POST", { status, ...(extra ?? {}) });
+      this.setState({ ordFlash: { id: o.id, text: flash }, ordReject: false, ordReason: "" });
+    } catch (e: any) { this.setState({ ordErr: e?.message ?? "We couldn’t update the order. Please try again." }); }
+    this.setState({ ordBusy: false }); this.loadOrders();
+  };
+  ordersVals(ar: boolean, narrow0: boolean) {
+    const narrow = narrow0 || this.state.w < 1100;
+    const s = this.state, A = (en: string, a: string) => (ar ? a : en);
+    const ST: Record<string, string[]> = { new: [A("New", "جديد"), "#FDEAF2", "#8A2040"], preparing: [A("Preparing", "قيد التحضير"), "#FFF1DC", "#8A4B00"], ready: [A("Ready", "جاهز"), "#F1E6FF", "#6A1FA0"], out: [A("Out for delivery", "في الطريق"), "#F6EEF2", "#3D1C31"], completed: [A("Completed", "مكتمل"), "#E6F4EC", "#16704A"], cancelled: [A("Rejected", "مرفوض"), "#FDECEC", "#B42318"] };
+    const TABS = [["new", A("New", "جديدة")], ["preparing", A("Preparing", "قيد التحضير")], ["ready", A("Ready", "جاهزة")], ["out", A("On the way", "في الطريق")], ["done", A("Done", "منتهية")]];
+    const inTab = (o: any, t: string) => (t === "done" ? o.st === "completed" || o.st === "cancelled" : o.st === t);
+    const os: any[] = s.orders ?? [], q = s.ordQ.trim().toLowerCase();
+    const match = (o: any) => String(o.id).includes(q.replace("#", "")) || o.name.toLowerCase().includes(q) || o.phone.replace(/\s/g, "").includes(q.replace(/\s/g, ""));
+    const money = (n: number) => "AED " + (Number.isInteger(n) ? n : n.toFixed(2));
+    const ago = (o: any) => (o.min < 60 ? A(`${o.min} min ago`, `منذ ${o.min} د`) : A(`${Math.floor(o.min / 60)} h ago`, `منذ ${Math.floor(o.min / 60)} س`));
+    const typeL = (o: any) => (o.type === "delivery" ? A("Delivery", "توصيل") : A("Pickup", "استلام"));
+    const told = A("Customer notified on WhatsApp.", "تم إبلاغ العميل على واتساب.");
+    const tabs = TABS.map(([k, label]) => { const on = !q && s.ordTab === k, n = os.filter(o => inTab(o, k)).length, hot = k === "new" && n > 0;
+      return { label, count: n, hasCount: n > 0, bg: on ? "#FDEAF2" : "#fff", fg: on ? "#8A2040" : "#3D1C31", bd: on ? "#F3B8CC" : "#ECD9E0", cbg: hot ? "#FF5577" : on ? "#fff" : "#F6EEF2", cfg: hot ? "#fff" : "#3D1C31",
+        pick: () => this.setState({ ordTab: k, ordQ: "", ordSel: null, ordReject: false, ordReason: "" }) }; });
+    const list = os.filter(o => (q ? match(o) : inTab(o, s.ordTab))).sort((a, b) => Number(b.id) - Number(a.id));
+    // design status -> API calls
+    const stepsTo = (o: any, to: string): [string, Record<string, unknown>?][] => to === "preparing" ? [["ACCEPTED", { prepMinutes: s.ordPrep }]] : to === "ready" ? (o.raw === "ACCEPTED" ? [["PREPARING"], ["READY"]] : [["READY"]]) : to === "out" ? [["OUT_FOR_DELIVERY"]] : [["COMPLETED"]];
+    const QN: Record<string, [string, string, string]> = { new: ["preparing", A("Accept", "قبول"), "linear-gradient(90deg,#FF5577,#C93DFF)"], preparing: ["ready", A("Mark ready", "جاهز"), "#1A0815"], ready: ["__r", A("Send out", "خرج للتوصيل"), "#1A0815"], out: ["completed", A("Delivered", "تم التوصيل"), "#1A0815"] };
+    const canEdit = this.props.canEdit;
+    const rows: any[] = list.map(o => { const st = ST[o.st], on = o.id === s.ordSel, qn = canEdit ? QN[o.st] : undefined;
+      const qTo = qn && (qn[0] === "__r" ? (o.type === "delivery" ? "out" : "completed") : qn[0]);
+      const qLabel = qn ? (qn[0] === "__r" && o.type !== "delivery" ? A("Picked up", "تم الاستلام") : qn[1]) : "";
+      return { id: "#" + o.id, name: o.name, summary: o.items.map((x: any) => `${x[1]}× ${x[0]}`).join(", "), total: money(o.total), when: o.st === "new" ? ago(o) : o.placed, whenFg: o.st === "new" ? "#C0284F" : "#8A5A6E",
+        type: typeL(o), stLabel: st[0], sbg: st[1], sfg: st[2], isNew: o.st === "new", cbd: on ? "#E3CBD4" : "#F0E4E8", csh: on ? "0 8px 24px -12px rgba(26,8,21,.18)" : "none",
+        oid: o.id, open: on, chev: on ? "180deg" : "0deg", hasQuick: !!qn && !on, qLabel, qBg: qn ? qn[2] : "", quick: () => qTo && this.orderAct(o, stepsTo(o, qTo), told), qPad: qn && !on ? "14px" : "0",
+        pick: () => this.setState({ ordSel: on ? null : o.id, ordReject: false, ordReason: "" }) }; });
+    const o = os.find(x => x.id === s.ordSel);
+    const ord = {
+      t: { title: A("Orders", "الطلبات"), sub: A("WhatsApp orders, newest first.", "طلبات واتساب، الأحدث أولاً."), search: A("Search order # or customer", "ابحث برقم الطلب أو اسم العميل"), empty: A("No orders here right now.", "لا توجد طلبات هنا حالياً."), pick: A("Select an order to see its details.", "اختر طلباً لعرض تفاصيله."), back: A("All orders", "كل الطلبات"),
+        prep: A("Ready in", "جاهز خلال"), accept: A("Accept order", "قبول الطلب"), reject: A("Reject", "رفض"), rejectQ: A("Why are you rejecting this order?", "لماذا ترفض هذا الطلب؟"), told: A("Lumia AI will tell the customer on WhatsApp.", "سيُبلغ Lumia AI العميل على واتساب."), confirmReject: A("Reject order", "تأكيد الرفض"), cancel: A("Cancel", "إلغاء"),
+        print: A("Print receipt", "طباعة الإيصال"), msg: A("Message", "مراسلة"), call: A("Call", "اتصال"), customer: A("Customer", "العميل"), note: A("Customer note", "ملاحظة العميل"), items: A("Items", "الأصناف"), total: A("Total", "الإجمالي"), progress: A("Progress", "سير الطلب") },
+      tabs, rows, empty: s.orders !== null && rows.length === 0, q: s.ordQ, onQ: (e: any) => this.setState({ ordQ: e.target.value }), err: s.ordErr,
+      dcols: narrow ? "minmax(0,1fr)" : "minmax(0,1fr) minmax(0,1.25fr)", dsep: narrow ? "0" : "1px solid #F3EEF1", dsepTop: narrow ? "1px solid #F3EEF1" : "0",
+    };
+    rows.forEach(r => { r.t = ord.t; r.L = { dcols: ord.dcols, dsep: ord.dsep, dsepTop: ord.dsepTop }; r.d = {}; });
+    if (!o) return { ord, od: {}, ordErr: s.ordErr };
+    const first = o.name.split(" ")[0];
+    const NEXT: Record<string, [string, string]> = { preparing: ["ready", A("Mark as ready", "جاهز")], ready: o.type === "delivery" ? ["out", A("Send out for delivery", "خرج للتوصيل")] : ["completed", A("Picked up by customer", "تم الاستلام")], out: ["completed", A("Mark as delivered", "تم التوصيل")] };
+    const nx = canEdit ? NEXT[o.st] : undefined;
+    const REASONS = [A("Item sold out", "صنف غير متوفر"), A("Too busy right now", "ضغط طلبات حالياً"), A("Outside delivery area", "خارج منطقة التوصيل"), A("Closing soon", "سنغلق قريباً")];
+    const keys = o.st === "cancelled" ? ["new", "cancelled"] : o.type === "delivery" ? ["new", "preparing", "ready", "out", "completed"] : ["new", "preparing", "ready", "completed"];
+    const SL: Record<string, string> = { new: A("Placed on WhatsApp", "تم الطلب عبر واتساب"), preparing: A("Accepted", "تم القبول"), ready: A("Ready", "جاهز"), out: A("Out for delivery", "خرج للتوصيل"), completed: o.type === "delivery" ? A("Delivered", "تم التوصيل") : A("Picked up", "تم الاستلام"), cancelled: A("Rejected", "مرفوض") };
+    const curIdx = keys.findIndex(k => !o.t[k]);
+    const steps = keys.map((k, i) => { const done = !!o.t[k], cur = i === curIdx && o.st !== "cancelled", bad = k === "cancelled";
+      return { label: SL[k], time: o.t[k] || "", dot: done ? (bad ? "#B42318" : "#16704A") : "#fff", ring: done ? (bad ? "#B42318" : "#16704A") : cur ? "#FF5577" : "#E3CBD4", line: i === keys.length - 1 ? "transparent" : done && o.t[keys[i + 1]] ? "#16704A" : "#F0E4E8", fw: done || cur ? 600 : 400, fg: done || cur ? "#1A0815" : "#8A5A6E" }; });
+    const st = ST[o.st], rejecting = canEdit && o.st === "new" && s.ordReject, closed = o.st === "completed" || o.st === "cancelled";
+    const od = { stepCols: `repeat(${keys.length},minmax(0,1fr))`,
+      title: A("Order #", "طلب #") + o.id, stLabel: st[0], sbg: st[1], sfg: st[2],
+      meta: [o.placed, typeL(o), A("Cash on delivery", "الدفع عند الاستلام")].join(" · "),
+      isNew: canEdit && o.st === "new" && !s.ordReject, rejecting, actBg: o.st === "new" ? "#FFF7FA" : "#fff",
+      waiting: A(`Waiting for you to accept · placed ${ago(o)}`, `بانتظار قبولك · ${ago(o)}`),
+      prepSeg: [15, 25, 35, 45].map(m => { const on = s.ordPrep === m; return { label: A(m + " min", m + " د"), on, fw: on ? 600 : 500, bg: on ? "#1A0815" : "transparent", fg: on ? "#fff" : "#3D1C31", pick: () => this.setState({ ordPrep: m }) }; }),
+      accept: () => this.orderAct(o, stepsTo(o, "preparing"), A(`Accepted. Lumia AI told ${first} it will be ready in ${s.ordPrep} min.`, `تم القبول. أبلغ Lumia AI العميل أن الطلب سيكون جاهزاً خلال ${s.ordPrep} دقيقة.`)),
+      startReject: () => this.setState({ ordReject: true, ordReason: "" }), cancelReject: () => this.setState({ ordReject: false, ordReason: "" }),
+      reasons: REASONS.map(r => { const on = s.ordReason === r; return { label: r, bg: on ? "#FDECEC" : "#fff", fg: on ? "#B42318" : "#3D1C31", bd: on ? "#F1B4B0" : "#ECD9E0", pick: () => this.setState({ ordReason: r }) }; }),
+      noReason: !s.ordReason, rejOp: s.ordReason ? 1 : 0.45,
+      confirmReject: () => s.ordReason && this.orderAct(o, [["REJECTED", { reason: s.ordReason }]], told),
+      hasNext: !!nx, nextLabel: nx ? nx[1] : "", next: () => nx && this.orderAct(o, stepsTo(o, nx[0]), told),
+      closed, closedFg: o.st === "cancelled" ? "#B42318" : "#16704A",
+      closedText: o.st === "cancelled" ? A("Rejected", "مرفوض") + (o.reason ? " · " + o.reason : "") : A("Completed at ", "اكتمل في ") + (o.t.completed || ""),
+      hasFlash: !!(s.ordFlash && s.ordFlash.id === o.id), flash: s.ordFlash && s.ordFlash.id === o.id ? s.ordFlash.text : "",
+      print: () => this.setState({ ordFlash: { id: o.id, text: A("Connect an order device in Settings to print receipts.", "اربط جهاز طلبات من الإعدادات لطباعة الإيصالات.") } }),
+      message: () => window.open("https://wa.me/" + o.phone.replace(/\D/g, ""), "_blank"), tel: "tel:" + o.phone.replace(/\s/g, ""),
+      name: o.name, phone: o.phone, addr: o.addr, isDelivery: o.type === "delivery",
+      hasNote: !!o.note, note: o.note,
+      items: o.items.map(([n, qn, pr, nt]: any) => ({ q: qn + "×", name: n, alt: "", hasAlt: false, note: nt || "", hasNote: !!nt, price: money(qn * pr) })),
+      totals: [[A("Subtotal", "المجموع الفرعي"), money(o.sub)], ...(o.type === "delivery" ? [[A("Delivery fee", "رسوم التوصيل"), o.fee ? money(o.fee) : A("Free", "مجاني")]] : [])].map(([k, v]) => ({ k, v })),
+      total: money(o.total), steps,
+    };
+    rows.forEach(r => { if (r.oid === o.id) r.d = od; });
+    return { ord, od, ordErr: s.ordErr };
+  }
   overviewVm(ar: boolean, narrow: boolean) {
     const s = this.state, o = s.overview, loc = ar ? "ar" : "en-US", f = (n: number) => n.toLocaleString(loc), cur = o?.currency ?? "AED", money = (m: number) => `${cur} ${f(Math.round(m / 100))}`;
     const nm = s.name || "your restaurant", period: string = s.period, cu = o?.current, pv = o?.previous;
@@ -321,7 +421,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     }).filter(g => g.items.length);
     const langFor = (short: boolean) => [["en", "EN"], ["ar", short ? "ع" : "العربية"]].map(([k, label]) => { const on = s.lang === k; return { label, on, fw: on ? 600 : 500, bg: on ? "#fff" : "transparent", fg: on ? "#1A0815" : "#8A5A6E", sh: on ? "0 1px 2px rgba(26,8,21,.12)" : "none", pick: () => this.setLang(k as any) }; });
     const nm = s.name.trim() || "Burger House"; const initials = nm.split(/\s+/).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase();
-    const setupItems: [string, boolean, any?][] = [["Restaurant created", true], ["Menu added", s.menuDone], [waOn ? "WhatsApp connected" : "Connect WhatsApp", waOn, this.openWA], ["Set delivery & order settings", false, () => window.location.assign(`/dashboard/settings?businessId=${this.state.businessId}#delivery`)], ["Test Lumia", false]];
+    const setupItems: [string, boolean, any?][] = [["Restaurant created", true], ["Menu added", s.menuDone], [waOn ? "WhatsApp connected" : "Connect WhatsApp", waOn, this.openWA], ["Set delivery & order settings", false, () => { history.replaceState(null, "", `/dashboard?page=settings&businessId=${this.state.businessId}#delivery`); this.setState({ page: "Settings" }); }], ["Test Lumia", false]];
     const doneN = setupItems.filter(x => x[1]).length;
     // WhatsApp import screens
     const info = s.waInfo; const waInitials = (s.waName || nm).split(/\s+/).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase();
@@ -373,11 +473,11 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       q: s.q, hasQ: !!s.q, onSearch: (e: any) => this.setState({ q: e.target.value }), clearSearch: () => this.setState({ q: "" }), sections, noResults: sections.length === 0, dashErr: s.dashErr,
       cats: [["All", T.all, count(M)], ...M.map(g => [g.id, catName(g), g.items.length])].map(([k, label, n]: any) => { const on = !q && s.cat === k; return { label, count: n, on, pick: () => this.setState({ cat: k, q: "" }), bg: on ? "#FDEAF2" : "transparent", fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, countFg: on ? "#8A2040" : "#8A5A6E", chipBg: on ? "#1A0815" : "#fff", chipFg: on ? "#fff" : "#3D1C31", chipBd: on ? "#1A0815" : "#ECD9E0" }; }),
       menuDone: s.menuDone && count(M) > 0, menuEmpty: !(s.menuDone && count(M) > 0), dashNarrow: narrow, dashWide: !narrow, openAddItem: p.canEdit ? this.openAddItem : noop, dlg,
-      nav: NAV.map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e: any) => { e?.preventDefault?.(); if (l === "Overview" || l === "Menu" || l === "WhatsApp") { this.setState({ page: l }); if (l === "WhatsApp") this.loadStats(); if (l === "Overview") this.loadOverview(); } else if (l === "Orders") window.location.assign(`/dashboard/orders?businessId=${this.state.businessId}`); else if (l === "Messages") window.location.assign(`/dashboard/messages?businessId=${this.state.businessId}`); else if (l === "Settings") window.location.assign(`/dashboard/settings?businessId=${this.state.businessId}`); else if (l === "Sign out") this.signOut(); }, fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, bg: on ? "#FDEAF2" : "transparent", bd: on ? "#FF5577" : "transparent" }; }),
+      nav: NAV.map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e: any) => { e?.preventDefault?.(); if (l === "Overview" || l === "Orders" || l === "Menu" || l === "WhatsApp" || l === "Settings") { this.setState({ page: l }); if (l === "WhatsApp") this.loadStats(); if (l === "Overview") this.loadOverview(); if (l === "Orders") this.loadOrders(); history.replaceState(null, "", `/dashboard?page=${l.toLowerCase()}&businessId=${this.state.businessId}`); } else if (l === "Sign out") this.signOut(); }, fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, bg: on ? "#FDEAF2" : "transparent", bd: on ? "#FF5577" : "transparent" }; }),
       setup: setupItems.map(([label0, done, fn], i) => { const lb = T.setup[i]; const label = Array.isArray(lb) ? lb[done ? 1 : 0] : lb; return { label, done, todo: !done, fg: done ? "#1A0815" : "#3D1C31", ul: !done && fn ? "underline" : "none", pick: fn || this.noopFn, bar: i < doneN ? "#16704A" : "rgba(26,8,21,.12)" }; }),
       setupLabel: ar ? `${doneN} من 5 مكتملة` : `${doneN} of 5 completed`, waSetupLabel: `${doneN} of 5 completed`,
       // whatsapp
-      pageMenu: s.page === "Menu", pageOverview: s.page === "Overview", ...this.overviewVm(ar, narrow), pageWA: s.page === "WhatsApp", waOpen: !!s.wa, wa: { intro: s.wa === "intro", connecting: s.wa === "connecting", success: s.wa === "success", import: s.wa === "import", review: s.wa === "review", catalog: s.wa === "catalog", error: s.wa === "error", inUse: s.wa === "inUse" },
+      pageMenu: s.page === "Menu", pageOverview: s.page === "Overview", pageOrders: s.page === "Orders", pageSettings: s.page === "Settings", notSettings: s.page !== "Settings", settingsNode: s.page === "Settings" ? <SettingsLoader businessId={s.businessId} query={`?businessId=${s.businessId}`}/> : null, ...this.overviewVm(ar, narrow), ...this.ordersVals(ar, narrow), pageWA: s.page === "WhatsApp", waOpen: !!s.wa, wa: { intro: s.wa === "intro", connecting: s.wa === "connecting", success: s.wa === "success", import: s.wa === "import", review: s.wa === "review", catalog: s.wa === "catalog", error: s.wa === "error", inUse: s.wa === "inUse" },
       waLabel: ({ intro: "08 WhatsApp · Connect", connecting: "08a WhatsApp · Connecting", success: "08b WhatsApp · Connected", import: "08c WhatsApp · Import info", review: "08d WhatsApp · Review differences", catalog: "08e WhatsApp · Catalog found", error: "08g WhatsApp · Error", inUse: "08h WhatsApp · Number in use" } as any)[s.wa] || "08 WhatsApp",
       waClose: () => { this.connectToken++; this.clearTimers(); this.setState({ wa: null, confirmReplace: false }); }, openWA: this.openWA, startConnect: this.startConnect, continueSetup: () => { if (!waOn) this.openWA(); },
       cancelConnect: () => { this.connectToken++; this.setState({ wa: "intro" }); },

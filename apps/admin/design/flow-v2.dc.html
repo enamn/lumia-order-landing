@@ -326,6 +326,12 @@ input::placeholder{color:#B89AA8}
     </sc-if>
 
     <div style="flex:1;display:flex;min-height:0">
+    <sc-if value="{{ pageSettings }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="09 Dashboard · Settings" style="flex:1;min-width:0;min-height:0;display:flex">
+        <div style="flex:1;min-width:0;height:100%">{{ settingsNode }}</div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ notSettings }}" hint-placeholder-val="{{ true }}">
     <main style="flex:1;min-width:0;min-height:0;overflow-y:auto;padding:{{ L.dashPad }};display:flex;flex-direction:column;gap:26px">
       <sc-if value="{{ pageOverview }}" hint-placeholder-val="{{ false }}">
       <div data-screen-label="06 Dashboard · Overview" style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
@@ -469,6 +475,148 @@ input::placeholder{color:#B89AA8}
           </div>
         </div>
       </sc-if>
+      </sc-if>
+
+      <!-- Orders page -->
+      <sc-if value="{{ pageOrders }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="06b Dashboard · Orders" style="display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
+          <div style="flex:1 1 240px;min-width:0">
+            <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">{{ ord.t.title }}</h1>
+            <p style="font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5">{{ ord.t.sub }}</p>
+          </div>
+          <label style="flex:0 1 300px;min-width:200px;height:44px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="flex:none"><circle cx="9" cy="9" r="5.5" stroke="#8A5A6E" stroke-width="1.7"></circle><path d="m13.2 13.2 3.3 3.3" stroke="#8A5A6E" stroke-width="1.7" stroke-linecap="round"></path></svg>
+            <input value="{{ ord.q }}" onChange="{{ ord.onQ }}" placeholder="{{ ord.t.search }}" aria-label="{{ ord.t.search }}" style="flex:1;min-width:0;border:0;background:transparent;font-size:15px;height:100%"></input>
+          </label>
+        </div>
+
+        <sc-if value="{{ ordErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:14px;color:#B4233B">{{ ordErr }}</div></sc-if>
+        <div style="display:flex;gap:8px;overflow-x:auto;flex:none;padding-bottom:2px;scrollbar-width:none">
+          <sc-for list="{{ ord.tabs }}" as="tb" hint-placeholder-count="5">
+            <button type="button" onClick="{{ tb.pick }}" style="height:40px;padding:0 14px;border-radius:999px;display:flex;align-items:center;gap:8px;white-space:nowrap;flex:none;font-size:14px;font-weight:500;background:{{ tb.bg }};color:{{ tb.fg }};border:1.5px solid {{ tb.bd }}">{{ tb.label }}<sc-if value="{{ tb.hasCount }}" hint-placeholder-val="{{ true }}"><span style="min-width:22px;height:22px;padding:0 6px;border-radius:999px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;background:{{ tb.cbg }};color:{{ tb.cfg }}">{{ tb.count }}</span></sc-if></button>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+          <sc-for list="{{ ord.rows }}" as="r" hint-placeholder-count="4">
+            <div style="border-radius:14px;background:#fff;border:1px solid {{ r.cbd }};box-shadow:{{ r.csh }};overflow:clip">
+              <div style="display:flex;align-items:center;gap:10px;padding-inline-end:{{ r.qPad }}">
+                <button type="button" onClick="{{ r.pick }}" aria-expanded="{{ r.open }}" style="flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:start;padding:14px 18px;flex-wrap:wrap">
+                  <div style="flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:4px">
+                    <div style="display:flex;align-items:center;gap:10px;min-width:0">
+                      <sc-if value="{{ r.isNew }}" hint-placeholder-val="{{ false }}"><span style="width:8px;height:8px;border-radius:50%;background:#FF5577;flex:none"></span></sc-if>
+                      <span style="font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;flex:none">{{ r.id }}</span>
+                      <span style="font-size:15px;font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span>
+                    </div>
+                    <span style="font-size:14px;color:#8A5A6E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.summary }}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:12px;flex:none;margin-inline-start:auto">
+                    <span style="display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:{{ r.sbg }};color:{{ r.sfg }}">{{ r.stLabel }}</span>
+                    <span style="font-size:13px;color:#8A5A6E;white-space:nowrap">{{ r.type }}</span>
+                    <span style="font-size:13px;font-weight:500;color:{{ r.whenFg }};font-variant-numeric:tabular-nums;white-space:nowrap">{{ r.when }}</span>
+                    <span dir="ltr" style="font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:72px;text-align:end">{{ r.total }}</span>
+                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ r.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  </div>
+                </button>
+                <sc-if value="{{ r.hasQuick }}" hint-placeholder-val="{{ false }}">
+                  <button type="button" onClick="{{ r.quick }}" style="height:38px;padding:0 14px;border-radius:10px;font-size:14px;font-weight:600;white-space:nowrap;flex:none;background:{{ r.qBg }};color:#fff">{{ r.qLabel }}</button>
+                </sc-if>
+              </div>
+
+              <sc-if value="{{ r.open }}" hint-placeholder-val="{{ false }}">
+                <div style="margin:0 18px;padding:16px 0;border-top:1px solid #F3EEF1;display:grid;grid-template-columns:{{ r.d.stepCols }}">
+                  <sc-for list="{{ r.d.steps }}" as="sp" hint-placeholder-count="5">
+                    <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                      <div style="display:flex;align-items:center">
+                        <span style="width:10px;height:10px;border-radius:50%;flex:none;background:{{ sp.dot }};border:2px solid {{ sp.ring }}"></span>
+                        <span style="flex:1;height:2px;margin:0 6px;border-radius:2px;background:{{ sp.line }}"></span>
+                      </div>
+                      <span style="font-size:13px;line-height:1.3;padding-inline-end:8px;font-weight:{{ sp.fw }};color:{{ sp.fg }}">{{ sp.label }}<span style="display:block;font-weight:400;font-size:12px;color:#8A5A6E;font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:2px">{{ sp.time }}</span></span>
+                    </div>
+                  </sc-for>
+                </div>
+
+                <div style="margin:0 18px;border-top:1px solid #F3EEF1;display:grid;grid-template-columns:{{ r.L.dcols }};gap:0 32px">
+                  <div style="padding:16px 0;display:flex;flex-direction:column;min-width:0">
+                    <span style="font-size:14px;font-weight:600;margin-bottom:6px">{{ r.t.items }}</span>
+                    <sc-for list="{{ r.d.items }}" as="it" hint-placeholder-count="3">
+                      <div style="display:flex;gap:10px;padding:6px 0;align-items:flex-start">
+                        <span style="width:26px;flex:none;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums">{{ it.q }}</span>
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                          <span style="font-size:15px">{{ it.name }}</span>
+                          <sc-if value="{{ it.hasNote }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;font-weight:500;color:#8A4B00">{{ it.note }}</span></sc-if>
+                        </div>
+                        <span dir="ltr" style="font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap">{{ it.price }}</span>
+                      </div>
+                    </sc-for>
+                    <div style="border-top:1px dashed #ECD9E0;margin-top:8px;padding-top:10px;display:flex;flex-direction:column;gap:5px">
+                      <sc-for list="{{ r.d.totals }}" as="tt" hint-placeholder-count="2"><div style="display:flex;justify-content:space-between;gap:12px;font-size:14px;color:#8A5A6E"><span>{{ tt.k }}</span><span dir="ltr" style="font-variant-numeric:tabular-nums">{{ tt.v }}</span></div></sc-for>
+                      <div style="display:flex;justify-content:space-between;gap:12px;font-size:16px;font-weight:600"><span>{{ r.t.total }}</span><span dir="ltr" style="font-variant-numeric:tabular-nums">{{ r.d.total }}</span></div>
+                    </div>
+                  </div>
+                  <div style="padding:16px 0;display:flex;flex-direction:column;gap:4px;min-width:0;border-top:{{ r.L.dsepTop }}">
+                    <span style="font-size:14px;font-weight:600;margin-bottom:6px">{{ r.t.customer }}</span>
+                    <span style="font-size:15px;font-weight:500">{{ r.d.name }}</span>
+                    <span dir="ltr" style="font-size:14px;color:#3D1C31;font-variant-numeric:tabular-nums;text-align:start">{{ r.d.phone }}</span>
+                    <sc-if value="{{ r.d.isDelivery }}" hint-placeholder-val="{{ true }}">
+                      <span style="font-size:14px;color:#3D1C31;line-height:1.45;margin-top:4px">{{ r.d.addr }}</span>
+                    </sc-if>
+                    <sc-if value="{{ r.d.hasNote }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size:14px;line-height:1.45;margin-top:8px;color:#8A4B00"><span style="font-weight:600">{{ r.t.note }}:</span> {{ r.d.note }}</span>
+                    </sc-if>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+                      <button type="button" onClick="{{ r.d.message }}" style="height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none" style-hover="background:#FBF3F8"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M3.5 16.5 4.6 13A7 7 0 1 1 7.3 15.6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path></svg>{{ r.t.msg }}</button>
+                      <a href="{{ r.d.tel }}" style="height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none" style-hover="background:#FBF3F8"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4 3.5h3l1.5 3.5-2 1.3a9 9 0 0 0 5.2 5.2l1.3-2 3.5 1.5v3a1.5 1.5 0 0 1-1.6 1.5A14 14 0 0 1 2.5 5.1 1.5 1.5 0 0 1 4 3.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path></svg>{{ r.t.call }}</a>
+                      <button type="button" onClick="{{ r.d.print }}" style="height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none" style-hover="background:#FBF3F8"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path></svg>{{ r.t.print }}</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="padding:14px 18px;border-top:1px solid #F3EEF1;display:flex;flex-direction:column;gap:12px">
+                  <sc-if value="{{ r.d.hasFlash }}" hint-placeholder-val="{{ false }}">
+                    <span role="status" style="display:flex;align-items:center;gap:8px;font-size:14px;color:#16704A;font-weight:500"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="flex:none"><circle cx="10" cy="10" r="9" fill="#16704A"></circle><path d="M6 10.2 8.6 12.8 14 7.4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>{{ r.d.flash }}</span>
+                  </sc-if>
+                  <sc-if value="{{ r.d.isNew }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px">
+                      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                        <span style="font-size:14px;color:#3D1C31">{{ r.t.prep }}</span>
+                        <div role="radiogroup" aria-label="{{ r.t.prep }}" style="display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px">
+                          <sc-for list="{{ r.d.prepSeg }}" as="ps" hint-placeholder-count="4"><button type="button" role="radio" aria-checked="{{ ps.on }}" onClick="{{ ps.pick }}" style="height:32px;padding:0 11px;border-radius:8px;font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:{{ ps.fw }};background:{{ ps.bg }};color:{{ ps.fg }}">{{ ps.label }}</button></sc-for>
+                        </div>
+                      </div>
+                      <div style="display:flex;gap:8px;margin-inline-start:auto">
+                        <button type="button" onClick="{{ r.d.startReject }}" style="height:44px;padding:0 16px;border-radius:12px;color:#B42318;font-weight:500;font-size:15px" style-hover="background:#FDECEC">{{ r.t.reject }}</button>
+                        <button type="button" onClick="{{ r.d.accept }}" style="height:44px;padding:0 24px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px">{{ r.t.accept }}</button>
+                      </div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ r.d.rejecting }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size:15px;font-weight:600">{{ r.t.rejectQ }}</span>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px">
+                      <sc-for list="{{ r.d.reasons }}" as="rs" hint-placeholder-count="4"><button type="button" onClick="{{ rs.pick }}" style="height:38px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;background:{{ rs.bg }};color:{{ rs.fg }};border:1px solid {{ rs.bd }}">{{ rs.label }}</button></sc-for>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
+                      <span style="font-size:13px;color:#8A5A6E;flex:1 1 200px">{{ r.t.told }}</span>
+                      <button type="button" onClick="{{ r.d.cancelReject }}" style="height:44px;padding:0 16px;border-radius:12px;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">{{ r.t.cancel }}</button>
+                      <button type="button" onClick="{{ r.d.confirmReject }}" disabled="{{ r.d.noReason }}" style="height:44px;padding:0 18px;border-radius:12px;background:#B42318;color:#fff;font-weight:600;font-size:15px;opacity:{{ r.d.rejOp }}">{{ r.t.confirmReject }}</button>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ r.d.hasNext }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;justify-content:flex-end">
+                      <button type="button" onClick="{{ r.d.next }}" style="height:44px;padding:0 24px;border-radius:12px;background:#1A0815;color:#fff;font-weight:600;font-size:15px" style-hover="background:#3D1C31">{{ r.d.nextLabel }}</button>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ r.d.closed }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size:15px;font-weight:500;color:{{ r.d.closedFg }}">{{ r.d.closedText }}</span>
+                  </sc-if>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ ord.empty }}" hint-placeholder-val="{{ false }}"><div style="padding:40px 20px;text-align:center;font-size:15px;color:#8A5A6E;border:1px dashed #ECD9E0;border-radius:14px">{{ ord.t.empty }}</div></sc-if>
+        </div>
+      </div>
       </sc-if>
 
       <!-- WhatsApp page -->
@@ -793,6 +941,7 @@ input::placeholder{color:#B89AA8}
       </div>
       </sc-if>
     </main>
+    </sc-if>
     </div>
   </div>
 </div>
@@ -870,10 +1019,21 @@ const SCREENS = {
 };
 const SETTINGS = 'Lumia Order Restaurant Settings.dc.html';
 const goSettings = (hash) => { window.location.href = SETTINGS + (hash ? '#' + hash : ''); };
+const ORDERS = [
+  { id: 1048, st: 'new', min: 2, placed: '7:42 PM', type: 'delivery', name: 'Ahmed Al Mansoori', phone: '+971 50 218 4471', addr: 'Al Majaz 2, Building 7, Apt 304, Sharjah', fee: 5, note: 'Please ring the bell twice', items: [['Burger Meal', 2, 38, 'No onions'], ['Cheese Fries', 1, 16], ['Coke', 2, 6]], t: { new: '7:42 PM' } },
+  { id: 1047, st: 'new', min: 6, placed: '7:38 PM', type: 'pickup', name: 'Sara Khalid', phone: '+971 55 903 1182', addr: '', fee: 0, note: '', items: [['Chicken Burger', 1, 24], ['Classic Burger', 1, 26]], t: { new: '7:38 PM' } },
+  { id: 1046, st: 'preparing', min: 14, placed: '7:30 PM', type: 'delivery', name: 'Rahul Menon', phone: '+971 52 447 6620', addr: 'Al Nahda, Sahara Tower 3, Apt 1209, Sharjah', fee: 5, note: '', items: [['Double Smash', 2, 34], ['Cheese Fries', 2, 16]], t: { new: '7:30 PM', preparing: '7:31 PM' } },
+  { id: 1045, st: 'preparing', min: 19, placed: '7:25 PM', type: 'delivery', name: 'Fatima Al Hashimi', phone: '+971 50 661 0934', addr: 'Al Nuaimiya 1, Villa 22, Ajman', fee: 0, note: 'Extra ketchup', items: [['Classic Burger', 3, 26], ['Coke', 3, 6]], t: { new: '7:25 PM', preparing: '7:26 PM' } },
+  { id: 1044, st: 'ready', min: 27, placed: '7:17 PM', type: 'pickup', name: 'Omar Haddad', phone: '+971 56 120 5578', addr: '', fee: 0, note: '', items: [['Mushroom Swiss', 1, 30]], t: { new: '7:17 PM', preparing: '7:18 PM', ready: '7:36 PM' } },
+  { id: 1043, st: 'out', min: 41, placed: '7:03 PM', type: 'delivery', name: 'Layla Nasser', phone: '+971 50 774 2290', addr: 'Muwaileh, Al Zahia, Building B4, Sharjah', fee: 10, note: '', items: [['Burger Meal', 1, 38], ['Chicken Burger', 1, 24]], t: { new: '7:03 PM', preparing: '7:04 PM', ready: '7:22 PM', out: '7:25 PM' } },
+  { id: 1042, st: 'completed', min: 70, placed: '6:34 PM', type: 'delivery', name: 'Khalid Saeed', phone: '+971 55 310 8841', addr: 'Al Khan, Building 12, Sharjah', fee: 5, note: '', items: [['Cheese Burger', 2, 28], ['Cheese Fries', 1, 16]], t: { new: '6:34 PM', preparing: '6:35 PM', ready: '6:52 PM', out: '6:55 PM', completed: '7:14 PM' } },
+  { id: 1041, st: 'cancelled', min: 82, placed: '6:22 PM', type: 'delivery', name: 'Maryam Ali', phone: '+971 52 980 4417', addr: 'Dubai Marina, Marina Gate 1', fee: 0, note: '', reason: 'Outside delivery area', items: [['Classic Burger', 2, 26]], t: { new: '6:22 PM', cancelled: '6:24 PM' } },
+];
 const WA_BASE = { page: 'Overview', period: 'week', wa: null, waStatus: 'none', waErr: null, waCatalog: true, catOpen: false, confirmReplace: false, confirmDisc: false, menuSrc: 'lumia', address: '', choices: {} };
 
 class Component extends DCLogic {
   state = {
+    orders: ORDERS, ordTab: 'new', ordSel: 1048, ordQ: '', ordReject: false, ordReason: '', ordPrep: 25, ordMobile: false, ordFlash: null,
     step: 'phone', num: '', cc: 0, focused: false, invalid: false, sending: false, ccOpen: false,
     digits: '', otpFocused: false, otpErr: null, verifying: false, resendAt: 0, now: Date.now(), note: null,
     name: '', nameFocused: false, nameErr: false, logo: null, drag: false, fileName: 'burger-house-menu.pdf',
@@ -894,7 +1054,7 @@ class Component extends DCLogic {
     this.tick = setInterval(() => { if (this.state.step === 'otp') this.setState({ now: Date.now() }); }, 1000);
     this.applyScreen();
     const hs = location.hash.slice(1);
-    if (hs === 'dash' || hs === 'menu') this.setState({ step: 'dash', menuDone: true, name: this.state.name || 'Burger House', page: hs === 'menu' ? 'Menu' : 'Overview' });
+    if (hs === 'dash' || hs === 'menu' || hs === 'orders') this.setState({ step: 'dash', menuDone: true, name: this.state.name || 'Burger House', page: hs === 'menu' ? 'Menu' : hs === 'orders' ? 'Orders' : 'Overview' });
   }
   componentWillUnmount() { window.removeEventListener('resize', this.onResize); this.ro && this.ro.disconnect(); clearInterval(this.tick); this.clearTimers(); }
   componentDidUpdate(p) {
@@ -962,6 +1122,84 @@ class Component extends DCLogic {
     });
   };
   takeFile(f) { if (!f) return; this.setState({ fileName: f.name, drag: false, step: 'processing' }); this.startProcessing(); }
+  ordersVals(ar, narrow0) {
+    const narrow = narrow0 || this.state.w < 1100;
+    const s = this.state, A = (en, a) => (ar ? a : en);
+    const ST = { new: [A('New', 'جديد'), '#FDEAF2', '#8A2040'], preparing: [A('Preparing', 'قيد التحضير'), '#FFF1DC', '#8A4B00'], ready: [A('Ready', 'جاهز'), '#F1E6FF', '#6A1FA0'], out: [A('Out for delivery', 'في الطريق'), '#F6EEF2', '#3D1C31'], completed: [A('Completed', 'مكتمل'), '#E6F4EC', '#16704A'], cancelled: [A('Rejected', 'مرفوض'), '#FDECEC', '#B42318'] };
+    const TABS = [['new', A('New', 'جديدة')], ['preparing', A('Preparing', 'قيد التحضير')], ['ready', A('Ready', 'جاهزة')], ['out', A('On the way', 'في الطريق')], ['done', A('Done', 'منتهية')]];
+    const inTab = (o, t) => (t === 'done' ? o.st === 'completed' || o.st === 'cancelled' : o.st === t);
+    const os = s.orders, q = s.ordQ.trim().toLowerCase();
+    const match = (o) => String(o.id).includes(q.replace('#', '')) || o.name.toLowerCase().includes(q) || o.phone.replace(/\s/g, '').includes(q.replace(/\s/g, ''));
+    const iname = (n) => (ar ? AR[n] || n : n);
+    const aed = (n) => 'AED ' + (Number.isInteger(n) ? n : n.toFixed(2));
+    const sub = (o) => o.items.reduce((t, i) => t + i[1] * i[2], 0);
+    const tot = (o) => sub(o) + (o.type === 'delivery' ? o.fee : 0);
+    const ago = (o) => A(`${o.min} min ago`, `منذ ${o.min} د`);
+    const typeL = (o) => (o.type === 'delivery' ? A('Delivery', 'توصيل') : A('Pickup', 'استلام'));
+    const tabs = TABS.map(([k, label]) => { const on = !q && s.ordTab === k, n = os.filter(o => inTab(o, k)).length, hot = k === 'new' && n > 0;
+      return { label, count: n, hasCount: n > 0, bg: on ? '#FDEAF2' : '#fff', fg: on ? '#8A2040' : '#3D1C31', bd: on ? '#F3B8CC' : '#ECD9E0', cbg: hot ? '#FF5577' : on ? '#fff' : '#F6EEF2', cfg: hot ? '#fff' : '#3D1C31',
+        pick: () => { const f = os.filter(o => inTab(o, k)).sort((a, b) => b.id - a.id)[0]; this.setState({ ordTab: k, ordQ: '', ordSel: f ? f.id : null, ordReject: false, ordReason: '', ordMobile: false }); } }; });
+    const list = os.filter(o => (q ? match(o) : inTab(o, s.ordTab))).sort((a, b) => b.id - a.id);
+    const nowT = () => new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const QN = { new: ['preparing', A('Accept', 'قبول'), 'linear-gradient(90deg,#FF5577,#C93DFF)'], preparing: ['ready', A('Mark ready', 'جاهز'), '#1A0815'], ready: ['__r', A('Send out', 'خرج للتوصيل'), '#1A0815'], out: ['completed', A('Delivered', 'تم التوصيل'), '#1A0815'] };
+    const rows = list.map((o, i) => { const st = ST[o.st], on = o.id === s.ordSel, qn = QN[o.st];
+      const qTo = qn && qn[0] === '__r' ? (o.type === 'delivery' ? 'out' : 'completed') : qn && qn[0];
+      const qLabel = qn ? (qn[0] === '__r' && o.type !== 'delivery' ? A('Picked up', 'تم الاستلام') : qn[1]) : '';
+      const quick = () => qTo && this.setState(S => ({ orders: S.orders.map(x => (x.id === o.id ? { ...x, st: qTo, t: { ...x.t, [qTo]: nowT() } } : x)), ordFlash: { id: o.id, text: A('Customer notified on WhatsApp.', 'تم إبلاغ العميل على واتساب.') } }));
+      return { id: '#' + o.id, name: o.name, summary: o.items.map(x => `${x[1]}× ${iname(x[0])}`).join(', '), total: aed(tot(o)), when: o.st === 'new' ? ago(o) : o.placed, whenFg: o.st === 'new' ? '#C0284F' : '#8A5A6E',
+        type: typeL(o), stLabel: st[0], sbg: st[1], sfg: st[2], isNew: o.st === 'new', cbd: on ? '#E3CBD4' : '#F0E4E8', csh: on ? '0 8px 24px -12px rgba(26,8,21,.18)' : 'none',
+        oid: o.id, open: on, chev: on ? '180deg' : '0deg', hasQuick: !!qn && !on, qLabel, qBg: qn ? qn[2] : '', quick, qPad: qn && !on ? '14px' : '0',
+        pick: () => this.setState({ ordSel: on ? null : o.id, ordReject: false, ordReason: '' }) }; });
+    const o = os.find(x => x.id === s.ordSel);
+    const ord = {
+      t: { title: A('Orders', 'الطلبات'), sub: A('WhatsApp orders, newest first.', 'طلبات واتساب، الأحدث أولاً.'), search: A('Search order # or customer', 'ابحث برقم الطلب أو اسم العميل'), empty: A('No orders here right now.', 'لا توجد طلبات هنا حالياً.'), pick: A('Select an order to see its details.', 'اختر طلباً لعرض تفاصيله.'), back: A('All orders', 'كل الطلبات'),
+        prep: A('Ready in', 'جاهز خلال'), accept: A('Accept order', 'قبول الطلب'), reject: A('Reject', 'رفض'), rejectQ: A('Why are you rejecting this order?', 'لماذا ترفض هذا الطلب؟'), told: A('Lumia AI will tell the customer on WhatsApp.', 'سيُبلغ Lumia AI العميل على واتساب.'), confirmReject: A('Reject order', 'تأكيد الرفض'), cancel: A('Cancel', 'إلغاء'),
+        print: A('Print receipt', 'طباعة الإيصال'), msg: A('Message', 'مراسلة'), call: A('Call', 'اتصال'), customer: A('Customer', 'العميل'), note: A('Customer note', 'ملاحظة العميل'), items: A('Items', 'الأصناف'), total: A('Total', 'الإجمالي'), progress: A('Progress', 'سير الطلب') },
+      tabs, rows, empty: rows.length === 0, q: s.ordQ, onQ: (e) => this.setState({ ordQ: e.target.value, ordMobile: false }),
+      cols: narrow ? 'minmax(0,1fr)' : 'minmax(260px,320px) minmax(0,1fr)', dcols: narrow ? 'minmax(0,1fr)' : 'minmax(0,1fr) minmax(0,1.25fr)', dsep: narrow ? '0' : '1px solid #F3EEF1', dsepTop: narrow ? '1px solid #F3EEF1' : '0', showList: !narrow || !s.ordMobile, showDetail: !!o && (!narrow || s.ordMobile), noSel: !o && !narrow, backBtn: narrow, back: () => this.setState({ ordMobile: false }), flip: ar ? -1 : 1,
+    };
+    rows.forEach(r => { r.t = ord.t; r.L = { dcols: ord.dcols, dsep: ord.dsep, dsepTop: ord.dsepTop }; r.d = {}; });
+    if (!o) return { ord, od: {} };
+    const now = () => new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const setSt = (st, text, extra = {}) => this.setState(S => ({ orders: S.orders.map(x => (x.id === o.id ? { ...x, ...extra, st, t: { ...x.t, [st]: now() } } : x)), ordFlash: { id: o.id, text }, ordReject: false, ordReason: '' }));
+    const told = A('Customer notified on WhatsApp.', 'تم إبلاغ العميل على واتساب.');
+    const first = o.name.split(' ')[0];
+    const NEXT = { preparing: ['ready', A('Mark as ready', 'جاهز')], ready: o.type === 'delivery' ? ['out', A('Send out for delivery', 'خرج للتوصيل')] : ['completed', A('Picked up by customer', 'تم الاستلام')], out: ['completed', A('Mark as delivered', 'تم التوصيل')] };
+    const nx = NEXT[o.st];
+    const REASONS = [A('Item sold out', 'صنف غير متوفر'), A('Too busy right now', 'ضغط طلبات حالياً'), A('Outside delivery area', 'خارج منطقة التوصيل'), A('Closing soon', 'سنغلق قريباً')];
+    const keys = o.st === 'cancelled' ? ['new', 'cancelled'] : o.type === 'delivery' ? ['new', 'preparing', 'ready', 'out', 'completed'] : ['new', 'preparing', 'ready', 'completed'];
+    const SL = { new: A('Placed on WhatsApp', 'تم الطلب عبر واتساب'), preparing: A('Accepted', 'تم القبول'), ready: A('Ready', 'جاهز'), out: A('Out for delivery', 'خرج للتوصيل'), completed: o.type === 'delivery' ? A('Delivered', 'تم التوصيل') : A('Picked up', 'تم الاستلام'), cancelled: A('Rejected', 'مرفوض') };
+    const curIdx = keys.findIndex(k => !o.t[k]);
+    const steps = keys.map((k, i) => { const done = !!o.t[k], cur = i === curIdx && o.st !== 'cancelled', bad = k === 'cancelled';
+      return { label: SL[k], time: o.t[k] || '', dot: done ? (bad ? '#B42318' : '#16704A') : '#fff', ring: done ? (bad ? '#B42318' : '#16704A') : cur ? '#FF5577' : '#E3CBD4', line: i === keys.length - 1 ? 'transparent' : done && o.t[keys[i + 1]] ? '#16704A' : '#F0E4E8', fw: done || cur ? 600 : 400, fg: done || cur ? '#1A0815' : '#8A5A6E' }; });
+    const st = ST[o.st], T_ = tot(o), rejecting = o.st === 'new' && s.ordReject, closed = o.st === 'completed' || o.st === 'cancelled';
+    const od = { stepCols: `repeat(${keys.length},minmax(0,1fr))`,
+      title: A('Order #', 'طلب #') + o.id, stLabel: st[0], sbg: st[1], sfg: st[2],
+      meta: [o.placed, typeL(o), A('Cash on delivery', 'الدفع عند الاستلام')].join(' · '),
+      isNew: o.st === 'new' && !s.ordReject, rejecting, actBg: o.st === 'new' ? '#FFF7FA' : '#fff',
+      waiting: A(`Waiting for you to accept · placed ${ago(o)}`, `بانتظار قبولك · ${ago(o)}`),
+      prepSeg: [15, 25, 35, 45].map(m => { const on = s.ordPrep === m; return { label: A(m + ' min', m + ' د'), on, fw: on ? 600 : 500, bg: on ? '#1A0815' : 'transparent', fg: on ? '#fff' : '#3D1C31', pick: () => this.setState({ ordPrep: m }) }; }),
+      accept: () => setSt('preparing', A(`Accepted. Lumia AI told ${first} it will be ready in ${s.ordPrep} min.`, `تم القبول. أبلغ Lumia AI العميل أن الطلب سيكون جاهزاً خلال ${s.ordPrep} دقيقة.`)),
+      startReject: () => this.setState({ ordReject: true, ordReason: '' }), cancelReject: () => this.setState({ ordReject: false, ordReason: '' }),
+      reasons: REASONS.map(r => { const on = s.ordReason === r; return { label: r, bg: on ? '#FDECEC' : '#fff', fg: on ? '#B42318' : '#3D1C31', bd: on ? '#F1B4B0' : '#ECD9E0', pick: () => this.setState({ ordReason: r }) }; }),
+      noReason: !s.ordReason, rejOp: s.ordReason ? 1 : 0.45,
+      confirmReject: () => s.ordReason && setSt('cancelled', told, { reason: s.ordReason }),
+      hasNext: !!nx, nextLabel: nx ? nx[1] : '', next: () => nx && setSt(nx[0], told),
+      closed, closedFg: o.st === 'cancelled' ? '#B42318' : '#16704A',
+      closedText: o.st === 'cancelled' ? A('Rejected · ', 'مرفوض · ') + (o.reason || '') : A('Completed at ', 'اكتمل في ') + (o.t.completed || ''),
+      hasFlash: !!(s.ordFlash && s.ordFlash.id === o.id), flash: s.ordFlash && s.ordFlash.id === o.id ? s.ordFlash.text : '',
+      print: () => this.setState({ ordFlash: { id: o.id, text: A('Receipt sent to Kitchen tablet.', 'تم إرسال الإيصال إلى جهاز المطبخ.') } }),
+      message: () => window.open('https://wa.me/' + o.phone.replace(/\D/g, ''), '_blank'), tel: 'tel:' + o.phone.replace(/\s/g, ''),
+      name: o.name, phone: o.phone, addr: o.addr, isDelivery: o.type === 'delivery', pinText: A('Location pin shared', 'تمت مشاركة الموقع'),
+      hasNote: !!o.note, note: o.note,
+      items: o.items.map(([n, qn, pr, nt]) => { const alt = ar ? n : AR[n] || ''; return { q: qn + '×', name: iname(n), alt, hasAlt: !!alt && alt !== iname(n), note: nt || '', hasNote: !!nt, price: aed(qn * pr) }; }),
+      totals: [[A('Subtotal', 'المجموع الفرعي'), aed(sub(o))], ...(o.type === 'delivery' ? [[A('Delivery fee', 'رسوم التوصيل'), o.fee ? aed(o.fee) : A('Free', 'مجاني')]] : [])].map(([k, v]) => ({ k, v })),
+      total: aed(T_), vat: A(`Includes 5% VAT (${aed(Math.round(T_ * 5 / 105 * 100) / 100)})`, `شامل ضريبة القيمة المضافة ٥٪ (${aed(Math.round(T_ * 5 / 105 * 100) / 100)})`),
+      steps,
+    };
+    rows.forEach(r => { if (r.oid === o.id) r.d = od; });
+    return { ord, od };
+  }
   renderVals() {
     const s = this.state;
     const c = COUNTRIES[s.cc];
@@ -1042,7 +1280,7 @@ class Component extends DCLogic {
         onPrice: (e) => { const v = e.target.value.replace(/[^\d.]/g, ''); this.setState(st => ({ edits: { ...st.edits, [n]: v }, flags: { ...st.flags, [n]: false } })); },
         ok: () => this.setState(st => ({ flags: { ...st.flags, [n]: false } })) }; }) }; });
     const waOn = s.waStatus === 'connected';
-    const setupItems = [['Restaurant created', true], ['Menu added', s.menuDone], [waOn ? 'WhatsApp connected' : 'Connect WhatsApp', waOn, this.openWA], ['Set delivery & order settings', false, () => goSettings('delivery')], ['Test Lumia', false]];
+    const setupItems = [['Restaurant created', true], ['Menu added', s.menuDone], [waOn ? 'WhatsApp connected' : 'Connect WhatsApp', waOn, this.openWA], ['Set delivery & order settings', false, () => this.setState({ page: 'Settings', settingsPage: 'delivery' })], ['Test Lumia', false]];
     const M = s.menuSrc === 'wa' ? WA_CAT : MENU;
     const ar = s.lang === 'ar';
     const T = ar ? T_AR : T_EN;
@@ -1176,7 +1414,8 @@ class Component extends DCLogic {
       menuDone: s.menuDone, menuEmpty: !s.menuDone,
       toMenuUpload: () => this.go('menu'),
       dashNarrow: narrow, dashWide: !narrow,
-      pageOverview: s.page === 'Overview',
+      pageOverview: s.page === 'Overview', pageSettings: s.page === 'Settings', notSettings: s.page !== 'Settings', settingsPage: s.settingsPage || '',
+      pageOrders: s.page === 'Orders', ...this.ordersVals(ar, narrow),
       ...(() => {
         const P = { today: { o: 18, r: 1124, a: 62, c: 41, d: ['+4', '+12%', '−3%', '+9'], bars: [['12 PM', 1], ['2 PM', 3], ['4 PM', 2], ['6 PM', 4], ['8 PM', 6], ['10 PM', 2]] },
           week: { o: 126, r: 8240, a: 65, c: 298, d: ['+18%', '+21%', '+3%', '+14%'], bars: [['Mon', 14], ['Tue', 12], ['Wed', 16], ['Thu', 21], ['Fri', 26], ['Sat', 22], ['Sun', 15]] },
@@ -1194,7 +1433,7 @@ class Component extends DCLogic {
           L: { ...L, split2: narrow ? 'minmax(0,1fr)' : 'minmax(0,1.6fr) minmax(0,1fr)' },
         };
       })(),
-      nav: [['Overview', 'M3 10.5 10 4l7 6.5M5 9v7.5h10V9'], ['Orders', 'M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0'], ['Menu', 'M5 4.5h10M5 10h10M5 15.5h6'], ['WhatsApp', 'M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z'], ['Customers', 'M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5'], ['Settings', 'M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4']].map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e) => { e && e.preventDefault && e.preventDefault(); if (l === 'Settings') goSettings(); else if (l === 'Overview' || l === 'Menu' || l === 'WhatsApp') this.setState({ page: l }); }, fg: on ? '#1A0815' : '#3D1C31', fw: on ? 600 : 400, bg: on ? '#FDEAF2' : 'transparent', bd: on ? '#FF5577' : 'transparent' }; }),
+      nav: [['Overview', 'M3 10.5 10 4l7 6.5M5 9v7.5h10V9'], ['Orders', 'M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0'], ['Menu', 'M5 4.5h10M5 10h10M5 15.5h6'], ['WhatsApp', 'M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z'], ['Customers', 'M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5'], ['Settings', 'M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4']].map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e) => { e && e.preventDefault && e.preventDefault(); if (l === 'Settings') this.setState({ page: 'Settings', settingsPage: '' }); else if (l === 'Overview' || l === 'Orders' || l === 'Menu' || l === 'WhatsApp') this.setState({ page: l }); }, fg: on ? '#1A0815' : '#3D1C31', fw: on ? 600 : 400, bg: on ? '#FDEAF2' : 'transparent', bd: on ? '#FF5577' : 'transparent' }; }),
       setup: setupItems.map(([label0, done, fn], i) => { const lb = T.setup[i]; const label = Array.isArray(lb) ? lb[done ? 1 : 0] : lb; return { label, done, todo: !done, fg: done ? '#1A0815' : '#3D1C31', ul: !done && fn ? 'underline' : 'none', pick: fn || this.noopFn, bar: i < doneN ? '#16704A' : 'rgba(26,8,21,.12)' }; }),
       setupLabel: ar ? `${doneN} من 5 مكتملة` : `${doneN} of 5 completed`, waSetupLabel: `${doneN} of 5 completed`,
       chips: [{ cat: 'All', count: count(M) }, ...M.map(g => ({ cat: g.cat, count: g.items.length }))].map(x => { const on = x.cat === s.cat; return { ...x, bg: on ? '#1A0815' : '#fff', fg: on ? '#fff' : '#3D1C31', bd: on ? '#1A0815' : '#ECD9E0', pick: () => this.setState({ cat: x.cat }) }; }),
