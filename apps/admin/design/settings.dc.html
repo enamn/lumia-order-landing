@@ -90,7 +90,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                       <span style="font-size:13px;color:#8A5A6E">Square PNG or JPG, at least 400 px.</span>
                     </div>
                   </div>
-                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px 20px">
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px 16px">
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Restaurant name</span><input value="{{ prof.name.v }}" onChange="{{ prof.name.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input><span style="font-size:13px;color:#8A5A6E">Legal or registered name.</span></label>
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Brand name shown to customers</span><input value="{{ prof.brand.v }}" onChange="{{ prof.brand.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input><span style="font-size:13px;color:#8A5A6E">Used in greetings and order summaries.</span></label>
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Cuisine type</span><input value="{{ prof.cuisine.v }}" onChange="{{ prof.cuisine.set }}" placeholder="e.g. Burgers, Lebanese, Pizza" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input></label>
@@ -99,7 +99,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                 <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0">
                   <div role="button" tabindex="0" onClick="{{ acc.s1.toggle }}" aria-expanded="{{ acc.s1.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Contact</h2></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s1.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                   <sc-if value="{{ acc.s1.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:18px;padding-top:18px">
-                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px 20px">
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px 16px">
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Business phone</span><input value="{{ prof.phone.v }}" onChange="{{ prof.phone.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Support WhatsApp number</span><input value="{{ prof.support.v }}" onChange="{{ prof.support.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input><span style="font-size:13px;color:#8A5A6E">Customers are sent here if they ask for a person.</span></label>
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Email</span><input type="email" value="{{ prof.email.v }}" onChange="{{ prof.email.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input></label>
@@ -166,7 +166,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
             <sc-if value="{{ adding }}" hint-placeholder-val="{{ false }}">
               <section style="border:1.5px solid #E3CBD4;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px">
                 <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">New branch</h2>
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px 20px">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px 16px">
                   <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Branch name</span><input value="{{ nb.name.v }}" onChange="{{ nb.name.set }}" placeholder="e.g. Dubai Marina Branch" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input></label>
                   <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Emirate</span>{{ nb.emSel }}</label>
                   <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Area</span><input value="{{ nb.area.v }}" onChange="{{ nb.area.set }}" placeholder="e.g. Dubai Marina" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input></label>
@@ -281,10 +281,12 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
               <h1 style="font-size:22px;font-weight:600;letter-spacing:-0.025em">Delivery settings</h1>
               <p style="font-size:14px;color:#8A5A6E;margin-top:4px;max-width:640px;line-height:1.5;text-wrap:pretty">Where you deliver and what customers pay. Your restaurant does the delivery. Lumia calculates the fee and includes it in the order summary.</p>
             </div>
+            <div style="display:grid;grid-template-columns:{{ L.split }};gap:20px;align-items:start">
+            <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
             <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0">
               <div role="button" tabindex="0" onClick="{{ acc.s5.toggle }}" aria-expanded="{{ acc.s5.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Delivery status</h2></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s5.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
               <sc-if value="{{ acc.s5.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:14px;padding-top:14px">
-              <div role="radiogroup" aria-label="Delivery status" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px">
+              <div role="radiogroup" aria-label="Delivery status" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px">
                 <sc-for list="{{ dStatusOpts }}" as="o" hint-placeholder-count="3">
                   <button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid {{ o.bd }};background:{{ o.bg }}">
                     <span style="width:18px;height:18px;border-radius:50%;border:1.5px solid {{ o.ring }};flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center"><span style="width:8px;height:8px;border-radius:50%;background:{{ o.dotBg }}"></span></span>
@@ -307,7 +309,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
               <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0">
                 <div role="button" tabindex="0" onClick="{{ acc.s6.toggle }}" aria-expanded="{{ acc.s6.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">How is the delivery fee calculated?</h2></div></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s6.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                 <sc-if value="{{ acc.s6.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:14px;padding-top:14px">
-                <div role="radiogroup" aria-label="Pricing method" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px">
+                <div role="radiogroup" aria-label="Pricing method" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px">
                   <sc-for list="{{ methodOpts }}" as="o" hint-placeholder-count="4">
                     <button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid {{ o.bd }};background:{{ o.bg }}">
                       <span style="width:18px;height:18px;border-radius:50%;border:1.5px solid {{ o.ring }};flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center"><span style="width:8px;height:8px;border-radius:50%;background:{{ o.dotBg }}"></span></span>
@@ -326,7 +328,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                   <div role="button" tabindex="0" onClick="{{ acc.s7.toggle }}" aria-expanded="{{ acc.s7.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px"><div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Delivery areas</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px">Turn an area off to stop delivering there.</p></div><button type="button" onClick="{{ addArea }}" style="height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px" style-hover="background:#FBF3F8">+ Add area</button></div></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s7.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                   <sc-if value="{{ acc.s7.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:12px;padding-top:12px">
                   <div style="display:flex;flex-direction:column">
-                    <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+                    <sc-if value="{{ tblWide }}" hint-placeholder-val="{{ true }}">
                       <div style="display:grid;grid-template-columns:{{ L.areaCols }};gap:10px;padding-bottom:8px;font-size:13px;font-weight:500;color:#8A5A6E"><span>Emirate</span><span>Area</span><span>Fee (AED)</span><span>Min. order</span><span>ETA (min)</span><span>Branch</span><span>Active</span><span></span></div>
                     </sc-if>
                     <sc-for list="{{ areas }}" as="r" hint-placeholder-count="3">
@@ -351,7 +353,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                   <sc-if value="{{ acc.s8.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:12px;padding-top:12px">
                   <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#FFF6E8;color:#6B3A00;font-size:14px;line-height:1.45"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;margin-top:1px"><path d="M10 3 18 17H2L10 3zM10 8.5v3.5M10 14.6v.01" stroke="#B25E00" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Distance pricing needs a branch location pin and customer location pin.</span></div>
                   <div style="display:flex;flex-direction:column">
-                    <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+                    <sc-if value="{{ tblWide }}" hint-placeholder-val="{{ true }}">
                       <div style="display:grid;grid-template-columns:{{ L.rangeCols }};gap:10px;padding-bottom:8px;font-size:13px;font-weight:500;color:#8A5A6E"><span>From (km)</span><span>To (km)</span><span>Fee (AED)</span><span>Min. order</span><span>ETA (min)</span><span>Active</span><span></span></div>
                     </sc-if>
                     <sc-for list="{{ ranges }}" as="r" hint-placeholder-count="3">
@@ -377,7 +379,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                     <span style="font-size:14px;font-weight:500;color:#3D1C31">Served emirates</span>
                     <div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ freeEm }}" as="o" hint-placeholder-count="7"><button type="button" onClick="{{ o.pick }}" style="height:38px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;background:{{ o.bg }};color:{{ o.fg }};border:1.5px solid {{ o.bd }}">{{ o.label }}</button></sc-for></div>
                   </div>
-                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px 20px">
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px 16px">
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Served areas</span><input value="{{ dlf.freeAreas.v }}" onChange="{{ dlf.freeAreas.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input><span style="font-size:13px;color:#8A5A6E">e.g. All areas, or Al Majaz, Al Nahda</span></label>
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Branch</span>{{ freeBrSel }}</label>
                   </div>
@@ -411,7 +413,6 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                 </div>
               </div></sc-if></section>
 
-              <div style="display:grid;grid-template-columns:{{ L.split }};gap:20px;align-items:start">
                 <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0;min-width:0">
                   <div role="button" tabindex="0" onClick="{{ acc.s12.toggle }}" aria-expanded="{{ acc.s12.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Test delivery fee</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px">Uses your unsaved changes.</p></div></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s12.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                   <sc-if value="{{ acc.s12.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:16px;padding-top:16px">
@@ -427,12 +428,15 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                     <sc-for list="{{ res.rows }}" as="r" hint-placeholder-count="3"><div style="display:flex;justify-content:space-between;gap:12px;font-size:14px"><span style="color:#8A5A6E">{{ r.k }}</span><span style="font-weight:500;font-variant-numeric:tabular-nums">{{ r.v }}</span></div></sc-for>
                   </div>
                 </div></sc-if></section>
+
+            </sc-if>
+
+            </div>
                 <div style="position:sticky;top:12px;border-radius:16px;background:#EFE7DE;padding:16px;display:flex;flex-direction:column;gap:8px">
                   <span style="font-size:14px;font-weight:600;color:#6B5B4E">Customer preview</span>
                   <div style="align-self:flex-start;max-width:92%;background:#fff;border-radius:4px 14px 14px 14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.06);white-space:pre-line">{{ res.msg }}</div>
                 </div>
-              </div>
-            </sc-if>
+            </div>
           </div>
         </sc-if>
 
@@ -443,8 +447,10 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
               <h1 style="font-size:22px;font-weight:600;letter-spacing:-0.025em">Working hours</h1>
               <p style="font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty">Lumia AI only takes orders while you're open. Outside these hours it tells customers when you open next.</p>
             </div>
+            <div style="display:grid;grid-template-columns:{{ L.split }};gap:20px;align-items:start">
+            <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
             <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px">
-              <div role="radiogroup" aria-label="Hours mode" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px">
+              <div role="radiogroup" aria-label="Hours mode" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px">
                 <sc-for list="{{ hModeOpts }}" as="o" hint-placeholder-count="3">
                   <button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid {{ o.bd }};background:{{ o.bg }}">
                     <span style="width:18px;height:18px;border-radius:50%;border:1.5px solid {{ o.ring }};flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center"><span style="width:8px;height:8px;border-radius:50%;background:{{ o.dotBg }}"></span></span>
@@ -463,7 +469,6 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
               </div>
             </section>
 
-            <div style="display:grid;grid-template-columns:{{ L.split }};gap:20px;align-items:start">
               <section style="border:1px solid #F0E4E8;border-radius:16px;padding:8px 22px;display:flex;flex-direction:column;min-width:0">
                 <sc-if value="{{ hm.closed }}" hint-placeholder-val="{{ false }}">
                   <div style="padding:12px 0 14px;display:flex;flex-direction:column;gap:14px">
@@ -472,7 +477,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                   </div>
                 </sc-if>
                 <sc-if value="{{ hm.rows }}" hint-placeholder-val="{{ true }}">
-                  <sc-if value="{{ hoursHead }}" hint-placeholder-val="{{ true }}">
+                  <sc-if value="{{ tblWide }}" hint-placeholder-val="{{ true }}">
                     <div style="display:grid;grid-template-columns:{{ L.dayCols }};gap:14px;padding:10px 0 6px;font-size:13px;font-weight:500;color:#8A5A6E"><span>Day</span><div style="display:grid;grid-template-columns:{{ L.dayInner }};gap:10px"><span>Opens</span><span>Closes</span><span>Last order</span><span></span></div></div>
                   </sc-if>
                   <sc-for list="{{ dayRows }}" as="d" hint-placeholder-count="7">
@@ -506,6 +511,9 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                   </sc-for>
                 </sc-if>
               </section>
+
+
+            </div>
               <div style="position:sticky;top:12px;border-radius:16px;background:#EFE7DE;padding:16px;display:flex;flex-direction:column;gap:10px">
                 <span style="font-size:14px;font-weight:600;color:#6B5B4E">Customer preview</span>
                 <sc-for list="{{ hoursBubbles }}" as="b" hint-placeholder-count="3">
@@ -523,7 +531,8 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
               <h1 style="font-size:22px;font-weight:600;letter-spacing:-0.025em">Menu setup</h1>
               <p style="font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty">Lumia AI answers from your approved menu: items, prices and what's available.</p>
             </div>
-            <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px">
+            <div style="display:grid;grid-template-columns:{{ L.split }};gap:20px;align-items:start">
+            <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px;min-width:0">
               <ol style="list-style:none;display:grid;grid-template-columns:{{ L.stepCols }};gap:10px">
                 <sc-for list="{{ menuSteps }}" as="m" hint-placeholder-count="5">
                   <li style="display:flex;flex-direction:column;gap:8px"><span style="height:5px;border-radius:3px;background:{{ m.bar }}"></span><span style="font-size:13px;font-weight:{{ m.fw }};color:{{ m.fg }}">{{ m.label }}</span></li>
@@ -543,10 +552,11 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                 <a href="{{ menuUrl }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px;display:inline-flex;align-items:center;text-decoration:none" style-hover="background:#FBF3F8;color:#1A0815">Edit items</a>
               </div>
             </section>
-            <div style="max-width:440px;border-radius:16px;background:#EFE7DE;padding:16px;display:flex;flex-direction:column;gap:8px">
+            <div style="position:sticky;top:12px;border-radius:16px;background:#EFE7DE;padding:16px;display:flex;flex-direction:column;gap:8px">
               <span style="font-size:14px;font-weight:600;color:#6B5B4E">Customer preview</span>
               <div style="align-self:flex-end;max-width:85%;background:#D9FDD3;border-radius:14px 4px 14px 14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.06)">Do you have chicken burger?</div>
               <div style="align-self:flex-start;max-width:85%;background:#fff;border-radius:4px 14px 14px 14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.06)">Yes, we have Chicken Burger for AED 24.</div>
+            </div>
             </div>
           </div>
         </sc-if>
@@ -742,7 +752,7 @@ class Component extends DCLogic {
   discard() { const s = this.state, k = KEY[s.page]; const next = s.blocked; this.setState(st => ({ draft: { ...st.draft, [k]: clone(st.saved[k]) }, error: '', blocked: null, adding: false, ...(next ? { page: next } : {}) })); }
 
   renderVals() {
-    const s = this.state, d = s.draft, sv = s.saved, wide = s.w >= 900;
+    const s = this.state, d = s.draft, sv = s.saved, wide = s.w >= 900, tw = s.w >= 560 ? s.w - (s.w >= 1000 ? 320 : 260) - 48 : s.w, tblWide = tw >= 700;
     const ce = React.createElement;
     const selStyle = (sm) => ({ height: sm ? 40 : 44, width: '100%', minWidth: 0, padding: '0 10px', borderRadius: sm ? 9 : 10, border: '1.5px solid #ECD9E0', background: '#fff', fontSize: sm ? 14 : 15 });
     const sel = (value, opts, onChange, sm = true, label) => ce('select', { value, onChange, style: selStyle(sm), 'aria-label': label }, opts.map(o => ce('option', { key: o.v, value: o.v }, o.l)));
@@ -901,13 +911,13 @@ class Component extends DCLogic {
 
     const PV = d.pay;
     return {
-      rootRef: this.rootRef, mainRef: this.mainRef, wide, narrow: !wide,
+      rootRef: this.rootRef, mainRef: this.mainRef, wide, narrow: !wide, tblWide,
       showAside: wide && !this.props.embedded, showTop: !wide || !!this.props.embedded, standalone: !this.props.embedded, rootH: this.props.embedded ? '100%' : '100dvh', topTitleSize: this.props.embedded && wide ? '20px' : '16px',
-      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', barGap: s.period === 'month' ? '20px' : '10px', pad: wide ? '24px 32px 48px' : '16px 16px 40px', split: s.w >= 1100 ? 'minmax(0,1fr) 300px' : 'minmax(0,1fr)',
-        areaCols: wide ? '1.2fr 1.1fr .8fr .8fr .7fr 1.3fr 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
-        rangeCols: wide ? 'repeat(5,minmax(0,1fr)) 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
-        rowPad: wide ? '10px 0' : '14px 0', cellLbl: wide ? 'none' : 'block',
-        dayCols: wide ? '160px minmax(0,1fr)' : 'minmax(0,1fr)', dayInner: wide ? 'repeat(3,minmax(0,1fr)) 80px' : 'minmax(0,1fr) minmax(0,1fr)',
+      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', barGap: s.period === 'month' ? '20px' : '10px', pad: wide ? '24px 32px 48px' : '16px 16px 40px', split: s.w >= 560 ? `minmax(0,1fr) ${s.w >= 1000 ? 300 : 240}px` : 'minmax(0,1fr)',
+        areaCols: tblWide ? '1.2fr 1.1fr .8fr .8fr .7fr 1.3fr 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
+        rangeCols: tblWide ? 'repeat(5,minmax(0,1fr)) 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
+        rowPad: tblWide ? '10px 0' : '14px 0', cellLbl: tblWide ? 'none' : 'block',
+        dayCols: tblWide ? '160px minmax(0,1fr)' : 'minmax(0,1fr)', dayInner: tblWide ? 'repeat(3,minmax(0,1fr)) 80px' : 'minmax(0,1fr) minmax(0,1fr)',
         stepCols: wide ? 'repeat(5,minmax(0,1fr))' : 'repeat(5,minmax(0,1fr))' },
       pg: Object.fromEntries(PAGES.map(([k]) => [k, s.page === k])),
       acc: Object.fromEntries(Object.keys(SEC_PAGE).map(k => { const pgK = SEC_PAGE[k], first = Object.keys(SEC_PAGE).find(x => SEC_PAGE[x] === pgK); const cur = (s.openSec || {})[pgK]; const open = cur === undefined ? k === first : cur === k;

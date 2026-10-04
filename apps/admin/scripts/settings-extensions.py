@@ -23,7 +23,5 @@ once('flex:none">{{ initials }}</span>', 'flex:none;overflow:hidden">{{ logoNode
 i = s.index('>Upload logo</button>'); j = s.rfind('onClick="{{ markDirty }}"', 0, i)
 s = s[:j] + 'onClick="{{ pickLogo }}"' + s[j + len('onClick="{{ markDirty }}"'):]
 once('<x-dc>', '<x-dc>\n<!-- LUMIA-EXT settings --><!-- LUMIA-EXT logo -->')
-# the Day / Opens / Closes / Last order header only fits when the rows are side by side (very wide screens); otherwise each cell carries its own label
-once('<sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">\n                    <div style="display:grid;grid-template-columns:{{ L.dayCols }}', '<sc-if value="{{ hoursHead }}" hint-placeholder-val="{{ true }}">\n                    <div style="display:grid;grid-template-columns:{{ L.dayCols }}')
 s = s.replace('<!-- LUMIA-EXT settings -->', '<!-- LUMIA-EXT settings --><!-- LUMIA-EXT embedded -->', 1)
 p.write_text(s); print("settings extensions applied")

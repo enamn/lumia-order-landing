@@ -99,7 +99,7 @@ class SettingsApp extends React.Component<Props, any> {
   discard() { const s = this.state, k = KEY[s.page]; const next = s.blocked; this.setState(st => ({ draft: { ...st.draft, [k]: clone(st.saved[k]) }, error: '', blocked: null, adding: false, ...(next ? { page: next } : {}) })); }
 
   renderVals() {
-    const s = this.state, d = s.draft, sv = s.saved, wide = s.w >= 640, split = s.w >= 1000, formW = s.w - (split ? 320 : 0), M = s.menu, menuLevel = M.items === 0 ? 0 : M.missingPrices > 0 ? 2 : 4;
+    const s = this.state, d = s.draft, sv = s.saved, wide = s.w >= 900, tw = s.w >= 560 ? s.w - (s.w >= 1000 ? 320 : 260) - 48 : s.w, tblWide = tw >= 700, M = s.menu, menuLevel = M.items === 0 ? 0 : M.missingPrices > 0 ? 2 : 4;
     const ce = React.createElement;
     const selStyle = (sm) => ({ height: sm ? 40 : 44, width: '100%', minWidth: 0, padding: '0 10px', borderRadius: sm ? 9 : 10, border: '1.5px solid #ECD9E0', background: '#fff', fontSize: sm ? 14 : 15 });
     const sel = (value, opts, onChange, sm = true, label) => ce('select', { value, onChange, style: selStyle(sm), 'aria-label': label }, opts.map(o => ce('option', { key: o.v, value: o.v }, o.l)));
@@ -246,13 +246,13 @@ class SettingsApp extends React.Component<Props, any> {
 
     const PV = d.pay;
     return {
-      rootRef: this.rootRef, mainRef: this.mainRef, wide, narrow: !wide, showAside: false, showTop: true, standalone: false, rootH: '100%', topTitleSize: wide ? '20px' : '16px',
-      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', pad: wide ? '24px 32px 48px' : '16px 16px 40px', split: split ? 'minmax(0,1fr) 300px' : 'minmax(0,1fr)',
-        areaCols: wide ? '1.2fr 1.1fr .8fr .8fr .7fr 1.3fr 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
-        rangeCols: wide ? 'repeat(5,minmax(0,1fr)) 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
-        rowPad: wide ? '10px 0' : '14px 0', cellLbl: formW >= 760 ? 'none' : 'block', hoursHead: formW >= 760,
-        dayCols: formW >= 760 ? '160px minmax(0,1fr)' : 'minmax(0,1fr)', dayInner: formW >= 580 ? 'repeat(3,minmax(132px,1fr)) 80px' : 'minmax(0,1fr) minmax(0,1fr)',
-        stepCols: wide ? 'repeat(5,minmax(0,1fr))' : 'repeat(5,minmax(0,1fr))' },
+      rootRef: this.rootRef, mainRef: this.mainRef, wide, narrow: !wide, tblWide, showAside: false, showTop: true, standalone: false, rootH: '100%', topTitleSize: wide ? '20px' : '16px',
+      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', barGap: '10px', pad: wide ? '24px 32px 48px' : '16px 16px 40px', split: s.w >= 560 ? `minmax(0,1fr) ${s.w >= 1000 ? 300 : 240}px` : 'minmax(0,1fr)',
+        areaCols: tblWide ? '1.2fr 1.1fr .8fr .8fr .7fr 1.3fr 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
+        rangeCols: tblWide ? 'repeat(5,minmax(0,1fr)) 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
+        rowPad: tblWide ? '10px 0' : '14px 0', cellLbl: tblWide ? 'none' : 'block',
+        dayCols: tblWide ? '160px minmax(0,1fr)' : 'minmax(0,1fr)', dayInner: tblWide ? 'repeat(3,minmax(0,1fr)) 80px' : 'minmax(0,1fr) minmax(0,1fr)',
+        stepCols: 'repeat(5,minmax(0,1fr))' },
       acc: Object.fromEntries(Object.keys(SEC_PAGE).map(k => { const pgK = SEC_PAGE[k], first = Object.keys(SEC_PAGE).find(x => SEC_PAGE[x] === pgK); const cur = (s.openSec || {})[pgK]; const open = cur === undefined ? k === first : cur === k;
         return [k, { open, chev: open ? '180deg' : '0deg', toggle: (e) => { if (e && e.target && e.target.closest && e.target.closest('[role=switch]')) return; this.setState(st => ({ openSec: { ...(st.openSec || {}), [pgK]: open ? null : k } })); } }]; })),
       pg: Object.fromEntries(PAGES.map(([k]) => [k, s.page === k])),
