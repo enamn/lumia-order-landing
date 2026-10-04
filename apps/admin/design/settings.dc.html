@@ -74,13 +74,14 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
         <sc-if value="{{ pg.profile }}" hint-placeholder-val="{{ false }}">
           <div data-screen-label="02 Restaurant profile" style="display:flex;flex-direction:column;gap:20px">
             <div>
-              <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Restaurant profile</h1>
-              <p style="font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty">How your restaurant appears to customers on WhatsApp and on receipts.</p>
+              <h1 style="font-size:22px;font-weight:600;letter-spacing:-0.025em">Restaurant profile</h1>
+              <p style="font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty">How your restaurant appears to customers on WhatsApp and on receipts.</p>
             </div>
             <div style="display:grid;grid-template-columns:{{ L.split }};gap:20px;align-items:start">
               <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
-                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px">
-                  <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Basics</h2>
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0">
+                  <div role="button" tabindex="0" onClick="{{ acc.s0.toggle }}" aria-expanded="{{ acc.s0.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Basics</h2></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s0.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                  <sc-if value="{{ acc.s0.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:18px;padding-top:18px">
                   <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
                     <span style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#FF5577,#C93DFF);color:#fff;font-size:20px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden">{{ logoNode }}</span>
                     <div style="display:flex;flex-direction:column;gap:6px">
@@ -94,26 +95,29 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Brand name shown to customers</span><input value="{{ prof.brand.v }}" onChange="{{ prof.brand.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input><span style="font-size:13px;color:#8A5A6E">Used in greetings and order summaries.</span></label>
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Cuisine type</span><input value="{{ prof.cuisine.v }}" onChange="{{ prof.cuisine.set }}" placeholder="e.g. Burgers, Lebanese, Pizza" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input></label>
                   </div>
-                </section>
-                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px">
-                  <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Contact</h2>
+                </div></sc-if></section>
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0">
+                  <div role="button" tabindex="0" onClick="{{ acc.s1.toggle }}" aria-expanded="{{ acc.s1.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Contact</h2></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s1.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                  <sc-if value="{{ acc.s1.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:18px;padding-top:18px">
                   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px 20px">
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Business phone</span><input value="{{ prof.phone.v }}" onChange="{{ prof.phone.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Support WhatsApp number</span><input value="{{ prof.support.v }}" onChange="{{ prof.support.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input><span style="font-size:13px;color:#8A5A6E">Customers are sent here if they ask for a person.</span></label>
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Email</span><input type="email" value="{{ prof.email.v }}" onChange="{{ prof.email.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input></label>
                   </div>
-                </section>
-                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px">
-                  <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+                </div></sc-if></section>
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0">
+                  <div role="button" tabindex="0" onClick="{{ acc.s2.toggle }}" aria-expanded="{{ acc.s2.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
                     <div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">VAT registered</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px;line-height:1.5">Lumia adds 5% VAT to order totals and shows your TRN on receipts.</p></div>
                     <button type="button" role="switch" aria-checked="{{ vatSw.on }}" aria-label="VAT registered" onClick="{{ vatSw.toggle }}" style="width:48px;height:28px;border-radius:999px;flex:none;background:{{ vatSw.tBg }};position:relative;transition:background .15s"><span style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX({{ vatSw.knob }});transition:transform .18s"></span></button>
-                  </div>
+                  </div></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s2.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                  <sc-if value="{{ acc.s2.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:18px;padding-top:18px">
                   <sc-if value="{{ vatSw.on }}" hint-placeholder-val="{{ true }}">
                     <label style="display:flex;flex-direction:column;gap:6px;max-width:360px"><span style="font-size:14px;font-weight:500;color:#3D1C31">TRN number</span><input value="{{ prof.trn.v }}" onChange="{{ prof.trn.set }}" inputmode="numeric" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid {{ trnBd }};background:#fff;font-size:15px;font-variant-numeric:tabular-nums;letter-spacing:.02em" style-focus="border-color:#C93DFF"></input><span style="font-size:13px;color:{{ trnHintFg }}">{{ trnHint }}</span></label>
                   </sc-if>
-                </section>
-                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px">
-                  <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Customer messages</h2>
+                </div></sc-if></section>
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0">
+                  <div role="button" tabindex="0" onClick="{{ acc.s3.toggle }}" aria-expanded="{{ acc.s3.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Customer messages</h2></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s3.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                  <sc-if value="{{ acc.s3.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:18px;padding-top:18px">
                   <div style="display:flex;flex-direction:column;gap:8px">
                     <span style="font-size:14px;font-weight:500;color:#3D1C31">Default language</span>
                     <div role="radiogroup" aria-label="Default language" style="display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;align-self:flex-start">
@@ -132,6 +136,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                       </sc-for>
                     </div>
                   </div>
+                </div></sc-if>
                 </section>
               </div>
               <div style="position:sticky;top:12px;border-radius:16px;background:#EFE7DE;padding:16px;display:flex;flex-direction:column;gap:8px">
@@ -149,8 +154,8 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
           <div data-screen-label="03 Branches" style="display:flex;flex-direction:column;gap:20px">
             <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
               <div>
-                <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Branches &amp; locations</h1>
-                <p style="font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty">Lumia uses each branch's location to pick the nearest branch and calculate delivery.</p>
+                <h1 style="font-size:22px;font-weight:600;letter-spacing:-0.025em">Branches &amp; locations</h1>
+                <p style="font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty">Lumia uses each branch's location to pick the nearest branch and calculate delivery.</p>
               </div>
               <sc-if value="{{ notAdding }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ startAdd }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">+ Add branch</button></sc-if>
             </div>
@@ -225,8 +230,8 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
         <sc-if value="{{ pg.whatsapp }}" hint-placeholder-val="{{ false }}">
           <div data-screen-label="04 WhatsApp" style="display:flex;flex-direction:column;gap:20px">
             <div>
-              <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">WhatsApp connection</h1>
-              <p style="font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty">The WhatsApp Business number your customers message to order.</p>
+              <h1 style="font-size:22px;font-weight:600;letter-spacing:-0.025em">WhatsApp connection</h1>
+              <p style="font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty">The WhatsApp Business number your customers message to order.</p>
             </div>
             <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
               <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
@@ -240,8 +245,9 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                 <div><dt style="font-size:13px;color:#8A5A6E">Last message received</dt><dd style="font-size:15px;font-weight:500;margin-top:2px">4 minutes ago</dd></div>
               </dl>
             </section>
-            <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px">
-              <div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Which branches does this number take orders for?</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px;line-height:1.5">Matters when you have more than one branch.</p></div>
+            <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0">
+              <div role="button" tabindex="0" onClick="{{ acc.s4.toggle }}" aria-expanded="{{ acc.s4.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Which branches does this number take orders for?</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px;line-height:1.5">Matters when you have more than one branch.</p></div></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s4.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+              <sc-if value="{{ acc.s4.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:16px;padding-top:16px">
               <div role="radiogroup" aria-label="Branch routing" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px">
                 <sc-for list="{{ routeOpts }}" as="o" hint-placeholder-count="3">
                   <button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid {{ o.bd }};background:{{ o.bg }}">
@@ -263,6 +269,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                 <span style="font-size:14px;color:#8A5A6E">{{ route.note }}</span>
               </div>
               <button type="button" onClick="{{ markDirty }}" style="align-self:flex-start;font-size:14px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px" style-hover="color:#FF5577">+ Add another WhatsApp number for a different branch</button>
+            </div></sc-if>
             </section>
           </div>
         </sc-if>
@@ -271,11 +278,12 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
         <sc-if value="{{ pg.delivery }}" hint-placeholder-val="{{ false }}">
           <div data-screen-label="05 Delivery" style="display:flex;flex-direction:column;gap:20px">
             <div>
-              <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Delivery settings</h1>
-              <p style="font-size:15px;color:#8A5A6E;margin-top:6px;max-width:640px;line-height:1.5;text-wrap:pretty">Where you deliver and what customers pay. Your restaurant does the delivery. Lumia calculates the fee and includes it in the order summary.</p>
+              <h1 style="font-size:22px;font-weight:600;letter-spacing:-0.025em">Delivery settings</h1>
+              <p style="font-size:14px;color:#8A5A6E;margin-top:4px;max-width:640px;line-height:1.5;text-wrap:pretty">Where you deliver and what customers pay. Your restaurant does the delivery. Lumia calculates the fee and includes it in the order summary.</p>
             </div>
-            <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
-              <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Delivery status</h2>
+            <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0">
+              <div role="button" tabindex="0" onClick="{{ acc.s5.toggle }}" aria-expanded="{{ acc.s5.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Delivery status</h2></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s5.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+              <sc-if value="{{ acc.s5.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:14px;padding-top:14px">
               <div role="radiogroup" aria-label="Delivery status" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px">
                 <sc-for list="{{ dStatusOpts }}" as="o" hint-placeholder-count="3">
                   <button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid {{ o.bd }};background:{{ o.bg }}">
@@ -285,6 +293,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                 </sc-for>
               </div>
               <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;border-top:1px solid #F3EEF1;padding-top:14px;font-size:14px"><span style="color:#8A5A6E">Delivery handled by</span><span style="font-weight:600">Your restaurant</span><span style="color:#8A5A6E">· Lumia doesn't provide drivers yet.</span></div>
+            </div></sc-if>
             </section>
 
             <sc-if value="{{ dl.pickup }}" hint-placeholder-val="{{ false }}">
@@ -295,8 +304,9 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
             </sc-if>
 
             <sc-if value="{{ dl.on }}" hint-placeholder-val="{{ true }}">
-              <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
-                <div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">How is the delivery fee calculated?</h2></div>
+              <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0">
+                <div role="button" tabindex="0" onClick="{{ acc.s6.toggle }}" aria-expanded="{{ acc.s6.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">How is the delivery fee calculated?</h2></div></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s6.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                <sc-if value="{{ acc.s6.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:14px;padding-top:14px">
                 <div role="radiogroup" aria-label="Pricing method" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px">
                   <sc-for list="{{ methodOpts }}" as="o" hint-placeholder-count="4">
                     <button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid {{ o.bd }};background:{{ o.bg }}">
@@ -308,11 +318,13 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                 <sc-if value="{{ dl.noMethod }}" hint-placeholder-val="{{ false }}">
                   <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#FFF6E8;color:#6B3A00;font-size:14px;line-height:1.45"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;margin-top:1px"><path d="M10 3 18 17H2L10 3zM10 8.5v3.5M10 14.6v.01" stroke="#B25E00" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Delivery settings are missing. Lumia AI cannot calculate delivery fees yet.</span></div>
                 </sc-if>
+              </div></sc-if>
               </section>
 
               <sc-if value="{{ dl.area }}" hint-placeholder-val="{{ false }}">
-                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:12px">
-                  <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px"><div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Delivery areas</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px">Turn an area off to stop delivering there.</p></div><button type="button" onClick="{{ addArea }}" style="height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px" style-hover="background:#FBF3F8">+ Add area</button></div>
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0">
+                  <div role="button" tabindex="0" onClick="{{ acc.s7.toggle }}" aria-expanded="{{ acc.s7.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px"><div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Delivery areas</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px">Turn an area off to stop delivering there.</p></div><button type="button" onClick="{{ addArea }}" style="height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px" style-hover="background:#FBF3F8">+ Add area</button></div></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s7.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                  <sc-if value="{{ acc.s7.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:12px;padding-top:12px">
                   <div style="display:flex;flex-direction:column">
                     <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
                       <div style="display:grid;grid-template-columns:{{ L.areaCols }};gap:10px;padding-bottom:8px;font-size:13px;font-weight:500;color:#8A5A6E"><span>Emirate</span><span>Area</span><span>Fee (AED)</span><span>Min. order</span><span>ETA (min)</span><span>Branch</span><span>Active</span><span></span></div>
@@ -330,12 +342,13 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                       </div>
                     </sc-for>
                   </div>
-                </section>
+                </div></sc-if></section>
               </sc-if>
 
               <sc-if value="{{ dl.distance }}" hint-placeholder-val="{{ false }}">
-                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:12px">
-                  <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px"><div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Distance ranges</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px">Measured from the branch to the customer. Leave "To" empty for no limit.</p></div><button type="button" onClick="{{ addRange }}" style="height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px" style-hover="background:#FBF3F8">+ Add range</button></div>
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0">
+                  <div role="button" tabindex="0" onClick="{{ acc.s8.toggle }}" aria-expanded="{{ acc.s8.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px"><div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Distance ranges</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px">Measured from the branch to the customer. Leave "To" empty for no limit.</p></div><button type="button" onClick="{{ addRange }}" style="height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px" style-hover="background:#FBF3F8">+ Add range</button></div></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s8.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                  <sc-if value="{{ acc.s8.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:12px;padding-top:12px">
                   <div style="display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#FFF6E8;color:#6B3A00;font-size:14px;line-height:1.45"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;margin-top:1px"><path d="M10 3 18 17H2L10 3zM10 8.5v3.5M10 14.6v.01" stroke="#B25E00" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Distance pricing needs a branch location pin and customer location pin.</span></div>
                   <div style="display:flex;flex-direction:column">
                     <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
@@ -353,12 +366,13 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                       </div>
                     </sc-for>
                   </div>
-                </section>
+                </div></sc-if></section>
               </sc-if>
 
               <sc-if value="{{ dl.free }}" hint-placeholder-val="{{ false }}">
-                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px">
-                  <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Where you deliver for free</h2>
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0">
+                  <div role="button" tabindex="0" onClick="{{ acc.s9.toggle }}" aria-expanded="{{ acc.s9.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Where you deliver for free</h2></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s9.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                  <sc-if value="{{ acc.s9.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:16px;padding-top:16px">
                   <div style="display:flex;flex-direction:column;gap:8px">
                     <span style="font-size:14px;font-weight:500;color:#3D1C31">Served emirates</span>
                     <div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ freeEm }}" as="o" hint-placeholder-count="7"><button type="button" onClick="{{ o.pick }}" style="height:38px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;background:{{ o.bg }};color:{{ o.fg }};border:1.5px solid {{ o.bd }}">{{ o.label }}</button></sc-for></div>
@@ -367,22 +381,25 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Served areas</span><input value="{{ dlf.freeAreas.v }}" onChange="{{ dlf.freeAreas.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input><span style="font-size:13px;color:#8A5A6E">e.g. All areas, or Al Majaz, Al Nahda</span></label>
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Branch</span>{{ freeBrSel }}</label>
                   </div>
-                </section>
+                </div></sc-if></section>
               </sc-if>
 
               <sc-if value="{{ dl.manual }}" hint-placeholder-val="{{ false }}">
-                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px">
-                  <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Manual confirmation</h2>
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0">
+                  <div role="button" tabindex="0" onClick="{{ acc.s10.toggle }}" aria-expanded="{{ acc.s10.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Manual confirmation</h2></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s10.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                  <sc-if value="{{ acc.s10.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:16px;padding-top:16px">
                   <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Message shown to customer</span><textarea value="{{ dlf.manualMsg.v }}" onChange="{{ dlf.manualMsg.set }}" rows="3" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;line-height:1.45;resize:vertical" style-focus="border-color:#C93DFF"></textarea></label>
                   <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
                     <div><span style="font-size:15px;font-weight:500">Send order to restaurant before final confirmation</span><p style="font-size:13px;color:#8A5A6E;margin-top:2px">You set the fee on the device, then Lumia sends the customer the final total.</p></div>
                     <button type="button" role="switch" aria-checked="{{ confirmSw.on }}" aria-label="Send before confirmation" onClick="{{ confirmSw.toggle }}" style="width:48px;height:28px;border-radius:999px;flex:none;background:{{ confirmSw.tBg }};position:relative;transition:background .15s"><span style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX({{ confirmSw.knob }});transition:transform .18s"></span></button>
                   </div>
+                </div></sc-if>
                 </section>
               </sc-if>
 
-              <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px">
-                <div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Order rules</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px">Defaults used when an area or range doesn't set its own.</p></div>
+              <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0">
+                <div role="button" tabindex="0" onClick="{{ acc.s11.toggle }}" aria-expanded="{{ acc.s11.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Order rules</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px">Defaults used when an area or range doesn't set its own.</p></div></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s11.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                <sc-if value="{{ acc.s11.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:16px;padding-top:16px">
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:16px 20px">
                   <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Minimum order (AED)</span><input inputmode="decimal" value="{{ dlf.minOrder.v }}" onChange="{{ dlf.minOrder.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
                   <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Free delivery above (AED)</span><input inputmode="decimal" value="{{ dlf.freeAbove.v }}" onChange="{{ dlf.freeAbove.set }}" placeholder="Off" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
@@ -392,11 +409,12 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                   <div><span style="font-size:15px;font-weight:500">Ask customers to share their location pin</span><p style="font-size:13px;color:{{ pinReqHintFg }};margin-top:2px">{{ pinReqHint }}</p></div>
                   <button type="button" role="switch" aria-checked="{{ pinSw.on }}" aria-label="Require customer location pin" onClick="{{ pinSw.toggle }}" disabled="{{ pinSw.locked }}" style="width:48px;height:28px;border-radius:999px;flex:none;background:{{ pinSw.tBg }};position:relative;transition:background .15s;opacity:{{ pinSw.op }}"><span style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX({{ pinSw.knob }});transition:transform .18s"></span></button>
                 </div>
-              </section>
+              </div></sc-if></section>
 
               <div style="display:grid;grid-template-columns:{{ L.split }};gap:20px;align-items:start">
-                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px;min-width:0">
-                  <div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Test delivery fee</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px">Uses your unsaved changes.</p></div>
+                <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0;min-width:0">
+                  <div role="button" tabindex="0" onClick="{{ acc.s12.toggle }}" aria-expanded="{{ acc.s12.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><div><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Test delivery fee</h2><p style="font-size:14px;color:#8A5A6E;margin-top:2px">Uses your unsaved changes.</p></div></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s12.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                  <sc-if value="{{ acc.s12.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:16px;padding-top:16px">
                   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px 14px">
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500;color:#3D1C31">Branch</span>{{ calc.brSel }}</label>
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500;color:#3D1C31">Emirate</span>{{ calc.emSel }}</label>
@@ -408,7 +426,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                     <span style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:{{ res.fg }}"><span style="width:8px;height:8px;border-radius:50%;background:currentColor"></span>{{ res.head }}</span>
                     <sc-for list="{{ res.rows }}" as="r" hint-placeholder-count="3"><div style="display:flex;justify-content:space-between;gap:12px;font-size:14px"><span style="color:#8A5A6E">{{ r.k }}</span><span style="font-weight:500;font-variant-numeric:tabular-nums">{{ r.v }}</span></div></sc-for>
                   </div>
-                </section>
+                </div></sc-if></section>
                 <div style="position:sticky;top:12px;border-radius:16px;background:#EFE7DE;padding:16px;display:flex;flex-direction:column;gap:8px">
                   <span style="font-size:14px;font-weight:600;color:#6B5B4E">Customer preview</span>
                   <div style="align-self:flex-start;max-width:92%;background:#fff;border-radius:4px 14px 14px 14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.06);white-space:pre-line">{{ res.msg }}</div>
@@ -422,8 +440,8 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
         <sc-if value="{{ pg.hours }}" hint-placeholder-val="{{ false }}">
           <div data-screen-label="06 Working hours" style="display:flex;flex-direction:column;gap:20px">
             <div>
-              <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Working hours</h1>
-              <p style="font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty">Lumia AI only takes orders while you're open. Outside these hours it tells customers when you open next.</p>
+              <h1 style="font-size:22px;font-weight:600;letter-spacing:-0.025em">Working hours</h1>
+              <p style="font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty">Lumia AI only takes orders while you're open. Outside these hours it tells customers when you open next.</p>
             </div>
             <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px">
               <div role="radiogroup" aria-label="Hours mode" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px">
@@ -502,8 +520,8 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
         <sc-if value="{{ pg.menu }}" hint-placeholder-val="{{ false }}">
           <div data-screen-label="07 Menu setup" style="display:flex;flex-direction:column;gap:20px">
             <div>
-              <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Menu setup</h1>
-              <p style="font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty">Lumia AI answers from your approved menu: items, prices and what's available.</p>
+              <h1 style="font-size:22px;font-weight:600;letter-spacing:-0.025em">Menu setup</h1>
+              <p style="font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty">Lumia AI answers from your approved menu: items, prices and what's available.</p>
             </div>
             <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px">
               <ol style="list-style:none;display:grid;grid-template-columns:{{ L.stepCols }};gap:10px">
@@ -538,23 +556,25 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
           <div data-screen-label="08 Order devices" style="display:flex;flex-direction:column;gap:20px">
             <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
               <div>
-                <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Lumia Order devices</h1>
-                <p style="font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty">Devices inside the restaurant that receive and print orders.</p>
+                <h1 style="font-size:22px;font-weight:600;letter-spacing:-0.025em">Lumia Order devices</h1>
+                <p style="font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty">Devices inside the restaurant that receive and print orders.</p>
               </div>
               <sc-if value="{{ hasDevices }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ startPair }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">+ Connect device</button></sc-if>
             </div>
             <sc-if value="{{ pairing }}" hint-placeholder-val="{{ false }}">
-              <section style="border:1.5px solid #E3CBD4;border-radius:16px;padding:22px;display:flex;flex-wrap:wrap;gap:20px;align-items:center">
-                <div style="flex:1 1 260px;display:flex;flex-direction:column;gap:6px">
+              <section style="border:1.5px solid #E3CBD4;border-radius:16px;padding:22px;display:flex;flex-wrap:wrap;gap:0;align-items:center">
+                <div role="button" tabindex="0" onClick="{{ acc.s13.toggle }}" aria-expanded="{{ acc.s13.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><div style="flex:1 1 260px;display:flex;flex-direction:column;gap:6px">
                   <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Connect a device</h2>
                   <p style="font-size:14px;color:#3D1C31;line-height:1.5">Open the Lumia Order app on the device and enter this code.</p>
                   <span style="font-size:13px;color:#8A5A6E">Code expires in 10 minutes.</span>
-                </div>
+                </div></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s13.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
+                <sc-if value="{{ acc.s13.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:20px;padding-top:20px">
                 <span style="font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:500;letter-spacing:.12em;padding:12px 18px;border-radius:12px;background:#FAF6FA">482 913</span>
                 <div style="display:flex;gap:10px;flex-basis:100%;justify-content:flex-end">
                   <button type="button" onClick="{{ cancelPair }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Cancel</button>
                   <button type="button" onClick="{{ finishPair }}" style="height:44px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px">Simulate: device connected</button>
                 </div>
+              </div></sc-if>
               </section>
             </sc-if>
             <sc-if value="{{ noDevicesIdle }}" hint-placeholder-val="{{ true }}">
@@ -590,8 +610,8 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
         <sc-if value="{{ pg.payments }}" hint-placeholder-val="{{ false }}">
           <div data-screen-label="09 Payments" style="display:flex;flex-direction:column;gap:20px">
             <div>
-              <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Payment settings</h1>
-              <p style="font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty">How customers pay for WhatsApp orders.</p>
+              <h1 style="font-size:22px;font-weight:600;letter-spacing:-0.025em">Payment settings</h1>
+              <p style="font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty">How customers pay for WhatsApp orders.</p>
             </div>
             <section style="border:1px solid #F0E4E8;border-radius:16px;padding:6px 22px;display:flex;flex-direction:column">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0">
@@ -644,6 +664,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
 <script type="text/x-dc" data-dc-script data-props="{&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Setup in progress&quot;,&quot;Ready to receive orders&quot;],&quot;default&quot;:&quot;Setup in progress&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
 const EM = ['Sharjah', 'Ajman', 'Dubai', 'Abu Dhabi', 'Umm Al Quwain', 'Ras Al Khaimah', 'Fujairah'];
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const SEC_PAGE = {"s0":"profile","s1":"profile","s2":"profile","s3":"profile","s4":"whatsapp","s5":"delivery","s6":"delivery","s7":"delivery","s8":"delivery","s9":"delivery","s10":"delivery","s11":"delivery","s12":"delivery","s13":"devices"};
 const PAGES = [
   ['profile', 'Profile', 'M4 8h12l-1.2-4H5.2zM5 8v8.5h10V8M8.5 16.5v-4h3v4'],
   ['branches', 'Branches', 'M10 17.5s5.5-4.8 5.5-9a5.5 5.5 0 0 0-11 0c0 4.2 5.5 9 5.5 9zM10 10.3a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6z'],
@@ -882,13 +903,15 @@ class Component extends DCLogic {
     return {
       rootRef: this.rootRef, mainRef: this.mainRef, wide, narrow: !wide,
       showAside: wide && !this.props.embedded, showTop: !wide || !!this.props.embedded, standalone: !this.props.embedded, rootH: this.props.embedded ? '100%' : '100dvh', topTitleSize: this.props.embedded && wide ? '20px' : '16px',
-      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', barGap: s.period === 'month' ? '20px' : '10px', pad: wide ? '32px 40px 64px' : '20px 16px 48px', split: wide ? 'minmax(0,1fr) 300px' : 'minmax(0,1fr)',
+      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', barGap: s.period === 'month' ? '20px' : '10px', pad: wide ? '24px 32px 48px' : '16px 16px 40px', split: s.w >= 1100 ? 'minmax(0,1fr) 300px' : 'minmax(0,1fr)',
         areaCols: wide ? '1.2fr 1.1fr .8fr .8fr .7fr 1.3fr 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
         rangeCols: wide ? 'repeat(5,minmax(0,1fr)) 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
         rowPad: wide ? '10px 0' : '14px 0', cellLbl: wide ? 'none' : 'block',
         dayCols: wide ? '160px minmax(0,1fr)' : 'minmax(0,1fr)', dayInner: wide ? 'repeat(3,minmax(0,1fr)) 80px' : 'minmax(0,1fr) minmax(0,1fr)',
         stepCols: wide ? 'repeat(5,minmax(0,1fr))' : 'repeat(5,minmax(0,1fr))' },
       pg: Object.fromEntries(PAGES.map(([k]) => [k, s.page === k])),
+      acc: Object.fromEntries(Object.keys(SEC_PAGE).map(k => { const pgK = SEC_PAGE[k], first = Object.keys(SEC_PAGE).find(x => SEC_PAGE[x] === pgK); const cur = (s.openSec || {})[pgK]; const open = cur === undefined ? k === first : cur === k;
+        return [k, { open, chev: open ? '180deg' : '0deg', toggle: (e) => { if (e && e.target && e.target.closest && e.target.closest('[role=switch]')) return; this.setState(st => ({ openSec: { ...(st.openSec || {}), [pgK]: open ? null : k } })); } }]; })),
       nav, navGroups, steps, ready, todoSteps, doneSteps, hasDone: doneSteps.length > 0, setupOpen: todo.length > 0, setupDone: todo.length === 0,
       periodSeg: seg([['today', 'Today'], ['week', '7 days'], ['month', '30 days']], s.period, (v) => this.setState({ period: v })), stats, bars, topItems, chartNote: per.note, warnings, hasWarnings: warnings.length > 0, progressLabel: `${doneN} of ${steps.length} steps completed`,
       brand, initials, markDirty: () => {},

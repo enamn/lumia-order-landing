@@ -16,6 +16,7 @@ export interface SettingsProps {
 }
 type Props = SettingsProps;
 
+const SEC_PAGE = {"s0":"profile","s1":"profile","s2":"profile","s3":"profile","s4":"whatsapp","s5":"delivery","s6":"delivery","s7":"delivery","s8":"delivery","s9":"delivery","s10":"delivery","s11":"delivery","s12":"delivery","s13":"devices"};
 async function api(path: string, method = "GET", body?: unknown) {
   const res = await fetch(path, { method, headers: { "Content-Type": "application/json" }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
   const json = await res.json().catch(() => ({}));
@@ -246,12 +247,14 @@ class SettingsApp extends React.Component<Props, any> {
     const PV = d.pay;
     return {
       rootRef: this.rootRef, mainRef: this.mainRef, wide, narrow: !wide, showAside: false, showTop: true, standalone: false, rootH: '100%', topTitleSize: wide ? '20px' : '16px',
-      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', pad: wide ? '28px 32px 56px' : '20px 16px 48px', split: split ? 'minmax(0,1fr) 300px' : 'minmax(0,1fr)',
+      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', pad: wide ? '24px 32px 48px' : '16px 16px 40px', split: split ? 'minmax(0,1fr) 300px' : 'minmax(0,1fr)',
         areaCols: wide ? '1.2fr 1.1fr .8fr .8fr .7fr 1.3fr 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
         rangeCols: wide ? 'repeat(5,minmax(0,1fr)) 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
         rowPad: wide ? '10px 0' : '14px 0', cellLbl: formW >= 760 ? 'none' : 'block', hoursHead: formW >= 760,
         dayCols: formW >= 760 ? '160px minmax(0,1fr)' : 'minmax(0,1fr)', dayInner: formW >= 580 ? 'repeat(3,minmax(132px,1fr)) 80px' : 'minmax(0,1fr) minmax(0,1fr)',
         stepCols: wide ? 'repeat(5,minmax(0,1fr))' : 'repeat(5,minmax(0,1fr))' },
+      acc: Object.fromEntries(Object.keys(SEC_PAGE).map(k => { const pgK = SEC_PAGE[k], first = Object.keys(SEC_PAGE).find(x => SEC_PAGE[x] === pgK); const cur = (s.openSec || {})[pgK]; const open = cur === undefined ? k === first : cur === k;
+        return [k, { open, chev: open ? '180deg' : '0deg', toggle: (e) => { if (e && e.target && e.target.closest && e.target.closest('[role=switch]')) return; this.setState(st => ({ openSec: { ...(st.openSec || {}), [pgK]: open ? null : k } })); } }]; })),
       pg: Object.fromEntries(PAGES.map(([k]) => [k, s.page === k])),
       nav, navGroups, steps, ready, todoSteps, doneSteps, hasDone: doneSteps.length > 0, setupOpen: todo.length > 0, setupDone: todo.length === 0,
       warnings, hasWarnings: warnings.length > 0, progressLabel: `${doneN} of ${steps.length} steps completed`,

@@ -130,163 +130,215 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                 <>
                 <div data-screen-label="02 Restaurant profile" style={S("display:flex;flex-direction:column;gap:20px")}>
                   <div>
-                    <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                    <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                       Restaurant profile
                     </h1>
-                    <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
+                    <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
                       How your restaurant appears to customers on WhatsApp and on receipts.
                     </p>
                   </div>
                   <div style={S(`display:grid;grid-template-columns:${vm.L.split};gap:20px;align-items:start`)}>
                     <div style={S("display:flex;flex-direction:column;gap:20px;min-width:0")}>
-                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px")}>
-                        <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                          Basics
-                        </h2>
-                        <div style={S("display:flex;align-items:center;gap:16px;flex-wrap:wrap")}>
-                          <span style={S("width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#FF5577,#C93DFF);color:#fff;font-size:20px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden")}>
-                            {vm.logoNode}
-                          </span>
-                          <div style={S("display:flex;flex-direction:column;gap:6px")}>
-                            <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                              Logo
-                            </span>
-                            <button type="button" onClick={vm.pickLogo} style={S("align-self:flex-start;height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
-                              Upload logo
-                            </button>
-                            <span style={S("font-size:13px;color:#8A5A6E")}>
-                              Square PNG or JPG, at least 400 px.
-                            </span>
-                          </div>
-                        </div>
-                        <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px 20px")}>
-                          <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                            <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                              Restaurant name
-                            </span>
-                            <input value={vm.prof.name.v} onChange={vm.prof.name.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
-                            <span style={S("font-size:13px;color:#8A5A6E")}>
-                              Legal or registered name.
-                            </span>
-                          </label>
-                          <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                            <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                              Brand name shown to customers
-                            </span>
-                            <input value={vm.prof.brand.v} onChange={vm.prof.brand.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
-                            <span style={S("font-size:13px;color:#8A5A6E")}>
-                              Used in greetings and order summaries.
-                            </span>
-                          </label>
-                          <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                            <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                              Cuisine type
-                            </span>
-                            <input value={vm.prof.cuisine.v} onChange={vm.prof.cuisine.set} placeholder="e.g. Burgers, Lebanese, Pizza" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
-                          </label>
-                        </div>
-                      </section>
-                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px")}>
-                        <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                          Contact
-                        </h2>
-                        <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px 20px")}>
-                          <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                            <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                              Business phone
-                            </span>
-                            <input value={vm.prof.phone.v} onChange={vm.prof.phone.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
-                          </label>
-                          <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                            <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                              Support WhatsApp number
-                            </span>
-                            <input value={vm.prof.support.v} onChange={vm.prof.support.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
-                            <span style={S("font-size:13px;color:#8A5A6E")}>
-                              Customers are sent here if they ask for a person.
-                            </span>
-                          </label>
-                          <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                            <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                              Email
-                            </span>
-                            <input type="email" value={vm.prof.email.v} onChange={vm.prof.email.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
-                          </label>
-                        </div>
-                      </section>
-                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px")}>
-                        <div style={S("display:flex;align-items:center;justify-content:space-between;gap:16px")}>
-                          <div>
+                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                        <div role="button" tabIndex={0} onClick={vm.acc.s0.toggle} aria-expanded={vm.acc.s0.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
+                          <div style={S("flex:1;min-width:0")}>
                             <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                              VAT registered
+                              Basics
                             </h2>
-                            <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px;line-height:1.5")}>
-                              Lumia adds 5% VAT to order totals and shows your TRN on receipts.
-                            </p>
                           </div>
-                          <button type="button" role="switch" aria-checked={vm.vatSw.on} aria-label="VAT registered" onClick={vm.vatSw.toggle} style={S(`width:48px;height:28px;border-radius:999px;flex:none;background:${vm.vatSw.tBg};position:relative;transition:background .15s`)}>
-                            <span style={S(`position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX(${vm.vatSw.knob});transition:transform .18s`)} />
-                          </button>
+                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s0.chev})`)}>
+                            <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
                         </div>
-                        {vm.vatSw.on && (
+                        {vm.acc.s0.open && (
                           <>
-                          <label style={S("display:flex;flex-direction:column;gap:6px;max-width:360px")}>
-                            <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                              TRN number
-                            </span>
-                            <input value={vm.prof.trn.v} onChange={vm.prof.trn.set} inputMode="numeric" style={S(`height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid ${vm.trnBd};background:#fff;font-size:15px;font-variant-numeric:tabular-nums;letter-spacing:.02em`)} className="dcs2" />
-                            <span style={S(`font-size:13px;color:${vm.trnHintFg}`)}>
-                              {vm.trnHint}
-                            </span>
-                          </label>
+                          <div style={S("display:flex;flex-direction:column;gap:18px;padding-top:18px")}>
+                            <div style={S("display:flex;align-items:center;gap:16px;flex-wrap:wrap")}>
+                              <span style={S("width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#FF5577,#C93DFF);color:#fff;font-size:20px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden")}>
+                                {vm.logoNode}
+                              </span>
+                              <div style={S("display:flex;flex-direction:column;gap:6px")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                  Logo
+                                </span>
+                                <button type="button" onClick={vm.pickLogo} style={S("align-self:flex-start;height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
+                                  Upload logo
+                                </button>
+                                <span style={S("font-size:13px;color:#8A5A6E")}>
+                                  Square PNG or JPG, at least 400 px.
+                                </span>
+                              </div>
+                            </div>
+                            <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px 20px")}>
+                              <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                  Restaurant name
+                                </span>
+                                <input value={vm.prof.name.v} onChange={vm.prof.name.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
+                                <span style={S("font-size:13px;color:#8A5A6E")}>
+                                  Legal or registered name.
+                                </span>
+                              </label>
+                              <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                  Brand name shown to customers
+                                </span>
+                                <input value={vm.prof.brand.v} onChange={vm.prof.brand.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
+                                <span style={S("font-size:13px;color:#8A5A6E")}>
+                                  Used in greetings and order summaries.
+                                </span>
+                              </label>
+                              <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                  Cuisine type
+                                </span>
+                                <input value={vm.prof.cuisine.v} onChange={vm.prof.cuisine.set} placeholder="e.g. Burgers, Lebanese, Pizza" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
+                              </label>
+                            </div>
+                          </div>
                           </>
                         )}
                       </section>
-                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px")}>
-                        <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                          Customer messages
-                        </h2>
-                        <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                            Default language
-                          </span>
-                          <div role="radiogroup" aria-label="Default language" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;align-self:flex-start")}>
-                            {(vm.langSeg as any[]).map((o: any, __i: number) => (
-                              <Fragment key={__i}>
-                                <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`height:34px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:${o.fw};background:${o.bg};color:${o.fg};box-shadow:${o.sh}`)}>
-                                  {o.label}
-                                </button>
-                              </Fragment>
-                            ))}
+                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                        <div role="button" tabIndex={0} onClick={vm.acc.s1.toggle} aria-expanded={vm.acc.s1.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
+                          <div style={S("flex:1;min-width:0")}>
+                            <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                              Contact
+                            </h2>
                           </div>
-                          <span style={S("font-size:13px;color:#8A5A6E")}>
-                            With Both, Lumia replies in the language the customer writes in.
-                          </span>
+                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s1.chev})`)}>
+                            <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
                         </div>
-                        <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                            Greeting style
-                          </span>
-                          <div role="radiogroup" aria-label="Greeting style" style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px")}>
-                            {(vm.greetOpts as any[]).map((o: any, __i: number) => (
-                              <Fragment key={__i}>
-                                <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid ${o.bd};background:${o.bg}`)}>
-                                  <span style={S(`width:18px;height:18px;border-radius:50%;border:1.5px solid ${o.ring};flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center`)}>
-                                    <span style={S(`width:8px;height:8px;border-radius:50%;background:${o.dotBg}`)} />
-                                  </span>
-                                  <span style={S("display:flex;flex-direction:column;gap:2px;min-width:0")}>
-                                    <span style={S("font-size:15px;font-weight:500")}>
+                        {vm.acc.s1.open && (
+                          <>
+                          <div style={S("display:flex;flex-direction:column;gap:18px;padding-top:18px")}>
+                            <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px 20px")}>
+                              <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                  Business phone
+                                </span>
+                                <input value={vm.prof.phone.v} onChange={vm.prof.phone.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                              </label>
+                              <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                  Support WhatsApp number
+                                </span>
+                                <input value={vm.prof.support.v} onChange={vm.prof.support.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                <span style={S("font-size:13px;color:#8A5A6E")}>
+                                  Customers are sent here if they ask for a person.
+                                </span>
+                              </label>
+                              <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                  Email
+                                </span>
+                                <input type="email" value={vm.prof.email.v} onChange={vm.prof.email.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
+                              </label>
+                            </div>
+                          </div>
+                          </>
+                        )}
+                      </section>
+                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                        <div role="button" tabIndex={0} onClick={vm.acc.s2.toggle} aria-expanded={vm.acc.s2.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
+                          <div style={S("flex:1;min-width:0")}>
+                            <div style={S("display:flex;align-items:center;justify-content:space-between;gap:16px")}>
+                              <div>
+                                <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                                  VAT registered
+                                </h2>
+                                <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px;line-height:1.5")}>
+                                  Lumia adds 5% VAT to order totals and shows your TRN on receipts.
+                                </p>
+                              </div>
+                              <button type="button" role="switch" aria-checked={vm.vatSw.on} aria-label="VAT registered" onClick={vm.vatSw.toggle} style={S(`width:48px;height:28px;border-radius:999px;flex:none;background:${vm.vatSw.tBg};position:relative;transition:background .15s`)}>
+                                <span style={S(`position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX(${vm.vatSw.knob});transition:transform .18s`)} />
+                              </button>
+                            </div>
+                          </div>
+                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s2.chev})`)}>
+                            <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                        {vm.acc.s2.open && (
+                          <>
+                          <div style={S("display:flex;flex-direction:column;gap:18px;padding-top:18px")}>
+                            {vm.vatSw.on && (
+                              <>
+                              <label style={S("display:flex;flex-direction:column;gap:6px;max-width:360px")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                  TRN number
+                                </span>
+                                <input value={vm.prof.trn.v} onChange={vm.prof.trn.set} inputMode="numeric" style={S(`height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid ${vm.trnBd};background:#fff;font-size:15px;font-variant-numeric:tabular-nums;letter-spacing:.02em`)} className="dcs2" />
+                                <span style={S(`font-size:13px;color:${vm.trnHintFg}`)}>
+                                  {vm.trnHint}
+                                </span>
+                              </label>
+                              </>
+                            )}
+                          </div>
+                          </>
+                        )}
+                      </section>
+                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                        <div role="button" tabIndex={0} onClick={vm.acc.s3.toggle} aria-expanded={vm.acc.s3.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
+                          <div style={S("flex:1;min-width:0")}>
+                            <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                              Customer messages
+                            </h2>
+                          </div>
+                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s3.chev})`)}>
+                            <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                        {vm.acc.s3.open && (
+                          <>
+                          <div style={S("display:flex;flex-direction:column;gap:18px;padding-top:18px")}>
+                            <div style={S("display:flex;flex-direction:column;gap:8px")}>
+                              <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                Default language
+                              </span>
+                              <div role="radiogroup" aria-label="Default language" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;align-self:flex-start")}>
+                                {(vm.langSeg as any[]).map((o: any, __i: number) => (
+                                  <Fragment key={__i}>
+                                    <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`height:34px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:${o.fw};background:${o.bg};color:${o.fg};box-shadow:${o.sh}`)}>
                                       {o.label}
-                                    </span>
-                                    <span style={S("font-size:13px;color:#8A5A6E;line-height:1.4")}>
-                                      {o.desc}
-                                    </span>
-                                  </span>
-                                </button>
-                              </Fragment>
-                            ))}
+                                    </button>
+                                  </Fragment>
+                                ))}
+                              </div>
+                              <span style={S("font-size:13px;color:#8A5A6E")}>
+                                With Both, Lumia replies in the language the customer writes in.
+                              </span>
+                            </div>
+                            <div style={S("display:flex;flex-direction:column;gap:8px")}>
+                              <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                Greeting style
+                              </span>
+                              <div role="radiogroup" aria-label="Greeting style" style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px")}>
+                                {(vm.greetOpts as any[]).map((o: any, __i: number) => (
+                                  <Fragment key={__i}>
+                                    <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid ${o.bd};background:${o.bg}`)}>
+                                      <span style={S(`width:18px;height:18px;border-radius:50%;border:1.5px solid ${o.ring};flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center`)}>
+                                        <span style={S(`width:8px;height:8px;border-radius:50%;background:${o.dotBg}`)} />
+                                      </span>
+                                      <span style={S("display:flex;flex-direction:column;gap:2px;min-width:0")}>
+                                        <span style={S("font-size:15px;font-weight:500")}>
+                                          {o.label}
+                                        </span>
+                                        <span style={S("font-size:13px;color:#8A5A6E;line-height:1.4")}>
+                                          {o.desc}
+                                        </span>
+                                      </span>
+                                    </button>
+                                  </Fragment>
+                                ))}
+                              </div>
+                            </div>
                           </div>
-                        </div>
+                          </>
+                        )}
                       </section>
                     </div>
                     <div style={S("position:sticky;top:12px;border-radius:16px;background:#EFE7DE;padding:16px;display:flex;flex-direction:column;gap:8px")}>
@@ -310,10 +362,10 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                 <div data-screen-label="03 Branches" style={S("display:flex;flex-direction:column;gap:20px")}>
                   <div style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
                     <div>
-                      <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                      <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                         Branches & locations
                       </h1>
-                      <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
+                      <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
                         Lumia uses each branch's location to pick the nearest branch and calculate delivery.
                       </p>
                     </div>
@@ -528,10 +580,10 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                 <>
                 <div data-screen-label="04 WhatsApp" style={S("display:flex;flex-direction:column;gap:20px")}>
                   <div>
-                    <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                    <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                       WhatsApp connection
                     </h1>
-                    <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
+                    <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
                       The WhatsApp Business number your customers message to order.
                     </p>
                   </div>
@@ -583,75 +635,88 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                       </div>
                     </dl>
                   </section>
-                  <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px")}>
-                    <div>
-                      <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                        Which branches does this number take orders for?
-                      </h2>
-                      <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px;line-height:1.5")}>
-                        Matters when you have more than one branch.
-                      </p>
+                  <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                    <div role="button" tabIndex={0} onClick={vm.acc.s4.toggle} aria-expanded={vm.acc.s4.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
+                      <div style={S("flex:1;min-width:0")}>
+                        <div>
+                          <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                            Which branches does this number take orders for?
+                          </h2>
+                          <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px;line-height:1.5")}>
+                            Matters when you have more than one branch.
+                          </p>
+                        </div>
+                      </div>
+                      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s4.chev})`)}>
+                        <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
                     </div>
-                    <div role="radiogroup" aria-label="Branch routing" style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px")}>
-                      {(vm.routeOpts as any[]).map((o: any, __i: number) => (
-                        <Fragment key={__i}>
-                          <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid ${o.bd};background:${o.bg}`)}>
-                            <span style={S(`width:18px;height:18px;border-radius:50%;border:1.5px solid ${o.ring};flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center`)}>
-                              <span style={S(`width:8px;height:8px;border-radius:50%;background:${o.dotBg}`)} />
-                            </span>
-                            <span style={S("display:flex;flex-direction:column;gap:2px;min-width:0")}>
-                              <span style={S("font-size:15px;font-weight:500")}>
-                                {o.label}
-                              </span>
-                              <span style={S("font-size:13px;color:#8A5A6E;line-height:1.4")}>
-                                {o.desc}
-                              </span>
-                            </span>
-                          </button>
-                        </Fragment>
-                      ))}
-                    </div>
-                    {vm.route.pickBranches && (
+                    {vm.acc.s4.open && (
                       <>
-                      <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                        <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                          {vm.route.pickLabel}
-                        </span>
-                        <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
-                          {(vm.routeBranches as any[]).map((o: any, __i: number) => (
+                      <div style={S("display:flex;flex-direction:column;gap:16px;padding-top:16px")}>
+                        <div role="radiogroup" aria-label="Branch routing" style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px")}>
+                          {(vm.routeOpts as any[]).map((o: any, __i: number) => (
                             <Fragment key={__i}>
-                              <button type="button" onClick={o.pick} style={S(`height:38px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;background:${o.bg};color:${o.fg};border:1.5px solid ${o.bd}`)}>
-                                {o.label}
+                              <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid ${o.bd};background:${o.bg}`)}>
+                                <span style={S(`width:18px;height:18px;border-radius:50%;border:1.5px solid ${o.ring};flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center`)}>
+                                  <span style={S(`width:8px;height:8px;border-radius:50%;background:${o.dotBg}`)} />
+                                </span>
+                                <span style={S("display:flex;flex-direction:column;gap:2px;min-width:0")}>
+                                  <span style={S("font-size:15px;font-weight:500")}>
+                                    {o.label}
+                                  </span>
+                                  <span style={S("font-size:13px;color:#8A5A6E;line-height:1.4")}>
+                                    {o.desc}
+                                  </span>
+                                </span>
                               </button>
                             </Fragment>
                           ))}
                         </div>
+                        {vm.route.pickBranches && (
+                          <>
+                          <div style={S("display:flex;flex-direction:column;gap:8px")}>
+                            <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                              {vm.route.pickLabel}
+                            </span>
+                            <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
+                              {(vm.routeBranches as any[]).map((o: any, __i: number) => (
+                                <Fragment key={__i}>
+                                  <button type="button" onClick={o.pick} style={S(`height:38px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;background:${o.bg};color:${o.fg};border:1.5px solid ${o.bd}`)}>
+                                    {o.label}
+                                  </button>
+                                </Fragment>
+                              ))}
+                            </div>
+                          </div>
+                          </>
+                        )}
+                        <div style={S("border-radius:12px;background:#FAF6FA;padding:14px 16px;display:flex;flex-direction:column;gap:6px")}>
+                          {(vm.waMap as any[]).map((m: any, __i: number) => (
+                            <Fragment key={__i}>
+                              <div style={S("font-size:15px;font-variant-numeric:tabular-nums;display:flex;flex-wrap:wrap;gap:4px 10px")}>
+                                <span style={S("font-weight:500")}>
+                                  +971 50 123 4567
+                                </span>
+                                <span style={S("color:#8A5A6E")}>
+                                  →
+                                </span>
+                                <span style={S("font-weight:500")}>
+                                  {m}
+                                </span>
+                              </div>
+                            </Fragment>
+                          ))}
+                          <span style={S("font-size:14px;color:#8A5A6E")}>
+                            {vm.route.note}
+                          </span>
+                        </div>
+                        <button type="button" onClick={vm.markDirty} style={S("align-self:flex-start;font-size:14px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px")} className="dcs3">
+                          + Add another WhatsApp number for a different branch
+                        </button>
                       </div>
                       </>
                     )}
-                    <div style={S("border-radius:12px;background:#FAF6FA;padding:14px 16px;display:flex;flex-direction:column;gap:6px")}>
-                      {(vm.waMap as any[]).map((m: any, __i: number) => (
-                        <Fragment key={__i}>
-                          <div style={S("font-size:15px;font-variant-numeric:tabular-nums;display:flex;flex-wrap:wrap;gap:4px 10px")}>
-                            <span style={S("font-weight:500")}>
-                              +971 50 123 4567
-                            </span>
-                            <span style={S("color:#8A5A6E")}>
-                              →
-                            </span>
-                            <span style={S("font-weight:500")}>
-                              {m}
-                            </span>
-                          </div>
-                        </Fragment>
-                      ))}
-                      <span style={S("font-size:14px;color:#8A5A6E")}>
-                        {vm.route.note}
-                      </span>
-                    </div>
-                    <button type="button" onClick={vm.markDirty} style={S("align-self:flex-start;font-size:14px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px")} className="dcs3">
-                      + Add another WhatsApp number for a different branch
-                    </button>
                   </section>
                 </div>
                 </>
@@ -660,47 +725,60 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                 <>
                 <div data-screen-label="05 Delivery" style={S("display:flex;flex-direction:column;gap:20px")}>
                   <div>
-                    <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                    <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                       Delivery settings
                     </h1>
-                    <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;max-width:640px;line-height:1.5;text-wrap:pretty")}>
+                    <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:640px;line-height:1.5;text-wrap:pretty")}>
                       Where you deliver and what customers pay. Your restaurant does the delivery. Lumia calculates the fee and includes it in the order summary.
                     </p>
                   </div>
-                  <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:14px")}>
-                    <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                      Delivery status
-                    </h2>
-                    <div role="radiogroup" aria-label="Delivery status" style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px")}>
-                      {(vm.dStatusOpts as any[]).map((o: any, __i: number) => (
-                        <Fragment key={__i}>
-                          <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid ${o.bd};background:${o.bg}`)}>
-                            <span style={S(`width:18px;height:18px;border-radius:50%;border:1.5px solid ${o.ring};flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center`)}>
-                              <span style={S(`width:8px;height:8px;border-radius:50%;background:${o.dotBg}`)} />
-                            </span>
-                            <span style={S("display:flex;flex-direction:column;gap:2px;min-width:0")}>
-                              <span style={S("font-size:15px;font-weight:500")}>
-                                {o.label}
-                              </span>
-                              <span style={S("font-size:13px;color:#8A5A6E;line-height:1.4")}>
-                                {o.desc}
-                              </span>
-                            </span>
-                          </button>
-                        </Fragment>
-                      ))}
+                  <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                    <div role="button" tabIndex={0} onClick={vm.acc.s5.toggle} aria-expanded={vm.acc.s5.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
+                      <div style={S("flex:1;min-width:0")}>
+                        <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                          Delivery status
+                        </h2>
+                      </div>
+                      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s5.chev})`)}>
+                        <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
                     </div>
-                    <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;border-top:1px solid #F3EEF1;padding-top:14px;font-size:14px")}>
-                      <span style={S("color:#8A5A6E")}>
-                        Delivery handled by
-                      </span>
-                      <span style={S("font-weight:600")}>
-                        Your restaurant
-                      </span>
-                      <span style={S("color:#8A5A6E")}>
-                        · Lumia doesn't provide drivers yet.
-                      </span>
-                    </div>
+                    {vm.acc.s5.open && (
+                      <>
+                      <div style={S("display:flex;flex-direction:column;gap:14px;padding-top:14px")}>
+                        <div role="radiogroup" aria-label="Delivery status" style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px")}>
+                          {(vm.dStatusOpts as any[]).map((o: any, __i: number) => (
+                            <Fragment key={__i}>
+                              <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid ${o.bd};background:${o.bg}`)}>
+                                <span style={S(`width:18px;height:18px;border-radius:50%;border:1.5px solid ${o.ring};flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center`)}>
+                                  <span style={S(`width:8px;height:8px;border-radius:50%;background:${o.dotBg}`)} />
+                                </span>
+                                <span style={S("display:flex;flex-direction:column;gap:2px;min-width:0")}>
+                                  <span style={S("font-size:15px;font-weight:500")}>
+                                    {o.label}
+                                  </span>
+                                  <span style={S("font-size:13px;color:#8A5A6E;line-height:1.4")}>
+                                    {o.desc}
+                                  </span>
+                                </span>
+                              </button>
+                            </Fragment>
+                          ))}
+                        </div>
+                        <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;border-top:1px solid #F3EEF1;padding-top:14px;font-size:14px")}>
+                          <span style={S("color:#8A5A6E")}>
+                            Delivery handled by
+                          </span>
+                          <span style={S("font-weight:600")}>
+                            Your restaurant
+                          </span>
+                          <span style={S("color:#8A5A6E")}>
+                            · Lumia doesn't provide drivers yet.
+                          </span>
+                        </div>
+                      </div>
+                      </>
+                    )}
                   </section>
                   {vm.dl.pickup && (
                     <>
@@ -723,422 +801,513 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                   )}
                   {vm.dl.on && (
                     <>
-                    <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:14px")}>
-                      <div>
-                        <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                          How is the delivery fee calculated?
-                        </h2>
+                    <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                      <div role="button" tabIndex={0} onClick={vm.acc.s6.toggle} aria-expanded={vm.acc.s6.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
+                        <div style={S("flex:1;min-width:0")}>
+                          <div>
+                            <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                              How is the delivery fee calculated?
+                            </h2>
+                          </div>
+                        </div>
+                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s6.chev})`)}>
+                          <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                       </div>
-                      <div role="radiogroup" aria-label="Pricing method" style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px")}>
-                        {(vm.methodOpts as any[]).map((o: any, __i: number) => (
-                          <Fragment key={__i}>
-                            <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid ${o.bd};background:${o.bg}`)}>
-                              <span style={S(`width:18px;height:18px;border-radius:50%;border:1.5px solid ${o.ring};flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center`)}>
-                                <span style={S(`width:8px;height:8px;border-radius:50%;background:${o.dotBg}`)} />
-                              </span>
-                              <span style={S("display:flex;flex-direction:column;gap:2px;min-width:0")}>
-                                <span style={S("font-size:15px;font-weight:500")}>
-                                  {o.label}
-                                </span>
-                                <span style={S("font-size:13px;color:#8A5A6E;line-height:1.4")}>
-                                  {o.desc}
-                                </span>
-                              </span>
-                            </button>
-                          </Fragment>
-                        ))}
-                      </div>
-                      {vm.dl.noMethod && (
+                      {vm.acc.s6.open && (
                         <>
-                        <div style={S("display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#FFF6E8;color:#6B3A00;font-size:14px;line-height:1.45")}>
-                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S("flex:none;margin-top:1px")}>
-                            <path d="M10 3 18 17H2L10 3zM10 8.5v3.5M10 14.6v.01" stroke="#B25E00" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          <span>
-                            Delivery settings are missing. Lumia AI cannot calculate delivery fees yet.
-                          </span>
+                        <div style={S("display:flex;flex-direction:column;gap:14px;padding-top:14px")}>
+                          <div role="radiogroup" aria-label="Pricing method" style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px")}>
+                            {(vm.methodOpts as any[]).map((o: any, __i: number) => (
+                              <Fragment key={__i}>
+                                <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px 16px;border-radius:12px;border:1.5px solid ${o.bd};background:${o.bg}`)}>
+                                  <span style={S(`width:18px;height:18px;border-radius:50%;border:1.5px solid ${o.ring};flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center`)}>
+                                    <span style={S(`width:8px;height:8px;border-radius:50%;background:${o.dotBg}`)} />
+                                  </span>
+                                  <span style={S("display:flex;flex-direction:column;gap:2px;min-width:0")}>
+                                    <span style={S("font-size:15px;font-weight:500")}>
+                                      {o.label}
+                                    </span>
+                                    <span style={S("font-size:13px;color:#8A5A6E;line-height:1.4")}>
+                                      {o.desc}
+                                    </span>
+                                  </span>
+                                </button>
+                              </Fragment>
+                            ))}
+                          </div>
+                          {vm.dl.noMethod && (
+                            <>
+                            <div style={S("display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#FFF6E8;color:#6B3A00;font-size:14px;line-height:1.45")}>
+                              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S("flex:none;margin-top:1px")}>
+                                <path d="M10 3 18 17H2L10 3zM10 8.5v3.5M10 14.6v.01" stroke="#B25E00" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                              <span>
+                                Delivery settings are missing. Lumia AI cannot calculate delivery fees yet.
+                              </span>
+                            </div>
+                            </>
+                          )}
                         </div>
                         </>
                       )}
                     </section>
                     {vm.dl.area && (
                       <>
-                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:12px")}>
-                        <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px")}>
-                          <div>
-                            <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                              Delivery areas
-                            </h2>
-                            <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px")}>
-                              Turn an area off to stop delivering there.
-                            </p>
-                          </div>
-                          <button type="button" onClick={vm.addArea} style={S("height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
-                            + Add area
-                          </button>
-                        </div>
-                        <div style={S("display:flex;flex-direction:column")}>
-                          {vm.wide && (
-                            <>
-                            <div style={S(`display:grid;grid-template-columns:${vm.L.areaCols};gap:10px;padding-bottom:8px;font-size:13px;font-weight:500;color:#8A5A6E`)}>
-                              <span>
-                                Emirate
-                              </span>
-                              <span>
-                                Area
-                              </span>
-                              <span>
-                                Fee (AED)
-                              </span>
-                              <span>
-                                Min. order
-                              </span>
-                              <span>
-                                ETA (min)
-                              </span>
-                              <span>
-                                Branch
-                              </span>
-                              <span>
-                                Active
-                              </span>
-                              <span />
+                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                        <div role="button" tabIndex={0} onClick={vm.acc.s7.toggle} aria-expanded={vm.acc.s7.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
+                          <div style={S("flex:1;min-width:0")}>
+                            <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px")}>
+                              <div>
+                                <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                                  Delivery areas
+                                </h2>
+                                <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px")}>
+                                  Turn an area off to stop delivering there.
+                                </p>
+                              </div>
+                              <button type="button" onClick={vm.addArea} style={S("height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
+                                + Add area
+                              </button>
                             </div>
-                            </>
-                          )}
-                          {(vm.areas as any[]).map((r: any, __i: number) => (
-                            <Fragment key={__i}>
-                              <div style={S(`display:grid;grid-template-columns:${vm.L.areaCols};gap:10px;align-items:end;padding:${vm.L.rowPad};border-top:1px solid #F3EEF1`)}>
-                                <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                  <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                          </div>
+                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s7.chev})`)}>
+                            <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                        {vm.acc.s7.open && (
+                          <>
+                          <div style={S("display:flex;flex-direction:column;gap:12px;padding-top:12px")}>
+                            <div style={S("display:flex;flex-direction:column")}>
+                              {vm.wide && (
+                                <>
+                                <div style={S(`display:grid;grid-template-columns:${vm.L.areaCols};gap:10px;padding-bottom:8px;font-size:13px;font-weight:500;color:#8A5A6E`)}>
+                                  <span>
                                     Emirate
                                   </span>
-                                  {r.emSel}
-                                </label>
-                                <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                  <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                  <span>
                                     Area
                                   </span>
-                                  <input value={r.area} onChange={r.set.area} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px")} className="dcs2" />
-                                </label>
-                                <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                  <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                  <span>
                                     Fee (AED)
                                   </span>
-                                  <input inputMode="decimal" value={r.fee} placeholder={r.feePh} onChange={r.set.fee} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
-                                </label>
-                                <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                  <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                  <span>
                                     Min. order
                                   </span>
-                                  <input inputMode="decimal" value={r.min} onChange={r.set.min} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
-                                </label>
-                                <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                  <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                  <span>
                                     ETA (min)
                                   </span>
-                                  <input inputMode="numeric" value={r.eta} onChange={r.set.eta} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
-                                </label>
-                                <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                  <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                  <span>
                                     Branch
                                   </span>
-                                  {r.brSel}
-                                </label>
-                                <div style={S("height:40px;display:flex;align-items:center;gap:8px")}>
-                                  <button type="button" role="switch" aria-checked={r.sw.on} aria-label="Area active" onClick={r.sw.toggle} style={S(`width:48px;height:28px;border-radius:999px;flex:none;background:${r.sw.tBg};position:relative;transition:background .15s`)}>
-                                    <span style={S(`position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX(${r.sw.knob});transition:transform .18s`)} />
-                                  </button>
-                                  <span style={S(`display:${vm.L.cellLbl};font-size:13px;color:#8A5A6E`)}>
-                                    {r.onLabel}
+                                  <span>
+                                    Active
                                   </span>
+                                  <span />
                                 </div>
-                                <button type="button" onClick={r.remove} aria-label="Remove area" style={S("width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;justify-self:end;color:#8A5A6E")} className="dcs4">
-                                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                                    <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                                  </svg>
-                                </button>
-                              </div>
-                            </Fragment>
-                          ))}
-                        </div>
+                                </>
+                              )}
+                              {(vm.areas as any[]).map((r: any, __i: number) => (
+                                <Fragment key={__i}>
+                                  <div style={S(`display:grid;grid-template-columns:${vm.L.areaCols};gap:10px;align-items:end;padding:${vm.L.rowPad};border-top:1px solid #F3EEF1`)}>
+                                    <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
+                                      <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                        Emirate
+                                      </span>
+                                      {r.emSel}
+                                    </label>
+                                    <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
+                                      <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                        Area
+                                      </span>
+                                      <input value={r.area} onChange={r.set.area} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px")} className="dcs2" />
+                                    </label>
+                                    <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
+                                      <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                        Fee (AED)
+                                      </span>
+                                      <input inputMode="decimal" value={r.fee} placeholder={r.feePh} onChange={r.set.fee} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                    </label>
+                                    <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
+                                      <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                        Min. order
+                                      </span>
+                                      <input inputMode="decimal" value={r.min} onChange={r.set.min} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                    </label>
+                                    <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
+                                      <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                        ETA (min)
+                                      </span>
+                                      <input inputMode="numeric" value={r.eta} onChange={r.set.eta} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                    </label>
+                                    <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
+                                      <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                        Branch
+                                      </span>
+                                      {r.brSel}
+                                    </label>
+                                    <div style={S("height:40px;display:flex;align-items:center;gap:8px")}>
+                                      <button type="button" role="switch" aria-checked={r.sw.on} aria-label="Area active" onClick={r.sw.toggle} style={S(`width:48px;height:28px;border-radius:999px;flex:none;background:${r.sw.tBg};position:relative;transition:background .15s`)}>
+                                        <span style={S(`position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX(${r.sw.knob});transition:transform .18s`)} />
+                                      </button>
+                                      <span style={S(`display:${vm.L.cellLbl};font-size:13px;color:#8A5A6E`)}>
+                                        {r.onLabel}
+                                      </span>
+                                    </div>
+                                    <button type="button" onClick={r.remove} aria-label="Remove area" style={S("width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;justify-self:end;color:#8A5A6E")} className="dcs4">
+                                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                                        <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                </Fragment>
+                              ))}
+                            </div>
+                          </div>
+                          </>
+                        )}
                       </section>
                       </>
                     )}
                     {vm.dl.distance && (
                       <>
-                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:12px")}>
-                        <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px")}>
-                          <div>
-                            <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                              Distance ranges
-                            </h2>
-                            <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px")}>
-                              Measured from the branch to the customer. Leave "To" empty for no limit.
-                            </p>
-                          </div>
-                          <button type="button" onClick={vm.addRange} style={S("height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
-                            + Add range
-                          </button>
-                        </div>
-                        <div style={S("display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#FFF6E8;color:#6B3A00;font-size:14px;line-height:1.45")}>
-                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S("flex:none;margin-top:1px")}>
-                            <path d="M10 3 18 17H2L10 3zM10 8.5v3.5M10 14.6v.01" stroke="#B25E00" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          <span>
-                            Distance pricing needs a branch location pin and customer location pin.
-                          </span>
-                        </div>
-                        <div style={S("display:flex;flex-direction:column")}>
-                          {vm.wide && (
-                            <>
-                            <div style={S(`display:grid;grid-template-columns:${vm.L.rangeCols};gap:10px;padding-bottom:8px;font-size:13px;font-weight:500;color:#8A5A6E`)}>
-                              <span>
-                                From (km)
-                              </span>
-                              <span>
-                                To (km)
-                              </span>
-                              <span>
-                                Fee (AED)
-                              </span>
-                              <span>
-                                Min. order
-                              </span>
-                              <span>
-                                ETA (min)
-                              </span>
-                              <span>
-                                Active
-                              </span>
-                              <span />
+                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                        <div role="button" tabIndex={0} onClick={vm.acc.s8.toggle} aria-expanded={vm.acc.s8.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
+                          <div style={S("flex:1;min-width:0")}>
+                            <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px")}>
+                              <div>
+                                <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                                  Distance ranges
+                                </h2>
+                                <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px")}>
+                                  Measured from the branch to the customer. Leave "To" empty for no limit.
+                                </p>
+                              </div>
+                              <button type="button" onClick={vm.addRange} style={S("height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
+                                + Add range
+                              </button>
                             </div>
-                            </>
-                          )}
-                          {(vm.ranges as any[]).map((r: any, __i: number) => (
-                            <Fragment key={__i}>
-                              <div style={S(`display:grid;grid-template-columns:${vm.L.rangeCols};gap:10px;align-items:end;padding:${vm.L.rowPad};border-top:1px solid #F3EEF1`)}>
-                                <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                  <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                          </div>
+                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s8.chev})`)}>
+                            <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                        {vm.acc.s8.open && (
+                          <>
+                          <div style={S("display:flex;flex-direction:column;gap:12px;padding-top:12px")}>
+                            <div style={S("display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#FFF6E8;color:#6B3A00;font-size:14px;line-height:1.45")}>
+                              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S("flex:none;margin-top:1px")}>
+                                <path d="M10 3 18 17H2L10 3zM10 8.5v3.5M10 14.6v.01" stroke="#B25E00" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                              <span>
+                                Distance pricing needs a branch location pin and customer location pin.
+                              </span>
+                            </div>
+                            <div style={S("display:flex;flex-direction:column")}>
+                              {vm.wide && (
+                                <>
+                                <div style={S(`display:grid;grid-template-columns:${vm.L.rangeCols};gap:10px;padding-bottom:8px;font-size:13px;font-weight:500;color:#8A5A6E`)}>
+                                  <span>
                                     From (km)
                                   </span>
-                                  <input inputMode="decimal" value={r.from} onChange={r.set.from} style={S(`height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid ${r.bd};background:#fff;font-size:14px;font-variant-numeric:tabular-nums`)} className="dcs2" />
-                                </label>
-                                <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                  <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                  <span>
                                     To (km)
                                   </span>
-                                  <input inputMode="decimal" value={r.to} placeholder="No limit" onChange={r.set.to} style={S(`height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid ${r.bd};background:#fff;font-size:14px;font-variant-numeric:tabular-nums`)} className="dcs2" />
-                                </label>
-                                <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                  <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                  <span>
                                     Fee (AED)
                                   </span>
-                                  <input inputMode="decimal" value={r.fee} onChange={r.set.fee} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
-                                </label>
-                                <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                  <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                  <span>
                                     Min. order
                                   </span>
-                                  <input inputMode="decimal" value={r.min} onChange={r.set.min} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
-                                </label>
-                                <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                  <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                  <span>
                                     ETA (min)
                                   </span>
-                                  <input inputMode="numeric" value={r.eta} onChange={r.set.eta} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
-                                </label>
-                                <div style={S("height:40px;display:flex;align-items:center;gap:8px")}>
-                                  <button type="button" role="switch" aria-checked={r.sw.on} aria-label="Range active" onClick={r.sw.toggle} style={S(`width:48px;height:28px;border-radius:999px;flex:none;background:${r.sw.tBg};position:relative;transition:background .15s`)}>
-                                    <span style={S(`position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX(${r.sw.knob});transition:transform .18s`)} />
-                                  </button>
-                                  <span style={S(`display:${vm.L.cellLbl};font-size:13px;color:#8A5A6E`)}>
-                                    {r.onLabel}
+                                  <span>
+                                    Active
                                   </span>
+                                  <span />
                                 </div>
-                                <button type="button" onClick={r.remove} aria-label="Remove range" style={S("width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;justify-self:end;color:#8A5A6E")} className="dcs4">
-                                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                                    <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                                  </svg>
-                                </button>
-                              </div>
-                            </Fragment>
-                          ))}
-                        </div>
+                                </>
+                              )}
+                              {(vm.ranges as any[]).map((r: any, __i: number) => (
+                                <Fragment key={__i}>
+                                  <div style={S(`display:grid;grid-template-columns:${vm.L.rangeCols};gap:10px;align-items:end;padding:${vm.L.rowPad};border-top:1px solid #F3EEF1`)}>
+                                    <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
+                                      <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                        From (km)
+                                      </span>
+                                      <input inputMode="decimal" value={r.from} onChange={r.set.from} style={S(`height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid ${r.bd};background:#fff;font-size:14px;font-variant-numeric:tabular-nums`)} className="dcs2" />
+                                    </label>
+                                    <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
+                                      <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                        To (km)
+                                      </span>
+                                      <input inputMode="decimal" value={r.to} placeholder="No limit" onChange={r.set.to} style={S(`height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid ${r.bd};background:#fff;font-size:14px;font-variant-numeric:tabular-nums`)} className="dcs2" />
+                                    </label>
+                                    <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
+                                      <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                        Fee (AED)
+                                      </span>
+                                      <input inputMode="decimal" value={r.fee} onChange={r.set.fee} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                    </label>
+                                    <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
+                                      <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                        Min. order
+                                      </span>
+                                      <input inputMode="decimal" value={r.min} onChange={r.set.min} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                    </label>
+                                    <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
+                                      <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
+                                        ETA (min)
+                                      </span>
+                                      <input inputMode="numeric" value={r.eta} onChange={r.set.eta} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                    </label>
+                                    <div style={S("height:40px;display:flex;align-items:center;gap:8px")}>
+                                      <button type="button" role="switch" aria-checked={r.sw.on} aria-label="Range active" onClick={r.sw.toggle} style={S(`width:48px;height:28px;border-radius:999px;flex:none;background:${r.sw.tBg};position:relative;transition:background .15s`)}>
+                                        <span style={S(`position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX(${r.sw.knob});transition:transform .18s`)} />
+                                      </button>
+                                      <span style={S(`display:${vm.L.cellLbl};font-size:13px;color:#8A5A6E`)}>
+                                        {r.onLabel}
+                                      </span>
+                                    </div>
+                                    <button type="button" onClick={r.remove} aria-label="Remove range" style={S("width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;justify-self:end;color:#8A5A6E")} className="dcs4">
+                                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                                        <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                </Fragment>
+                              ))}
+                            </div>
+                          </div>
+                          </>
+                        )}
                       </section>
                       </>
                     )}
                     {vm.dl.free && (
                       <>
-                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px")}>
-                        <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                          Where you deliver for free
-                        </h2>
-                        <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                            Served emirates
-                          </span>
-                          <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
-                            {(vm.freeEm as any[]).map((o: any, __i: number) => (
-                              <Fragment key={__i}>
-                                <button type="button" onClick={o.pick} style={S(`height:38px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;background:${o.bg};color:${o.fg};border:1.5px solid ${o.bd}`)}>
-                                  {o.label}
-                                </button>
-                              </Fragment>
-                            ))}
+                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                        <div role="button" tabIndex={0} onClick={vm.acc.s9.toggle} aria-expanded={vm.acc.s9.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
+                          <div style={S("flex:1;min-width:0")}>
+                            <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                              Where you deliver for free
+                            </h2>
                           </div>
+                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s9.chev})`)}>
+                            <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
                         </div>
-                        <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px 20px")}>
-                          <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                            <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                              Served areas
-                            </span>
-                            <input value={vm.dlf.freeAreas.v} onChange={vm.dlf.freeAreas.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
-                            <span style={S("font-size:13px;color:#8A5A6E")}>
-                              e.g. All areas, or Al Majaz, Al Nahda
-                            </span>
-                          </label>
-                          <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                            <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                              Branch
-                            </span>
-                            {vm.freeBrSel}
-                          </label>
-                        </div>
+                        {vm.acc.s9.open && (
+                          <>
+                          <div style={S("display:flex;flex-direction:column;gap:16px;padding-top:16px")}>
+                            <div style={S("display:flex;flex-direction:column;gap:8px")}>
+                              <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                Served emirates
+                              </span>
+                              <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
+                                {(vm.freeEm as any[]).map((o: any, __i: number) => (
+                                  <Fragment key={__i}>
+                                    <button type="button" onClick={o.pick} style={S(`height:38px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;background:${o.bg};color:${o.fg};border:1.5px solid ${o.bd}`)}>
+                                      {o.label}
+                                    </button>
+                                  </Fragment>
+                                ))}
+                              </div>
+                            </div>
+                            <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px 20px")}>
+                              <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                  Served areas
+                                </span>
+                                <input value={vm.dlf.freeAreas.v} onChange={vm.dlf.freeAreas.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
+                                <span style={S("font-size:13px;color:#8A5A6E")}>
+                                  e.g. All areas, or Al Majaz, Al Nahda
+                                </span>
+                              </label>
+                              <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                  Branch
+                                </span>
+                                {vm.freeBrSel}
+                              </label>
+                            </div>
+                          </div>
+                          </>
+                        )}
                       </section>
                       </>
                     )}
                     {vm.dl.manual && (
                       <>
-                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px")}>
-                        <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                          Manual confirmation
-                        </h2>
-                        <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                            Message shown to customer
-                          </span>
-                          <textarea value={vm.dlf.manualMsg.v} onChange={vm.dlf.manualMsg.set} rows={3} style={S("width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;line-height:1.45;resize:vertical")} className="dcs2" />
-                        </label>
-                        <div style={S("display:flex;align-items:center;justify-content:space-between;gap:16px")}>
-                          <div>
-                            <span style={S("font-size:15px;font-weight:500")}>
-                              Send order to restaurant before final confirmation
-                            </span>
-                            <p style={S("font-size:13px;color:#8A5A6E;margin-top:2px")}>
-                              You set the fee on the device, then Lumia sends the customer the final total.
-                            </p>
+                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                        <div role="button" tabIndex={0} onClick={vm.acc.s10.toggle} aria-expanded={vm.acc.s10.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
+                          <div style={S("flex:1;min-width:0")}>
+                            <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                              Manual confirmation
+                            </h2>
                           </div>
-                          <button type="button" role="switch" aria-checked={vm.confirmSw.on} aria-label="Send before confirmation" onClick={vm.confirmSw.toggle} style={S(`width:48px;height:28px;border-radius:999px;flex:none;background:${vm.confirmSw.tBg};position:relative;transition:background .15s`)}>
-                            <span style={S(`position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX(${vm.confirmSw.knob});transition:transform .18s`)} />
-                          </button>
+                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s10.chev})`)}>
+                            <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
                         </div>
+                        {vm.acc.s10.open && (
+                          <>
+                          <div style={S("display:flex;flex-direction:column;gap:16px;padding-top:16px")}>
+                            <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                              <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                Message shown to customer
+                              </span>
+                              <textarea value={vm.dlf.manualMsg.v} onChange={vm.dlf.manualMsg.set} rows={3} style={S("width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;line-height:1.45;resize:vertical")} className="dcs2" />
+                            </label>
+                            <div style={S("display:flex;align-items:center;justify-content:space-between;gap:16px")}>
+                              <div>
+                                <span style={S("font-size:15px;font-weight:500")}>
+                                  Send order to restaurant before final confirmation
+                                </span>
+                                <p style={S("font-size:13px;color:#8A5A6E;margin-top:2px")}>
+                                  You set the fee on the device, then Lumia sends the customer the final total.
+                                </p>
+                              </div>
+                              <button type="button" role="switch" aria-checked={vm.confirmSw.on} aria-label="Send before confirmation" onClick={vm.confirmSw.toggle} style={S(`width:48px;height:28px;border-radius:999px;flex:none;background:${vm.confirmSw.tBg};position:relative;transition:background .15s`)}>
+                                <span style={S(`position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX(${vm.confirmSw.knob});transition:transform .18s`)} />
+                              </button>
+                            </div>
+                          </div>
+                          </>
+                        )}
                       </section>
                       </>
                     )}
-                    <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px")}>
-                      <div>
-                        <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                          Order rules
-                        </h2>
-                        <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px")}>
-                          Defaults used when an area or range doesn't set its own.
-                        </p>
-                      </div>
-                      <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:16px 20px")}>
-                        <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                            Minimum order (AED)
-                          </span>
-                          <input inputMode="decimal" value={vm.dlf.minOrder.v} onChange={vm.dlf.minOrder.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
-                        </label>
-                        <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                            Free delivery above (AED)
-                          </span>
-                          <input inputMode="decimal" value={vm.dlf.freeAbove.v} onChange={vm.dlf.freeAbove.set} placeholder="Off" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
-                        </label>
-                        <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                            Default ETA (minutes)
-                          </span>
-                          <input inputMode="numeric" value={vm.dlf.eta.v} onChange={vm.dlf.eta.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
-                        </label>
-                      </div>
-                      <div style={S("display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid #F3EEF1;padding-top:14px")}>
-                        <div>
-                          <span style={S("font-size:15px;font-weight:500")}>
-                            Ask customers to share their location pin
-                          </span>
-                          <p style={S(`font-size:13px;color:${vm.pinReqHintFg};margin-top:2px`)}>
-                            {vm.pinReqHint}
-                          </p>
+                    <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                      <div role="button" tabIndex={0} onClick={vm.acc.s11.toggle} aria-expanded={vm.acc.s11.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
+                        <div style={S("flex:1;min-width:0")}>
+                          <div>
+                            <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                              Order rules
+                            </h2>
+                            <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px")}>
+                              Defaults used when an area or range doesn't set its own.
+                            </p>
+                          </div>
                         </div>
-                        <button type="button" role="switch" aria-checked={vm.pinSw.on} aria-label="Require customer location pin" onClick={vm.pinSw.toggle} disabled={!!vm.pinSw.locked} style={S(`width:48px;height:28px;border-radius:999px;flex:none;background:${vm.pinSw.tBg};position:relative;transition:background .15s;opacity:${vm.pinSw.op}`)}>
-                          <span style={S(`position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX(${vm.pinSw.knob});transition:transform .18s`)} />
-                        </button>
+                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s11.chev})`)}>
+                          <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                       </div>
+                      {vm.acc.s11.open && (
+                        <>
+                        <div style={S("display:flex;flex-direction:column;gap:16px;padding-top:16px")}>
+                          <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:16px 20px")}>
+                            <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                              <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                Minimum order (AED)
+                              </span>
+                              <input inputMode="decimal" value={vm.dlf.minOrder.v} onChange={vm.dlf.minOrder.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                            </label>
+                            <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                              <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                Free delivery above (AED)
+                              </span>
+                              <input inputMode="decimal" value={vm.dlf.freeAbove.v} onChange={vm.dlf.freeAbove.set} placeholder="Off" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                            </label>
+                            <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                              <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                Default ETA (minutes)
+                              </span>
+                              <input inputMode="numeric" value={vm.dlf.eta.v} onChange={vm.dlf.eta.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                            </label>
+                          </div>
+                          <div style={S("display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid #F3EEF1;padding-top:14px")}>
+                            <div>
+                              <span style={S("font-size:15px;font-weight:500")}>
+                                Ask customers to share their location pin
+                              </span>
+                              <p style={S(`font-size:13px;color:${vm.pinReqHintFg};margin-top:2px`)}>
+                                {vm.pinReqHint}
+                              </p>
+                            </div>
+                            <button type="button" role="switch" aria-checked={vm.pinSw.on} aria-label="Require customer location pin" onClick={vm.pinSw.toggle} disabled={!!vm.pinSw.locked} style={S(`width:48px;height:28px;border-radius:999px;flex:none;background:${vm.pinSw.tBg};position:relative;transition:background .15s;opacity:${vm.pinSw.op}`)}>
+                              <span style={S(`position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX(${vm.pinSw.knob});transition:transform .18s`)} />
+                            </button>
+                          </div>
+                        </div>
+                        </>
+                      )}
                     </section>
                     <div style={S(`display:grid;grid-template-columns:${vm.L.split};gap:20px;align-items:start`)}>
-                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px;min-width:0")}>
-                        <div>
-                          <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                            Test delivery fee
-                          </h2>
-                          <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px")}>
-                            Uses your unsaved changes.
-                          </p>
+                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0;min-width:0")}>
+                        <div role="button" tabIndex={0} onClick={vm.acc.s12.toggle} aria-expanded={vm.acc.s12.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
+                          <div style={S("flex:1;min-width:0")}>
+                            <div>
+                              <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                                Test delivery fee
+                              </h2>
+                              <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px")}>
+                                Uses your unsaved changes.
+                              </p>
+                            </div>
+                          </div>
+                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s12.chev})`)}>
+                            <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
                         </div>
-                        <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px 14px")}>
-                          <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                            <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
-                              Branch
-                            </span>
-                            {vm.calc.brSel}
-                          </label>
-                          <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                            <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
-                              Emirate
-                            </span>
-                            {vm.calc.emSel}
-                          </label>
-                          <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                            <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
-                              Area
-                            </span>
-                            <input value={vm.calc.area} onChange={vm.calc.setArea} placeholder="Any" style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px")} className="dcs2" />
-                          </label>
-                          <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                            <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
-                              Distance (km)
-                            </span>
-                            <input inputMode="decimal" value={vm.calc.dist} onChange={vm.calc.setDist} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
-                          </label>
-                          <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                            <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
-                              Order subtotal (AED)
-                            </span>
-                            <input inputMode="decimal" value={vm.calc.sub} onChange={vm.calc.setSub} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
-                          </label>
-                        </div>
-                        <div style={S("border-radius:12px;background:#FAF6FA;padding:14px 16px;display:flex;flex-direction:column;gap:8px")}>
-                          <span style={S(`display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:${vm.res.fg}`)}>
-                            <span style={S("width:8px;height:8px;border-radius:50%;background:currentColor")} />
-                            {vm.res.head}
-                          </span>
-                          {(vm.res.rows as any[]).map((r: any, __i: number) => (
-                            <Fragment key={__i}>
-                              <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:14px")}>
-                                <span style={S("color:#8A5A6E")}>
-                                  {r.k}
+                        {vm.acc.s12.open && (
+                          <>
+                          <div style={S("display:flex;flex-direction:column;gap:16px;padding-top:16px")}>
+                            <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px 14px")}>
+                              <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                                <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
+                                  Branch
                                 </span>
-                                <span style={S("font-weight:500;font-variant-numeric:tabular-nums")}>
-                                  {r.v}
+                                {vm.calc.brSel}
+                              </label>
+                              <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                                <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
+                                  Emirate
                                 </span>
-                              </div>
-                            </Fragment>
-                          ))}
-                        </div>
+                                {vm.calc.emSel}
+                              </label>
+                              <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                                <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
+                                  Area
+                                </span>
+                                <input value={vm.calc.area} onChange={vm.calc.setArea} placeholder="Any" style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px")} className="dcs2" />
+                              </label>
+                              <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                                <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
+                                  Distance (km)
+                                </span>
+                                <input inputMode="decimal" value={vm.calc.dist} onChange={vm.calc.setDist} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                              </label>
+                              <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                                <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
+                                  Order subtotal (AED)
+                                </span>
+                                <input inputMode="decimal" value={vm.calc.sub} onChange={vm.calc.setSub} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                              </label>
+                            </div>
+                            <div style={S("border-radius:12px;background:#FAF6FA;padding:14px 16px;display:flex;flex-direction:column;gap:8px")}>
+                              <span style={S(`display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:${vm.res.fg}`)}>
+                                <span style={S("width:8px;height:8px;border-radius:50%;background:currentColor")} />
+                                {vm.res.head}
+                              </span>
+                              {(vm.res.rows as any[]).map((r: any, __i: number) => (
+                                <Fragment key={__i}>
+                                  <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:14px")}>
+                                    <span style={S("color:#8A5A6E")}>
+                                      {r.k}
+                                    </span>
+                                    <span style={S("font-weight:500;font-variant-numeric:tabular-nums")}>
+                                      {r.v}
+                                    </span>
+                                  </div>
+                                </Fragment>
+                              ))}
+                            </div>
+                          </div>
+                          </>
+                        )}
                       </section>
                       <div style={S("position:sticky;top:12px;border-radius:16px;background:#EFE7DE;padding:16px;display:flex;flex-direction:column;gap:8px")}>
                         <span style={S("font-size:14px;font-weight:600;color:#6B5B4E")}>
@@ -1158,10 +1327,10 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                 <>
                 <div data-screen-label="06 Working hours" style={S("display:flex;flex-direction:column;gap:20px")}>
                   <div>
-                    <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                    <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                       Working hours
                     </h1>
-                    <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
+                    <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
                       Lumia AI only takes orders while you're open. Outside these hours it tells customers when you open next.
                     </p>
                   </div>
@@ -1364,10 +1533,10 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                 <>
                 <div data-screen-label="07 Menu setup" style={S("display:flex;flex-direction:column;gap:20px")}>
                   <div>
-                    <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                    <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                       Menu setup
                     </h1>
-                    <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
+                    <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
                       Lumia AI answers from your approved menu: items, prices and what's available.
                     </p>
                   </div>
@@ -1450,10 +1619,10 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                 <div data-screen-label="08 Order devices" style={S("display:flex;flex-direction:column;gap:20px")}>
                   <div style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
                     <div>
-                      <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                      <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                         Lumia Order devices
                       </h1>
-                      <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
+                      <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
                         Devices inside the restaurant that receive and print orders.
                       </p>
                     </div>
@@ -1467,29 +1636,42 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                   </div>
                   {vm.pairing && (
                     <>
-                    <section style={S("border:1.5px solid #E3CBD4;border-radius:16px;padding:22px;display:flex;flex-wrap:wrap;gap:20px;align-items:center")}>
-                      <div style={S("flex:1 1 260px;display:flex;flex-direction:column;gap:6px")}>
-                        <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                          Connect a device
-                        </h2>
-                        <p style={S("font-size:14px;color:#3D1C31;line-height:1.5")}>
-                          Open the Lumia Order app on the device and enter this code.
-                        </p>
-                        <span style={S("font-size:13px;color:#8A5A6E")}>
-                          Code expires in 10 minutes.
-                        </span>
+                    <section style={S("border:1.5px solid #E3CBD4;border-radius:16px;padding:22px;display:flex;flex-wrap:wrap;gap:0;align-items:center")}>
+                      <div role="button" tabIndex={0} onClick={vm.acc.s13.toggle} aria-expanded={vm.acc.s13.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
+                        <div style={S("flex:1;min-width:0")}>
+                          <div style={S("flex:1 1 260px;display:flex;flex-direction:column;gap:6px")}>
+                            <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                              Connect a device
+                            </h2>
+                            <p style={S("font-size:14px;color:#3D1C31;line-height:1.5")}>
+                              Open the Lumia Order app on the device and enter this code.
+                            </p>
+                            <span style={S("font-size:13px;color:#8A5A6E")}>
+                              Code expires in 10 minutes.
+                            </span>
+                          </div>
+                        </div>
+                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s13.chev})`)}>
+                          <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                       </div>
-                      <span style={S("font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:500;letter-spacing:.12em;padding:12px 18px;border-radius:12px;background:#FAF6FA")}>
-                        482 913
-                      </span>
-                      <div style={S("display:flex;gap:10px;flex-basis:100%;justify-content:flex-end")}>
-                        <button type="button" onClick={vm.cancelPair} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dcs1">
-                          Cancel
-                        </button>
-                        <button type="button" onClick={vm.finishPair} style={S("height:44px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")}>
-                          Simulate: device connected
-                        </button>
-                      </div>
+                      {vm.acc.s13.open && (
+                        <>
+                        <div style={S("display:flex;flex-direction:column;gap:20px;padding-top:20px")}>
+                          <span style={S("font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:500;letter-spacing:.12em;padding:12px 18px;border-radius:12px;background:#FAF6FA")}>
+                            482 913
+                          </span>
+                          <div style={S("display:flex;gap:10px;flex-basis:100%;justify-content:flex-end")}>
+                            <button type="button" onClick={vm.cancelPair} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dcs1">
+                              Cancel
+                            </button>
+                            <button type="button" onClick={vm.finishPair} style={S("height:44px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")}>
+                              Simulate: device connected
+                            </button>
+                          </div>
+                        </div>
+                        </>
+                      )}
                     </section>
                     </>
                   )}
@@ -1563,10 +1745,10 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                 <>
                 <div data-screen-label="09 Payments" style={S("display:flex;flex-direction:column;gap:20px")}>
                   <div>
-                    <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                    <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                       Payment settings
                     </h1>
-                    <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
+                    <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
                       How customers pay for WhatsApp orders.
                     </p>
                   </div>
