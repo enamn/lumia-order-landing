@@ -40,8 +40,12 @@ describe.skipIf(!enabled)("subscriptions with Stripe", () => {
   });
   it("opens Stripe Checkout through the API with the chosen plan, and only for owners and admins", async () => {
     calls = [];
+    await db.business.update({ where: { id: biz }, data: { phone: "+97165550142", email: "hi@billing.test", vatRegistered: true, taxRegistrationNumber: "100234567800003" } });
+    await db.location.updateMany({ where: { businessId: biz }, data: { addressLine1: "Corniche St", city: "Al Majaz", emirate: "Sharjah" } });
+    expect((await getSubscription(owner, biz)).defaults.address).toBe("Corniche St, Al Majaz, Sharjah");
     const r = await startCheckout(owner, biz, { plan: "plus", billing: "yearly", terminals: 2, address: "Shop 4, Al Majaz 2, Sharjah" });
     expect(r.url).toContain("checkout.stripe.com");
+    expect(calls[0]!.body.customer).toMatchObject({ name: "Billing Burgers", phone: "+97165550142", trn: "100234567800003", address: { line1: "Corniche St", city: "Al Majaz", state: "Sharjah" }, language: "en" }); expect(calls[0]!.body.email).toBe("hi@billing.test");
     expect(calls[0]).toMatchObject({ path: "/internal/billing/checkout", body: { businessId: biz, plan: "plus", billing: "yearly", terminals: 2, successUrl: `https://app.test/dashboard?businessId=${biz}&billing=success`, cancelUrl: `https://app.test/dashboard?businessId=${biz}&billing=cancel` } });
     await expect(startCheckout(viewer, biz, { plan: "plus", billing: "yearly", terminals: 1, address: "Shop 4, Al Majaz 2" })).rejects.toMatchObject({ status: 403 });
     await expect(startCheckout(owner, biz, { plan: "gold", billing: "yearly", terminals: 1, address: "Shop 4, Al Majaz 2" })).rejects.toMatchObject({ code: "VALIDATION_FAILED" });

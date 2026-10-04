@@ -33,11 +33,19 @@ export async function getSubscriptionFor(businessId: string) {
   const b = await db.business.findUniqueOrThrow({ where: { id: businessId }, select: { createdAt: true, subscription: true } });
   return { sub: read(b.subscription), createdAt: b.createdAt };
 }
+// What we already know about the restaurant, used to pre-fill the payment page and Stripe so nobody types it twice.
+async function knownDetails(businessId: string) {
+  const b = await db.business.findUniqueOrThrow({ where: { id: businessId }, select: { name: true, phone: true, email: true, vatRegistered: true, taxRegistrationNumber: true, settings: true, locations: { where: { status: "ACTIVE" }, orderBy: { createdAt: "asc" }, take: 1, select: { addressLine1: true, city: true, emirate: true } } } });
+  const loc = b.locations[0], legal = (b.settings as { profile?: { name?: string } } | null)?.profile?.name;
+  const address = [loc?.addressLine1, loc?.city, loc?.emirate].filter(Boolean).join(", ");
+  return { name: legal || b.name, phone: b.phone ?? undefined, email: b.email ?? undefined, trn: b.vatRegistered && /^\d{15}$/.test(b.taxRegistrationNumber ?? "") ? b.taxRegistrationNumber! : undefined, address, line1: loc?.addressLine1 || undefined, city: loc?.city || undefined, state: loc?.emirate || undefined };
+}
 export async function getSubscription(userId: string, businessId: string) {
   const { member } = await authorize(userId, businessId);
   const { sub, createdAt } = await getSubscriptionFor(businessId);
   const { stripeCustomerId, stripeSubscriptionId, events: _events, ...safe } = sub;
-  return { ...safe, canManage: member.role === "OWNER" || member.role === "ADMIN", hasCustomer: Boolean(stripeCustomerId), trial: trialInfo(createdAt), entitlements: entitlements(sub) };
+  const known = await knownDetails(businessId);
+  return { ...safe, defaults: { address: known.address }, canManage: member.role === "OWNER" || member.role === "ADMIN", hasCustomer: Boolean(stripeCustomerId), trial: trialInfo(createdAt), entitlements: entitlements(sub) };
 }
 
 const checkoutSchema = z.object({ plan: z.enum(["starter", "plus", "pro"]), billing: z.enum(["monthly", "yearly"]), terminals: z.number().int().min(1).max(10), address: z.string().trim().min(6).max(400) }).strict();
@@ -47,12 +55,16 @@ export async function startCheckout(userId: string, businessId: string, input: u
   const data = checkoutSchema.safeParse(input);
   if (!data.success) throw new AppError("VALIDATION_FAILED", "Choose a plan and add a delivery address for the terminal.", 400);
   const { business } = await authorize(userId, businessId, "business.manage");
-  const user = await db.user.findUnique({ where: { id: userId }, select: { email: true } });
+  const user = await db.user.findUnique({ where: { id: userId }, select: { email: true, preferredLanguage: true } });
   const { sub } = await getSubscriptionFor(businessId);
-  const email = business.email || (user?.email && !user.email.endsWith(".invalid") ? user.email : undefined);
+  const known = await knownDetails(businessId);
+  const email = known.email || (user?.email && !user.email.endsWith(".invalid") ? user.email : undefined);
+  const customer = { name: known.name, ...(known.phone ? { phone: known.phone } : {}), ...(known.trn ? { trn: known.trn } : {}), ...(known.line1 || known.city || known.state ? { address: { line1: known.line1, city: known.city, state: known.state } } : {}), language: user?.preferredLanguage === "ar" ? "ar" : "en" };
   const base = `${appUrl()}/dashboard?businessId=${businessId}`;
-  const result = await lumiaApi<{ url: string }>("/internal/billing/checkout", { businessId, ...data.data, ...(email ? { email } : {}), ...(sub.stripeCustomerId ? { customerId: sub.stripeCustomerId } : {}), successUrl: `${base}&billing=success`, cancelUrl: `${base}&billing=cancel` }, 25_000);
+  const result = await lumiaApi<{ url: string; customerId?: string }>("/internal/billing/checkout", { businessId, ...data.data, customer, ...(email ? { email } : {}), ...(sub.stripeCustomerId ? { customerId: sub.stripeCustomerId } : {}), successUrl: `${base}&billing=success`, cancelUrl: `${base}&billing=cancel` }, 25_000);
   if (!result.ok) throw new AppError(result.code === "BILLING_NOT_CONFIGURED" ? "BILLING_NOT_CONFIGURED" : "BILLING_UNAVAILABLE", result.code === "BILLING_NOT_CONFIGURED" ? "Payments are not switched on yet. Please contact Lumia to subscribe." : "We couldn’t open the payment page. Please try again.", 503);
+  // Remember the Stripe customer so a second attempt reuses it (and so renewals can be matched to this restaurant).
+  if (result.data.customerId && result.data.customerId !== sub.stripeCustomerId) await db.business.update({ where: { id: businessId }, data: { subscription: { ...sub, stripeCustomerId: result.data.customerId } as unknown as Prisma.InputJsonValue } });
   return { url: result.data.url };
 }
 export async function openPortal(userId: string, businessId: string) {

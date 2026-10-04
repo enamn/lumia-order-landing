@@ -90,7 +90,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu)) > 0, cat: "All", menu: toCats(props.menu), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
-      page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: "", addrTry: false, subErr: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
+      page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
       lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
     };
   }
@@ -240,7 +240,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const money = (n: number) => "AED " + n.toLocaleString("en-US", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
     const yr = s.bill === "yearly", sel = SUB_PLANS.find(p => p.id === s.plan) || SUB_PLANS[1];
     const tPrice = (id: string) => (yr ? TERM[id] : 599), qty = s.termQty || 1, termAmt = tPrice(sel.id) + (qty - 1) * 599;
-    const planAmt = yr ? sel.y : sel.m, base = planAmt + termAmt, vat = Math.round(base * 5) / 100, tot = base + vat, addrOk = s.addr.trim().length > 5, paying = s.sub === "paying";
+    const planAmt = yr ? sel.y : sel.m, base = planAmt + termAmt, vat = Math.round(base * 5) / 100, tot = base + vat, addrVal: string = s.addr ?? d?.defaults?.address ?? "", addrOk = addrVal.trim().length > 5, paying = s.sub === "paying";
     const paidPlan = active ? SUB_PLANS.find(p => p.id === d.plan) : undefined, endDate = fd(new Date(d?.trial?.endsAt ?? Date.now()));
     const periodEnd = d?.currentPeriodEnd ? new Date(d.currentPeriodEnd) : null, pastDue = d?.status === "PAST_DUE";
     const tab = (v: string, label: string) => { const on = s.bill === v; return { label, on, fw: on ? 600 : 500, bg: on ? "#fff" : "transparent", fg: on ? "#1A0815" : "#8A5A6E", sh: on ? "0 1px 3px rgba(26,8,21,.12)" : "none", pick: () => this.setState({ bill: v }) }; };
@@ -264,7 +264,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
         plans: SUB_PLANS.map(p => { const on = p.id === sel.id; return { name: p.name, desc: p.desc, inc: p.inc, hasInc: !!p.inc, feats: p.feats, on, price: money(yr ? p.y : p.m), per: yr ? "/ year" : "/ month", strike: yr ? money(p.sy) : "", eq: yr ? `≈ ${money(Math.round(p.y / 12))}/month, billed annually` : "Billed monthly",
           cta: "Choose " + p.name, term: money(tPrice(p.id)), ctaBg: on ? "linear-gradient(90deg,#FF5577,#C93DFF)" : "#1A0815", choose: () => this.setState({ plan: p.id, planStep: "pay", subErr: "" }), bd: on ? "#FF5577" : "#F0E4E8", bg: on ? "#FFF7FA" : "#fff", ring: on ? "#FF5577" : "#D9BFCB", dot: on ? "#FF5577" : "transparent", pick: () => this.setState({ plan: p.id }) }; }),
         selName: sel.name + " plan", selBilling: yr ? "Billed yearly" : "Billed monthly", planAmt: money(planAmt), termAmt: money(termAmt), termLine: qty > 1 ? `Terminal × ${qty}` : "Terminal", termPrice: money(tPrice(sel.id)), termQty: qty, termMin: qty <= 1, decOp: qty <= 1 ? 0.3 : 1,
-        termQtyNote: qty > 1 ? "Extra terminals AED 599 each" : "Need one per branch?", addr: s.addr, addrErr: s.addrTry && !addrOk, addrBd: s.addrTry && !addrOk ? "#B42318" : "#ECD9E0",
+        termQtyNote: qty > 1 ? "Extra terminals AED 599 each" : "Need one per branch?", addr: addrVal, addrErr: s.addrTry && !addrOk, addrBd: s.addrTry && !addrOk ? "#B42318" : "#ECD9E0",
         subtotal: money(base), vat: money(vat), total: money(tot), payLabel: paying ? "Opening secure payment…" : "Continue to payment · " + money(tot), renew: fd(new Date(Date.now() + (yr ? 365 : 30) * 86_400_000)), invalid: paying, payOp: paying ? 0.7 : 1,
         cols: narrow || s.w < 1100 ? "minmax(0,1fr)" : "minmax(0,1.5fr) minmax(340px,1fr)", err: s.subErr,
       },
@@ -274,7 +274,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       noopPrevent: (e: any) => e?.preventDefault?.(),
       lockOpen: !!lk, lock: lk || LOCKS.customers, lockClose: () => this.setState({ lock: null }), lockUpgrade: () => this.setState({ lock: null, sub: null, plan: lk ? lk.id : s.plan, page: "Plans", planStep: "plans" }),
       subLater: () => this.setState({ sub: null }), subOpenPlans: () => this.setState({ sub: null, lock: null, page: "Plans", planStep: "plans", subErr: "" }), subClosePlans: () => { if (!paying) this.setState({ page: "Overview", planStep: "plans" }); }, subBackPlans: () => { if (!paying) this.setState({ planStep: "plans" }); },
-      subPay: (e: any) => { e?.preventDefault?.(); if (!addrOk) { this.setState({ addrTry: true }); return; } if (!paying) this.startPay(sel.id, s.bill, qty, s.addr.trim()); },
+      subPay: (e: any) => { e?.preventDefault?.(); if (!addrOk) { this.setState({ addrTry: true }); return; } if (!paying) this.startPay(sel.id, s.bill, qty, addrVal.trim()); },
       subPortal: this.openPortal, onAddr: (e: any) => this.setState({ addr: e.target.value }), termInc: () => this.setState({ termQty: Math.min(10, qty + 1) }), termDec: () => this.setState({ termQty: Math.max(1, qty - 1) }),
       pagePlans: s.page === "Plans",
     };
