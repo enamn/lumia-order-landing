@@ -99,7 +99,7 @@ class SettingsApp extends React.Component<Props, any> {
   discard() { const s = this.state, k = KEY[s.page]; const next = s.blocked; this.setState(st => ({ draft: { ...st.draft, [k]: clone(st.saved[k]) }, error: '', blocked: null, adding: false, ...(next ? { page: next } : {}) })); }
 
   renderVals() {
-    const s = this.state, d = s.draft, sv = s.saved, wide = s.w >= 900, tw = s.w >= 560 ? s.w - (s.w >= 1000 ? 320 : 260) - 48 : s.w, tblWide = tw >= 700, M = s.menu, menuLevel = M.items === 0 ? 0 : M.missingPrices > 0 ? 2 : 4;
+    const s = this.state, d = s.draft, sv = s.saved, wide = s.w >= 900, tw = s.w >= 560 ? s.w - (s.w >= 1000 ? 340 : 260) - 48 : s.w, tblWide = tw >= 700, M = s.menu, menuLevel = M.items === 0 ? 0 : M.missingPrices > 0 ? 2 : 4;
     const ce = React.createElement;
     const selStyle = (sm) => ({ height: sm ? 40 : 44, width: '100%', minWidth: 0, padding: '0 10px', borderRadius: sm ? 9 : 10, border: '1.5px solid #ECD9E0', background: '#fff', fontSize: sm ? 14 : 15 });
     const sel = (value, opts, onChange, sm = true, label) => ce('select', { value, onChange, style: selStyle(sm), 'aria-label': label }, opts.map(o => ce('option', { key: o.v, value: o.v }, o.l)));
