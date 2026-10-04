@@ -243,11 +243,11 @@ class SettingsApp extends React.Component<Props, any> {
     const PV = d.pay;
     return {
       rootRef: this.rootRef, mainRef: this.mainRef, wide, narrow: !wide,
-      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', pad: wide ? '32px 40px 64px' : '20px 16px 48px', split: wide ? 'minmax(0,1fr) 300px' : 'minmax(0,1fr)',
+      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', pad: wide ? '32px 40px 64px' : '20px 16px 48px', split: s.w >= 1240 ? 'minmax(0,1fr) 300px' : 'minmax(0,1fr)',
         areaCols: wide ? '1.2fr 1.1fr .8fr .8fr .7fr 1.3fr 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
         rangeCols: wide ? 'repeat(5,minmax(0,1fr)) 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
-        rowPad: wide ? '10px 0' : '14px 0', cellLbl: wide ? 'none' : 'block',
-        dayCols: wide ? '160px minmax(0,1fr)' : 'minmax(0,1fr)', dayInner: wide ? 'repeat(3,minmax(0,1fr)) 80px' : 'minmax(0,1fr) minmax(0,1fr)',
+        rowPad: wide ? '10px 0' : '14px 0', cellLbl: s.w >= 1480 ? 'none' : 'block', hoursHead: s.w >= 1480,
+        dayCols: s.w >= 1480 ? '160px minmax(0,1fr)' : 'minmax(0,1fr)', dayInner: s.w >= 1480 || (wide && s.w >= 760) ? 'repeat(3,minmax(132px,1fr)) 80px' : 'minmax(0,1fr) minmax(0,1fr)',
         stepCols: wide ? 'repeat(5,minmax(0,1fr))' : 'repeat(5,minmax(0,1fr))' },
       pg: Object.fromEntries(PAGES.map(([k]) => [k, s.page === k])),
       nav, navGroups, steps, ready, todoSteps, doneSteps, hasDone: doneSteps.length > 0, setupOpen: todo.length > 0, setupDone: todo.length === 0,

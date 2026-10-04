@@ -454,7 +454,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                   </div>
                 </sc-if>
                 <sc-if value="{{ hm.rows }}" hint-placeholder-val="{{ true }}">
-                  <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+                  <sc-if value="{{ hoursHead }}" hint-placeholder-val="{{ true }}">
                     <div style="display:grid;grid-template-columns:{{ L.dayCols }};gap:14px;padding:10px 0 6px;font-size:13px;font-weight:500;color:#8A5A6E"><span>Day</span><div style="display:grid;grid-template-columns:{{ L.dayInner }};gap:10px"><span>Opens</span><span>Closes</span><span>Last order</span><span></span></div></div>
                   </sc-if>
                   <sc-for list="{{ dayRows }}" as="d" hint-placeholder-count="7">

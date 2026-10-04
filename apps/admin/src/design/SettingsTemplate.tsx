@@ -1231,7 +1231,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                       )}
                       {vm.hm.rows && (
                         <>
-                        {vm.wide && (
+                        {vm.hoursHead && (
                           <>
                           <div style={S(`display:grid;grid-template-columns:${vm.L.dayCols};gap:14px;padding:10px 0 6px;font-size:13px;font-weight:500;color:#8A5A6E`)}>
                             <span>
