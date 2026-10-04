@@ -34,6 +34,7 @@ describe.skipIf(!enabled)("restaurant settings", () => {
     await expect(save("profile", { ...p, extra: 1 })).rejects.toMatchObject({ code: "VALIDATION_FAILED" });
   });
   it("adds, pins and deactivates branches", async () => {
+    await db.business.update({ where: { id: biz }, data: { subscription: { status: "ACTIVE", plan: "pro" } } }); // more than one branch needs the Pro plan
     const cur = (await getSettings(owner, biz)).sections.branches;
     const next = [{ ...cur[0], pin: true, coords: "25.3302, 55.3901", area: "Al Majaz", eta: "50" }, { id: "tmp-1", name: "Ajman Branch", emirate: "Ajman", area: "Nuaimiya", address: "Sheikh Khalifa St", phone: "", eta: "60", active: true, pin: false, coords: "" }];
     const r = await save("branches", next);

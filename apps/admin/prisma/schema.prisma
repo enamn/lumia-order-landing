@@ -198,6 +198,7 @@ model Business {
   status String @default("DRAFT")
   revision Int @default(0)
   settings Json?
+  subscription Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   locations Location[]

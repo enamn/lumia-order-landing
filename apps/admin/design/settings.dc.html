@@ -932,7 +932,7 @@ class Component extends DCLogic {
       greetOpts: radio([['friendly', 'Friendly', 'Warm and casual'], ['formal', 'Formal', 'Polite and professional'], ['short', 'Short', 'Straight to the order']], pr.greet, (v) => this.upd('profile', x => { x.greet = v; })),
       greetBubbles,
       pinMissing, branchCards, adding: s.adding, notAdding: !s.adding,
-      startAdd: () => this.setState({ adding: true, nb: newBranch(), pinQ: '', pinMode: 'search' }), cancelAdd: () => this.setState({ adding: false }),
+      startAdd: () => this.props.onPremium ? this.props.onPremium('branches') : this.setState({ adding: true, nb: newBranch(), pinQ: '', pinMode: 'search' }), cancelAdd: () => this.setState({ adding: false }),
       confirmAdd: () => { const b = { ...s.nb, id: String(Date.now()) }; this.upd('branches', x => { x.push(b); }); this.setState({ adding: false }); },
       nb, nbStatus: seg([[true, 'Active'], [false, 'Inactive']], nbS.active, (v) => setNb('active', v)),
       pinModes: [['search', 'Search address'], ['map', 'Drop pin on map'], ['current', 'Use current location'], ['paste', 'Paste Google Maps link']].map(([k, l]) => ({ ...chip(l, s.pinMode === k, () => this.setState({ pinMode: k })) })),

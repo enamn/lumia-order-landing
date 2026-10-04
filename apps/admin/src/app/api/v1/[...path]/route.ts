@@ -4,6 +4,7 @@ import { extractMenu, confirmImport } from "@/modules/menu/import";
 import { setLanguage } from "@/modules/auth/profile";
 import { connectWhatsApp, getWhatsAppStatus, getImportInfo, applyImport, useCatalog, disconnectWhatsApp } from "@/modules/whatsapp/link";
 import { createMessageTemplate } from "@/modules/whatsapp/templates";
+import { getSubscription, startCheckout, openPortal } from "@/modules/billing/service";
 import { getSettings, saveSettingsSection } from "@/modules/settings/service";
 import { getMessageStats, getOverview, listConversations } from "@/modules/messages/inbound";
 import { getConversation, sendReply } from "@/modules/messages/reply";
@@ -40,6 +41,11 @@ async function handle(request: Request, context: Context) {
     if (section === "members" && path.length === 3) {
       if (method === "GET") return members(userId, businessId);
       if (method === "POST") return setMember(userId, businessId, await jsonBody(request), requestId);
+    }
+    if (section === "subscription") {
+      if (method === "GET" && path.length === 3) return getSubscription(userId, businessId);
+      if (method === "POST" && subId === "checkout" && path.length === 4) return startCheckout(userId, businessId, await jsonBody(request));
+      if (method === "POST" && subId === "portal" && path.length === 4) return openPortal(userId, businessId);
     }
     if (section === "settings") {
       if (method === "GET" && path.length === 3) return getSettings(userId, businessId);

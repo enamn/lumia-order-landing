@@ -91,7 +91,7 @@ input::placeholder{color:#B89AA8}
     <div style="display:flex;flex-direction:column;gap:10px">
       <button type="submit" disabled="{{ sending }}" style="height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">{{ spinnerSend }}<span>{{ sendLabel }}</span></button>
     </div>
-    <p style="margin-top:20px;font-size:13px;line-height:1.5;color:#8A5A6E;text-align:center;text-wrap:pretty">By continuing, you agree to Lumia's <a href="{{ termsUrl }}" style="color:#3D1C31">Terms of Service</a> and <a href="Lumia Order Privacy.dc.html" style="color:#3D1C31">Privacy Policy</a>.</p>
+    <p style="margin-top:20px;font-size:13px;line-height:1.5;color:#8A5A6E;text-align:center;text-wrap:pretty">By continuing, you agree to Lumia's <a href="#terms" style="color:#3D1C31">Terms of Service</a> and <a href="Lumia Order Privacy.dc.html" style="color:#3D1C31">Privacy Policy</a>.</p>
   </form>
   </sc-if>
 
@@ -143,7 +143,7 @@ input::placeholder{color:#B89AA8}
     <label for="pd-name" style="display:block;font-size:14px;font-weight:500;color:#3D1C31;margin-top:28px">Restaurant name</label>
     <input id="pd-name" ref="{{ nameRef }}" type="text" autoComplete="organization" placeholder="Burger House" value="{{ name }}" onChange="{{ onName }}" onFocus="{{ nameFocus }}" onBlur="{{ nameBlur }}" style="margin-top:8px;height:56px;border-radius:14px;border:1.5px solid {{ nf.bd }};box-shadow:{{ nf.ring }};padding:0 16px;font-size:17px;background:#fff;transition:border-color .15s,box-shadow .15s"></input>
     <sc-if value="{{ nameErr }}" hint-placeholder-val="{{ false }}">
-      <div role="alert" style="margin-top:10px;font-size:14px;color:#B4233B">{{ nameErrText }}</div>
+      <div role="alert" style="margin-top:10px;font-size:14px;color:#B4233B">Enter your restaurant name to continue</div>
     </sc-if>
     <div style="display:flex;align-items:center;gap:8px;margin-top:26px">
       <span style="font-size:14px;font-weight:500;color:#3D1C31">Logo</span>
@@ -179,8 +179,6 @@ input::placeholder{color:#B89AA8}
       <span style="margin-top:20px;display:inline-flex;align-items:center;height:48px;padding:0 24px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)">Choose file</span>
       <input type="file" accept="application/pdf,image/png,image/jpeg" onChange="{{ onMenuFile }}" style="display:none"></input>
     </label>
-    <!-- LUMIA-EXT menu error -->
-    <sc-if value="{{ menuErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="margin-top:12px;font-size:14px;color:#B4233B">{{ menuErr }}</div></sc-if>
     <div style="flex:{{ L.spacer }};min-height:28px"></div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <button type="button" onClick="{{ manual }}" style="height:52px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px" style-hover="border-color:#D9BFCB;background:#FBF3F8">Add menu manually</button>
@@ -261,7 +259,6 @@ input::placeholder{color:#B89AA8}
         </div>
       </sc-for>
     </div>
-    <sc-if value="{{ readyErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="margin-top:12px;font-size:14px;color:#B4233B">{{ readyErr }}</div></sc-if>
     <div style="flex:{{ L.spacer }};min-height:24px"></div>
     <div style="position:{{ L.stick }};bottom:0;background:#fff;padding-top:12px;display:flex;flex-direction:column;gap:10px;box-shadow:{{ L.stickSh }}">
       <button type="button" onClick="{{ confirmMenu }}" disabled="{{ hasFlags }}" style="height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;opacity:{{ confirmOp }};box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Confirm menu</button>
@@ -285,10 +282,20 @@ input::placeholder{color:#B89AA8}
       </div>
       <nav style="flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:2px">
         <sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
-          <a href="#" onClick="{{ n.pick }}" style="height:40px;padding:0 12px;border-radius:10px;display:flex;align-items:center;gap:12px;font-size:15px;text-decoration:none;font-weight:{{ n.fw }};color:{{ n.fg }};background:{{ n.bg }}" style-hover="background:#FBF3F8;color:#1A0815"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none"><path d="{{ n.icon }}" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>{{ n.label }}</a>
+          <a href="#" onClick="{{ n.pick }}" style="height:40px;padding:0 12px;border-radius:10px;display:flex;align-items:center;gap:12px;font-size:15px;text-decoration:none;font-weight:{{ n.fw }};color:{{ n.fg }};background:{{ n.bg }}" style-hover="background:#FBF3F8;color:#1A0815"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none"><path d="{{ n.icon }}" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg><span style="flex:1;min-width:0">{{ n.label }}</span><sc-if value="{{ n.lock }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;font-weight:600;padding:2px 7px;border-radius:999px;background:#F1E6FF;color:#6A1FA0">Plus</span></sc-if></a>
         </sc-for>
       </nav>
       <div style="padding:12px;border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:8px">
+          <sc-if value="{{ sub.onTrial }}" hint-placeholder-val="{{ true }}">
+            <button type="button" onClick="{{ subOpenPlans }}" style="text-align:start;padding:12px;border-radius:12px;background:#FBF3F8;display:flex;flex-direction:column;gap:9px" style-hover="background:#FDEAF2">
+              <span style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px;font-weight:600">{{ sub.tag }}<span style="font-size:13px;font-weight:500;color:#8A2040;font-variant-numeric:tabular-nums">{{ sub.leftLabel }}</span></span>
+              <span style="height:4px;border-radius:2px;background:#EAD9E1;overflow:hidden;display:block"><span style="display:block;height:100%;width:{{ sub.barW }};border-radius:2px;background:linear-gradient(90deg,#FF5577,#C93DFF)"></span></span>
+              <span style="font-size:14px;font-weight:600;color:#C0284F">{{ sub.choose }}</span>
+            </button>
+          </sc-if>
+          <sc-if value="{{ sub.isPaid }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:12px;background:#E4F4EC;color:#16704A;font-size:14px;font-weight:600"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="m5 10.5 3.2 3L15 7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path></svg>{{ sub.paidName }} plan</div>
+          </sc-if>
           <div role="radiogroup" aria-label="Dashboard language" style="display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;flex:none">
             <sc-for list="{{ langs }}" as="lg" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{ lg.on }}" onClick="{{ lg.pick }}" style="flex:1;height:30px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:{{ lg.fw }};background:{{ lg.bg }};color:{{ lg.fg }};box-shadow:{{ lg.sh }}">{{ lg.label }}</button></sc-for>
           </div>
@@ -322,13 +329,19 @@ input::placeholder{color:#B89AA8}
             <button type="button" onClick="{{ n.pick }}" style="padding:8px 0 10px;white-space:nowrap;font-size:15px;font-weight:{{ n.fw }};color:{{ n.fg }};border-bottom:2px solid {{ n.bd }}">{{ n.label }}</button>
           </sc-for>
         </nav>
+        <sc-if value="{{ sub.onTrial }}" hint-placeholder-val="{{ true }}">
+          <div style="padding:8px 16px;background:#FBF3F8;border-top:1px solid #F0E4E8;display:flex;align-items:center;gap:10px;font-size:14px">
+            <span style="font-weight:600">{{ sub.tag }}</span><span style="color:#8A2040;font-variant-numeric:tabular-nums;flex:1;min-width:0">{{ sub.leftLabel }}</span>
+            <button type="button" onClick="{{ subOpenPlans }}" style="height:32px;padding:0 12px;border-radius:9px;background:#1A0815;color:#fff;font-size:13px;font-weight:600;flex:none">{{ sub.choose }}</button>
+          </div>
+        </sc-if>
       </header>
     </sc-if>
 
     <div style="flex:1;display:flex;min-height:0">
     <sc-if value="{{ pageSettings }}" hint-placeholder-val="{{ false }}">
       <div data-screen-label="09 Dashboard · Settings" style="flex:1;min-width:0;min-height:0;display:flex">
-        <div style="flex:1;min-width:0;height:100%">{{ settingsNode }}</div>
+        <dc-import name="Lumia Order Restaurant Settings" embedded="{{ true }}" start-page="{{ settingsPage }}" on-premium="{{ premiumBranch }}" style="flex:1;min-width:0;height:100%" hint-size="100%,100%"></dc-import>
       </div>
     </sc-if>
     <sc-if value="{{ notSettings }}" hint-placeholder-val="{{ true }}">
@@ -343,6 +356,43 @@ input::placeholder{color:#B89AA8}
           <sc-for list="{{ periodSeg }}" as="o" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="height:34px;padding:0 14px;border-radius:8px;font-size:14px;white-space:nowrap;font-weight:{{ o.fw }};background:{{ o.bg }};color:{{ o.fg }};box-shadow:{{ o.sh }}">{{ o.label }}</button></sc-for>
         </div>
       </div>
+      <sc-if value="{{ term.show }}" hint-placeholder-val="{{ false }}">
+      <section data-screen-label="06d Terminal shipment" dir="ltr" style="border:1px solid #F0E4E8;border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px 20px">
+          <div style="flex:none;width:44px;height:78px;position:relative;overflow:hidden;border-radius:8px;background:#FBF3F8"><div style="position:absolute;top:-6px;left:50%;margin-left:-150px;transform:scale(.145);transform-origin:top center;height:704px"><dc-import name="LumiaTerminal" screen="new2" hint-size="300px,704px"></dc-import></div></div>
+          <div style="flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px"><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Lumia Order Terminal</h2><span style="font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px;background:{{ term.pillBg }};color:{{ term.pillFg }}">{{ term.label }}</span></div>
+            <p style="font-size:14px;line-height:1.5;color:#3D1C31;text-wrap:pretty">{{ term.msg }}</p>
+            <p style="font-size:13px;color:#8A5A6E">Order {{ term.no }} · {{ term.qtyLabel }} · {{ term.addr }}</p>
+          </div>
+          <div style="flex:none;display:flex;flex-direction:column;gap:2px">
+            <span style="font-size:13px;color:#8A5A6E">{{ term.etaLabel }}</span>
+            <span style="font-size:18px;font-weight:600;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">{{ term.eta }}</span>
+          </div>
+        </div>
+        <ol style="list-style:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0">
+          <sc-for list="{{ term.steps }}" as="st" hint-placeholder-count="5">
+            <li style="display:flex;flex-direction:column;gap:8px;min-width:0">
+              <div style="display:flex;align-items:center">
+                <span style="width:20px;height:20px;border-radius:50%;flex:none;background:{{ st.dot }};border:2px solid {{ st.ring }};display:flex;align-items:center;justify-content:center">
+                  <sc-if value="{{ st.done }}" hint-placeholder-val="{{ false }}"><svg width="11" height="11" viewBox="0 0 20 20" fill="none"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+                  <sc-if value="{{ st.now }}" hint-placeholder-val="{{ false }}"><span style="width:8px;height:8px;border-radius:50%;background:#FF5577"></span></sc-if>
+                </span>
+                <span style="flex:1;height:3px;margin:0 4px;border-radius:2px;background:{{ st.line }}"></span>
+              </div>
+              <span style="font-size:13px;line-height:1.3;padding-inline-end:8px;font-weight:{{ st.fw }};color:{{ st.fg }}">{{ st.label }}</span>
+              <span style="font-size:12px;color:#8A5A6E;font-variant-numeric:tabular-nums">{{ st.date }}</span>
+            </li>
+          </sc-for>
+        </ol>
+        <sc-if value="{{ term.hasCourier }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:12px 14px;border-radius:12px;background:#FBF3F8;font-size:14px">
+            <span style="color:#3D1C31">Aramex · Tracking no. <span style="font-weight:600;color:#1A0815;font-variant-numeric:tabular-nums">4419 2071 553</span></span>
+            <a href="#" onClick="{{ noopPrevent }}" style="font-weight:500">Track with courier</a>
+          </div>
+        </sc-if>
+      </section>
+      </sc-if>
       <section style="border-radius:20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);padding:22px 24px;display:flex;flex-wrap:wrap;gap:18px 32px;align-items:center">
         <div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:12px">
           <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px">
@@ -364,8 +414,6 @@ input::placeholder{color:#B89AA8}
         </div>
         <button type="button" onClick="{{ continueSetup }}" style="height:48px;padding:0 22px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;flex:none;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">{{ t.continueSetup }}</button>
       </section>
-      <sc-if value="{{ ovLoading }}" hint-placeholder-val="{{ false }}">{{ loaderNode }}</sc-if>
-      <sc-if value="{{ ovReady }}" hint-placeholder-val="{{ true }}">
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px">
         <sc-for list="{{ stats }}" as="m" hint-placeholder-count="4">
           <div style="border:1px solid #F0E4E8;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:6px">
@@ -399,10 +447,7 @@ input::placeholder{color:#B89AA8}
         </section>
       </div>
       </sc-if>
-      </sc-if>
 
-      <!-- LUMIA-EXT dash error -->
-      <sc-if value="{{ dashErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:14px;color:#B4233B">{{ dashErr }}</div></sc-if>
       <sc-if value="{{ pageMenu }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
         <div>
@@ -415,7 +460,7 @@ input::placeholder{color:#B89AA8}
           </sc-if>
         </div>
         <sc-if value="{{ menuDone }}" hint-placeholder-val="{{ true }}">
-          <button type="button" onClick="{{ openAddItem }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">{{ t.addItem }}</button>
+          <button type="button" onClick="{{ noop }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">{{ t.addItem }}</button>
         </sc-if>
       </div>
 
@@ -447,7 +492,7 @@ input::placeholder{color:#B89AA8}
                       <div style="min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px">
                         <span style="font-size:15px;font-weight:500;color:{{ it.nameFg }}">{{ it.main }}</span>
                         <sc-if value="{{ it.hasAlt }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;color:#8A5A6E">{{ it.alt }}</span></sc-if>
-                        <sc-if value="{{ it.noAlt }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ it.editAr }}" style="font-size:13px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px" style-hover="color:#FF5577">+ {{ t.addAr }}</button></sc-if>
+                        <sc-if value="{{ it.noAlt }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ noop }}" style="font-size:13px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px" style-hover="color:#FF5577">+ {{ t.addAr }}</button></sc-if>
                       </div>
                       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
                         <span style="font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap">{{ it.price }}</span>
@@ -474,7 +519,7 @@ input::placeholder{color:#B89AA8}
           <p style="font-size:15px;color:#3D1C31;margin-top:6px;max-width:360px;line-height:1.5">Upload your existing menu and Lumia AI will create it for you.</p>
           <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px">
             <button type="button" onClick="{{ toMenuUpload }}" style="height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Upload menu</button>
-            <button type="button" onClick="{{ openAddItem }}" style="height:46px;padding:0 20px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Add item manually</button>
+            <button type="button" onClick="{{ noop }}" style="height:46px;padding:0 20px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Add item manually</button>
           </div>
         </div>
       </sc-if>
@@ -509,7 +554,6 @@ input::placeholder{color:#B89AA8}
           </div>
         </sc-if>
         <sc-if value="{{ ord.hasAny }}" hint-placeholder-val="{{ true }}">
-        <sc-if value="{{ ordErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:14px;color:#B4233B">{{ ordErr }}</div></sc-if>
         <div style="display:flex;gap:8px;overflow-x:auto;flex:none;padding-bottom:2px;scrollbar-width:none">
           <sc-for list="{{ ord.tabs }}" as="tb" hint-placeholder-count="5">
             <button type="button" onClick="{{ tb.pick }}" style="height:40px;padding:0 14px;border-radius:999px;display:flex;align-items:center;gap:8px;white-space:nowrap;flex:none;font-size:14px;font-weight:500;background:{{ tb.bg }};color:{{ tb.fg }};border:1.5px solid {{ tb.bd }}">{{ tb.label }}<sc-if value="{{ tb.hasCount }}" hint-placeholder-val="{{ true }}"><span style="min-width:22px;height:22px;padding:0 6px;border-radius:999px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;background:{{ tb.cbg }};color:{{ tb.cfg }}">{{ tb.count }}</span></sc-if></button>
@@ -632,7 +676,6 @@ input::placeholder{color:#B89AA8}
               </sc-if>
             </div>
           </sc-for>
-          <sc-if value="{{ ordLoading }}" hint-placeholder-val="{{ false }}">{{ loaderNode }}</sc-if>
           <sc-if value="{{ ord.empty }}" hint-placeholder-val="{{ false }}">
             <div style="padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;border:1px dashed #ECD9E0;border-radius:14px">
               <span style="font-size:15px;font-weight:600">{{ ord.tabEmpty.title }}</span>
@@ -641,6 +684,121 @@ input::placeholder{color:#B89AA8}
           </sc-if>
         </div>
         </sc-if>
+      </div>
+      </sc-if>
+
+      <!-- Plans & payment page -->
+      <sc-if value="{{ pagePlans }}" hint-placeholder-val="{{ false }}">
+      <div dir="ltr" style="position:fixed;inset:0;z-index:55;background:#fff;display:flex;flex-direction:column">
+      <header style="height:64px;flex:none;padding:0 16px 0 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F0E4E8">
+        <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style="display:block;flex:none"><defs><linearGradient id="gPD3" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF5577"></stop><stop offset="1" stop-color="#C93DFF"></stop></linearGradient></defs><path d="M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z" stroke="url(#gPD3)" stroke-width="8" stroke-linejoin="round"></path><path d="M28 30V66H40" stroke="#1A0815" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="64" cy="55" r="11" stroke="url(#gPD3)" stroke-width="10"></circle></svg>
+        <span style="font-size:16px;font-weight:600;flex:1;min-width:0">Subscribe to Lumia Order</span>
+        <span style="font-size:14px;color:#8A5A6E;flex:none">{{ sub.stepLabel }}</span>
+        <button type="button" onClick="{{ subClosePlans }}" aria-label="Close" style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none" style-hover="background:#FBF3F8"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="m4 4 8 8M12 4l-8 8" stroke="#1A0815" stroke-width="1.7" stroke-linecap="round"></path></svg></button>
+      </header>
+      <div style="flex:1;min-height:0;overflow-y:auto">
+      <div style="max-width:1100px;margin:0 auto;padding:{{ sub.pad }};display:flex;flex-direction:column;gap:22px;align-items:center">
+        <sc-if value="{{ sub.stepPlans }}" hint-placeholder-val="{{ true }}">
+        <div data-screen-label="11 Choose a plan" style="display:flex;flex-direction:column;gap:22px;width:100%">
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
+            <div style="flex:1 1 280px;min-width:0">
+              <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Choose your plan</h1>
+              <p style="font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5;text-wrap:pretty">{{ sub.trialLine }}</p>
+            </div>
+            <div role="radiogroup" aria-label="Billing" style="display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px">
+              <sc-for list="{{ sub.bills }}" as="b" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{ b.on }}" onClick="{{ b.pick }}" style="height:34px;padding:0 14px;border-radius:8px;font-size:14px;white-space:nowrap;font-weight:{{ b.fw }};background:{{ b.bg }};color:{{ b.fg }};box-shadow:{{ b.sh }}">{{ b.label }}</button></sc-for>
+              <span style="align-self:center;font-size:12px;font-weight:600;padding:3px 8px;margin:0 4px;border-radius:999px;background:#E4F4EC;color:#16704A;white-space:nowrap">Yearly saves 2 months</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px;align-items:stretch">
+            <sc-for list="{{ sub.plans }}" as="p" hint-placeholder-count="3">
+              <button type="button" onClick="{{ p.choose }}" aria-label="{{ p.cta }}" style="text-align:start;border:2px solid {{ p.bd }};background:{{ p.bg }};border-radius:20px;padding:22px;display:flex;flex-direction:column;transition:border-color .15s,box-shadow .15s,transform .15s" style-hover="border-color:#FF5577;box-shadow:0 24px 48px -30px rgba(201,61,255,.55);transform:translateY(-2px)">
+                <span style="font-size:19px;font-weight:600">{{ p.name }}</span>
+                <span style="font-size:14px;line-height:1.45;color:#8A5A6E;margin-top:6px">{{ p.desc }}</span>
+                <div style="display:flex;flex-direction:column;margin-top:16px;font-variant-numeric:tabular-nums">
+                  <span style="font-size:14px;color:#8A5A6E;text-decoration:line-through;min-height:20px">{{ p.strike }}</span>
+                  <span style="display:flex;align-items:baseline;gap:6px"><span style="font-size:30px;font-weight:600;letter-spacing:-0.04em">{{ p.price }}</span><span style="font-size:14px;color:#8A5A6E">{{ p.per }}</span></span>
+                  <span style="font-size:13px;color:#3D1C31;margin-top:4px">{{ p.eq }}</span>
+                  <span style="font-size:13px;color:#8A2040;margin-top:8px;padding:6px 10px;border-radius:8px;background:#FDEAF2;align-self:flex-start">+ Terminal {{ p.term }} one-time</span>
+                </div>
+                <span style="height:1px;background:#F0E4E8;margin:18px 0 14px;display:block"></span>
+                <sc-if value="{{ p.hasInc }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;font-weight:600;color:#3D1C31;margin-bottom:10px">{{ p.inc }}</span></sc-if>
+                <div style="display:flex;flex-direction:column;gap:7px;font-size:14px">
+                  <sc-for list="{{ p.feats }}" as="f" hint-placeholder-count="6"><span style="display:flex;gap:8px"><span style="color:#FF5577;flex:none">✓</span><span>{{ f }}</span></span></sc-for>
+                </div>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sub.stepPay }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="12 Payment" style="display:flex;flex-direction:column;gap:20px;max-width:900px;width:100%">
+          <button type="button" onClick="{{ subBackPlans }}" style="align-self:flex-start;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px 0 8px;border-radius:10px;font-size:14px;font-weight:500;color:#3D1C31" style-hover="background:#FBF3F8;color:#1A0815"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3 5 8l5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>Plans</button>
+          <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Payment</h1>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:20px;align-items:start">
+            <form onSubmit="{{ subPay }}" noValidate="{{ true }}" style="display:flex;flex-direction:column;gap:16px">
+              <section style="border:2px solid #FF5577;background:#FFF7FA;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;gap:14px;align-items:flex-start">
+                  <div style="flex:none;width:64px;height:112px;position:relative;overflow:hidden;border-radius:10px;background:#fff"><div style="position:absolute;top:-10px;left:50%;margin-left:-150px;transform:scale(.21);transform-origin:top center;height:704px"><dc-import name="LumiaTerminal" screen="new2" hint-size="300px,704px"></dc-import></div></div>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><span style="font-size:16px;font-weight:600">Lumia Order Terminal</span><span style="font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#1A0815;color:#fff">Required</span></div>
+                    <span style="font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty">Receives, accepts and prints your orders. Every subscription includes at least one terminal.</span>
+                    <span style="display:flex;align-items:baseline;gap:8px;margin-top:4px;font-variant-numeric:tabular-nums"><span style="font-size:14px;color:#8A5A6E;text-decoration:line-through">AED 699</span><span style="font-size:18px;font-weight:600">{{ sub.termPrice }}</span><span style="font-size:13px;color:#8A5A6E">one-time</span></span>
+                  </div>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding-top:12px;border-top:1px solid #F3D6E2">
+                  <span style="font-size:14px;color:#3D1C31">{{ sub.termQtyNote }}</span>
+                  <div style="display:flex;align-items:center;border:1.5px solid #ECD9E0;border-radius:10px;background:#fff">
+                    <button type="button" onClick="{{ termDec }}" disabled="{{ sub.termMin }}" aria-label="Fewer terminals" style="width:36px;height:36px;font-size:18px;opacity:{{ sub.decOp }}">−</button>
+                    <span style="min-width:28px;text-align:center;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums">{{ sub.termQty }}</span>
+                    <button type="button" onClick="{{ termInc }}" aria-label="More terminals" style="width:36px;height:36px;font-size:18px">+</button>
+                  </div>
+                </div>
+                <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Delivery address for the terminal</span>
+                  <input autoComplete="street-address" placeholder="Building, street, area, emirate" value="{{ sub.addr }}" onChange="{{ onAddr }}" style="height:48px;padding:0 14px;border-radius:12px;border:1.5px solid {{ sub.addrBd }};background:#fff;font-size:15px" style-focus="border-color:#FF5577;box-shadow:0 0 0 4px #FDEAF2"></label>
+                <sc-if value="{{ sub.addrErr }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#B42318;margin-top:-6px">Add a delivery address for your terminal to continue.</span></sc-if>
+                <span style="font-size:13px;color:#8A5A6E;margin-top:-4px">Estimated delivery: 10–15 business days.</span>
+              </section>
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">
+                <button type="button" onClick="{{ subQuick }}" style="height:50px;border-radius:12px;background:#1A0815;color:#fff;font-size:15px;font-weight:600" style-hover="background:#3D1C31">Apple Pay</button>
+                <button type="button" onClick="{{ subQuick }}" style="height:50px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-weight:600" style-hover="background:#FBF3F8">Google Pay</button>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#8A5A6E"><span style="flex:1;height:1px;background:#F0E4E8"></span>or pay by card<span style="flex:1;height:1px;background:#F0E4E8"></span></div>
+              <div style="border:1.5px solid #ECD9E0;border-radius:14px;display:flex;flex-direction:column;overflow:hidden">
+                <input aria-label="Card number" inputMode="numeric" autoComplete="cc-number" placeholder="Card number" value="{{ sub.card }}" onChange="{{ onCard }}" style="height:52px;padding:0 16px;font-size:16px;font-variant-numeric:tabular-nums;border-bottom:1.5px solid #ECD9E0" style-focus="background:#FFF7FA">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+                  <input aria-label="Expiry date" inputMode="numeric" autoComplete="cc-exp" placeholder="MM/YY" value="{{ sub.exp }}" onChange="{{ onExp }}" style="height:52px;padding:0 16px;font-size:16px;font-variant-numeric:tabular-nums;border-inline-end:1.5px solid #ECD9E0;min-width:0" style-focus="background:#FFF7FA">
+                  <input aria-label="Security code" inputMode="numeric" autoComplete="cc-csc" placeholder="CVC" value="{{ sub.cvc }}" onChange="{{ onCvc }}" style="height:52px;padding:0 16px;font-size:16px;font-variant-numeric:tabular-nums;min-width:0" style-focus="background:#FFF7FA">
+                </div>
+              </div>
+              <button type="submit" disabled="{{ sub.invalid }}" style="height:54px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;opacity:{{ sub.payOp }};display:flex;align-items:center;justify-content:center;gap:10px;font-variant-numeric:tabular-nums">
+                <sc-if value="{{ sub.paying }}" hint-placeholder-val="{{ false }}"><span style="width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:lo-spin .8s linear infinite"></span></sc-if>
+                {{ sub.payLabel }}
+              </button>
+              <p style="display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:1.45;color:#8A5A6E"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" style="flex:none;margin-top:2px"><rect x="4.5" y="9" width="11" height="8" rx="2" stroke="currentColor" stroke-width="1.6"></rect><path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" stroke-width="1.6"></path></svg>Secure payment. Cancel anytime from Settings.</p>
+            </form>
+            <aside style="background:#FBF3F8;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+                <div style="display:flex;flex-direction:column;gap:3px">
+                  <span style="font-size:19px;font-weight:600;letter-spacing:-0.02em">{{ sub.selName }}</span>
+                  <span style="font-size:14px;color:#3D1C31">{{ sub.selBilling }}</span>
+                </div>
+                <button type="button" onClick="{{ subBackPlans }}" style="font-size:14px;font-weight:500;color:#1A0815;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px" style-hover="color:#FF5577">Change</button>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:15px;font-variant-numeric:tabular-nums;padding-top:14px;border-top:1px solid #ECD9E0">
+                <div style="display:flex;justify-content:space-between;gap:12px;color:#3D1C31"><span>{{ sub.selName }}</span><span>{{ sub.planAmt }}</span></div>
+                <div style="display:flex;justify-content:space-between;gap:12px;color:#3D1C31"><span>{{ sub.termLine }}</span><span>{{ sub.termAmt }}</span></div>
+                <div style="display:flex;justify-content:space-between;gap:12px;color:#3D1C31"><span>VAT (5%)</span><span>{{ sub.vat }}</span></div>
+                <div style="display:flex;justify-content:space-between;gap:12px;font-size:18px;font-weight:600;padding-top:10px;border-top:1px solid #ECD9E0"><span>Total today</span><span>{{ sub.total }}</span></div>
+              </div>
+              <p style="font-size:13px;color:#8A5A6E">Renews on {{ sub.renew }}.</p>
+            </aside>
+          </div>
+        </div>
+        </sc-if>
+      </div>
+      </div>
       </div>
       </sc-if>
 
@@ -680,7 +838,7 @@ input::placeholder{color:#B89AA8}
               <button type="button" onClick="{{ openWA }}" style="align-self:flex-start;height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Connect WhatsApp</button>
             </sc-if>
           </div>
-          <!-- LUMIA-EXT today hidden --><sc-if value="{{ waShowToday }}" hint-placeholder-val="{{ true }}">
+          <sc-if value="{{ waIsConnected }}" hint-placeholder-val="{{ true }}">
             <div style="background:#FAF6FA;border-radius:20px;padding:20px 22px 8px;display:flex;flex-direction:column">
               <span style="font-size:14px;font-weight:600;color:#8A5A6E;padding-bottom:6px">Today</span>
               <sc-for list="{{ waToday }}" as="t" hint-placeholder-count="3">
@@ -710,29 +868,7 @@ input::placeholder{color:#B89AA8}
       </div>
       </sc-if>
 
-      
-<!-- LUMIA-EXT edit dialog -->
-<sc-if value="{{ dlg.open }}" hint-placeholder-val="{{ false }}">
-<div dir="ltr" style="position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px">
-  <div onClick="{{ dlg.cancel }}" style="position:absolute;inset:0;background:rgba(26,8,21,.36)"></div>
-  <form role="dialog" aria-modal="true" aria-label="{{ dlg.title }}" data-screen-label="09 Edit dialog" onSubmit="{{ dlg.submit }}" noValidate="{{ true }}" style="position:relative;width:100%;max-width:420px;background:#fff;border-radius:20px;padding:26px 24px 22px;box-shadow:0 30px 80px -30px rgba(26,8,21,.45);display:flex;flex-direction:column">
-    <h2 style="font-size:22px;font-weight:600;letter-spacing:-0.03em">{{ dlg.title }}</h2>
-    <p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;text-wrap:pretty">{{ dlg.hint }}</p>
-    <sc-for list="{{ dlg.fields }}" as="f" hint-placeholder-count="3">
-      <label style="display:block;font-size:14px;font-weight:500;color:#3D1C31;margin-top:16px">{{ f.label }}
-        <input type="text" value="{{ f.value }}" onChange="{{ f.onChange }}" placeholder="{{ f.placeholder }}" dir="{{ f.dir }}" inputMode="{{ f.mode }}" autoFocus="{{ f.focus }}" style="display:block;margin-top:8px;height:48px;width:100%;border-radius:12px;border:1.5px solid #E3CBD4;padding:0 14px;font-size:16px;background:#fff"></input>
-      </label>
-    </sc-for>
-    <sc-if value="{{ dlg.error }}" hint-placeholder-val="{{ false }}"><div role="alert" style="margin-top:12px;font-size:14px;color:#B4233B">{{ dlg.error }}</div></sc-if>
-    <div style="display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:24px">
-      <button type="button" onClick="{{ dlg.cancel }}" style="flex:1 1 120px;height:48px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Cancel</button>
-      <button type="submit" disabled="{{ dlg.busy }}" style="flex:1 1 160px;height:48px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;opacity:{{ dlg.op }}">{{ dlg.saveLabel }}</button>
-    </div>
-  </form>
-</div>
-</sc-if>
-
-<!-- WhatsApp connection drawer -->
+      <!-- WhatsApp connection drawer -->
       <sc-if value="{{ waOpen }}" hint-placeholder-val="{{ false }}">
       <div dir="ltr" style="position:fixed;inset:0;z-index:40;display:flex;justify-content:flex-end">
         <div onClick="{{ waClose }}" style="position:absolute;inset:0;background:rgba(26,8,21,.32)"></div>
@@ -877,8 +1013,8 @@ input::placeholder{color:#B89AA8}
               <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:20px">
                 <div style="border-radius:16px;border:1px solid #ECD9E0;padding:14px 16px;display:flex;flex-direction:column;gap:4px">
                   <span style="display:flex;align-items:center;gap:7px;font-size:13px;color:#8A5A6E"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="display:block;flex:none"><path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366"></path></svg>WhatsApp catalog</span>
-                  <span style="font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">{{ waCatTotal }}</span>
-                  <span style="font-size:14px;color:#3D1C31">products · {{ waCatCount }} categories</span>
+                  <span style="font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums">37</span>
+                  <span style="font-size:14px;color:#3D1C31">products · 5 categories</span>
                 </div>
                 <sc-if value="{{ menuDone }}" hint-placeholder-val="{{ true }}">
                 <div style="border-radius:16px;background:#FAF6FA;padding:14px 16px;display:flex;flex-direction:column;gap:4px">
@@ -917,7 +1053,7 @@ input::placeholder{color:#B89AA8}
             <div style="position:absolute;inset:0;background:rgba(26,8,21,.32);display:flex;align-items:flex-end;padding:16px">
               <div role="alertdialog" aria-modal="true" data-screen-label="08f Replace menu confirm" style="width:100%;background:#fff;border-radius:20px;padding:22px 20px 18px;box-shadow:0 20px 50px -20px rgba(26,8,21,.45);display:flex;flex-direction:column">
                 <h3 style="font-size:20px;font-weight:600;letter-spacing:-0.025em">Replace current menu?</h3>
-                <p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;text-wrap:pretty">Your {{ lumiaItems }} Lumia menu items will be replaced by {{ waCatTotal }} products from your WhatsApp catalog. Prices and availability you set in Lumia won't be kept.</p>
+                <p style="font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;text-wrap:pretty">Your {{ lumiaItems }} Lumia menu items will be replaced by 37 products from your WhatsApp catalog. Prices and availability you set in Lumia won't be kept.</p>
                 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:20px">
                   <button type="button" onClick="{{ cancelReplace }}" style="flex:1 1 120px;height:48px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Cancel</button>
                   <button type="button" onClick="{{ useCatalog }}" style="flex:1 1 140px;height:48px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px" style-hover="background:#981B30">Replace menu</button>
@@ -969,13 +1105,70 @@ input::placeholder{color:#B89AA8}
     </sc-if>
     </div>
   </div>
+<sc-if value="{{ sub.panel }}" hint-placeholder-val="{{ false }}">
+<div dir="ltr" style="position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div onClick="{{ subLater }}" style="position:absolute;inset:0;background:rgba(26,8,21,.36)"></div>
+  <div role="dialog" aria-modal="true" aria-labelledby="tr-h" data-screen-label="10 Free trial" style="position:relative;width:100%;max-width:440px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)">
+    <div style="padding:26px 26px 22px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);display:flex;flex-direction:column;gap:14px">
+      <span style="align-self:flex-start;height:28px;padding:0 11px;border-radius:999px;background:#fff;font-size:13px;font-weight:600;color:#8A2040;display:flex;align-items:center">Free trial</span>
+      <h2 id="tr-h" style="font-size:24px;font-weight:600;letter-spacing:-0.03em;line-height:1.15;text-wrap:balance">{{ sub.title }}</h2>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="height:6px;border-radius:3px;background:rgba(26,8,21,.1);overflow:hidden;display:block"><span style="display:block;height:100%;width:{{ sub.barW }};border-radius:3px;background:linear-gradient(90deg,#FF5577,#C93DFF)"></span></span>
+        <span style="font-size:14px;font-weight:500;color:#8A2040;font-variant-numeric:tabular-nums">{{ sub.leftLabel }}</span>
+      </div>
+    </div>
+    <div style="padding:22px 26px 24px;display:flex;flex-direction:column;gap:20px">
+      <p style="font-size:15px;line-height:1.55;color:#3D1C31;text-wrap:pretty">{{ sub.body }}</p>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button type="button" onClick="{{ subOpenPlans }}" style="height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Choose a plan</button>
+        <button type="button" onClick="{{ subLater }}" style="height:44px;font-size:15px;font-weight:500;color:#3D1C31" style-hover="color:#1A0815">{{ sub.later }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ lockOpen }}" hint-placeholder-val="{{ false }}">
+<div dir="ltr" style="position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div onClick="{{ lockClose }}" style="position:absolute;inset:0;background:rgba(26,8,21,.36)"></div>
+  <div role="dialog" aria-modal="true" aria-labelledby="lk-h" data-screen-label="14 Premium feature" style="position:relative;width:100%;max-width:420px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)">
+    <div style="padding:24px 24px 20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);display:flex;flex-direction:column;gap:14px">
+      <span style="align-self:flex-start;height:28px;padding:0 11px;border-radius:999px;background:#fff;font-size:13px;font-weight:600;color:#8A2040;display:flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 20 20" fill="none"><rect x="4.5" y="9" width="11" height="8" rx="2" stroke="currentColor" stroke-width="1.8"></rect><path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" stroke-width="1.8"></path></svg>{{ lock.tag }}</span>
+      <h2 id="lk-h" style="font-size:23px;font-weight:600;letter-spacing:-0.03em;line-height:1.15;text-wrap:balance">{{ lock.title }}</h2>
+    </div>
+    <div style="padding:20px 24px 22px;display:flex;flex-direction:column;gap:18px">
+      <p style="font-size:15px;line-height:1.55;color:#3D1C31;text-wrap:pretty">{{ lock.body }}</p>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:15px">
+        <sc-for list="{{ lock.feats }}" as="f" hint-placeholder-count="3"><div style="display:flex;gap:10px"><span style="color:#FF5577;flex:none">✓</span><span>{{ f }}</span></div></sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button type="button" onClick="{{ lockUpgrade }}" style="height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">{{ lock.cta }}</button>
+        <button type="button" onClick="{{ lockClose }}" style="height:44px;font-size:15px;font-weight:500;color:#3D1C31" style-hover="color:#1A0815">Not now</button>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ sub.done }}" hint-placeholder-val="{{ false }}">
+<div dir="ltr" style="position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div onClick="{{ subLater }}" style="position:absolute;inset:0;background:rgba(26,8,21,.36)"></div>
+  <div role="dialog" aria-modal="true" data-screen-label="13 Subscribed" style="position:relative;width:100%;max-width:420px;background:#fff;border-radius:24px;padding:32px 26px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)">
+    <span style="width:64px;height:64px;border-radius:50%;background:#E4F4EC;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 20 20" fill="none"><path d="m5 10.5 3.2 3L15 7" stroke="#16704A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+    <h2 style="font-size:24px;font-weight:600;letter-spacing:-0.03em;margin-top:18px">You’re on the {{ sub.paidName }} plan</h2>
+    <p style="font-size:15px;line-height:1.55;color:#3D1C31;margin-top:8px;text-wrap:pretty">Lumia will keep receiving WhatsApp orders without interruption. Your terminal arrives in 10–15 business days, and you can track it from Overview.</p>
+    <button type="button" onClick="{{ subLater }}" style="margin-top:24px;width:100%;height:52px;border-radius:14px;background:#1A0815;color:#fff;font-weight:600;font-size:16px" style-hover="background:#3D1C31">Back to dashboard</button>
+  </div>
+</div>
+</sc-if>
+
 </div>
 </sc-if>
 
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Flow&quot;,&quot;1 Mobile number&quot;,&quot;2 OTP&quot;,&quot;2 OTP · incorrect&quot;,&quot;2 OTP · expired&quot;,&quot;2 Number verified&quot;,&quot;3 Restaurant name&quot;,&quot;4 Menu upload&quot;,&quot;5 AI processing&quot;,&quot;5B Menu ready&quot;,&quot;Dashboard · menu&quot;,&quot;Dashboard · empty menu&quot;,&quot;WA · Connect&quot;,&quot;WA · Connecting&quot;,&quot;WA · Connected&quot;,&quot;WA · Connected, no catalog&quot;,&quot;WA · Import info&quot;,&quot;WA · Review differences&quot;,&quot;WA · Catalog found&quot;,&quot;WA · Replace menu confirm&quot;,&quot;WA · Error&quot;,&quot;WA · Number in use&quot;,&quot;Dashboard · WhatsApp connected&quot;,&quot;WhatsApp page · connected&quot;,&quot;WhatsApp page · disconnect&quot;,&quot;WhatsApp page · disconnected&quot;,&quot;Orders · list&quot;,&quot;Orders · no orders yet&quot;,&quot;Orders · no orders, WhatsApp not connected&quot;],&quot;default&quot;:&quot;Flow&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screens&quot;},&quot;viewport&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Auto&quot;,&quot;Mobile frame&quot;],&quot;default&quot;:&quot;Auto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screens&quot;},&quot;otpResult&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Correct&quot;,&quot;Incorrect&quot;,&quot;Expired&quot;],&quot;default&quot;:&quot;Correct&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;waResult&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Success · catalog&quot;,&quot;Success · no catalog&quot;,&quot;Permission cancelled&quot;,&quot;Business unavailable&quot;,&quot;Number already connected&quot;],&quot;default&quot;:&quot;Success · catalog&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;dashLanguage&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;English&quot;,&quot;Arabic&quot;],&quot;default&quot;:&quot;English&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;trialDaysLeft&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:14,&quot;min&quot;:0,&quot;max&quot;:14,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Flow&quot;,&quot;1 Mobile number&quot;,&quot;2 OTP&quot;,&quot;2 OTP · incorrect&quot;,&quot;2 OTP · expired&quot;,&quot;2 Number verified&quot;,&quot;3 Restaurant name&quot;,&quot;4 Menu upload&quot;,&quot;5 AI processing&quot;,&quot;5B Menu ready&quot;,&quot;Dashboard · menu&quot;,&quot;Dashboard · empty menu&quot;,&quot;WA · Connect&quot;,&quot;WA · Connecting&quot;,&quot;WA · Connected&quot;,&quot;WA · Connected, no catalog&quot;,&quot;WA · Import info&quot;,&quot;WA · Review differences&quot;,&quot;WA · Catalog found&quot;,&quot;WA · Replace menu confirm&quot;,&quot;WA · Error&quot;,&quot;WA · Number in use&quot;,&quot;Dashboard · WhatsApp connected&quot;,&quot;WhatsApp page · connected&quot;,&quot;WhatsApp page · disconnect&quot;,&quot;WhatsApp page · disconnected&quot;,&quot;Orders · list&quot;,&quot;Orders · no orders yet&quot;,&quot;Orders · no orders, WhatsApp not connected&quot;,&quot;Trial · panel&quot;,&quot;Trial · choose plan&quot;,&quot;Trial · payment&quot;,&quot;Trial · subscribed&quot;,&quot;Terminal · preparing&quot;,&quot;Terminal · shipped&quot;,&quot;Terminal · out for delivery&quot;,&quot;Terminal · delivered&quot;,&quot;Premium · Customers&quot;,&quot;Premium · Add branch&quot;],&quot;default&quot;:&quot;Flow&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screens&quot;},&quot;viewport&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Auto&quot;,&quot;Mobile frame&quot;],&quot;default&quot;:&quot;Auto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screens&quot;},&quot;otpResult&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Correct&quot;,&quot;Incorrect&quot;,&quot;Expired&quot;],&quot;default&quot;:&quot;Correct&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;waResult&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Success · catalog&quot;,&quot;Success · no catalog&quot;,&quot;Permission cancelled&quot;,&quot;Business unavailable&quot;,&quot;Number already connected&quot;],&quot;default&quot;:&quot;Success · catalog&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;dashLanguage&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;English&quot;,&quot;Arabic&quot;],&quot;default&quot;:&quot;English&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
 const COUNTRIES = [
   { flag: '🇦🇪', name: 'United Arab Emirates', dial: '+971', len: 9, groups: [2,3,4], ex: '50 123 4567', re: /^5[024568]\d{7}$/, label: 'UAE' },
   { flag: '🇸🇦', name: 'Saudi Arabia', dial: '+966', len: 9, groups: [2,3,4], ex: '50 123 4567', re: /^5\d{8}$/, label: 'Saudi' },
@@ -1044,7 +1237,24 @@ const SCREENS = {
   'Orders · list': D({ page: 'Orders', waStatus: 'connected', ordersSet: 'full' }),
   'Orders · no orders yet': D({ page: 'Orders', waStatus: 'connected', ordersSet: 'none' }),
   'Orders · no orders, WhatsApp not connected': D({ page: 'Orders', ordersSet: 'none' }),
+  'Trial · panel': D({ sub: 'panel' }),
+  'Trial · choose plan': D({ page: 'Plans' }),
+  'Trial · payment': D({ page: 'Plans', planStep: 'pay', plan: 'plus', bill: 'yearly', card: '4242 4242 4242 4242', exp: '08/28', cvc: '123', addr: 'Shop 4, Al Majaz 2, Sharjah' }),
+  'Terminal · preparing': D({ paid: 'plus', termStage: 1, addr: 'Shop 4, Al Majaz 2, Sharjah' }),
+  'Terminal · shipped': D({ paid: 'plus', termStage: 2, addr: 'Shop 4, Al Majaz 2, Sharjah' }),
+  'Terminal · out for delivery': D({ paid: 'plus', termStage: 3, addr: 'Shop 4, Al Majaz 2, Sharjah' }),
+  'Terminal · delivered': D({ paid: 'plus', termStage: 4, addr: 'Shop 4, Al Majaz 2, Sharjah' }),
+  'Premium · Customers': D({ lock: 'customers' }),
+  'Premium · Add branch': D({ page: 'Settings', settingsPage: 'branches', lock: 'branches' }),
+  'Trial · subscribed': D({ sub: 'done', plan: 'plus', paid: 'plus' }),
 };
+const SUB_PLANS = [
+  { id: 'starter', name: 'Starter', desc: 'For small restaurants and home kitchens starting with AI-powered WhatsApp ordering.', m: 149, y: 1490, sy: 1788, inc: '', feats: ['1 restaurant / branch', '1 WhatsApp Business number', 'AI text ordering', 'AI voice ordering', 'Menu management', 'Order dashboard', 'Delivery zones and delivery fees', 'Opening hours', 'Basic customer history', '1 staff account', 'Basic analytics', '0% commission on orders'] },
+  { id: 'plus', name: 'Plus', desc: 'For growing restaurants that need more staff access and better customer insights.', m: 249, y: 2490, sy: 2988, inc: 'Everything in Starter, plus:', feats: ['Up to 3 staff accounts', 'Full customer history', 'Advanced analytics', 'Promotions / customer campaigns', 'Basic automation', '0% commission on orders'] },
+  { id: 'pro', name: 'Pro', desc: 'For established restaurants and multi-branch operations.', m: 399, y: 3990, sy: 4788, inc: 'Everything in Plus, plus:', feats: ['Up to 3 branches', 'Up to 3 WhatsApp Business numbers', 'Up to 10 staff accounts', 'Advanced automation', 'Multi-branch management', 'Priority support', 'Assisted onboarding', '0% commission on orders'] },
+];
+const TERM = { starter: 549, plus: 499, pro: 399 };
+const SUB_BASE = { termStage: 0, termQty: 1, addr: '', addrTry: false, planStep: 'plans', lock: null, sub: null, paid: null, plan: 'plus', bill: 'yearly', card: '', exp: '', cvc: '', holder: '' };
 const SETTINGS = 'Lumia Order Restaurant Settings.dc.html';
 const goSettings = (hash) => { window.location.href = SETTINGS + (hash ? '#' + hash : ''); };
 const ORDERS = [
@@ -1062,7 +1272,7 @@ const WA_BASE = { page: 'Overview', period: 'week', wa: null, waStatus: 'none', 
 class Component extends DCLogic {
   state = {
     orders: ORDERS, ordTab: 'new', ordSel: 1048, ordQ: '', ordReject: false, ordReason: '', ordPrep: 25, ordMobile: false, ordFlash: null,
-    step: 'phone', num: '', cc: 0, focused: false, invalid: false, sending: false, ccOpen: false,
+    ...SUB_BASE, step: 'phone', num: '', cc: 0, focused: false, invalid: false, sending: false, ccOpen: false,
     digits: '', otpFocused: false, otpErr: null, verifying: false, resendAt: 0, now: Date.now(), note: null,
     name: '', nameFocused: false, nameErr: false, logo: null, drag: false, fileName: 'burger-house-menu.pdf',
     phase: 0, shown: 0, menuDone: false, cat: 'All', sold: { 'Beef Bacon Burger': true }, edits: {}, flags: { 'Family Box': true, 'Fresh Orange': true }, open: { Meals: true, Drinks: true }, ...WA_BASE, lang: this.props.dashLanguage === 'Arabic' ? 'ar' : 'en', q: '', w: typeof window !== 'undefined' ? window.innerWidth : 1200,
@@ -1100,7 +1310,7 @@ class Component extends DCLogic {
     const sc = SCREENS[this.props.screen];
     this.clearTimers();
     if (!sc) { this.setState({ step: 'phone' }); return; }
-    const base = { num: '501234567', cc: 0, invalid: false, sending: false, ccOpen: false, digits: '', otpErr: null, verifying: false, note: null, name: 'Burger House', nameErr: false, phase: 0, shown: 0, cat: 'All', fileName: 'burger-house-menu.pdf', ...WA_BASE };
+    const base = { num: '501234567', cc: 0, invalid: false, sending: false, ccOpen: false, digits: '', otpErr: null, verifying: false, note: null, name: 'Burger House', nameErr: false, phase: 0, shown: 0, cat: 'All', fileName: 'burger-house-menu.pdf', ...WA_BASE, ...SUB_BASE };
     const resendAt = Date.now() + (sc.resendIn ?? 30) * 1000;
     this.setState({ ...base, ...sc, resendAt, now: Date.now(), ...(sc.ordersSet ? { orders: sc.ordersSet === 'none' ? [] : ORDERS, ordTab: 'new', ordSel: sc.ordersSet === 'none' ? null : 1048, ordQ: '' } : {}) });
     if (sc.step === 'otp' && !sc.otpErr) this.focus(this.otpRef);
@@ -1149,6 +1359,87 @@ class Component extends DCLogic {
       else this.setState({ wa: 'error', waErr: r });
     });
   };
+  subVals(s, narrow, ar) {
+    const A = (e, a) => (ar ? a : e);
+    const left = Math.max(0, Math.min(14, Math.round(this.props.trialDaysLeft ?? 14)));
+    const fd = (d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    const money = (n) => 'AED ' + n.toLocaleString('en-US', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
+    const yr = s.bill === 'yearly';
+    const sel = SUB_PLANS.find(p => p.id === s.plan) || SUB_PLANS[1];
+    const tPrice = (id) => (yr ? TERM[id] : 599);
+    const qty = s.termQty || 1, termAmt = tPrice(sel.id) + (qty - 1) * 599;
+    const planAmt = yr ? sel.y : sel.m, base = planAmt + termAmt, vat = Math.round(base * 5) / 100, tot = base + vat;
+    const addrOk = s.addr.trim().length > 5;
+    const valid = addrOk && s.card.replace(/\D/g, '').length === 16 && /^\d{2}\/\d{2}$/.test(s.exp) && s.cvc.length >= 3;
+    const paying = s.sub === 'paying';
+    const paidPlan = SUB_PLANS.find(p => p.id === s.paid);
+    const endDate = fd(new Date(2026, 9, 4 + left));
+    const finish = () => { this.setState({ sub: 'paying' }); this.later(1600, () => this.setState({ sub: 'done', paid: sel.id, page: 'Overview', planStep: 'plans', termStage: 0 })); };
+    const tab = (v, label) => { const on = s.bill === v; return { label, on, fw: on ? 600 : 500, bg: on ? '#fff' : 'transparent', fg: on ? '#1A0815' : '#8A5A6E', sh: on ? '0 1px 3px rgba(26,8,21,.12)' : 'none', pick: () => this.setState({ bill: v }) }; };
+    const LOCKS = {
+      customers: { id: 'plus', tag: 'Plus feature', title: 'Customers is available on Plus and Pro', body: 'See everyone who ordered from you on WhatsApp, what they ordered and how often they come back.', feats: ['Full customer history', 'Advanced analytics', 'Promotions / customer campaigns'], cta: 'Upgrade to Plus' },
+      branches: { id: 'pro', tag: 'Pro feature', title: 'Add more branches with Pro', body: 'Your plan includes 1 branch. Pro lets you run up to 3 branches from one dashboard.', feats: ['Up to 3 branches', 'Up to 3 WhatsApp Business numbers', 'Multi-branch management'], cta: 'Upgrade to Pro' },
+    };
+    const lk = LOCKS[s.lock];
+    return {
+      sub: {
+        panel: s.sub === 'panel', done: s.sub === 'done', paying, stepPlans: s.planStep !== 'pay', stepPay: s.planStep === 'pay', stepLabel: s.planStep === 'pay' ? 'Step 2 of 2' : 'Step 1 of 2', pad: narrow ? '24px 16px 32px' : '40px 32px 48px',
+        onTrial: !s.paid, isPaid: !!s.paid, paidName: paidPlan ? paidPlan.name : '',
+        tag: A('Free trial', 'تجربة مجانية'), choose: A('Choose a plan', 'اختر باقة'),
+        leftLabel: left === 1 ? A('1 day left', 'متبقٍ يوم واحد') : A(`${left} days left`, `متبقٍ ${left} يوماً`),
+        barW: Math.round(left / 14 * 100) + '%',
+        title: left ? 'You’re on a 14-day free trial' : 'Your free trial has ended',
+        body: left ? `Your trial ends on ${endDate}. Subscribe to a plan to keep receiving WhatsApp orders after that.` : 'Subscribe to a plan to keep receiving WhatsApp orders.',
+        later: left ? 'Maybe later' : 'Not now',
+        trialLine: paidPlan ? `You’re on the ${paidPlan.name} plan.` : left ? `Your free trial ends on ${endDate}. Pick a plan to keep receiving WhatsApp orders.` : 'Your free trial has ended. Pick a plan to keep receiving WhatsApp orders.',
+        bills: [tab('monthly', 'Monthly'), tab('yearly', 'Yearly')],
+        plans: SUB_PLANS.map(p => { const on = p.id === sel.id; return { name: p.name, desc: p.desc, inc: p.inc, hasInc: !!p.inc, feats: p.feats, on,
+          price: money(yr ? p.y : p.m), per: yr ? '/ year' : '/ month', strike: yr ? money(p.sy) : '', eq: yr ? `≈ ${money(Math.round(p.y / 12))}/month, billed annually` : 'Billed monthly',
+          cta: 'Choose ' + p.name, term: money(tPrice(p.id)), ctaBg: on ? 'linear-gradient(90deg,#FF5577,#C93DFF)' : '#1A0815', choose: () => this.setState({ plan: p.id, planStep: 'pay' }),
+          bd: on ? '#FF5577' : '#F0E4E8', bg: on ? '#FFF7FA' : '#fff', ring: on ? '#FF5577' : '#D9BFCB', dot: on ? '#FF5577' : 'transparent',
+          pick: () => this.setState({ plan: p.id }) }; }),
+        selName: sel.name + ' plan', selBilling: yr ? 'Billed yearly' : 'Billed monthly',
+        planAmt: money(planAmt), termAmt: money(termAmt), termLine: qty > 1 ? `Terminal × ${qty}` : 'Terminal', termPrice: money(tPrice(sel.id)), termQty: qty, termMin: qty <= 1, decOp: qty <= 1 ? 0.3 : 1,
+        termQtyNote: qty > 1 ? `Extra terminals AED 599 each` : 'Need one per branch?',
+        addr: s.addr, addrErr: s.addrTry && !addrOk, addrBd: s.addrTry && !addrOk ? '#B42318' : '#ECD9E0',
+        subtotal: money(base), vat: money(vat), total: money(tot), payLabel: paying ? 'Processing payment…' : 'Pay ' + money(tot),
+        renew: fd(new Date(2026, 9 + (yr ? 12 : 1), 4)), invalid: (addrOk && !valid) || paying, payOp: valid || paying ? 1 : 0.45,
+        card: s.card, exp: s.exp, cvc: s.cvc,
+        cols: narrow || s.w < 1100 ? 'minmax(0,1fr)' : 'minmax(0,1.5fr) minmax(340px,1fr)',
+      },
+      term: (() => {
+        const st = s.termStage || 0;
+        const S = [['Order placed', '4 Oct'], ['Preparing', '5 Oct'], ['Shipped', '12 Oct'], ['Out for delivery', '16 Oct'], ['Delivered', '16 Oct']];
+        const pill = st >= 4 ? ['#E4F4EC', '#16704A'] : st >= 2 ? ['#F1E6FF', '#6A1FA0'] : ['#FFF1DC', '#8A4B00'];
+        const MSG = ['We received your order and will start preparing your terminal shortly.', 'Your terminal is being prepared and tested before it ships.', 'Your terminal is on its way.', 'Your terminal is out for delivery today. Someone at the restaurant will need to receive it.', 'Your terminal was delivered. Turn it on and sign in with your Lumia number to start receiving orders.'];
+        return { show: !!s.paid, label: S[st][0], pillBg: pill[0], pillFg: pill[1], msg: MSG[st], no: '#LT-20418',
+          qtyLabel: qty === 1 ? '1 terminal' : qty + ' terminals', addr: s.addr.trim() || 'Al Majaz 2, Sharjah',
+          etaLabel: st >= 4 ? 'Delivered on' : 'Estimated delivery', eta: st >= 4 ? '16 Oct 2026' : st === 3 ? 'Today' : '16–23 Oct',
+          hasCourier: st >= 2 && st < 4,
+          steps: S.map(([label, d], i) => { const done = i < st || (i === st && st === 4), now = i === st && st < 4; return { label, done, now,
+            date: i <= st ? d : (i === 4 ? 'Expected' : ''),
+            dot: done ? '#FF5577' : '#fff', ring: done || now ? '#FF5577' : '#E3CBD4', line: i === 4 ? 'transparent' : i < st ? '#FF5577' : '#F0E4E8',
+            fw: now ? 600 : done ? 500 : 400, fg: done || now ? '#1A0815' : '#8A5A6E' }; }) };
+      })(),
+      noopPrevent: (e) => { e && e.preventDefault && e.preventDefault(); },
+      lockOpen: !!lk, lock: lk || LOCKS.customers,
+      lockClose: () => this.setState({ lock: null }),
+      lockUpgrade: () => this.setState({ lock: null, sub: null, plan: lk ? lk.id : s.plan, page: 'Plans', planStep: 'plans' }),
+      premiumBranch: s.paid === 'pro' ? null : () => this.setState({ lock: 'branches' }),
+      subLater: () => this.setState({ sub: null }),
+      subOpenPlans: () => this.setState({ sub: null, lock: null, page: 'Plans', planStep: 'plans' }),
+      subClosePlans: () => { if (!paying) this.setState({ page: 'Overview', planStep: 'plans' }); },
+      subBackPlans: () => { if (!paying) this.setState({ planStep: 'plans' }); },
+      onCard: (e) => { const d = e.target.value.replace(/\D/g, '').slice(0, 16); this.setState({ card: d.replace(/(\d{4})(?=\d)/g, '$1 ') }); },
+      onExp: (e) => { const d = e.target.value.replace(/\D/g, '').slice(0, 4); this.setState({ exp: d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d }); },
+      onCvc: (e) => this.setState({ cvc: e.target.value.replace(/\D/g, '').slice(0, 4) }),
+      subPay: (e) => { e && e.preventDefault && e.preventDefault(); if (!addrOk) { this.setState({ addrTry: true }); return; } if (!valid || paying) return; finish(); },
+      subQuick: () => { if (paying) return; if (!addrOk) { this.setState({ addrTry: true }); return; } finish(); },
+      onAddr: (e) => this.setState({ addr: e.target.value }),
+      termInc: () => this.setState({ termQty: Math.min(10, qty + 1) }),
+      termDec: () => this.setState({ termQty: Math.max(1, qty - 1) }),
+    };
+  }
   takeFile(f) { if (!f) return; this.setState({ fileName: f.name, drag: false, step: 'processing' }); this.startProcessing(); }
   ordersVals(ar, narrow0) {
     const narrow = narrow0 || this.state.w < 1100;
@@ -1400,7 +1691,7 @@ class Component extends DCLogic {
       sections, noResults: sections.length === 0,
       cats: [['All', T.all, count(M)], ...M.map(g => [g.cat, catName(g.cat), g.items.length])].map(([k, label, n]) => { const on = !q && s.cat === k; return { label, count: n, on, pick: () => this.setState({ cat: k, q: '' }), bg: on ? '#FDEAF2' : 'transparent', fg: on ? '#8A2040' : '#3D1C31', fw: on ? 600 : 400, countFg: on ? '#8A2040' : '#8A5A6E', chipBg: on ? '#1A0815' : '#fff', chipFg: on ? '#fff' : '#3D1C31', chipBd: on ? '#1A0815' : '#ECD9E0' }; }),
       // whatsapp
-      pageMenu: s.page === 'Menu', pageWA: s.page === 'WhatsApp',
+      pageMenu: s.page === 'Menu', pagePlans: s.page === 'Plans', pageWA: s.page === 'WhatsApp',
       waOpen: !!s.wa, wa: { intro: s.wa === 'intro', connecting: s.wa === 'connecting', success: s.wa === 'success', import: s.wa === 'import', review: s.wa === 'review', catalog: s.wa === 'catalog', error: s.wa === 'error', inUse: s.wa === 'inUse' },
       waLabel: { intro: '08 WhatsApp · Connect', connecting: '08a WhatsApp · Connecting', success: '08b WhatsApp · Connected', import: '08c WhatsApp · Import info', review: '08d WhatsApp · Review differences', catalog: '08e WhatsApp · Catalog found', error: '08g WhatsApp · Error', inUse: '08h WhatsApp · Number in use' }[s.wa] || '08 WhatsApp',
       waClose: () => { this.clearTimers(); this.setState({ wa: null, confirmReplace: false }); },
@@ -1439,9 +1730,10 @@ class Component extends DCLogic {
       reconnect: () => { this.openWA(); this.startConnect(); },
       review, hasFlags: flagN > 0, confirmOp: flagN > 0 ? 0.45 : 1,
       flagMsg: flagN === 1 ? '1 price needs a quick check before you confirm.' : `${flagN} prices need a quick check before you confirm.`,
-      confirmMenu: () => { if (flagN) return; this.go('dash', { menuDone: true, cat: 'All' }); },
+      confirmMenu: () => { if (flagN) return; this.go('dash', { menuDone: true, cat: 'All', sub: s.paid ? null : 'panel' }); },
+      ...this.subVals(s, narrow, ar),
       catSummary: MENU.map((g, i) => ({ cat: g.cat, label: `${g.items.length} items`, bt: i ? '1px solid #F0E4E8' : '0' })),
-      openLumia: () => this.go('dash', { menuDone: true, cat: 'All' }),
+      openLumia: () => this.go('dash', { menuDone: true, cat: 'All', sub: s.paid ? null : 'panel' }),
       // dash
       menuDone: s.menuDone, menuEmpty: !s.menuDone,
       toMenuUpload: () => this.go('menu'),
@@ -1465,7 +1757,7 @@ class Component extends DCLogic {
           L: { ...L, split2: narrow ? 'minmax(0,1fr)' : 'minmax(0,1.6fr) minmax(0,1fr)' },
         };
       })(),
-      nav: [['Overview', 'M3 10.5 10 4l7 6.5M5 9v7.5h10V9'], ['Orders', 'M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0'], ['Menu', 'M5 4.5h10M5 10h10M5 15.5h6'], ['WhatsApp', 'M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z'], ['Customers', 'M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5'], ['Settings', 'M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4']].map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e) => { e && e.preventDefault && e.preventDefault(); if (l === 'Settings') this.setState({ page: 'Settings', settingsPage: '' }); else if (l === 'Overview' || l === 'Orders' || l === 'Menu' || l === 'WhatsApp') this.setState({ page: l }); }, fg: on ? '#1A0815' : '#3D1C31', fw: on ? 600 : 400, bg: on ? '#FDEAF2' : 'transparent', bd: on ? '#FF5577' : 'transparent' }; }),
+      nav: [['Overview', 'M3 10.5 10 4l7 6.5M5 9v7.5h10V9'], ['Orders', 'M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0'], ['Menu', 'M5 4.5h10M5 10h10M5 15.5h6'], ['WhatsApp', 'M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z'], ['Customers', 'M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5'], ['Settings', 'M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4']].map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e) => { e && e.preventDefault && e.preventDefault(); if (l === 'Settings') this.setState({ page: 'Settings', settingsPage: '' }); else if (l === 'Overview' || l === 'Orders' || l === 'Menu' || l === 'WhatsApp') this.setState({ page: l }); else if (l === 'Customers' && !['plus', 'pro'].includes(s.paid)) this.setState({ lock: 'customers' }); }, fg: on ? '#1A0815' : '#3D1C31', fw: on ? 600 : 400, bg: on ? '#FDEAF2' : 'transparent', bd: on ? '#FF5577' : 'transparent', lock: l === 'Customers' && !['plus', 'pro'].includes(s.paid) }; }),
       setup: setupItems.map(([label0, done, fn], i) => { const lb = T.setup[i]; const label = Array.isArray(lb) ? lb[done ? 1 : 0] : lb; return { label, done, todo: !done, fg: done ? '#1A0815' : '#3D1C31', ul: !done && fn ? 'underline' : 'none', pick: fn || this.noopFn, bar: i < doneN ? '#16704A' : 'rgba(26,8,21,.12)' }; }),
       setupLabel: ar ? `${doneN} من 5 مكتملة` : `${doneN} of 5 completed`, waSetupLabel: `${doneN} of 5 completed`,
       chips: [{ cat: 'All', count: count(M) }, ...M.map(g => ({ cat: g.cat, count: g.items.length }))].map(x => { const on = x.cat === s.cat; return { ...x, bg: on ? '#1A0815' : '#fff', fg: on ? '#fff' : '#3D1C31', bd: on ? '#1A0815' : '#ECD9E0', pick: () => this.setState({ cat: x.cat }) }; }),

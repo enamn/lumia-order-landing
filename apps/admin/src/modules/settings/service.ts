@@ -4,6 +4,7 @@ import { transaction } from "@/server/transaction";
 import { authorize, can } from "@/server/authorization";
 import { AppError } from "@/server/errors";
 import { updateProgress } from "../business/service";
+import { entitlements, getSubscriptionFor } from "../billing/service";
 import { SECTIONS, sectionSchemas, EMIRATES, type Section, type Profile, type Branch, type Delivery, type Hours } from "./schema";
 
 // The restaurant settings. Profile basics, branches, hours and ordering rules live in the tables the rest of the app already reads
@@ -57,6 +58,7 @@ export async function getSettings(userId: string, businessId: string) {
     business: { id: b.id, name: b.name, logoUrl: b.logoUrl },
     menu: { categories: new Set(items.map(i => i.categoryId).filter(Boolean)).size, items: items.length, missingPrices: items.filter(i => i.basePriceMinor <= 0).length, soldOut: items.filter(i => !i.isAvailable).length, updatedAt: items.reduce<Date | null>((m, i) => (!m || i.updatedAt > m ? i.updatedAt : m), null) },
     whatsapp: { connected: Boolean(wa), displayPhoneNumber: wa?.displayPhoneNumber ?? "" },
+    branchLimit: entitlements((await getSubscriptionFor(businessId)).sub).branches,
   };
 }
 
@@ -79,6 +81,8 @@ export async function saveSettingsSection(userId: string, businessId: string, se
       const list = data as Branch[], eta: Record<string, string> = {};
       const existing = await tx.location.findMany({ where: { businessId }, include: { hours: true }, orderBy: { createdAt: "asc" } });
       const template = existing[0]?.hours ?? [];
+      const limit = entitlements((await getSubscriptionFor(businessId)).sub).branches;
+      if (list.length > existing.length && list.length > limit) throw new AppError("PLAN_LIMIT", `Your plan includes ${limit} ${limit === 1 ? "branch" : "branches"}. Upgrade to Pro to add more.`, 403);
       for (const br of list) {
         const coords = br.pin ? parseCoords(br.coords) : null;
         if (br.pin && !coords) throw new AppError("VALIDATION_FAILED", `The location pin for ${br.name} is not valid. Use latitude, longitude.`, 400);
