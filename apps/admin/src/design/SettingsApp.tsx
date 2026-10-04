@@ -247,7 +247,7 @@ class SettingsApp extends React.Component<Props, any> {
     const PV = d.pay;
     return {
       rootRef: this.rootRef, mainRef: this.mainRef, wide, narrow: !wide, tblWide, showAside: false, showTop: true, standalone: false, rootH: '100%', topTitleSize: wide ? '20px' : '16px',
-      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', barGap: '10px', pad: wide ? '24px 32px 48px' : '16px 16px 40px', split: s.w >= 560 ? `minmax(0,1fr) ${s.w >= 1000 ? 300 : 240}px` : 'minmax(0,1fr)',
+      L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', barGap: '10px', pad: wide ? '24px 32px 48px' : '16px 16px 40px', split: s.w >= 560 ? `minmax(0,1fr) ${s.w >= 1000 ? 340 : 260}px` : 'minmax(0,1fr)',
         areaCols: tblWide ? '1.2fr 1.1fr .8fr .8fr .7fr 1.3fr 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
         rangeCols: tblWide ? 'repeat(5,minmax(0,1fr)) 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
         rowPad: tblWide ? '10px 0' : '14px 0', cellLbl: tblWide ? 'none' : 'block',
