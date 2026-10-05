@@ -326,17 +326,69 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
       expect(conv.branchId).toBe(second); expect(conv.draftOrder).toBeNull(); expect(lastAi().menu.map((m: any) => m.name)).toEqual(["Ajman Special"]);
     } finally { if (prior) await db.subscription.update({ where: { id: prior.id }, data: { plan: prior.plan, billing: prior.billing, status: prior.status, currentPeriodStart: prior.currentPeriodStart, currentPeriodEnd: prior.currentPeriodEnd } }); else await db.subscription.delete({ where: { id: sub.id } }); }
   });
-  it("sends the approved review template to the customer when the order is placed (the plain message is only the fallback)", async () => {
-    await setRules({ method: "area" }); reviewOn = true; const who = "971500000921";
-    try {
-      await turn(() => say("delivery order: 2 classic", who), id => draft(id, { address: "Al Majaz 2, flat 8", emirate: "Sharjah", area: "Al Majaz" }));
-      const r = await turn(() => say("yes", who), id => draft(id, { address: "Al Majaz 2, flat 8", emirate: "Sharjah", area: "Al Majaz", confirmed: true }));
-      const review = calls.find(c => c.path === "/internal/whatsapp/order-review")!.body;
-      expect(review).toMatchObject({ to: "+" + who, customerName: "Sara Khalid", restaurantName: "Delivery Burgers", items: "2× Classic", total: "66 AED" }); expect(review.orderNumber).toMatch(/^#\d+$/);
-      expect(r).toBe(""); // the template replaced the plain "order received" message
-      const stored = await db.message.findFirstOrThrow({ where: { externalMessageId: { startsWith: "wamid.rev." }, conversation: { customer: { phone: "+" + who } } } });
-      expect(stored.textContent).toContain("received"); expect(stored.senderType).toBe("AI"); // the inbox still shows what the customer was told
-    } finally { reviewOn = false; }
+  describe("the customer reviews the order with the template (Confirm order / Change order)", () => {
+    const base = { address: "Al Majaz 2, flat 8", emirate: "Sharjah", area: "Al Majaz" };
+    const pendingOf = (who: string) => db.order.findMany({ where: { businessId: biz, status: "AWAITING_CUSTOMER_CONFIRMATION", customer: { phone: "+" + who } } });
+    const aiCalls = () => calls.filter(c => c.path === "/internal/ai/reply").length;
+    const three = (id: (n: string) => string, extra: object = {}) => { const d = draft(id, { ...base, ...extra }); return { ...d, order: { ...d.order, items: [{ id: id("Classic"), quantity: 3, notes: "" }] } }; };
+    const review = () => calls.filter(c => c.path === "/internal/whatsapp/order-review").at(-1)!.body;
+    beforeAll(() => { reviewOn = true; }); afterAll(() => { reviewOn = false; });
+
+    it("a complete order is sent to the customer as the template, saved with its number but hidden from the restaurant; tapping Confirm order sends it", async () => {
+      const { listOrders } = await import("../src/modules/orders/service"); const { usageSummary } = await import("../src/modules/billing/usage");
+      await setRules({ method: "area" }); const who = "971500000941";
+      const r = await turn(() => say("delivery order: 2 classic", who), id => draft(id, base));
+      expect(review()).toMatchObject({ to: "+" + who, customerName: "Sara Khalid", restaurantName: "Delivery Burgers", items: "2× Classic", total: "66 AED" });
+      expect(r).toBe(""); // only the template went out, no text summary asking for YES
+      const [pending] = await pendingOf(who); expect(pending).toBeTruthy(); expect(review().orderNumber).toBe(`#${pending!.orderNumber}`);
+      expect((await db.message.findFirstOrThrow({ where: { externalMessageId: { startsWith: "wamid.rev." }, conversation: { customer: { phone: "+" + who } } } })).textContent).toContain("[Confirm order] [Change order]"); // staff see the same text in the inbox
+      expect((await listOrders(owner, biz)).some(o => o.id === pending!.id)).toBe(false);
+      const before = (await usageSummary(biz)).orders.used;
+      const placed = await turn(() => say("Confirm order", who), () => ({}));
+      expect(aiCalls()).toBe(0); expect(placed).toContain("received"); expect(placed).toContain(pending!.orderNumber); // answered without the AI
+      expect(await db.order.findUniqueOrThrow({ where: { id: pending!.id } })).toMatchObject({ status: "AWAITING_BUSINESS_CONFIRMATION" });
+      expect((await listOrders(owner, biz)).find(o => o.id === pending!.id)).toMatchObject({ status: "AWAITING_BUSINESS_CONFIRMATION", total: 66 });
+      expect((await usageSummary(biz)).orders.used).toBe(before + 1); expect(await pendingOf(who)).toHaveLength(0);
+      expect((await db.conversation.findFirstOrThrow({ where: { customer: { phone: "+" + who } } })).draftOrder).toBeNull();
+      expect(await db.customerAddress.findFirst({ where: { customer: { phone: "+" + who }, label: "Home" } })).toMatchObject({ addressText: "Al Majaz 2, flat 8", emirate: "Sharjah" }); // the address is remembered once the order is sent
+      expect((await db.customer.findFirstOrThrow({ where: { phone: "+" + who } })).lastBranchId).toBeTruthy();
+    });
+    it("Change order removes the pending order and reopens the chat; the changed order gets a new review", async () => {
+      const who = "971500000942";
+      await turn(() => say("delivery order: 2 classic", who), id => draft(id, base));
+      const first = review(); expect(await pendingOf(who)).toHaveLength(1);
+      const r = await turn(() => say("Change order", who), () => ({}));
+      expect(aiCalls()).toBe(0); expect(r).toContain("tell me what you'd like to change"); expect(await pendingOf(who)).toHaveLength(0);
+      expect(((await db.conversation.findFirstOrThrow({ where: { customer: { phone: "+" + who } } })).draftOrder as any).shownKey).toBe(""); // the draft is kept for editing
+      await turn(() => say("make it 3", who), id => three(id));
+      expect(review()).toMatchObject({ items: "3× Classic", total: "94 AED" }); expect(review().orderNumber).toBe(first.orderNumber); // the free number is reused
+      expect(await pendingOf(who)).toHaveLength(1);
+    });
+    it("typing yes also confirms the reviewed order (it is not duplicated), and an edit after the review replaces it", async () => {
+      const who = "971500000943";
+      await turn(() => say("delivery order: 2 classic", who), id => draft(id, base));
+      await turn(() => say("actually 3", who), id => three(id)); // changed: the old review is replaced
+      const [pending] = await pendingOf(who); expect(await pendingOf(who)).toHaveLength(1); expect(review()).toMatchObject({ items: "3× Classic" });
+      const orders = await db.order.count({ where: { businessId: biz, customer: { phone: "+" + who } } });
+      const r = await turn(() => say("yes", who), id => three(id, { confirmed: true }));
+      expect(r).toContain("received"); expect(await db.order.count({ where: { businessId: biz, customer: { phone: "+" + who } } })).toBe(orders); // same order, not a second one
+      expect(await db.order.findUniqueOrThrow({ where: { id: pending!.id } })).toMatchObject({ status: "AWAITING_BUSINESS_CONFIRMATION", totalMinor: 9400 });
+    });
+    it("an order that stops being complete is no longer waiting for a tap, and at the orders limit the tap is answered with the assistance message and the order stays pending", async () => {
+      const { allowanceFor, usageSummary } = await import("../src/modules/billing/usage");
+      const setUsed = async (used: number) => { const { period } = await allowanceFor(biz); await db.usageCounter.updateMany({ where: { businessId: biz, periodStart: period.start, kind: "orders" }, data: { used } }); };
+      const a = "971500000944";
+      await turn(() => say("delivery order: 2 classic", a), id => draft(id, base)); expect(await pendingOf(a)).toHaveLength(1);
+      await turn(() => say("send it to Somewhere", a), id => draft(id, { address: "Somewhere", emirate: null, area: "" })); // the area is missing again
+      expect(await pendingOf(a)).toHaveLength(0);
+      const b = "971500000945", used = (await usageSummary(biz)).orders;
+      await turn(() => say("delivery order: 2 classic", b), id => draft(id, base)); expect(await pendingOf(b)).toHaveLength(1);
+      await setUsed(used.limit + Math.ceil(used.limit * 0.1));
+      try {
+        const r = await turn(() => say("Confirm order", b), () => ({}));
+        expect(r).toContain("Someone from the restaurant will assist you soon"); expect(await pendingOf(b)).toHaveLength(1);
+      } finally { await setUsed(0); }
+    });
   });
   it("asks for the location with a one-tap Send location button, and sends plain text when WhatsApp refuses the button", async () => {
     await setRules({ method: "distance" });

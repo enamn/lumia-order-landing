@@ -67,7 +67,7 @@ export async function getMessageStats(userId: string, businessId: string) {
   await authorize(userId, businessId);
   const received = await db.message.count({ where: { direction: "INBOUND", createdAt: { gte: startOfToday() }, conversation: { businessId } } });
   const aiReplies = await db.message.count({ where: { senderType: "AI", createdAt: { gte: startOfToday() }, conversation: { businessId } } });
-  const ordersCreated = await db.order.count({ where: { businessId, createdAt: { gte: startOfToday() } } });
+  const ordersCreated = await db.order.count({ where: { businessId, status: { not: "AWAITING_CUSTOMER_CONFIRMATION" }, createdAt: { gte: startOfToday() } } });
   return { messagesReceived: received, aiReplies, ordersCreated };
 }
 
@@ -96,7 +96,7 @@ export async function getOverview(userId: string, businessId: string, period: st
   // Setup checklist: delivery rules saved in Settings, and at least one order placed (a real or test order).
   const biz = await db.business.findUniqueOrThrow({ where: { id: businessId }, select: { settings: true } });
   const delivery = (biz.settings as { delivery?: { method?: string | null; status?: string } } | null)?.delivery;
-  const setup = { delivery: Boolean(delivery && (delivery.method || (delivery.status && delivery.status !== "available"))), tested: (await db.order.count({ where: { businessId } })) > 0 };
+  const setup = { delivery: Boolean(delivery && (delivery.method || (delivery.status && delivery.status !== "available"))), tested: (await db.order.count({ where: { businessId, status: { not: "AWAITING_CUSTOMER_CONFIRMATION" } } })) > 0 };
   return { setup, period: period in PERIODS ? period : "week", currency: orders[0]?.currencyCode ?? "AED", current: strip(cur), previous: strip(prev), buckets, top };
 }
 

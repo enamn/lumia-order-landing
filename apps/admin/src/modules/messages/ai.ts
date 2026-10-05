@@ -6,12 +6,12 @@ import { lumiaApi } from "@/server/lumia-api";
 import { decryptSecret } from "@/server/crypto";
 import { deliverOrderReview, deliverText, type Interactive } from "./reply";
 import { welcomeFor } from "./welcome-text";
-import { DRAFT_TTL_MS, type SavedAddr, draftKey, isComplete, meetsMinimum, money, orderItemLines, placedText, recheckText, removedText, resolveDraft, summaryText, type DeliveryContext, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
+import { DRAFT_TTL_MS, type SavedAddr, draftKey, isComplete, meetsMinimum, money, orderItemLines, placedText, recheckText, langOf, removedText, resolveDraft, summaryText, type DeliveryContext, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
 import { branchFromText, looksLikeAddress, nearestBranch, quoteDelivery, type BranchPoint, type DeliveryRules } from "@/modules/orders/delivery";
 import { catalogIdFor } from "@/modules/menu/catalog";
 import { canPersonalize, entitlementsFor } from "@/modules/billing/service";
 import { canStartOrder, consume, refund } from "@/modules/billing/usage";
-import { createOrderFromDraft } from "@/modules/orders/service";
+import { confirmPendingOrder, createOrderFromDraft, discardPendingOrders, findPendingOrder } from "@/modules/orders/service";
 
 // The AI assistant answers customers' WhatsApp messages from the restaurant's own menu. It only replies when the owner turned it on,
 // never keeps talking once a person has taken over, and hands anything it cannot answer (orders, complaints, unknown facts) to staff.
@@ -101,6 +101,10 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const preQuote = known?.delivery ?? quoteDelivery(rules, branches, { emirate: stored?.emirate ?? pinPlace.emirate, area: stored?.area || pinPlace.area, ...(pin ?? {}) }, 0, options.minimumMinor);
   const deliveryHint = options.delivery ? { method: rules?.method ?? null, needs: preQuote.status === "needs" ? preQuote.need : null, pinReceived: Boolean(pin), emirate: known?.emirate ?? stored?.emirate ?? pinPlace.emirate, area: stored?.area || pinPlace.area, note: pinPlace.formatted ? `The location pin the customer shared is at: ${pinPlace.formatted}. Do not ask for the emirate or area again; still ask for the building, flat or landmark if the address text is missing.` : "" } : null;
   const useName = await canPersonalize(t.businessId);
+  // A tap on the review template's buttons is handled directly: no AI call, nothing counted against the AI allowance.
+  const tapText = latestInbound.textContent.trim();
+  const tap = /^(confirm order|تأكيد الطلب)$/i.test(tapText) ? "confirm" : /^(change order|تعديل الطلب)$/i.test(tapText) ? "change" : null;
+  if (tap) { const pendingOrder = await findPendingOrder(t.conversationId); if (pendingOrder) return handleReviewTap(t, tap, pendingOrder, account, conversation, langOf(recent.find(m => m.direction === "OUTBOUND")?.textContent ?? tapText)); }
   // Abuse guard: a flood from one customer.
   const burst = await db.message.count({ where: { conversationId: t.conversationId, direction: "INBOUND", createdAt: { gte: new Date(now - 120000) } } });
   if (burst > RATE_BURST) { if (burst === RATE_BURST + 1) await sendNotice(t, SLOW_DOWN).catch(() => undefined); return "skipped"; }
@@ -151,15 +155,16 @@ export async function autoReply(t: { businessId: string; conversationId: string;
       const slot = await consume(t.businessId, "orders", { inProgress: true });
       if (!slot.ok) { parts.length = 0; parts.push(BUSY); data.draftOrder = prev as never; }
       else {
-        let order: Awaited<ReturnType<typeof createOrderFromDraft>>;
-        try { order = await createOrderFromDraft({ businessId: t.businessId, conversationId: t.conversationId, customerId: conversation.customerId, customerName: conversation.customer.displayName ?? "", customerPhone: conversation.customer.phone, resolved: { ...resolved, fulfillment: resolved.fulfillment }, branchId: perBranch ? branchId : null }); }
-        catch (e) { await refund(t.businessId, "orders", slot); throw e; } // an order that was not saved does not count
+        let order: { orderNumber: string; totalMinor: number };
+        try {
+          // The customer already reviewed this order with the template: confirming it sends that very order to the restaurant.
+          const pending = await findPendingOrder(t.conversationId);
+          order = (pending && await confirmPendingOrder({ businessId: t.businessId, orderId: pending.id })) || await createOrderFromDraft({ businessId: t.businessId, conversationId: t.conversationId, customerId: conversation.customerId, customerName: conversation.customer.displayName ?? "", customerPhone: conversation.customer.phone, resolved: { ...resolved, fulfillment: resolved.fulfillment }, branchId: perBranch ? branchId : null });
+        } catch (e) { await refund(t.businessId, "orders", slot); throw e; } // an order that was not saved does not count
         parts.length = 0; parts.push(placedText(order.orderNumber, order.totalMinor, resolved.fulfillment, lang));
-        // The approved "review your order" template goes to the customer instead of the plain message (the plain message is the fallback and the inbox text).
-        reviewId = await deliverOrderReview(account, conversation.customer.phone, { customerName: resolved.name || conversation.customer.displayName || "", orderNumber: `#${order.orderNumber}`, restaurantName: conversation.business.name, items: orderItemLines(resolved.lines, lang), total: `${money(order.totalMinor)} AED` });
         if (perBranch && branchId) await db.customer.update({ where: { id: conversation.customerId }, data: { lastBranchId: branchId } });
       }
-    } else if (!resolved.lines.length) { data.draftOrder = null as never; if (resolved.removed.length) parts.push(removedText(resolved.removed, lang)); }
+    } else if (!resolved.lines.length) { await discardPendingOrders(t.conversationId); data.draftOrder = null as never; if (resolved.removed.length) parts.push(removedText(resolved.removed, lang)); }
     else {
       if (resolved.removed.length) parts.push(removedText(resolved.removed, lang));
       // The customer said yes but this is not (yet) exactly what they were shown, or something is missing: never let the assistant claim the order
@@ -168,14 +173,28 @@ export async function autoReply(t: { businessId: string; conversationId: string;
       // The summary below asks for YES, so the assistant's own words must not say the order is already confirmed; a real question from it is kept.
       // Only when the summary really asks for YES (complete order); an order still missing its location keeps the assistant's own question.
       const asksYes = isComplete(resolved) && meetsMinimum(resolved, options);
-      if (model.confirmed || (showSummary && asksYes && !/[?؟]/.test(parts[0] ?? ""))) parts[0] = recheckText(lang);
-      // Show the exact summary whenever it changed, or an item was dropped, so the customer always confirms what we will really place.
-      if (showSummary) parts.push(summaryText(resolved, lang, options));
+      // A complete order is reviewed with the approved template: the order is saved with its number but only the customer sees it, and the template's
+      // Confirm / Change buttons decide what happens next. If the template cannot be sent, the text summary and YES work as before.
+      let reviewed = false;
+      if (asksYes && showSummary && !model.confirmed && !resolved.removed.length && resolved.fulfillment) {
+        try {
+          await discardPendingOrders(t.conversationId);
+          const pending = await createOrderFromDraft({ businessId: t.businessId, conversationId: t.conversationId, customerId: conversation.customerId, customerName: conversation.customer.displayName ?? "", customerPhone: conversation.customer.phone, resolved: { ...resolved, fulfillment: resolved.fulfillment }, branchId: perBranch ? branchId : null, pending: true });
+          const review = { customerName: resolved.name || conversation.customer.displayName || "", orderNumber: `#${pending.orderNumber}`, restaurantName: conversation.business.name, items: orderItemLines(resolved.lines, lang), total: `${money(pending.totalMinor)} AED` };
+          reviewId = await deliverOrderReview(account, conversation.customer.phone, review);
+          if (reviewId) { reviewed = true; parts.length = 0; parts.push(reviewText(review, lang)); } else await discardPendingOrders(t.conversationId);
+        } catch { await discardPendingOrders(t.conversationId).catch(() => undefined); }
+      } else if (!asksYes) await discardPendingOrders(t.conversationId); // an order that is no longer complete is not waiting for a tap
+      if (!reviewed) {
+        if (model.confirmed || (showSummary && asksYes && !/[?؟]/.test(parts[0] ?? ""))) parts[0] = recheckText(lang);
+        // Show the exact summary whenever it changed, or an item was dropped, so the customer always confirms what we will really place.
+        if (showSummary) parts.push(summaryText(resolved, lang, options));
+      }
       data.draftOrder = { items: resolved.lines.map(l => ({ itemId: l.itemId, quantity: l.quantity, notes: l.notes })), fulfillment: resolved.fulfillment, address: resolved.address, emirate: resolved.emirate, area: resolved.area, label: resolved.label, savedId: resolved.savedId, name: model.customerName || "", shownKey: key, updatedAt: new Date().toISOString() };
     }
   }
   // First contact: if nobody has answered this customer yet (and Meta's own welcome event didn't already), greet them before answering.
-  if (await db.message.count({ where: { conversationId: t.conversationId, direction: "OUTBOUND" } }) === 0) parts.unshift(welcomeFor(agent, conversation.business.name));
+  if (!reviewId && await db.message.count({ where: { conversationId: t.conversationId, direction: "OUTBOUND" } }) === 0) parts.unshift(welcomeFor(agent, conversation.business.name));
   const reply = parts.filter(Boolean).join("\n\n");
   // Flags and the saved draft change only together with a reply that was really sent, so a failed delivery never leaves the chat stuck as "needs you".
   if (!reply) { if (Object.keys(data).length) await db.conversation.update({ where: { id: t.conversationId }, data: data as never }); return "skipped"; }
@@ -222,6 +241,35 @@ async function sendNotice(t: Target, text: string, repeatAfterMs = 600000): Prom
     db.conversation.update({ where: { id: t.conversationId }, data: { lastMessageAt: at } }),
   ]);
   return "sent";
+}
+// What the review template looks like in the inbox (the template itself is Meta's; this is the same text, for staff).
+const reviewText = (v: { customerName: string; orderNumber: string; restaurantName: string; items: string; total: string }, lang: "en" | "ar") => lang === "ar"
+  ? `مرحباً ${v.customerName || ""}، فضلاً راجع الطلب ${v.orderNumber} من ${v.restaurantName}.\n${v.items}\nالمجموع: ${v.total}\nأكّد أدناه لإرسال طلبك إلى المطعم.\n[تأكيد الطلب] [تعديل الطلب]`
+  : `Hi ${v.customerName || "there"}, please review order ${v.orderNumber} from ${v.restaurantName}.\n${v.items}\nTotal: ${v.total}\nConfirm below to send your order to the restaurant.\n[Confirm order] [Change order]`;
+
+async function sendDirect(t: Target, account: { phoneNumberId: string | null; accessTokenEncrypted: string | null }, phone: string, text: string): Promise<"sent"> {
+  const messageId = await deliverText(account, phone, text);
+  const at = new Date();
+  await db.$transaction([
+    db.message.create({ data: { conversationId: t.conversationId, externalMessageId: messageId, direction: "OUTBOUND", senderType: "AI", messageType: "TEXT", textContent: text, status: "SENT", createdAt: at } }),
+    db.conversation.update({ where: { id: t.conversationId }, data: { lastMessageAt: at } }),
+  ]);
+  return "sent";
+}
+// The customer tapped Confirm order or Change order under the review template.
+async function handleReviewTap(t: Target, tap: "confirm" | "change", pending: { id: string }, account: { phoneNumberId: string | null; accessTokenEncrypted: string | null }, conversation: { draftOrder: unknown; customer: { phone: string } }, lang: "en" | "ar"): Promise<"sent" | "skipped"> {
+  if (tap === "change") {
+    await discardPendingOrders(t.conversationId);
+    const draft = conversation.draftOrder as StoredDraft | null;
+    if (draft) await db.conversation.update({ where: { id: t.conversationId }, data: { draftOrder: { ...draft, shownKey: "" } as never } }); // the next complete order is reviewed again
+    return sendDirect(t, account, conversation.customer.phone, lang === "ar" ? "تمام، اكتب لي ما الذي تريد تغييره 👍" : "No problem, tell me what you'd like to change 👍");
+  }
+  const slot = await consume(t.businessId, "orders", { inProgress: true }); // the order counts against the plan's monthly orders when it is sent to the restaurant
+  if (!slot.ok) return sendNotice(t, BUSY, 3600000);
+  let order: Awaited<ReturnType<typeof confirmPendingOrder>>;
+  try { order = await confirmPendingOrder({ businessId: t.businessId, orderId: pending.id }); } catch (e) { await refund(t.businessId, "orders", slot); throw e; }
+  if (!order) { await refund(t.businessId, "orders", slot); return "skipped"; }
+  return sendDirect(t, account, conversation.customer.phone, placedText(order.orderNumber, order.totalMinor, order.fulfillmentType === "DELIVERY" ? "delivery" : "pickup", lang));
 }
 export const replyToUnreadable = (t: Target) => sendNotice(t, TYPE_ONLY);
 

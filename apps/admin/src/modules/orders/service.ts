@@ -16,7 +16,7 @@ async function nextOrderNumber(tx: Tx, businessId: string): Promise<string> {
 }
 
 // Creates the order from a confirmed draft. Called by the AI assistant after the customer confirmed the exact summary we showed.
-export async function createOrderFromDraft(input: { businessId: string; conversationId: string; customerId: string; customerName: string; customerPhone: string; resolved: Resolved & { fulfillment: "delivery" | "pickup" }; branchId?: string | null }) {
+export async function createOrderFromDraft(input: { businessId: string; conversationId: string; customerId: string; customerName: string; customerPhone: string; resolved: Resolved & { fulfillment: "delivery" | "pickup" }; branchId?: string | null; pending?: boolean }) {
   const { businessId, resolved: r } = input;
   for (let attempt = 0; ; attempt++) {
     try {
@@ -27,7 +27,8 @@ export async function createOrderFromDraft(input: { businessId: string; conversa
         const location = (wanted ? await tx.location.findFirst({ where: { id: wanted, businessId, status: "ACTIVE" } }) : null) ?? await tx.location.findFirst({ where: { businessId, status: "ACTIVE" }, orderBy: { createdAt: "asc" } });
         if (!location) throw new AppError("NO_LOCATION", "This business has no active location.", 409);
         const settings = await tx.orderSettings.findUnique({ where: { businessId } });
-        const status: OrderStatus = settings?.requiresOrderAcceptance === false ? "ACCEPTED" : "AWAITING_BUSINESS_CONFIRMATION";
+        // A pending order is the one the customer is asked to review: it has its number, but the restaurant does not see it until the customer confirms.
+        const status: OrderStatus = input.pending ? "AWAITING_CUSTOMER_CONFIRMATION" : settings?.requiresOrderAcceptance === false ? "ACCEPTED" : "AWAITING_BUSINESS_CONFIRMATION";
         const orderNumber = await nextOrderNumber(tx, businessId);
         const order = await tx.order.create({ data: {
           businessId, locationId: location.id, customerId: input.customerId, conversationId: input.conversationId, orderNumber, channel: "WHATSAPP",
@@ -36,6 +37,7 @@ export async function createOrderFromDraft(input: { businessId: string; conversa
           ...(r.fulfillment === "delivery" ? { deliveryDetails: { create: { recipientName: r.name || input.customerName || "Customer", recipientPhone: input.customerPhone, addressText: r.address, city: r.area || location.city, ...(r.emirate ? { emirate: r.emirate } : {}), ...(r.label ? { addressLabel: r.label } : {}), ...(r.pin ? { latitude: r.pin.latitude, longitude: r.pin.longitude } : {}) } } } : {}),
           history: { create: { newStatus: status, changedByType: "AI" } },
         }, select: { id: true, orderNumber: true, status: true, totalMinor: true } });
+        if (input.pending) return order; // nothing else changes until the customer confirms
         await tx.conversation.update({ where: { id: input.conversationId }, data: { draftOrder: null } });
         // Remember the address under the name the customer gave it (Home, Work, ...), so next time it can simply be picked.
         if (r.fulfillment === "delivery" && r.address && r.label) {
@@ -55,9 +57,42 @@ export async function createOrderFromDraft(input: { businessId: string; conversa
   }
 }
 
+// ---- the customer's review step: the order exists (so it has its number) but only the customer sees it until they tap Confirm ----
+export const findPendingOrder = (conversationId: string) => db.order.findFirst({ where: { conversationId, status: "AWAITING_CUSTOMER_CONFIRMATION" }, orderBy: { createdAt: "desc" }, select: { id: true, orderNumber: true, totalMinor: true, fulfillmentType: true } });
+// The customer asked to change it (or it was replaced by a newer review): it never existed for the restaurant, so it is removed and its number is free again.
+export async function discardPendingOrders(conversationId: string) {
+  await transaction(async tx => {
+    const ids = (await tx.order.findMany({ where: { conversationId, status: "AWAITING_CUSTOMER_CONFIRMATION" }, select: { id: true } })).map(o => o.id);
+    if (!ids.length) return;
+    await tx.orderItem.deleteMany({ where: { orderId: { in: ids } } }); await tx.orderDeliveryDetails.deleteMany({ where: { orderId: { in: ids } } }); await tx.orderStatusHistory.deleteMany({ where: { orderId: { in: ids } } });
+    await tx.order.deleteMany({ where: { id: { in: ids } } });
+  });
+}
+// The customer confirmed: the order goes to the restaurant, the chat's draft is done, and the delivery address is remembered under its name.
+export async function confirmPendingOrder(input: { businessId: string; orderId: string }) {
+  return transaction(async tx => {
+    const o = await tx.order.findFirst({ where: { id: input.orderId, businessId: input.businessId, status: "AWAITING_CUSTOMER_CONFIRMATION" }, include: { deliveryDetails: true } });
+    if (!o) return null;
+    const settings = await tx.orderSettings.findUnique({ where: { businessId: input.businessId } });
+    const status: OrderStatus = settings?.requiresOrderAcceptance === false ? "ACCEPTED" : "AWAITING_BUSINESS_CONFIRMATION";
+    const order = await tx.order.update({ where: { id: o.id }, data: { status, history: { create: { previousStatus: "AWAITING_CUSTOMER_CONFIRMATION", newStatus: status, changedByType: "CUSTOMER" } } }, select: { id: true, orderNumber: true, status: true, totalMinor: true, fulfillmentType: true } });
+    if (o.conversationId) await tx.conversation.update({ where: { id: o.conversationId }, data: { draftOrder: null } });
+    await tx.customer.update({ where: { id: o.customerId }, data: { lastBranchId: o.locationId } });
+    const d = o.deliveryDetails;
+    if (d && d.addressText && d.addressLabel) {
+      const fields = { addressText: d.addressText, city: d.city ?? null, emirate: d.emirate ?? null, ...(d.latitude !== null && d.longitude !== null ? { latitude: d.latitude, longitude: d.longitude } : {}) };
+      const have = await tx.customerAddress.findMany({ where: { customerId: o.customerId } });
+      const same = have.find(a => a.label.toLowerCase() === d.addressLabel!.toLowerCase());
+      if (same) await tx.customerAddress.update({ where: { id: same.id }, data: fields });
+      else if (have.length < 6) await tx.customerAddress.create({ data: { customerId: o.customerId, label: d.addressLabel, ...fields, isDefault: have.length === 0 } });
+    }
+    return order;
+  });
+}
+
 export async function listOrders(userId: string, businessId: string) {
   await authorize(userId, businessId);
-  const rows = await db.order.findMany({ where: { businessId }, orderBy: { createdAt: "desc" }, take: 60, include: { items: true, history: { select: { newStatus: true, createdAt: true, reason: true }, orderBy: { createdAt: "asc" } }, customer: { select: { displayName: true, phone: true } }, deliveryDetails: { select: { addressText: true, addressLabel: true, recipientName: true, latitude: true, longitude: true } } } });
+  const rows = await db.order.findMany({ where: { businessId, status: { not: "AWAITING_CUSTOMER_CONFIRMATION" } }, orderBy: { createdAt: "desc" }, take: 60, include: { items: true, history: { select: { newStatus: true, createdAt: true, reason: true }, orderBy: { createdAt: "asc" } }, customer: { select: { displayName: true, phone: true } }, deliveryDetails: { select: { addressText: true, addressLabel: true, recipientName: true, latitude: true, longitude: true } } } });
   return rows.map(o => ({ id: o.id, number: o.orderNumber, status: o.status, fulfillment: o.fulfillmentType, total: o.totalMinor / 100, currency: o.currencyCode, createdAt: o.createdAt, conversationId: o.conversationId, note: o.customerNotes ?? "", subtotal: o.subtotalMinor / 100, deliveryFee: o.deliveryFeeMinor / 100, history: o.history.map(h => ({ status: h.newStatus, at: h.createdAt, reason: h.reason ?? "" })), address: [o.deliveryDetails?.addressLabel ? `${o.deliveryDetails.addressLabel}: ${o.deliveryDetails.addressText}` : o.deliveryDetails?.addressText, o.deliveryDetails?.latitude != null ? `https://maps.google.com/?q=${o.deliveryDetails.latitude},${o.deliveryDetails.longitude}` : ""].filter(Boolean).join("\n"), customer: { name: o.deliveryDetails?.recipientName || o.customer.displayName || "", phone: o.customer.phone }, items: o.items.map(i => ({ name: i.itemNameSnapshot, quantity: i.quantity, notes: i.notes ?? "", total: i.totalMinor / 100 })) }));
 }
 
