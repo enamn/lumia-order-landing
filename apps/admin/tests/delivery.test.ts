@@ -139,6 +139,23 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
     r = await turn(() => say("my name is Omar", "971500000888"), id => draft(id, { address: "Al Nahda", emirate: "Sharjah", area: "Al Nahda", customerName: "Omar" }));
     expect(r).toContain("For: Omar"); expect(r).toContain("Reply YES");
   });
+  it("still places the order when the assistant forgets the emirate, area, address and name on the confirming turn", async () => {
+    await setRules({ method: "area", areas: rules().areas.map(a => ({ ...a, branch: a.emirate === "Sharjah" ? branchId : a.branch })) } as any);
+    const p = "971500001111";
+    let r = await turn(() => say("2 classic delivery", p), id => draft(id, { address: "Al Majaz St 9", emirate: "Sharjah", area: "Al Majaz" }));
+    expect(r).toContain("Total: 66 AED");
+    r = await turn(() => say("نعم", p), id => draft(id, { address: "", emirate: null, area: "", customerName: "", confirmed: true })); // the model dropped everything it knew
+    expect(r).toContain("Total 66 AED");
+    expect(await db.order.count({ where: { businessId: biz, totalMinor: 6600, deliveryDetails: { is: { addressText: "Al Majaz St 9" } } } })).toBeGreaterThan(0);
+  });
+  it("never says the order is placed when the confirmation does not match what was shown: it shows the summary again", async () => {
+    const p = "971500002222";
+    await turn(() => say("2 classic delivery", p), id => draft(id, { address: "Al Majaz St 9", emirate: "Sharjah", area: "Al Majaz" }));
+    const before = await db.order.count({ where: { businessId: biz } });
+    const r = await turn(() => say("yes but make it 3", p), id => ({ ...draft(id, { address: "Al Majaz St 9", emirate: "Sharjah", area: "Al Majaz", confirmed: true }), reply: "Done, your order is confirmed! 🎉", order: { items: [{ id: id("Classic"), quantity: 3, notes: "" }], fulfillment: "delivery", address: "Al Majaz St 9", emirate: "Sharjah", area: "Al Majaz", customerName: "", confirmed: true } }));
+    expect(await db.order.count({ where: { businessId: biz } })).toBe(before); // changed items: not the summary the customer saw
+    expect(r).not.toContain("confirmed!"); expect(r).toContain("reply YES to confirm"); expect(r).toContain("3 × Classic"); expect(r).toContain("Total: 94 AED");
+  });
   it("calls customers by name only on Plus, Pro and the free trial, not on Starter", async () => {
     await setRules({ method: "free" });
     const p = "971500000999";

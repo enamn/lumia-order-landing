@@ -6,7 +6,7 @@ import { lumiaApi } from "@/server/lumia-api";
 import { decryptSecret } from "@/server/crypto";
 import { deliverText } from "./reply";
 import { welcomeFor } from "./welcome-text";
-import { DRAFT_TTL_MS, draftKey, isComplete, meetsMinimum, placedText, removedText, resolveDraft, summaryText, type DeliveryContext, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
+import { DRAFT_TTL_MS, draftKey, isComplete, meetsMinimum, placedText, recheckText, removedText, resolveDraft, summaryText, type DeliveryContext, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
 import { quoteDelivery, type BranchPoint, type DeliveryRules } from "@/modules/orders/delivery";
 import { canPersonalize } from "@/modules/billing/service";
 import { createOrderFromDraft } from "@/modules/orders/service";
@@ -83,7 +83,9 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const lang = r.data.language; const parts = [r.data.reply];
   const data: { needsHuman?: boolean; draftOrder?: object | null } = {};
   if (r.data.needsHuman) data.needsHuman = true;
-  const model = r.data.order;
+  // The model must send the whole draft every turn, but it sometimes drops a field it already knew (emirate, area, address, name). Keep what was
+  // already agreed, otherwise the confirmation would not match what the customer was shown and the order would never be placed.
+  const model = r.data.order && stored ? { ...r.data.order, address: r.data.order.address?.trim() || stored.address, emirate: r.data.order.emirate ?? stored.emirate ?? null, area: r.data.order.area?.trim() || stored.area || "", customerName: r.data.order.customerName?.trim() || stored.name || "" } : r.data.order;
   if (model) {
     const resolved = resolveDraft(menu, model, options, ctx); const key = draftKey(resolved);
     // An order is placed only when the customer confirmed the exact summary we showed them (same items, type and address), and it is complete.
@@ -93,9 +95,12 @@ export async function autoReply(t: { businessId: string; conversationId: string;
     } else if (!resolved.lines.length) { data.draftOrder = null as never; if (resolved.removed.length) parts.push(removedText(resolved.removed, lang)); }
     else {
       if (resolved.removed.length) parts.push(removedText(resolved.removed, lang));
+      // The customer said yes but this is not (yet) exactly what they were shown, or something is missing: never let the assistant claim the order
+      // is placed. Show the summary again and ask them to confirm it.
+      if (model.confirmed) parts[0] = recheckText(lang);
       // Show the exact summary whenever it changed, or an item was dropped, so the customer always confirms what we will really place.
-      if (stored?.shownKey !== key || resolved.removed.length) parts.push(summaryText(resolved, lang, options));
-      data.draftOrder = { items: resolved.lines.map(l => ({ itemId: l.itemId, quantity: l.quantity, notes: l.notes })), fulfillment: resolved.fulfillment, address: resolved.address, emirate: resolved.emirate, area: resolved.area, name: model.customerName || stored?.name || "", shownKey: key, updatedAt: new Date().toISOString() };
+      if (stored?.shownKey !== key || resolved.removed.length || model.confirmed) parts.push(summaryText(resolved, lang, options));
+      data.draftOrder = { items: resolved.lines.map(l => ({ itemId: l.itemId, quantity: l.quantity, notes: l.notes })), fulfillment: resolved.fulfillment, address: resolved.address, emirate: resolved.emirate, area: resolved.area, name: model.customerName || "", shownKey: key, updatedAt: new Date().toISOString() };
     }
   }
   // First contact: if nobody has answered this customer yet (and Meta's own welcome event didn't already), greet them before answering.
