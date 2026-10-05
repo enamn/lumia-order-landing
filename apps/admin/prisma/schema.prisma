@@ -662,6 +662,9 @@ model Subscription {
   cancelAtPeriodEnd Boolean @default(false)
   pendingPlan String?
   pendingBilling String?
+  // Pro only: branches bought beyond the 3 included (AED 99 each per period); a lower number set here starts at the next renewal.
+  extraBranches Int?
+  pendingExtraBranches Int?
   failedAttempts Int @default(0)
   lastFailure String?
   processedSessions String[]

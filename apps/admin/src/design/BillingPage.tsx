@@ -98,6 +98,18 @@ export function BillingPage({ businessId, onChoosePlan, onChanged }: { businessI
         </div>}
       </section>; })()}
 
+    {active && sub.branches && <section style={card}>
+      <h2 style={h2}>Branches</h2>
+      <p style={muted}><b>{sub.branches.used}</b> active of <b>{sub.branches.limit}</b> {sub.branches.limit === 1 ? "branch" : "branches"} · {sub.branches.included} included in {planName}{sub.branches.extra ? ` + ${sub.branches.extra} extra` : ""}.{sub.branches.menuPerBranch ? " Each branch can have its own menu, or all branches can share one." : sub.plan === "plus" ? " All branches share one menu." : ""}</p>
+      {sub.branches.pendingExtra !== undefined && <p style={muted}>From {date(sub.currentPeriodEnd)} you will have {sub.branches.pendingExtra} extra {sub.branches.pendingExtra === 1 ? "branch" : "branches"}.</p>}
+      {sub.branches.priceMinor ? <p style={muted}>Extra branch: {aed(sub.branches.priceMinor)} + VAT per {sub.billing === "yearly" ? "year" : "month"}. Each one adds {sub.branches.ordersPerBranch} orders a month.</p> : null}
+      {canManage && sub.entitlements?.canBuyBranches && <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <button type="button" style={outline} disabled={!!busy || pastDue || !sub.card || !sub.branches.canBuy} onClick={() => { if (window.confirm(`Add a branch for ${aed(sub.branches.priceMinor)} + VAT per ${sub.billing === "yearly" ? "year" : "month"}? You pay ${aed(sub.branches.payNowMinor)} (incl. VAT) now for the rest of this period, charged to your card ending ${sub.card.last4}.`)) run("branch", () => api(`${base}/branch`, "POST", { requestId: crypto.randomUUID() }), "Branch added. You can now add it in Settings."); }}>{busy === "branch" ? "Charging…" : "Add a branch"}</button>
+        {(sub.branches.pendingExtra ?? sub.branches.extra) > 0 && <button type="button" style={outline} disabled={!!busy} onClick={() => run("branches", () => api(`${base}/branches`, "POST", { extra: (sub.branches.pendingExtra ?? sub.branches.extra) - 1 }), "One fewer extra branch from your next renewal.")}>Remove one at renewal</button>}
+        {!sub.card && <span style={muted}>Add a card to buy a branch.</span>}
+      </div>}
+    </section>}
+
     {active && canManage && <section style={card}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}><h2 style={h2}>Change plan</h2>
         <div role="radiogroup" aria-label="Billing cycle" style={{ display: "flex", padding: 3, borderRadius: 10, background: "#F6EEF2", gap: 2 }}>

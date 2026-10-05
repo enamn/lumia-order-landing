@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { db } from "@/server/db";
-import { LIMITS, ORDER_BUFFER, REPLIES_PER_ORDER, TRIAL_LIMITS, type PlanId } from "./plans";
+import { EXTRA_BRANCH, LIMITS, ORDER_BUFFER, REPLIES_PER_ORDER, TRIAL_LIMITS, type PlanId } from "./plans";
 import { getSubscriptionFor, trialInfo } from "./service";
 
 // Monthly allowances per plan. WhatsApp orders are what the restaurant sees; AI replies (a fair-use pool of REPLIES_PER_ORDER per order), voice notes and menu
@@ -28,7 +28,9 @@ export async function allowanceFor(businessId: string, now = new Date()) {
   const [sub, b] = await Promise.all([getSubscriptionFor(businessId), db.business.findUniqueOrThrow({ where: { id: businessId }, select: { createdAt: true } })]);
   const active = sub?.status === "ACTIVE" || sub?.status === "PAST_DUE";
   const trial = !sub && trialInfo(b.createdAt, now.getTime()).daysLeft > 0;
-  const limits = active ? LIMITS[sub!.plan as PlanId] : trial ? TRIAL_LIMITS : LIMITS.starter;
+  const base = active ? LIMITS[sub!.plan as PlanId] : trial ? TRIAL_LIMITS : LIMITS.starter;
+  // Every extra branch on Pro adds orders to the month.
+  const limits = active && sub!.plan === "pro" ? { ...base, orders: base.orders + EXTRA_BRANCH.orders * Math.max(0, sub!.extraBranches ?? 0) } : base;
   return { limits, period: usagePeriod(active ? sub!.currentPeriodStart : b.createdAt, now), source: active ? "plan" as const : trial ? "trial" as const : "none" as const };
 }
 

@@ -32,7 +32,7 @@ describe("plans, prices and periods", () => {
     const now = Date.parse("2026-10-10T12:00:00Z");
     expect(trialInfo(new Date("2026-10-10T11:00:00Z"), now).daysLeft).toBe(14); expect(trialInfo(new Date("2026-10-03T12:00:00Z"), now).daysLeft).toBe(7); expect(trialInfo(new Date("2026-01-01T00:00:00Z"), now).daysLeft).toBe(0);
     expect(entitlements(null)).toMatchObject({ plan: null, branches: 1, customers: false });
-    expect(entitlements({ status: "ACTIVE", plan: "plus" })).toMatchObject({ branches: 1, customers: true, staff: 3 });
+    expect(entitlements({ status: "ACTIVE", plan: "plus" })).toMatchObject({ branches: 3, customers: true, staff: 3 });
     expect(entitlements({ status: "PAST_DUE", plan: "pro" })).toMatchObject({ branches: 3, customers: true });
     for (const status of ["CANCELED", "ENDED"]) expect(entitlements({ status, plan: "pro" })).toMatchObject({ plan: null, branches: 1 });
   });
@@ -101,7 +101,7 @@ describe.skipIf(!enabled)("Lumia-run subscriptions, Stripe only takes payments",
     expect(await confirmSession(owner, biz, { sessionId: session.sessionId })).toMatchObject({ applied: false, reason: "ALREADY_APPLIED" }); expect(await listInvoices(owner, biz)).toHaveLength(1);
     expect(await handleBillingEvent({ id: "evt_1", type: "checkout.session.completed", session })).toMatchObject({ applied: false, reason: "ALREADY_APPLIED" }); // the webhook for the same payment changes nothing
     const view = await getSubscription(owner, biz);
-    expect(view).toMatchObject({ status: "ACTIVE", plan: "plus", entitlements: { plan: "plus", customers: true, branches: 1 }, nextCharge: { amountMinor: quoteRenewal("plus", "yearly").totalMinor }, card: { last4: "4242" } });
+    expect(view).toMatchObject({ status: "ACTIVE", plan: "plus", entitlements: { plan: "plus", customers: true, branches: 3 }, nextCharge: { amountMinor: quoteRenewal("plus", "yearly").totalMinor }, card: { last4: "4242" } });
     await expect(startCheckout(owner, biz, { plan: "pro", billing: "monthly", terminals: 1, address: "Shop 4, Al Majaz 2" })).rejects.toMatchObject({ code: "ALREADY_SUBSCRIBED" });
   });
   it("renews when due: charges the card on file once, moves the period on and issues an invoice", async () => {
@@ -165,11 +165,13 @@ describe.skipIf(!enabled)("Lumia-run subscriptions, Stripe only takes payments",
     expect(await sub()).toMatchObject({ status: "CANCELED", nextChargeAt: null }); expect((await getSubscription(owner, biz)).entitlements.plan).toBeNull();
     await expect(changePlan(viewer, biz, { plan: "pro", billing: "monthly" })).rejects.toMatchObject({ status: 403 });
   });
-  it("limits branches to the plan: one without Pro, up to three with Pro", async () => {
-    await db.subscription.updateMany({ where: { businessId: biz }, data: { status: "ACTIVE", plan: "plus", cancelAtPeriodEnd: false } });
+  it("limits branches to the plan: one on Starter, three on Plus, three on Pro (more can be bought there)", async () => {
+    await db.subscription.updateMany({ where: { businessId: biz }, data: { status: "ACTIVE", plan: "starter", cancelAtPeriodEnd: false } });
     const cur = (await getSettings(owner, biz)).sections.branches; expect((await getSettings(owner, biz)).branchLimit).toBe(1);
     const add = (n: number) => [...cur, ...Array.from({ length: n }, (_, i) => ({ id: `tmp-${i}`, name: `Extra ${i}`, emirate: "Dubai", area: "", address: "", phone: "", eta: "45", active: true, pin: false, coords: "" }))];
     await expect(saveSettingsSection(owner, biz, "branches", add(1), "t")).rejects.toMatchObject({ code: "PLAN_LIMIT" });
+    await db.subscription.updateMany({ where: { businessId: biz }, data: { plan: "plus" } });
+    expect((await getSettings(owner, biz)).branchLimit).toBe(3);
     await db.subscription.updateMany({ where: { businessId: biz }, data: { plan: "pro" } });
     expect((await getSettings(owner, biz)).branchLimit).toBe(3); expect(((await saveSettingsSection(owner, biz, "branches", add(2), "t")).value as any[])).toHaveLength(3);
   });

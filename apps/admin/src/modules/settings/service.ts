@@ -4,7 +4,8 @@ import { transaction } from "@/server/transaction";
 import { authorize, can } from "@/server/authorization";
 import { AppError } from "@/server/errors";
 import { updateProgress } from "../business/service";
-import { entitlementsFor } from "../billing/service";
+import { entitlements, entitlementsFor, getSubscriptionFor } from "../billing/service";
+import { EXTRA_BRANCH, quoteExtraBranch, type Billing } from "../billing/plans";
 import { SECTIONS, sectionSchemas, EMIRATES, type Section, type Profile, type Branch, type Delivery, type Hours } from "./schema";
 
 // The restaurant settings. Profile basics, branches, hours and ordering rules live in the tables the rest of the app already reads
@@ -47,6 +48,15 @@ function sectionsOf(b: Loaded) {
   return { profile, branches, wa: (s.wa as object | undefined) ?? { routing: "all", one: first?.id ?? "", sel: b.locations.map(l => l.id) }, delivery, hours: { ...hours, per }, pay: (s.pay as object | undefined) ?? { cod: true, verify: false, threshold: "150" } };
 }
 
+// Pro owners can add a branch beyond the included ones for a monthly fee: the settings screen offers it with the price (null when not possible).
+async function branchOffer(businessId: string) {
+  const sub = await getSubscriptionFor(businessId), e = entitlements(sub);
+  if (!e.canBuyBranches || !sub || (sub.extraBranches ?? 0) >= EXTRA_BRANCH.max) return null;
+  const month = sub.billing === "yearly" ? "year" : "month", q = quoteExtraBranch(sub.billing as Billing, sub.currentPeriodStart, sub.currentPeriodEnd, new Date());
+  const price = EXTRA_BRANCH[sub.billing as Billing];
+  return { priceAed: price, period: month, payNowMinor: q.totalMinor, card: (sub.card as { last4?: string } | null)?.last4 ?? null, hasCard: Boolean(sub.stripeCustomerId && sub.stripePaymentMethodId) };
+}
+
 export async function getSettings(userId: string, businessId: string) {
   const { member } = await authorize(userId, businessId);
   const b = await load(businessId);
@@ -59,6 +69,7 @@ export async function getSettings(userId: string, businessId: string) {
     menu: { categories: new Set(items.map(i => i.categoryId).filter(Boolean)).size, items: items.length, missingPrices: items.filter(i => i.basePriceMinor <= 0).length, soldOut: items.filter(i => !i.isAvailable).length, updatedAt: items.reduce<Date | null>((m, i) => (!m || i.updatedAt > m ? i.updatedAt : m), null) },
     whatsapp: { connected: Boolean(wa), displayPhoneNumber: wa?.displayPhoneNumber ?? "" },
     branchLimit: (await entitlementsFor(businessId)).branches,
+    branchBuy: await branchOffer(businessId),
   };
 }
 
@@ -81,8 +92,10 @@ export async function saveSettingsSection(userId: string, businessId: string, se
       const list = data as Branch[], eta: Record<string, string> = {};
       const existing = await tx.location.findMany({ where: { businessId }, include: { hours: true }, orderBy: { createdAt: "asc" } });
       const template = existing[0]?.hours ?? [];
-      const limit = (await entitlementsFor(businessId)).branches;
-      if (list.length > existing.length && list.length > limit) throw new AppError("PLAN_LIMIT", `Your plan includes ${limit} ${limit === 1 ? "branch" : "branches"}. Upgrade to Pro to add more.`, 403);
+      const e = await entitlementsFor(businessId), limit = e.branches;
+      // Switched-off branches do not count: only active ones are limited by the plan.
+      const activeAfter = list.filter(b => b.active).length, activeBefore = existing.filter(l => l.status === "ACTIVE").length;
+      if (activeAfter > limit && activeAfter > activeBefore) throw new AppError("PLAN_LIMIT", e.canBuyBranches ? `Your plan includes ${limit} active ${limit === 1 ? "branch" : "branches"}. Add an extra branch for AED 99 a month to add another.` : `Your plan includes ${limit} ${limit === 1 ? "branch" : "branches"}. ${e.plan === "plus" ? "Upgrade to Pro to run more branches." : "Upgrade to run more branches."}`, 403);
       for (const br of list) {
         const coords = br.pin ? parseCoords(br.coords) : null;
         if (br.pin && !coords) throw new AppError("VALIDATION_FAILED", `The location pin for ${br.name} is not valid. Use latitude, longitude.`, 400);

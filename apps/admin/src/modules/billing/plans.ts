@@ -19,6 +19,9 @@ export interface Limits { orders: number; voice: number; imports: number }
 export const LIMITS: Record<PlanId, Limits> = { starter: { orders: 100, voice: 60, imports: 3 }, plus: { orders: 150, voice: 120, imports: 10 }, pro: { orders: 250, voice: 200, imports: 30 } };
 // The free trial reads a menu with AI only twice.
 export const TRIAL_LIMITS: Limits = { orders: 20, voice: 20, imports: 2 };
+// Branches: Starter 1, Plus 3 (fixed), Pro 3 and more at AED 99 a month each (AED 990 a year). Every extra branch adds some orders to the monthly limit.
+export const INCLUDED_BRANCHES: Record<PlanId, number> = { starter: 1, plus: 3, pro: 3 };
+export const EXTRA_BRANCH = { monthly: 99, yearly: 990, orders: 80, max: 27 };
 // Fair use: AI replies allowed per order of the monthly limit (a normal order takes about 7).
 export const REPLIES_PER_ORDER = 15;
 // Someone already halfway through an order may finish it even when the monthly orders are used up, up to this much extra.
@@ -46,7 +49,16 @@ export function quoteSignup(plan: PlanId, billing: Billing, terminals: number): 
   if (terminals > 1) lines.push({ name: "Lumia Order Terminal (extra)", unitMinor: fils(TERMINAL.extra), quantity: terminals - 1 });
   return withVat(lines);
 }
-export const quoteRenewal = (plan: PlanId, billing: Billing): Quote => withVat([{ name: planName(plan, billing), unitMinor: planMinor(plan, billing), quantity: 1 }]);
+export function quoteRenewal(plan: PlanId, billing: Billing, extraBranches = 0): Quote {
+  const lines: Line[] = [{ name: planName(plan, billing), unitMinor: planMinor(plan, billing), quantity: 1 }];
+  if (plan === "pro" && extraBranches > 0) lines.push({ name: `Extra branch (${billing})`, unitMinor: fils(EXTRA_BRANCH[billing]), quantity: extraBranches });
+  return withVat(lines);
+}
+// One more branch in the middle of a period pays for the time that is left.
+export function quoteExtraBranch(billing: Billing, periodStart: Date, periodEnd: Date, now: Date): Quote {
+  const total = periodEnd.getTime() - periodStart.getTime(), left = Math.max(0, Math.min(total, periodEnd.getTime() - now.getTime()));
+  return withVat([{ name: "Extra branch (rest of period)", unitMinor: Math.round(fils(EXTRA_BRANCH[billing]) * (total > 0 ? left / total : 0)), quantity: 1 }]);
+}
 export const quoteTopUp = (pack: TopUpId): Quote => withVat([{ name: `Lumia Order extra orders (${TOPUPS[pack].orders})`, unitMinor: fils(TOPUPS[pack].price), quantity: 1 }]);
 export const isUpgrade = (from: PlanId, to: PlanId) => PLANS[to].rank > PLANS[from].rank;
 

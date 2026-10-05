@@ -14,7 +14,7 @@ export interface SettingsProps {
   businessId: string;
   query: string;
   onPremium?: () => void; onSaved?: () => void;
-  initial: { sections: any; branchLimit?: number; menu: { categories: number; items: number; missingPrices: number; soldOut: number; updatedAt: string | null }; whatsapp: { connected: boolean; displayPhoneNumber: string } };
+  initial: { sections: any; branchLimit?: number; branchBuy?: { priceAed: number; period: string; payNowMinor: number; card: string | null; hasCard: boolean } | null; menu: { categories: number; items: number; missingPrices: number; soldOut: number; updatedAt: string | null }; whatsapp: { connected: boolean; displayPhoneNumber: string } };
 }
 type Props = SettingsProps;
 
@@ -79,6 +79,14 @@ class SettingsApp extends React.Component<Props, any> {
   upd(k, fn) { this.setState(s => { const v = clone(s.draft[k]); fn(v); return { draft: { ...s.draft, [k]: v }, toast: '', error: '' }; }); }
   dirtyOf(s, page) { const k = KEY[page]; return !!k && JSON.stringify(s.draft[k]) !== JSON.stringify(s.saved[k]); }
   go(p: string) { const s = this.state; if (p === s.page) return; if (this.dirtyOf(s, s.page)) { this.setState({ blocked: p }); return; } this.setState({ page: p, blocked: null, toast: '', error: '', adding: false }); history.replaceState(null, '', location.pathname + location.search + '#' + p); }
+  // Pro: another branch for a monthly fee, paid with the card on file; the limit grows as soon as the payment goes through.
+  async buyBranch(then: () => void) {
+    const bb = this.props.initial.branchBuy; if (!bb) return;
+    if (!bb.hasCard) { this.setState({ error: 'Add a card in Billing first to add a branch.' }); return; }
+    if (!window.confirm(`Add a branch for AED ${bb.priceAed} a ${bb.period} (+ VAT)? You pay AED ${(bb.payNowMinor / 100).toFixed(2)} now for the rest of this period, charged to your card ending ${bb.card ?? ''}.`)) return;
+    try { await api(`/api/v1/businesses/${this.props.businessId}/subscription/branch`, 'POST', { requestId: crypto.randomUUID() }); this.props.initial.branchLimit = (this.props.initial.branchLimit ?? 1) + 1; cache.delete(this.props.businessId); this.flash('Branch added to your plan.'); then(); }
+    catch (e: any) { this.setState({ error: e.message }); }
+  }
   flash(msg) { clearTimeout(this.tt); this.setState({ toast: msg }); this.tt = setTimeout(() => this.setState({ toast: '' }), 3000); }
   async save() {
     const s = this.state, k = KEY[s.page]; if (!k || s.saving) return;
@@ -270,7 +278,7 @@ class SettingsApp extends React.Component<Props, any> {
       greetOpts: radio([['friendly', 'Friendly', 'Warm and casual'], ['formal', 'Formal', 'Polite and professional'], ['short', 'Short', 'Straight to the order']], pr.greet, (v) => this.upd('profile', x => { x.greet = v; })),
       greetBubbles,
       pinMissing, branchCards, adding: s.adding, notAdding: !s.adding,
-      startAdd: () => (this.props.onPremium && d.branches.length >= (this.props.initial.branchLimit ?? 1)) ? this.props.onPremium() : this.setState({ adding: true, nb: newBranch(), pinQ: '', pinMode: 'current' }), cancelAdd: () => this.setState({ adding: false }),
+      startAdd: () => { const open = () => this.setState({ adding: true, nb: newBranch(), pinQ: '', pinMode: 'current' }); if (d.branches.filter((b: any) => b.active).length < (this.props.initial.branchLimit ?? 1)) return open(); const bb = this.props.initial.branchBuy; if (bb) return this.buyBranch(open); if (this.props.onPremium) return this.props.onPremium(); open(); }, cancelAdd: () => this.setState({ adding: false }),
       confirmAdd: () => { const b = { ...s.nb, id: String(Date.now()) }; this.upd('branches', x => { x.push(b); }); this.setState({ adding: false }); },
       nb, nbStatus: seg([[true, 'Active'], [false, 'Inactive']], nbS.active, (v) => setNb('active', v)),
       pinModes: [['current', 'Use current location'], ['paste', 'Paste Google Maps link']].map(([k, l]) => ({ ...chip(l, s.pinMode === k, () => this.setState({ pinMode: k })) })),
@@ -331,7 +339,7 @@ const FRESH_MS = 60_000;
 export function prefetchSettings(businessId: string) {
   const hit = cache.get(businessId);
   if (hit && Date.now() - hit.at < FRESH_MS) return hit;
-  const entry: { at: number; promise: Promise<Loaded>; data?: Loaded } = { at: Date.now(), promise: api(`/api/v1/businesses/${businessId}/settings`).then((r: any) => ({ sections: r.sections, menu: r.menu, whatsapp: r.whatsapp, branchLimit: r.branchLimit })) };
+  const entry: { at: number; promise: Promise<Loaded>; data?: Loaded } = { at: Date.now(), promise: api(`/api/v1/businesses/${businessId}/settings`).then((r: any) => ({ sections: r.sections, menu: r.menu, whatsapp: r.whatsapp, branchLimit: r.branchLimit, branchBuy: r.branchBuy })) };
   entry.promise.then(d => { entry.data = d; }, () => { if (cache.get(businessId) === entry) cache.delete(businessId); });
   cache.set(businessId, entry);
   return entry;
