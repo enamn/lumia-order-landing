@@ -50,7 +50,7 @@ describe.skipIf(!enabled)("taking orders over WhatsApp", () => {
     await setAiSettings(owner, biz, { enabled: true }, "t");
   });
   afterAll(async () => { vi.unstubAllGlobals(); await db.$disconnect(); });
-  const draft = (id: (n: string) => string, items: [string, number][], fulfillment: any = null, address = "", confirmed = false) => ({ items: items.map(([nm, q]) => ({ id: id(nm), quantity: q, notes: "" })), fulfillment, address, confirmed });
+  const draft = (id: (n: string) => string, items: [string, number][], fulfillment: any = null, address = "", confirmed = false) => ({ items: items.map(([nm, q]) => ({ id: id(nm), quantity: q, notes: "" })), fulfillment, address, addressLabel: fulfillment === "delivery" ? "Home" : "", confirmed });
   const reply = (order: any, text = "Sure!") => ({ intent: "order_request", language: "en", reply: text, needsHuman: false, order });
 
   it("builds the draft with server prices, then places the order only after the customer confirms the shown summary", async () => {
@@ -83,7 +83,7 @@ describe.skipIf(!enabled)("taking orders over WhatsApp", () => {
     const c3 = "971500000444";
     let r = await turn("deliver 1 classic", id => reply(draft(id, [["Classic", 1]], "delivery"), "What's your address?"), c3); expect(r).not.toContain("Reply YES");
     r = await turn("yes", id => reply(draft(id, [["Classic", 1]], "delivery", "", true)), c3); expect(await db.order.count({ where: { businessId: biz } })).toBe(2);
-    r = await turn("Al Majaz, building 4", id => reply(draft(id, [["Classic", 1]], "delivery", "Al Majaz, building 4")), c3); expect(r).toContain("Delivery to: Al Majaz, building 4"); expect(r).toContain("Reply YES");
+    r = await turn("Al Majaz, building 4", id => reply(draft(id, [["Classic", 1]], "delivery", "Al Majaz, building 4")), c3); expect(r).toContain("Delivery to (Home): Al Majaz, building 4"); expect(r).toContain("Reply YES");
     await db.orderSettings.create({ data: { businessId: biz, minimumOrderAmountMinor: 5000, supportsPickup: false } });
     r = await turn("add fries", id => reply(draft(id, [["Classic", 1], ["Fries", 1]], "delivery", "Al Majaz, building 4")), c3); expect(r).toContain("The minimum order is 50 AED."); expect(r).not.toContain("Reply YES");
     expect(calls.find(c => c.path === "/internal/ai/reply")!.body.options).toEqual({ delivery: true, pickup: false, minimumOrder: 50 });

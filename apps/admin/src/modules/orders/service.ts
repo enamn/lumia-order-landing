@@ -32,10 +32,18 @@ export async function createOrderFromDraft(input: { businessId: string; conversa
           businessId, locationId: location.id, customerId: input.customerId, conversationId: input.conversationId, orderNumber, channel: "WHATSAPP",
           fulfillmentType: r.fulfillment === "delivery" ? "DELIVERY" : "PICKUP", status, subtotalMinor: r.subtotalMinor, deliveryFeeMinor: r.feeMinor, totalMinor: r.totalMinor, ...(r.delivery?.status === "ok" && r.delivery.manual ? { internalNotes: "Delivery fee not included: confirm it with the customer." } : {}),
           items: { create: r.lines.map(l => ({ catalogItemId: l.itemId, itemNameSnapshot: l.name || l.nameAr, quantity: l.quantity, unitPriceMinor: l.unitMinor, subtotalMinor: l.totalMinor, taxAmountMinor: 0, totalMinor: l.totalMinor, notes: l.notes || null })) },
-          ...(r.fulfillment === "delivery" ? { deliveryDetails: { create: { recipientName: r.name || input.customerName || "Customer", recipientPhone: input.customerPhone, addressText: r.address, city: r.area || location.city, ...(r.emirate ? { emirate: r.emirate } : {}), ...(r.pin ? { latitude: r.pin.latitude, longitude: r.pin.longitude } : {}) } } } : {}),
+          ...(r.fulfillment === "delivery" ? { deliveryDetails: { create: { recipientName: r.name || input.customerName || "Customer", recipientPhone: input.customerPhone, addressText: r.address, city: r.area || location.city, ...(r.emirate ? { emirate: r.emirate } : {}), ...(r.label ? { addressLabel: r.label } : {}), ...(r.pin ? { latitude: r.pin.latitude, longitude: r.pin.longitude } : {}) } } } : {}),
           history: { create: { newStatus: status, changedByType: "AI" } },
         }, select: { id: true, orderNumber: true, status: true, totalMinor: true } });
         await tx.conversation.update({ where: { id: input.conversationId }, data: { draftOrder: null } });
+        // Remember the address under the name the customer gave it (Home, Work, ...), so next time it can simply be picked.
+        if (r.fulfillment === "delivery" && r.address && r.label) {
+          const fields = { addressText: r.address, city: r.area || location.city, emirate: r.emirate ?? null, ...(r.pin ? { latitude: r.pin.latitude, longitude: r.pin.longitude } : {}) };
+          const have = (await tx.customerAddress.findMany({ where: { customerId: input.customerId } }));
+          const same = have.find(a => a.label.toLowerCase() === r.label.toLowerCase());
+          if (same) await tx.customerAddress.update({ where: { id: same.id }, data: fields });
+          else if (have.length < 6) await tx.customerAddress.create({ data: { customerId: input.customerId, label: r.label, ...fields, isDefault: have.length === 0 } });
+        }
         return order;
       });
     } catch (error) {
@@ -48,8 +56,8 @@ export async function createOrderFromDraft(input: { businessId: string; conversa
 
 export async function listOrders(userId: string, businessId: string) {
   await authorize(userId, businessId);
-  const rows = await db.order.findMany({ where: { businessId }, orderBy: { createdAt: "desc" }, take: 60, include: { items: true, history: { select: { newStatus: true, createdAt: true, reason: true }, orderBy: { createdAt: "asc" } }, customer: { select: { displayName: true, phone: true } }, deliveryDetails: { select: { addressText: true, recipientName: true, latitude: true, longitude: true } } } });
-  return rows.map(o => ({ id: o.id, number: o.orderNumber, status: o.status, fulfillment: o.fulfillmentType, total: o.totalMinor / 100, currency: o.currencyCode, createdAt: o.createdAt, conversationId: o.conversationId, note: o.customerNotes ?? "", subtotal: o.subtotalMinor / 100, deliveryFee: o.deliveryFeeMinor / 100, history: o.history.map(h => ({ status: h.newStatus, at: h.createdAt, reason: h.reason ?? "" })), address: [o.deliveryDetails?.addressText, o.deliveryDetails?.latitude != null ? `https://maps.google.com/?q=${o.deliveryDetails.latitude},${o.deliveryDetails.longitude}` : ""].filter(Boolean).join("\n"), customer: { name: o.deliveryDetails?.recipientName || o.customer.displayName || "", phone: o.customer.phone }, items: o.items.map(i => ({ name: i.itemNameSnapshot, quantity: i.quantity, notes: i.notes ?? "", total: i.totalMinor / 100 })) }));
+  const rows = await db.order.findMany({ where: { businessId }, orderBy: { createdAt: "desc" }, take: 60, include: { items: true, history: { select: { newStatus: true, createdAt: true, reason: true }, orderBy: { createdAt: "asc" } }, customer: { select: { displayName: true, phone: true } }, deliveryDetails: { select: { addressText: true, addressLabel: true, recipientName: true, latitude: true, longitude: true } } } });
+  return rows.map(o => ({ id: o.id, number: o.orderNumber, status: o.status, fulfillment: o.fulfillmentType, total: o.totalMinor / 100, currency: o.currencyCode, createdAt: o.createdAt, conversationId: o.conversationId, note: o.customerNotes ?? "", subtotal: o.subtotalMinor / 100, deliveryFee: o.deliveryFeeMinor / 100, history: o.history.map(h => ({ status: h.newStatus, at: h.createdAt, reason: h.reason ?? "" })), address: [o.deliveryDetails?.addressLabel ? `${o.deliveryDetails.addressLabel}: ${o.deliveryDetails.addressText}` : o.deliveryDetails?.addressText, o.deliveryDetails?.latitude != null ? `https://maps.google.com/?q=${o.deliveryDetails.latitude},${o.deliveryDetails.longitude}` : ""].filter(Boolean).join("\n"), customer: { name: o.deliveryDetails?.recipientName || o.customer.displayName || "", phone: o.customer.phone }, items: o.items.map(i => ({ name: i.itemNameSnapshot, quantity: i.quantity, notes: i.notes ?? "", total: i.totalMinor / 100 })) }));
 }
 
 const NEXT: Record<string, OrderStatus[]> = {

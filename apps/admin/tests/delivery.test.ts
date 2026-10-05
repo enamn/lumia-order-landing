@@ -51,12 +51,12 @@ describe("order summary with a delivery fee", () => {
   const opts = { delivery: true, pickup: true, minimumMinor: 0 }, items = [{ id: "1", quantity: 2, notes: "" }];
   const ctx = (r: DeliveryRules | null = rules(), profileName = "Sara Khalid") => ({ rules: r, branches, profileName });
   it("shows subtotal, delivery fee, final total, name and ETA, and needs the name and a fee before it is complete", () => {
-    const r = resolveDraft(menu, { items, fulfillment: "delivery", address: "Al Majaz St 5", emirate: "Sharjah", area: "Al Majaz", customerName: "" }, opts, ctx());
+    const r = resolveDraft(menu, { items, fulfillment: "delivery", address: "Al Majaz St 5", emirate: "Sharjah", area: "Al Majaz", customerName: "", addressLabel: "Home" }, opts, ctx());
     expect(r).toMatchObject({ subtotalMinor: 5600, feeMinor: 1000, totalMinor: 6600, name: "Sara Khalid", emirate: "Sharjah" }); expect(isComplete(r)).toBe(true);
     const text = summaryText(r, "en", opts);
     expect(text).toContain("Subtotal: 56 AED"); expect(text).toContain("Delivery fee: 10 AED"); expect(text).toContain("Total: 66 AED"); expect(text).toContain("For: Sara Khalid"); expect(text).toContain("about 30 minutes"); expect(text).toContain("Reply YES");
     expect(summaryText(r, "ar", opts)).toContain("رسوم التوصيل: 10 AED");
-    expect(isComplete(resolveDraft(menu, { items, fulfillment: "delivery", address: "Al Majaz St 5", emirate: "Sharjah", area: "Al Majaz", customerName: "" }, opts, ctx(rules(), "")))).toBe(false); // no name yet
+    expect(isComplete(resolveDraft(menu, { items, fulfillment: "delivery", address: "Al Majaz St 5", emirate: "Sharjah", area: "Al Majaz", customerName: "", addressLabel: "Home" }, opts, ctx(rules(), "")))).toBe(false); // no name yet
     const noFee = resolveDraft(menu, { items, fulfillment: "delivery", address: "Somewhere", emirate: null, area: "", customerName: "" }, opts, ctx());
     expect(noFee.delivery).toEqual({ status: "needs", need: "area" }); expect(isComplete(noFee)).toBe(false); expect(summaryText(noFee, "en", opts)).not.toContain("Reply YES");
     const outside = resolveDraft(menu, { items, fulfillment: "delivery", address: "Fujairah Corniche", emirate: "Fujairah", area: "", customerName: "" }, opts, ctx());
@@ -64,9 +64,36 @@ describe("order summary with a delivery fee", () => {
     expect(summaryText(resolveDraft(menu, { items, fulfillment: "delivery", address: "x street", emirate: "Sharjah", area: "Al Majaz", customerName: "" }, { ...opts, minimumMinor: 0 }, ctx(rules({ method: "manual" }))), "en", opts)).toContain("The restaurant will confirm the delivery fee");
   });
   it("a confirmation only counts for what was shown: a different fee, total or name changes the key", () => {
-    const base = { items, fulfillment: "delivery" as const, address: "Al Majaz St 5", emirate: "Sharjah", area: "Al Majaz", customerName: "" };
+    const base = { items, fulfillment: "delivery" as const, address: "Al Majaz St 5", emirate: "Sharjah", area: "Al Majaz", customerName: "", addressLabel: "Home" };
     const a = draftKey(resolveDraft(menu, base, opts, ctx())), b = draftKey(resolveDraft(menu, { ...base, area: "Al Khan" }, opts, ctx())), c = draftKey(resolveDraft(menu, base, opts, ctx(rules(), "Omar")));
     expect(new Set([a, b, c]).size).toBe(3); expect(draftKey(resolveDraft(menu, base, opts, ctx()))).toBe(a);
+  });
+});
+
+describe("address labels", () => {
+  const menu: MenuEntry[] = [{ index: "1", itemId: "a", name: "Classic", nameAr: "كلاسيك", priceMinor: 2800, available: true }];
+  const opts = { delivery: true, pickup: true, minimumMinor: 0 }, items = [{ id: "1", quantity: 1, notes: "" }];
+  const saved = [{ id: "1", label: "Work", text: "Opus tower 804", emirate: "Sharjah", area: "Al Majaz", latitude: 25.3402, longitude: 55.3901 }, { id: "2", label: "Home", text: "Villa 3", emirate: "Ajman", area: "", latitude: null, longitude: null }];
+  const ctx = { rules: rules(), branches, profileName: "Sara Khalid", saved };
+  it("Home and Work are recognised in English and Arabic, other names are kept", async () => {
+    const { normalizeLabel } = await import("../src/modules/orders/draft");
+    for (const w of ["home", "Home ", "البيت", "المنزل"]) expect(normalizeLabel(w)).toBe("Home"); for (const w of ["work", "Office", "عمل", "العمل", "مكتب"]) expect(normalizeLabel(w)).toBe("Work");
+    expect(normalizeLabel("  Mum's   house ")).toBe("Mum's house"); expect(normalizeLabel("")).toBe(""); expect(normalizeLabel("x".repeat(80))).toHaveLength(30);
+  });
+  it("a delivery order is not complete until the address has a name, and the summary shows it", () => {
+    const d = { items, fulfillment: "delivery" as const, address: "Al Majaz St 5", emirate: "Sharjah", area: "Al Majaz", customerName: "" };
+    expect(isComplete(resolveDraft(menu, { ...d, addressLabel: "" }, opts, ctx))).toBe(false);
+    const w = resolveDraft(menu, { ...d, addressLabel: "عمل" }, opts, ctx); expect(w.label).toBe("Work"); expect(isComplete(w)).toBe(true);
+    expect(summaryText(w, "en", opts)).toContain("Delivery to (Work): Al Majaz St 5"); expect(summaryText(w, "ar", opts)).toContain("التوصيل إلى (العمل):");
+  });
+  it("picking a saved address uses its text, area, emirate and pin, so nothing else is asked", () => {
+    const r = resolveDraft(menu, { items, fulfillment: "delivery", address: "", emirate: null, area: "", customerName: "", addressLabel: "", savedAddress: "1" }, opts, ctx);
+    expect(r).toMatchObject({ address: "Opus tower 804", emirate: "Sharjah", area: "Al Majaz", label: "Work", savedId: "1", feeMinor: 1000 }); expect(isComplete(r)).toBe(true);
+    const byDistance = resolveDraft(menu, { items, fulfillment: "delivery", address: "", emirate: null, area: "", customerName: "", addressLabel: "", savedAddress: "1" }, opts, { ...ctx, rules: rules({ method: "distance" }) });
+    expect(byDistance).toMatchObject({ feeMinor: 500, pin: { latitude: 25.3402, longitude: 55.3901 } }); // the saved pin prices it
+    const noPin = resolveDraft(menu, { items, fulfillment: "delivery", address: "", emirate: null, area: "", customerName: "", addressLabel: "", savedAddress: "2" }, opts, { ...ctx, rules: rules({ method: "distance" }) });
+    expect(noPin.delivery).toEqual({ status: "needs", need: "pin" }); // that saved address has no pin
+    expect(resolveDraft(menu, { items, fulfillment: "delivery", address: "Elsewhere", emirate: "Dubai", area: "", customerName: "", addressLabel: "Home", savedAddress: "99" }, opts, ctx).savedId).toBe(""); // unknown id: ignored
   });
 });
 
@@ -78,7 +105,7 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
   const sent = () => calls.filter(c => c.path === "/internal/whatsapp/send").map(c => c.body.text as string);
   const lastAi = () => calls.filter(c => c.path === "/internal/ai/reply").at(-1)!.body;
   const turn = async (run: () => Promise<unknown>, make: (id: (n: string) => string) => any) => { calls = []; ai = { __make: make }; await run(); return sent().at(-1) ?? ""; };
-  const draft = (id: (n: string) => string, extra: object = {}) => ({ intent: "order_request", language: "en", reply: "Sure!", needsHuman: false, order: { items: [{ id: id("Classic"), quantity: 2, notes: "" }], fulfillment: "delivery", address: "", emirate: null, area: "", customerName: "", confirmed: false, ...extra } });
+  const draft = (id: (n: string) => string, extra: object = {}) => ({ intent: "order_request", language: "en", reply: "Sure!", needsHuman: false, order: { items: [{ id: id("Classic"), quantity: 2, notes: "" }], fulfillment: "delivery", address: "", emirate: null, area: "", customerName: "", addressLabel: "Home", savedAddress: "", confirmed: false, ...extra } });
   const setRules = (r: Partial<DeliveryRules> & { method: DeliveryRules["method"] }) => db.business.update({ where: { id: biz }, data: { settings: { delivery: rules(r as any) } as any } });
   beforeAll(async () => {
     await ensureMongoIndexes();
@@ -144,7 +171,7 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
     const p = "971500001111";
     let r = await turn(() => say("2 classic delivery", p), id => draft(id, { address: "Al Majaz St 9", emirate: "Sharjah", area: "Al Majaz" }));
     expect(r).toContain("Total: 66 AED");
-    r = await turn(() => say("نعم", p), id => draft(id, { address: "", emirate: null, area: "", customerName: "", confirmed: true })); // the model dropped everything it knew
+    r = await turn(() => say("نعم", p), id => draft(id, { address: "", emirate: null, area: "", customerName: "", addressLabel: "", confirmed: true })); // the model dropped everything it knew
     expect(r).toContain("Total 66 AED");
     expect(await db.order.count({ where: { businessId: biz, totalMinor: 6600, deliveryDetails: { is: { addressText: "Al Majaz St 9" } } } })).toBeGreaterThan(0);
   });
@@ -155,6 +182,32 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
     const r = await turn(() => say("yes but make it 3", p), id => ({ ...draft(id, { address: "Al Majaz St 9", emirate: "Sharjah", area: "Al Majaz", confirmed: true }), reply: "Done, your order is confirmed! 🎉", order: { items: [{ id: id("Classic"), quantity: 3, notes: "" }], fulfillment: "delivery", address: "Al Majaz St 9", emirate: "Sharjah", area: "Al Majaz", customerName: "", confirmed: true } }));
     expect(await db.order.count({ where: { businessId: biz } })).toBe(before); // changed items: not the summary the customer saw
     expect(r).not.toContain("confirmed!"); expect(r).toContain("reply YES to confirm"); expect(r).toContain("3 × Classic"); expect(r).toContain("Total: 94 AED");
+  });
+  it("remembers an address under its name and offers it next time, with its pin, without asking again", async () => {
+    await setRules({ method: "distance" });
+    const p = "971500003333";
+    await turn(() => say("2 classic delivery", p), id => draft(id));
+    let r = await turn(() => inbound({ type: "location", location: { latitude: 25.3402, longitude: 55.3901 } }, p), id => draft(id, { address: "Opus tower 804", addressLabel: "عمل" }));
+    expect(r).toContain("Delivery to (Work): Opus tower 804"); expect(r).toContain("Delivery fee: 5 AED");
+    r = await turn(() => say("yes", p), id => draft(id, { address: "Opus tower 804", addressLabel: "Work", confirmed: true }));
+    expect(r).toContain("Total 61 AED");
+    const rows = await db.customerAddress.findMany({ where: { customer: { businessId: biz, phone: "+" + p } } });
+    expect(rows).toHaveLength(1); expect(rows[0]).toMatchObject({ label: "Work", addressText: "Opus tower 804", latitude: 25.3402, longitude: 55.3901, isDefault: true });
+    expect((await db.order.findFirstOrThrow({ where: { businessId: biz, customer: { phone: "+" + p } }, include: { deliveryDetails: true } })).deliveryDetails).toMatchObject({ addressLabel: "Work" });
+    // next order: the saved address is offered and picking it prices the order from its pin, no new pin needed
+    r = await turn(() => say("same as last time, delivery to work", p), id => ({ ...draft(id), order: { items: [{ id: id("Classic"), quantity: 2, notes: "" }], fulfillment: "delivery", address: "", emirate: null, area: "", customerName: "", addressLabel: "", savedAddress: "1", confirmed: false } }));
+    expect(lastAi().savedAddresses).toEqual([{ id: "1", label: "Work", text: "Opus tower 804" }]);
+    expect(r).toContain("Delivery to (Work): Opus tower 804"); expect(r).toContain("Delivery fee: 5 AED"); expect(r).toContain("Reply YES");
+    r = await turn(() => say("yes", p), id => ({ ...draft(id), order: { items: [{ id: id("Classic"), quantity: 2, notes: "" }], fulfillment: "delivery", address: "", emirate: null, area: "", customerName: "", addressLabel: "", savedAddress: "1", confirmed: true } }));
+    expect(r).toContain("Total 61 AED"); expect(await db.customerAddress.count({ where: { customer: { businessId: biz, phone: "+" + p } } })).toBe(1); // updated, not duplicated
+  });
+  it("asks for the address name before the order can be confirmed", async () => {
+    await setRules({ method: "free" });
+    const p = "971500004444";
+    let r = await turn(() => say("delivery to Sharjah Al Nahda, 2 classic", p), id => draft(id, { address: "Al Nahda St", emirate: "Sharjah", area: "Al Nahda", addressLabel: "" }));
+    expect(r).not.toContain("Reply YES"); // no name for the address yet: the assistant has to ask
+    r = await turn(() => say("work", p), id => draft(id, { address: "Al Nahda St", emirate: "Sharjah", area: "Al Nahda", addressLabel: "work" }));
+    expect(r).toContain("Delivery to (Work)"); expect(r).toContain("Reply YES");
   });
   it("calls customers by name only on Plus, Pro and the free trial, not on Starter", async () => {
     await setRules({ method: "free" });

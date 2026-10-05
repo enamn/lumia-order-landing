@@ -6,18 +6,28 @@ export type Lang = "en" | "ar";
 export type Fulfillment = "delivery" | "pickup";
 export interface MenuEntry { index: string; itemId: string; name: string; nameAr: string; priceMinor: number; available: boolean }
 export interface StoredLine { itemId: string; quantity: number; notes: string }
-export interface StoredDraft { items: StoredLine[]; fulfillment: Fulfillment | null; address: string; emirate?: string | null; area?: string; name?: string; shownKey: string; updatedAt: string }
-export interface ModelDraft { items: { id: string; quantity: number; notes: string }[]; fulfillment: Fulfillment | null; address: string; emirate?: string | null; area?: string; customerName?: string; confirmed: boolean }
+export interface StoredDraft { items: StoredLine[]; fulfillment: Fulfillment | null; address: string; emirate?: string | null; area?: string; name?: string; label?: string; savedId?: string; shownKey: string; updatedAt: string }
+export interface ModelDraft { items: { id: string; quantity: number; notes: string }[]; fulfillment: Fulfillment | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; confirmed: boolean }
 export interface PricedLine { itemId: string; name: string; nameAr: string; quantity: number; unitMinor: number; totalMinor: number; notes: string }
-export interface Resolved { lines: PricedLine[]; removed: string[]; fulfillment: Fulfillment | null; address: string; subtotalMinor: number; emirate: string | null; area: string; name: string; delivery: Quote | null; feeMinor: number; totalMinor: number; pin?: { latitude: number; longitude: number } }
+export interface Resolved { lines: PricedLine[]; removed: string[]; fulfillment: Fulfillment | null; address: string; subtotalMinor: number; emirate: string | null; area: string; name: string; label: string; savedId: string; delivery: Quote | null; feeMinor: number; totalMinor: number; pin?: { latitude: number; longitude: number } }
 // What the server knows for pricing delivery: the restaurant's rules and branches, the customer's WhatsApp name and shared location pin.
-export interface DeliveryContext { rules: DeliveryRules | null; branches: BranchPoint[]; profileName: string; pin?: { latitude: number; longitude: number } }
+export interface SavedAddr { id: string; label: string; text: string; emirate: string | null; area: string; latitude: number | null; longitude: number | null }
+export interface DeliveryContext { rules: DeliveryRules | null; branches: BranchPoint[]; profileName: string; pin?: { latitude: number; longitude: number }; saved?: SavedAddr[] }
+// "Home" and "Work" in English or Arabic become one spelling each; any other name the customer chose is kept (short, trimmed).
+export function normalizeLabel(raw: string | undefined | null): string {
+  const t = (raw ?? "").replace(/\s+/g, " ").trim().slice(0, 30);
+  if (!t) return "";
+  if (/^(home|house|بيت|البيت|منزل|المنزل|بيتي|منزلي)$/i.test(t)) return "Home";
+  if (/^(work|office|job|عمل|العمل|شغل|الشغل|مكتب|المكتب|دوام|عملي)$/i.test(t)) return "Work";
+  return t;
+}
+export const labelFor = (label: string, lang: Lang) => (lang === "ar" ? (label === "Home" ? "المنزل" : label === "Work" ? "العمل" : label) : label);
 export interface Options { delivery: boolean; pickup: boolean; minimumMinor: number }
 
 export const DRAFT_TTL_MS = 12 * 3600 * 1000;
 const label = (e: { name: string; nameAr: string }, lang: Lang) => (lang === "ar" ? e.nameAr || e.name : e.name || e.nameAr);
 
-export function resolveDraft(menu: MenuEntry[], d: Pick<ModelDraft, "items" | "fulfillment" | "address" | "emirate" | "area" | "customerName">, options: Options, ctx?: DeliveryContext): Resolved {
+export function resolveDraft(menu: MenuEntry[], d: Pick<ModelDraft, "items" | "fulfillment" | "address" | "emirate" | "area" | "customerName" | "addressLabel" | "savedAddress">, options: Options, ctx?: DeliveryContext): Resolved {
   const byIndex = new Map(menu.map(m => [m.index, m])); const merged = new Map<string, PricedLine>(); const removed: string[] = [];
   for (const l of d.items) {
     const m = byIndex.get(l.id);
@@ -30,17 +40,22 @@ export function resolveDraft(menu: MenuEntry[], d: Pick<ModelDraft, "items" | "f
   const lines = [...merged.values()];
   const fulfillment = d.fulfillment && options[d.fulfillment] ? d.fulfillment : null;
   const subtotalMinor = lines.reduce((s, l) => s + l.totalMinor, 0), address = fulfillment === "delivery" ? d.address.trim() : "";
-  const isDelivery = fulfillment === "delivery", area = isDelivery ? (d.area ?? "").trim() : "";
-  const emirate = isDelivery ? (emirateFrom(d.emirate, d.address, d.area) ?? null) : null, name = isDelivery ? ((d.customerName ?? "").trim() || ctx?.profileName.trim() || "") : "";
-  const delivery = isDelivery && ctx ? quoteDelivery(ctx.rules, ctx.branches, { emirate, area, ...(ctx.pin ?? {}) }, subtotalMinor, options.minimumMinor) : null;
+  const isDelivery = fulfillment === "delivery";
+  // The customer picked one of their saved addresses: its text, area, emirate and location pin are used (no need to ask or share again).
+  const saved = isDelivery && d.savedAddress ? ctx?.saved?.find(a => a.id === d.savedAddress) : undefined;
+  const addr = saved ? saved.text : address, area = isDelivery ? (saved ? saved.area : (d.area ?? "")).trim() : "";
+  const emirate = isDelivery ? (saved?.emirate ?? emirateFrom(d.emirate, addr, area) ?? null) : null, name = isDelivery ? ((d.customerName ?? "").trim() || ctx?.profileName.trim() || "") : "";
+  const pin = saved && saved.latitude !== null && saved.longitude !== null ? { latitude: saved.latitude, longitude: saved.longitude } : saved ? undefined : ctx?.pin;
+  const label = isDelivery ? (saved ? saved.label : normalizeLabel(d.addressLabel)) : "";
+  const delivery = isDelivery && ctx ? quoteDelivery(ctx.rules, ctx.branches, { emirate, area, ...(pin ?? {}) }, subtotalMinor, options.minimumMinor) : null;
   const feeMinor = delivery?.status === "ok" ? delivery.feeMinor : 0;
-  return { lines, removed: [...new Set(removed)], fulfillment, address, subtotalMinor, emirate, area, name, delivery, feeMinor, totalMinor: subtotalMinor + feeMinor, ...(isDelivery && ctx?.pin ? { pin: ctx.pin } : {}) };
+  return { lines, removed: [...new Set(removed)], fulfillment, address: isDelivery ? addr : "", subtotalMinor, emirate, area, name, label, savedId: saved?.id ?? "", delivery, feeMinor, totalMinor: subtotalMinor + feeMinor, ...(isDelivery && pin ? { pin } : {}) };
 }
 
 // The confirmation must match what was shown, including the delivery fee, the total and who it is for.
-export const draftKey = (r: Pick<Resolved, "lines" | "fulfillment" | "address" | "feeMinor" | "totalMinor" | "name" | "emirate" | "area">) => createHash("sha256").update(JSON.stringify([r.lines.map(l => [l.itemId, l.quantity, l.notes]), r.fulfillment, r.address, r.feeMinor, r.totalMinor, r.name, r.emirate, r.area])).digest("hex").slice(0, 16);
+export const draftKey = (r: Pick<Resolved, "lines" | "fulfillment" | "address" | "feeMinor" | "totalMinor" | "name" | "emirate" | "area" | "label" | "savedId">) => createHash("sha256").update(JSON.stringify([r.lines.map(l => [l.itemId, l.quantity, l.notes]), r.fulfillment, r.address, r.feeMinor, r.totalMinor, r.name, r.emirate, r.area, r.label, r.savedId])).digest("hex").slice(0, 16);
 // Delivery needs an address, a name and a delivery fee that could be worked out (or that the restaurant will confirm).
-export const isComplete = (r: Resolved) => r.lines.length > 0 && r.fulfillment !== null && (r.fulfillment === "pickup" || (r.address.length >= 3 && (r.delivery === null || (r.name.length >= 2 && r.delivery.status === "ok"))));
+export const isComplete = (r: Resolved) => r.lines.length > 0 && r.fulfillment !== null && (r.fulfillment === "pickup" || (r.address.length >= 3 && (r.delivery === null || (r.name.length >= 2 && r.label.length >= 1 && r.delivery.status === "ok"))));
 export const minimumFor = (r: Resolved, o: Options) => (r.delivery?.status === "ok" ? r.delivery.minimumMinor : o.minimumMinor);
 export const meetsMinimum = (r: Resolved, o: Options) => r.subtotalMinor >= minimumFor(r, o);
 export const money = (minor: number) => (minor % 100 === 0 ? String(minor / 100) : (minor / 100).toFixed(2));
@@ -61,7 +76,7 @@ export function summaryText(r: Resolved, lang: Lang, options: Options): string {
   } else out.push(`${t.total}: ${money(r.subtotalMinor)} AED`);
   if (r.fulfillment === "pickup") out.push(t.pickup);
   else if (r.fulfillment === "delivery") {
-    if (r.address) out.push(`${t.delivery}: ${r.address}`);
+    if (r.address) out.push(`${t.delivery}${r.label ? ` (${labelFor(r.label, lang)})` : ""}: ${r.address}`);
     if (r.name && q?.status === "ok") out.push(`${t.forName}: ${r.name}`);
     if (q?.status === "ok" && q.etaMinutes) out.push(t.eta(q.etaMinutes));
     if (q?.status === "unavailable") out.push(q.reason === "PAUSED" ? t.pausedNow : t.noPickupOnly);
