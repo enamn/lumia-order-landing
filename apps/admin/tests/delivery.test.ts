@@ -272,8 +272,10 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
   });
   it("Pro with a menu per branch: no menu until the branch is known (pickup asks, a pin picks the nearest), then that branch's menu, and the order goes to that branch", async () => {
     const { createBranchMenu, addItem } = await import("../src/modules/menu/service");
-    const subId = `sub-${suffix}`;
-    await db.subscription.create({ data: { id: subId, businessId: biz, plan: "pro", billing: "monthly", status: "ACTIVE", currentPeriodStart: new Date(), currentPeriodEnd: new Date(Date.now() + 30 * 86400000), startedAt: new Date() } });
+    // An earlier test may already have given this restaurant a subscription (one per restaurant): switch it to Pro and put it back afterwards.
+    const prior = await db.subscription.findFirst({ where: { businessId: biz } });
+    const pro = { plan: "pro", billing: "monthly", status: "ACTIVE", currentPeriodStart: new Date(), currentPeriodEnd: new Date(Date.now() + 30 * 86400000), startedAt: new Date() };
+    const sub = prior ? await db.subscription.update({ where: { id: prior.id }, data: pro }) : await db.subscription.create({ data: { businessId: biz, ...pro } });
     try {
       const second = (await db.location.create({ data: { businessId: biz, name: "Ajman Branch", code: `AJ${suffix}`.toUpperCase(), status: "ACTIVE", latitude: 25.4052, longitude: 55.4451 } })).id;
       await createBranchMenu(owner, biz, second, { copy: false }, "r"); await addItem(owner, biz, { name: "Ajman Special", category: "Grill", price: 35 }, "r", second);
@@ -300,6 +302,6 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
       await turn(() => inbound({ type: "location", location: { latitude: 25.4052, longitude: 55.4451 } }, w), () => reply({ reply: "Now at Ajman" }));
       const conv = await db.conversation.findFirstOrThrow({ where: { customer: { phone: "+" + w } } });
       expect(conv.branchId).toBe(second); expect(conv.draftOrder).toBeNull(); expect(lastAi().menu.map((m: any) => m.name)).toEqual(["Ajman Special"]);
-    } finally { await db.subscription.delete({ where: { id: subId } }); }
+    } finally { if (prior) await db.subscription.update({ where: { id: prior.id }, data: { plan: prior.plan, billing: prior.billing, status: prior.status, currentPeriodStart: prior.currentPeriodStart, currentPeriodEnd: prior.currentPeriodEnd } }); else await db.subscription.delete({ where: { id: sub.id } }); }
   });
 });
