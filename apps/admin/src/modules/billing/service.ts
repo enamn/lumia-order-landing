@@ -4,7 +4,8 @@ import { db } from "@/server/db";
 import { authorize } from "@/server/authorization";
 import { AppError } from "@/server/errors";
 import { lumiaApi } from "@/server/lumia-api";
-import { PLANS, RETRY_DAYS, addPeriod, isUpgrade, quoteRenewal, quoteSignup, quoteUpgrade, type Billing, type PlanId, type Quote } from "./plans";
+import { PLANS, RETRY_DAYS, TOPUPS, TOPUP_IDS, addPeriod, isUpgrade, quoteRenewal, quoteSignup, quoteTopUp, quoteUpgrade, type Billing, type PlanId, type Quote } from "./plans";
+import { addCredits, usageSummary } from "./usage";
 
 // Subscriptions are run by Lumia: the plan, the billing period, renewals, retries, plan changes, cancellation and invoices all live here.
 // Stripe only takes each payment and keeps the card on file (through lumia-order-api). Card details never reach Lumia.
@@ -44,7 +45,7 @@ async function knownDetails(businessId: string) {
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : undefined);
 export async function getSubscription(userId: string, businessId: string) {
   const { member } = await authorize(userId, businessId);
-  const [b, sub, known] = await Promise.all([db.business.findUniqueOrThrow({ where: { id: businessId }, select: { createdAt: true, stripeCustomerId: true } }), getSubscriptionFor(businessId), knownDetails(businessId)]);
+  const [b, sub, known, usage] = await Promise.all([db.business.findUniqueOrThrow({ where: { id: businessId }, select: { createdAt: true, stripeCustomerId: true } }), getSubscriptionFor(businessId), knownDetails(businessId), usageSummary(businessId)]);
   const active = isActive(sub), nextPlan = (sub?.pendingPlan ?? sub?.plan) as PlanId | undefined, nextBilling = (sub?.pendingBilling ?? sub?.billing) as Billing | undefined;
   return {
     status: (sub?.status ?? "NONE") as SubStatus, plan: sub?.plan, billing: sub?.billing, currentPeriodStart: iso(sub?.currentPeriodStart), currentPeriodEnd: iso(sub?.currentPeriodEnd), cancelAtPeriodEnd: sub?.cancelAtPeriodEnd ?? false,
@@ -52,7 +53,8 @@ export async function getSubscription(userId: string, businessId: string) {
     nextCharge: active && !sub!.cancelAtPeriodEnd && nextPlan && nextBilling ? { at: iso(sub!.nextChargeAt ?? sub!.currentPeriodEnd)!, amountMinor: quoteRenewal(nextPlan, nextBilling).totalMinor } : null,
     card: (sub?.card as Card | null) ?? undefined, terminals: sub?.terminals, terminalAddress: sub?.terminalAddress ?? undefined, terminal: (sub?.terminal as Terminal | null) ?? undefined, startedAt: iso(sub?.startedAt),
     hasCustomer: Boolean(sub?.stripeCustomerId || b.stripeCustomerId), defaults: { address: known.address }, canManage: member.role === "OWNER" || member.role === "ADMIN",
-    trial: trialInfo(b.createdAt), entitlements: entitlements(sub),
+    trial: trialInfo(b.createdAt), entitlements: entitlements(sub), usage,
+    topups: TOPUP_IDS.map(id => ({ id, replies: TOPUPS[id].replies, totalMinor: quoteTopUp(id).totalMinor, subtotalMinor: quoteTopUp(id).subtotalMinor })),
   };
 }
 
@@ -113,7 +115,7 @@ async function nextInvoiceNumber(now: Date): Promise<string> {
     catch (e) { if (attempt < 4 && e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") continue; throw e; }
   }
 }
-async function writeInvoice(s: Subscription, kind: "SIGNUP" | "RENEWAL" | "UPGRADE", quote: Quote, period: { start: Date; end: Date }, paymentIntentId: string | undefined, now: Date) {
+async function writeInvoice(s: Subscription, kind: "SIGNUP" | "RENEWAL" | "UPGRADE" | "TOPUP", quote: Quote, period: { start: Date; end: Date }, paymentIntentId: string | undefined, now: Date) {
   const known = await knownDetails(s.businessId);
   return db.billingInvoice.create({ data: { businessId: s.businessId, subscriptionId: s.id, number: await nextInvoiceNumber(now), kind, status: "PAID", lines: quote.lines as unknown as Prisma.InputJsonValue, subtotalMinor: quote.subtotalMinor, vatMinor: quote.vatMinor, totalMinor: quote.totalMinor, periodStart: period.start, periodEnd: period.end, stripePaymentIntentId: paymentIntentId ?? null,
     billedTo: { name: known.name, trn: known.trn ?? null, address: known.address, email: known.email ?? null } as unknown as Prisma.InputJsonValue, createdAt: now } });
@@ -253,4 +255,21 @@ export async function getInvoice(userId: string, businessId: string, invoiceId: 
   const inv = await db.billingInvoice.findFirst({ where: { id: invoiceId, businessId } });
   if (!inv) throw new AppError("NOT_FOUND", "Invoice not found.", 404);
   return inv;
+}
+
+// Extra AI replies, paid with the card on file. The credits are added only after the payment succeeded; the request ID makes a double click charge once.
+const topUpSchema = z.object({ pack: z.enum(TOPUP_IDS as [string, ...string[]]), requestId: z.string().min(8).max(80) }).strict();
+export async function buyTopUp(userId: string, businessId: string, input: unknown, now = new Date()) {
+  const { pack, requestId } = topUpSchema.parse(input);
+  await authorize(userId, businessId, "business.manage");
+  const s = await getSubscriptionFor(businessId);
+  if (!isActive(s)) throw new AppError("NO_SUBSCRIPTION", "Subscribe to a plan first.", 409);
+  if (!s!.stripeCustomerId || !s!.stripePaymentMethodId) throw new AppError("NO_CARD", "Add a card first.", 409);
+  if (s!.status === "PAST_DUE") throw new AppError("PAYMENT_OVERDUE", "Update your card and pay the overdue renewal first.", 409);
+  const id = pack as keyof typeof TOPUPS, q = quoteTopUp(id);
+  const charge = await api<ChargeReply>("/internal/billing/charge", { customerId: s!.stripeCustomerId, paymentMethodId: s!.stripePaymentMethodId, amountMinor: q.totalMinor, description: `Lumia Order ${TOPUPS[id].replies} AI replies`, idempotencyKey: `topup:${s!.id}:${requestId}`, metadata: { kind: "topup", subscriptionId: s!.id, businessId, pack: id } });
+  if (charge.status !== "succeeded") throw new AppError("PAYMENT_FAILED", charge.failureMessage ?? "The payment did not go through. Try another card.", 402);
+  await addCredits(businessId, TOPUPS[id].replies);
+  await writeInvoice(s!, "TOPUP", q, { start: now, end: now }, charge.paymentIntentId, now);
+  return getSubscription(userId, businessId);
 }

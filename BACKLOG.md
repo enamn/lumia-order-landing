@@ -32,3 +32,10 @@
 - Settings the AI does not use yet: delivery fee rules, WhatsApp number routing, payment options, opening hours (hours are saved per branch, not yet enforced when taking orders).
 - Branch pin: search by address and a map picker (today: current location or a pasted Google Maps link).
 - Speech-to-text: real-voice test of OpenAI and Google, then choose a provider per plan.
+
+## Usage limits (follow-ups)
+- Check the real cost per AI reply from the API log event `reply.ai.usage` (token counts) and re-tune `LIMITS` / `TOPUPS` in `apps/admin/src/modules/billing/plans.ts`.
+- Cut the cost per reply (prompt caching of the menu and rules, a cheaper model for simple turns), then raise the limits.
+- Overview banner and an email/WhatsApp alert to the owner at 80% and 100% of the AI replies (today: only on the Billing page and as unanswered chats in the inbox).
+- Super admin: change a restaurant's limits, grant free credits, set a global daily AI ceiling, block a number platform-wide.
+- Restaurant can block a customer number from the inbox.

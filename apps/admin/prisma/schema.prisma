@@ -696,3 +696,15 @@ model BillingCounter {
   value Int
   @@map("billing_counters")
 }
+
+// How much of a monthly allowance a restaurant has used (kind ai, voice, imports; periodStart is the start of its billing month), and its bought
+// AI-reply credits (kind credits; periodStart is always 1970-01-01 so they never expire, `used` is the remaining balance).
+model UsageCounter {
+  id String @id @default(uuid()) @map("_id")
+  businessId String
+  periodStart DateTime
+  kind String
+  used Int @default(0)
+  updatedAt DateTime @updatedAt
+  @@map("usage_counters")
+}

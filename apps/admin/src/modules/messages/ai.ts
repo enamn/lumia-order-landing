@@ -9,11 +9,14 @@ import { welcomeFor } from "./welcome-text";
 import { DRAFT_TTL_MS, type SavedAddr, draftKey, isComplete, meetsMinimum, placedText, recheckText, removedText, resolveDraft, summaryText, type DeliveryContext, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
 import { quoteDelivery, type BranchPoint, type DeliveryRules } from "@/modules/orders/delivery";
 import { canPersonalize } from "@/modules/billing/service";
+import { consume, refund } from "@/modules/billing/usage";
 import { createOrderFromDraft } from "@/modules/orders/service";
 
 // The AI assistant answers customers' WhatsApp messages from the restaurant's own menu. It only replies when the owner turned it on,
 // never keeps talking once a person has taken over, and hands anything it cannot answer (orders, complaints, unknown facts) to staff.
 const HUMAN_ACTIVE_MS = 15 * 60 * 1000; const MAX_AI_PER_HOUR = 20;
+// Abuse guards: one person sending more than RATE_BURST messages in two minutes is told once to slow down, then ignored for a while; very long messages are cut.
+const RATE_BURST = 10; const MAX_TEXT = 1000;
 export const aiSettingsSchema = z.object({ enabled: z.boolean().optional(), instructions: z.string().trim().max(1500).optional(), welcome: z.string().trim().max(600).optional(), tone: z.enum(["Friendly", "Professional", "Casual"]).optional() }).strict();
 
 const agentFor = (businessId: string) => db.aiAgent.findFirst({ where: { businessId }, orderBy: { createdAt: "asc" } });
@@ -83,8 +86,14 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const preQuote = known?.delivery ?? quoteDelivery(rules, branches, { emirate: stored?.emirate ?? pinPlace.emirate, area: stored?.area || pinPlace.area, ...(pin ?? {}) }, 0, options.minimumMinor);
   const deliveryHint = options.delivery ? { method: rules?.method ?? null, needs: preQuote.status === "needs" ? preQuote.need : null, pinReceived: Boolean(pin), emirate: known?.emirate ?? stored?.emirate ?? pinPlace.emirate, area: stored?.area || pinPlace.area, note: pinPlace.formatted ? `The location pin the customer shared is at: ${pinPlace.formatted}. Do not ask for the emirate or area again; still ask for the building, flat or landmark if the address text is missing.` : "" } : null;
   const useName = await canPersonalize(t.businessId);
-  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, delivery: deliveryHint, customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent, ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
-  if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "AI_REPLY_REJECTED", status: r.status, apiCode: r.code })); return "skipped"; }
+  // Abuse guard: a flood from one customer.
+  const burst = await db.message.count({ where: { conversationId: t.conversationId, direction: "INBOUND", createdAt: { gte: new Date(now - 120000) } } });
+  if (burst > RATE_BURST) { if (burst === RATE_BURST + 1) await sendNotice(t, SLOW_DOWN).catch(() => undefined); return "skipped"; }
+  // The plan's monthly AI replies (then bought credits). Someone halfway through an order may finish it; everyone else gets a plain notice and the owner sees the message in the inbox.
+  const taken = await consume(t.businessId, "ai", { inProgress: Boolean(stored) });
+  if (!taken.ok) return sendNotice(t, BUSY, 3600000);
+  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, delivery: deliveryHint, customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
+  if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "AI_REPLY_REJECTED", status: r.status, apiCode: r.code })); await refund(t.businessId, "ai", taken); return sendNotice(t, TRY_AGAIN, 300000).catch(() => "skipped" as const); } // an AI failure must never leave the customer in silence
   const lang = r.data.language; const parts = [r.data.reply];
   const data: { needsHuman?: boolean; draftOrder?: object | null } = {};
   // Muting the assistant is for real complaints and questions it cannot answer. Cancelling or changing an order in progress never needs a person.
@@ -133,19 +142,22 @@ export const UNREADABLE_TYPES = new Set(["AUDIO", "VOICE", "IMAGE", "VIDEO", "DO
 const TYPE_ONLY = "Sorry, I can only read text messages for now. Please type your message and I'll help right away 🙏\nعذراً، أستطيع قراءة الرسائل النصية فقط حالياً. فضلاً اكتب رسالتك وسأساعدك فوراً 🙏";
 const UNSUPPORTED_LANGUAGE = "Sorry, I can only understand voice messages in Arabic or English. Please send your message in Arabic or English, or type it 🙏\nعذراً، أفهم الرسائل الصوتية بالعربية والإنجليزية فقط. فضلاً أرسل رسالتك بالعربية أو الإنجليزية أو اكتبها 🙏";
 const NOT_CLEAR = "Sorry, I couldn't hear that clearly. Could you send it again, or type your message? 🙏\nعذراً، لم أستطع سماع الرسالة بوضوح. هل يمكنك إعادة إرسالها أو كتابتها؟ 🙏";
+const SLOW_DOWN = "You're sending messages very quickly. Please wait a moment and I'll reply 🙏\nأنت ترسل الرسائل بسرعة كبيرة. فضلاً انتظر قليلاً وسأرد عليك 🙏";
+const BUSY = "Thanks for your message! The restaurant has received it and will reply shortly 🙏\nشكراً لرسالتك! وصلت رسالتك إلى المطعم وسيرد عليك قريباً 🙏";
+const TRY_AGAIN = "Sorry, I couldn't process that. Please send your message again 🙏\nعذراً، لم أتمكن من معالجة رسالتك. فضلاً أرسلها مرة أخرى 🙏";
 type Target = { businessId: string; conversationId: string; externalMessageId: string };
 
 // A fixed notice (not an AI answer): same guards as the assistant, and the same notice is never repeated within ten minutes.
-async function sendNotice(t: Target, text: string): Promise<"sent" | "skipped"> {
+async function sendNotice(t: Target, text: string, repeatAfterMs = 600000): Promise<"sent" | "skipped"> {
   const agent = await agentFor(t.businessId);
   if (!isOn(agent)) return "skipped";
   const account = await db.whatsAppAccount.findFirst({ where: { businessId: t.businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
   const conversation = await db.conversation.findFirst({ where: { id: t.conversationId, businessId: t.businessId }, include: { customer: { select: { phone: true } } } });
   if (!account || !conversation || conversation.needsHuman === true) return "skipped";
   const now = Date.now();
-  const recent = await db.message.findMany({ where: { conversationId: t.conversationId }, orderBy: { createdAt: "desc" }, take: 6, select: { senderType: true, textContent: true, createdAt: true } });
+  const recent = await db.message.findMany({ where: { conversationId: t.conversationId }, orderBy: { createdAt: "desc" }, take: 12, select: { senderType: true, textContent: true, createdAt: true } });
   if (recent.some(m => m.senderType === "STAFF" && now - m.createdAt.getTime() < HUMAN_ACTIVE_MS)) return "skipped";
-  if (recent.some(m => m.senderType === "AI" && m.textContent === text && now - m.createdAt.getTime() < 600000)) return "skipped";
+  if (recent.some(m => m.senderType === "AI" && m.textContent === text && now - m.createdAt.getTime() < repeatAfterMs)) return "skipped";
   const messageId = await deliverText(account, conversation.customer.phone, text);
   const at = new Date();
   await db.$transaction([
@@ -162,8 +174,10 @@ export async function handleVoice(t: Target & { mediaId: string }): Promise<"sen
   if (!isOn(agent)) return "skipped";
   const account = await db.whatsAppAccount.findFirst({ where: { businessId: t.businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
   if (!account?.accessTokenEncrypted) return "skipped";
+  const voice = await consume(t.businessId, "voice"); // over the plan's voice notes: ask the customer to type instead
+  if (!voice.ok) return sendNotice(t, TYPE_ONLY);
   const r = await lumiaApi<{ text: string; language: "ar" | "en" | "mixed" | "other"; usable: boolean }>("/internal/whatsapp/transcribe", { accessToken: decryptSecret(account.accessTokenEncrypted), mediaId: t.mediaId, hotwords: (await loadMenu(t.businessId)).flatMap(m => [m.name, m.nameAr]).filter(Boolean).slice(0, 80) }, 90000);
-  if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "VOICE_TRANSCRIBE_FAILED", status: r.status, apiCode: r.code })); return sendNotice(t, TYPE_ONLY); }
+  if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "VOICE_TRANSCRIBE_FAILED", status: r.status, apiCode: r.code })); await refund(t.businessId, "voice", voice); return sendNotice(t, TYPE_ONLY); }
   if (r.data.text) await db.message.updateMany({ where: { externalMessageId: t.externalMessageId }, data: { textContent: r.data.text, transcription: r.data.text } });
   if (r.data.language === "other") return sendNotice(t, r.data.text ? UNSUPPORTED_LANGUAGE : NOT_CLEAR);
   if (!r.data.usable) return sendNotice(t, NOT_CLEAR);

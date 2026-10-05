@@ -112,7 +112,7 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
     process.env.LUMIA_API_URL = "http://api.test"; process.env.INTERNAL_API_KEY = "k".repeat(32); process.env.WHATSAPP_LINK_TEST_MODE = "false"; process.env.WHATSAPP_TOKEN_ENCRYPTION_KEY = Buffer.alloc(32, 9).toString("base64");
     vi.stubGlobal("fetch", vi.fn(async (url: string, init: RequestInit) => {
       const path = new URL(url).pathname; const body = JSON.parse(String(init.body)); calls.push({ path, body });
-      if (path === "/internal/ai/reply") { const ids = (nm: string) => body.menu.find((m: any) => m.name === nm)?.id; return Response.json(ai.__make(ids)); }
+      if (path === "/internal/ai/reply") { if (ai.__fail) return Response.json({ error: { code: "AI_FAILED" } }, { status: 502 }); const ids = (nm: string) => body.menu.find((m: any) => m.name === nm)?.id; return Response.json(ai.__make(ids)); }
       if (path === "/internal/geo/reverse") return Response.json({ emirate: "Sharjah", area: "Al Majaz", street: "Al Majaz St", place: "", formatted: "Al Majaz St, Al Majaz, Sharjah" });
       return Response.json({ messageId: `wamid.out.${suffix}.${++out}` });
     }));
@@ -229,5 +229,24 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
     await turn(() => say("hello again", p), id => draft(id)); expect(lastAi().customer.useName).toBe(false);
     await db.subscription.updateMany({ where: { businessId: biz }, data: { plan: "plus" } });
     await turn(() => say("one more", p), id => draft(id)); expect(lastAi().customer.useName).toBe(true);
+  });
+  it("keeps the customer informed when the plan's AI replies are used up, when the AI fails, and when someone floods the chat", async () => {
+    const { allowanceFor, usageSummary } = await import("../src/modules/billing/usage");
+    const setUsed = async (used: number) => { const { period } = await allowanceFor(biz); await db.usageCounter.updateMany({ where: { businessId: biz, periodStart: period.start, kind: "ai" }, data: { used } }); };
+    const limit = (await usageSummary(biz)).aiReplies.limit;
+    // Used up: a plain notice instead of an AI answer (no AI call), and the same notice is not repeated within the hour.
+    await setUsed(limit); const a = "971500000901";
+    let r = await turn(() => say("hello", a), id => draft(id));
+    expect(calls.some(c => c.path === "/internal/ai/reply")).toBe(false); expect(r).toContain("The restaurant has received it"); expect(r).toContain("وصلت رسالتك");
+    r = await turn(() => say("hello?", a), id => draft(id)); expect(r).toBe(""); expect(calls.some(c => c.path === "/internal/ai/reply")).toBe(false);
+    // The AI itself fails: the customer is told to send it again (never silence) and no allowance is spent.
+    await setUsed(0); ai = { __fail: true }; calls = []; await say("a failing message", "971500000902"); ai = null;
+    expect(sent().at(-1)).toContain("Please send your message again"); expect((await usageSummary(biz)).aiReplies.used).toBe(0);
+    // A flood: the 11th message in two minutes gets one "slow down", later ones are ignored.
+    const f = "971500000903"; let last = "";
+    for (let i = 1; i <= 10; i++) last = await turn(() => say(`msg ${i}`, f), id => draft(id)); expect(last).not.toContain("quickly");
+    r = await turn(() => say("msg 11", f), id => draft(id)); expect(r).toContain("very quickly");
+    r = await turn(() => say("msg 12", f), id => draft(id)); expect(r).toBe("");
+    await setUsed(0);
   });
 });

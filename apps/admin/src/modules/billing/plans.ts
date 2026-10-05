@@ -11,6 +11,18 @@ export const PLANS: Record<PlanId, { name: string; monthly: number; yearly: numb
 // The first terminal costs less on a yearly plan; extra terminals are the same for everyone.
 export const TERMINAL = { yearly: { starter: 549, plus: 499, pro: 399 } as Record<PlanId, number>, monthly: 599, extra: 599 };
 export const VAT_PERCENT = 5;
+
+// What each plan includes every month (counted from the plan's own billing day). An AI reply is one answer the assistant sends; a voice note is one transcription;
+// an import is one menu file read by AI. Sized from the real cost of a reply (about AED 0.08 today), so a plan used to its limit still earns money.
+export interface Limits { aiReplies: number; voice: number; imports: number }
+export const LIMITS: Record<PlanId, Limits> = { starter: { aiReplies: 400, voice: 40, imports: 3 }, plus: { aiReplies: 1000, voice: 150, imports: 10 }, pro: { aiReplies: 2000, voice: 400, imports: 30 } };
+export const TRIAL_LIMITS: Limits = { aiReplies: 150, voice: 15, imports: 3 };
+// Someone already halfway through an order may finish it even when the monthly allowance is used up, up to this much extra.
+export const ORDER_BUFFER = 0.1;
+// Extra AI replies bought on top of the plan. They never expire and are used only after the monthly allowance. Prices are before VAT, in AED.
+export const TOPUPS = { ai500: { replies: 500, price: 69 }, ai2000: { replies: 2000, price: 229 } } as const;
+export type TopUpId = keyof typeof TOPUPS;
+export const TOPUP_IDS = Object.keys(TOPUPS) as TopUpId[];
 // Retries after a failed renewal, in days after the previous attempt. After the last one fails the subscription lapses.
 export const RETRY_DAYS = [1, 3, 5];
 
@@ -31,6 +43,7 @@ export function quoteSignup(plan: PlanId, billing: Billing, terminals: number): 
   return withVat(lines);
 }
 export const quoteRenewal = (plan: PlanId, billing: Billing): Quote => withVat([{ name: planName(plan, billing), unitMinor: planMinor(plan, billing), quantity: 1 }]);
+export const quoteTopUp = (pack: TopUpId): Quote => withVat([{ name: `Lumia Order AI replies (${TOPUPS[pack].replies.toLocaleString("en-US")})`, unitMinor: fils(TOPUPS[pack].price), quantity: 1 }]);
 export const isUpgrade = (from: PlanId, to: PlanId) => PLANS[to].rank > PLANS[from].rank;
 
 // An upgrade in the middle of a period pays the price difference for the time that is left (same billing cycle).

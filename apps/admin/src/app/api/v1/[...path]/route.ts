@@ -4,7 +4,7 @@ import { extractMenu, confirmImport } from "@/modules/menu/import";
 import { setLanguage } from "@/modules/auth/profile";
 import { connectWhatsApp, getWhatsAppStatus, getImportInfo, applyImport, useCatalog, disconnectWhatsApp } from "@/modules/whatsapp/link";
 import { createMessageTemplate } from "@/modules/whatsapp/templates";
-import { getSubscription, startCheckout, startCardUpdate, confirmSession, quotePlanChange, changePlan, setCancel, listInvoices } from "@/modules/billing/service";
+import { getSubscription, startCheckout, startCardUpdate, confirmSession, quotePlanChange, changePlan, buyTopUp, setCancel, listInvoices } from "@/modules/billing/service";
 import { getSettings, saveSettingsSection } from "@/modules/settings/service";
 import { getMessageStats, getOverview, listConversations } from "@/modules/messages/inbound";
 import { getConversation, sendReply } from "@/modules/messages/reply";
@@ -51,6 +51,7 @@ async function handle(request: Request, context: Context) {
         if (subId === "confirm") return confirmSession(userId, businessId, await jsonBody(request));
         if (subId === "quote") return quotePlanChange(userId, businessId, await jsonBody(request));
         if (subId === "change") return changePlan(userId, businessId, await jsonBody(request));
+        if (subId === "topup") return buyTopUp(userId, businessId, await jsonBody(request));
         if (subId === "cancel") return setCancel(userId, businessId, true);
         if (subId === "resume") return setCancel(userId, businessId, false);
       }

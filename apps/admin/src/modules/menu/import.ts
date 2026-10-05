@@ -2,6 +2,7 @@ import { z } from "zod";
 import { authorize } from "@/server/authorization";
 import { transaction } from "@/server/transaction";
 import { AppError } from "@/server/errors";
+import { consume, refund } from "@/modules/billing/usage";
 import { lumiaApi } from "@/server/lumia-api";
 
 const MAX_FILE_BYTES = 8 * 1048576;
@@ -17,8 +18,11 @@ export async function extractMenu(userId: string, businessId: string, input: unk
   await authorize(userId, businessId, "operations.manage");
   const file = uploadSchema.parse(input);
   if (!/^[A-Za-z0-9+/=]+$/.test(file.data) || file.data.length * 0.75 > MAX_FILE_BYTES) throw new AppError("FILE_TOO_LARGE", "That file is too large. Use a file under 8 MB.", 413);
+  const taken = await consume(businessId, "imports"); // AI menu reading is counted per month
+  if (!taken.ok) throw new AppError("LIMIT_REACHED", "You’ve used all AI menu imports included in your plan this month. You can add items manually, or upgrade your plan.", 429);
   const result = await lumiaApi<DraftMenu>("/internal/menu/extract", { mediaType: file.mediaType, data: file.data }, 130000);
   if (result.ok) return result.data;
+  await refund(businessId, "imports", taken); // nothing was read, so it does not count
   if (result.code === "AI_NOT_CONFIGURED") throw new AppError("AI_NOT_CONFIGURED", "AI menu import isn’t available yet. You can add your menu manually.", 503);
   if (result.code === "NO_MENU_FOUND") throw new AppError("NO_MENU_FOUND", "We couldn’t find a menu in that file. Try another file or add items manually.", 422);
   throw new AppError("AI_FAILED", "We couldn’t read that menu. Try a clearer photo or PDF, or add items manually.", 502);

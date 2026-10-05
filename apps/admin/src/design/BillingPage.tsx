@@ -77,6 +77,24 @@ export function BillingPage({ businessId, onChoosePlan, onChanged }: { businessI
       {cardForm && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}><div ref={slot} style={{ minHeight: 300, border: "1.5px solid #ECD9E0", borderRadius: 16, padding: 12, background: "#fff" }} /><div><button type="button" style={outline} onClick={() => setCardForm(null)}>Cancel</button></div></div>}
     </section>}
 
+    {sub.usage && <section style={card}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}><h2 style={h2}>Usage this month</h2><span style={muted}>Resets {date(sub.usage.periodEnd)}</span></div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 16 }}>
+        {([["AI replies", sub.usage.aiReplies], ["Voice notes", sub.usage.voice], ["AI menu imports", sub.usage.imports]] as [string, { used: number; limit: number }][]).map(([label, u]) => { const pct = u.limit ? Math.min(100, Math.round(u.used / u.limit * 100)) : 100, hot = pct >= 100, warm = pct >= 80;
+          return <div key={label} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}><span>{label}</span><b style={{ fontVariantNumeric: "tabular-nums" }}>{u.used.toLocaleString("en-US")} / {u.limit.toLocaleString("en-US")}</b></div>
+            <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={u.limit} aria-valuenow={u.used} style={{ height: 8, borderRadius: 999, background: "#F6EEF2", overflow: "hidden" }}><div style={{ width: `${pct}%`, height: "100%", borderRadius: 999, background: hot ? "#B42318" : warm ? "#E8A100" : "linear-gradient(90deg,#FF5577,#C93DFF)" }} /></div>
+          </div>; })}
+      </div>
+      {sub.usage.credits > 0 && <p style={muted}><b>{sub.usage.credits.toLocaleString("en-US")}</b> extra AI replies bought. They are used after your monthly replies and never expire.</p>}
+      {sub.usage.aiReplies.used >= sub.usage.aiReplies.limit && <div role="alert" style={{ padding: "12px 14px", borderRadius: 12, background: "#FFF1DC", color: "#6B3A00", fontSize: 14, lineHeight: 1.45 }}>Your AI replies for this month are used up{sub.usage.credits > 0 ? "" : ". Customers now get a short “the restaurant will reply shortly” message and you reply yourself from the inbox"}. Buy more below or upgrade your plan.</div>
+        || sub.usage.aiReplies.limit && sub.usage.aiReplies.used / sub.usage.aiReplies.limit >= 0.8 && <div role="status" style={{ padding: "12px 14px", borderRadius: 12, background: "#FFF1DC", color: "#6B3A00", fontSize: 14, lineHeight: 1.45 }}>You have used over 80% of this month’s AI replies.</div>}
+      {active && canManage && <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+        {(sub.topups ?? []).map((t: any) => <button key={t.id} type="button" style={outline} disabled={!!busy || pastDue || !sub.card} onClick={() => { if (window.confirm(`Buy ${t.replies.toLocaleString("en-US")} AI replies for ${aed(t.totalMinor)} (incl. VAT)? Your card ${sub.card ? "••••" + sub.card.last4 : ""} will be charged now.`)) run("topup", () => api(`${base}/topup`, "POST", { pack: t.id, requestId: crypto.randomUUID() }), `${t.replies.toLocaleString("en-US")} AI replies added.`); }}>{busy === "topup" ? "Charging…" : `Add ${t.replies.toLocaleString("en-US")} replies · ${aed(t.subtotalMinor)} + VAT`}</button>)}
+        {!sub.card && <span style={muted}>Add a card to buy more replies.</span>}
+      </div>}
+    </section>}
+
     {active && canManage && <section style={card}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}><h2 style={h2}>Change plan</h2>
         <div role="radiogroup" aria-label="Billing cycle" style={{ display: "flex", padding: 3, borderRadius: 10, background: "#F6EEF2", gap: 2 }}>
@@ -98,7 +116,7 @@ export function BillingPage({ businessId, onChoosePlan, onChanged }: { businessI
       <h2 style={h2}>Invoices</h2>
       {!invoices.length ? <p style={muted}>Invoices appear here after your first payment.</p> : <div style={{ display: "flex", flexDirection: "column" }}>
         {invoices.map((i, k) => <div key={i.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderTop: k ? "1px solid #F3EEF1" : 0, flexWrap: "wrap" }}>
-          <b style={{ fontVariantNumeric: "tabular-nums", minWidth: 130 }}>{i.number}</b><span style={{ ...muted, flex: 1, minWidth: 140 }}>{date(i.createdAt)} · {i.kind === "SIGNUP" ? "First payment" : i.kind === "RENEWAL" ? "Renewal" : "Upgrade"}</span>
+          <b style={{ fontVariantNumeric: "tabular-nums", minWidth: 130 }}>{i.number}</b><span style={{ ...muted, flex: 1, minWidth: 140 }}>{date(i.createdAt)} · {i.kind === "SIGNUP" ? "First payment" : i.kind === "RENEWAL" ? "Renewal" : i.kind === "TOPUP" ? "AI replies" : "Upgrade"}</span>
           <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{aed(i.totalMinor)}</span><a href={`/invoices/${i.id}?businessId=${businessId}`} target="_blank" rel="noreferrer" style={{ fontSize: 14, fontWeight: 500 }}>View</a>
         </div>)}
       </div>}
