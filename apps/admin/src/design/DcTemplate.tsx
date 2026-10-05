@@ -1094,6 +1094,11 @@ export function DcTemplate({ vm }: { vm: any }) {
                         )}
                         </>
                       )}
+                      {vm.pageBilling && (
+                        <>
+                        {vm.billingNode}
+                        </>
+                      )}
                       {vm.pageOrders && (
                         <>
                         <div data-screen-label="06b Dashboard \u00b7 Orders" style={S("display:flex;flex-direction:column;gap:18px")}>

@@ -8,6 +8,8 @@ import "./dc-hover.css";
 import { DcTemplate } from "./DcTemplate";
 import { PageLoader, ContentLoader } from "@/components/lumia-loader";
 import { SettingsLoader, prefetchSettings } from "./SettingsApp";
+import { BillingPage } from "./BillingPage";
+import { mountEmbeddedCheckout } from "@/lib/stripe-embed";
 import { authClient } from "@/lib/auth-client";
 import { logoToDataUrl } from "@/lib/logo";
 import { COUNTRIES, groupDigits as fmt, maskPhone } from "@/modules/auth/countries";
@@ -26,7 +28,7 @@ export interface FlowProps {
   wa: { status: "none" | "connected" | "disconnected"; displayPhoneNumber: string; verifiedName: string };
   meta: { appId: string; configId: string; graphVersion: string };
   marketingUrl: string;
-  initialPage?: "Overview" | "Orders" | "Menu" | "WhatsApp" | "Settings";
+  initialPage?: "Overview" | "Orders" | "Menu" | "WhatsApp" | "Settings" | "Billing";
 }
 export interface MenuCat { id: string; name: string; nameAr: string; items: { id: string; name: string; nameAr: string; priceMinor: number; isAvailable: boolean }[] }
 type Item = { id: string; n: string; ar: string; p: number; on: boolean };
@@ -90,7 +92,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu)) > 0, cat: "All", menu: toCats(props.menu), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
-      page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
+      page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", embedId: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
       lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
     };
   }
@@ -134,34 +136,31 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   showOverviewLoader = () => { if (this.state.overview === null) { this.setState({ ovSlow: false }); this.later(350, () => { if (this.state.overview === null) this.setState({ ovSlow: true }); }); } };
   loadSub = () => (this.state.businessId ? api(`/api/v1/businesses/${this.state.businessId}/subscription`).then((subData: any) => { this.setState({ subData }); return subData; }).catch(() => null) : Promise.resolve(null));
   // Back from Stripe: the webhook may take a few seconds to arrive, so check until the plan shows as active.
-  confirmPayment = async () => {
+  confirmPayment = async (sessionId?: string) => {
     this.setState({ sub: "confirming" });
+    if (sessionId) { try { await api(`/api/v1/businesses/${this.state.businessId}/subscription/confirm`, "POST", { sessionId }); } catch { /* the webhook may still activate it: fall through to the check below */ } }
     for (let i = 0; i < 15; i++) { const d = await this.loadSub(); if (d && (d.status === "ACTIVE" || d.status === "PAST_DUE")) { this.setState({ sub: "done", page: "Overview" }); return; } await new Promise(r => setTimeout(r, 2000)); }
     this.setState({ sub: null, subErr: "" }); // still processing: it will appear on its own
   };
   stripeRef = React.createRef<HTMLDivElement>(); stripeForm: any = null;
   // Stripe's Embedded Checkout: the card form is drawn inside the payment step. Card details go straight to Stripe's frame.
   mountStripe = async () => {
-    const { embedSecret, embedKey } = this.state; if (this.stripeForm || !embedSecret || !this.stripeRef.current) return;
-    const w = window as any;
-    if (!w.Stripe) await new Promise<void>((resolve, reject) => { const t = document.createElement("script"); t.src = "https://js.stripe.com/v3/"; t.onload = () => resolve(); t.onerror = () => reject(Error("We couldn’t load the payment form.")); document.head.appendChild(t); }).catch((e: any) => this.setState({ embedSecret: null, subErr: e.message }));
-    if (!w.Stripe || !this.stripeRef.current || this.state.embedSecret !== embedSecret) return;
+    const { embedSecret, embedKey, embedId } = this.state; if (this.stripeForm || !embedSecret || !this.stripeRef.current) return;
     try {
-      const form = await w.Stripe(embedKey).initEmbeddedCheckout({ clientSecret: embedSecret, onComplete: () => { this.unmountStripe(); this.setState({ embedSecret: null }); this.confirmPayment(); } });
-      if (!this.stripeRef.current) { form.destroy(); return; }
-      this.stripeForm = form; form.mount(this.stripeRef.current);
-    } catch { this.setState({ embedSecret: null, subErr: "We couldn’t load the payment form. Please try again." }); }
+      const form = await mountEmbeddedCheckout(this.stripeRef.current, embedSecret, embedKey, () => { this.unmountStripe(); this.setState({ embedSecret: null }); this.confirmPayment(embedId); });
+      if (!this.stripeRef.current || this.state.embedSecret !== embedSecret) { form.destroy(); return; }
+      this.stripeForm = form;
+    } catch (e: any) { this.setState({ embedSecret: null, subErr: e?.message ?? "We couldn’t load the payment form. Please try again." }); }
   };
   unmountStripe = () => { try { this.stripeForm?.destroy(); } catch { /* already gone */ } this.stripeForm = null; };
   startPay = async (plan: string, bill: string, terminals: number, address: string) => {
     this.setState({ sub: "paying", subErr: "" });
     try {
       const r = await api(`/api/v1/businesses/${this.state.businessId}/subscription/checkout`, "POST", { plan, billing: bill, terminals, address });
-      if (r.clientSecret && r.publishableKey) this.setState({ sub: null, embedSecret: r.clientSecret, embedKey: r.publishableKey }); else window.location.assign(r.url);
+      if (r.clientSecret && r.publishableKey) this.setState({ sub: null, embedSecret: r.clientSecret, embedKey: r.publishableKey, embedId: r.sessionId }); else window.location.assign(r.url);
     }
     catch (e: any) { this.setState({ sub: null, subErr: e?.message ?? "We couldn’t open the payment page. Please try again." }); }
   };
-  openPortal = async () => { try { const r = await api(`/api/v1/businesses/${this.state.businessId}/subscription/portal`, "POST", {}); window.location.assign(r.url); } catch (e: any) { this.setState({ dashErr: e?.message ?? "We couldn’t open billing." }); } };
   loadOrders = () => { if (!this.state.businessId) return; api(`/api/v1/businesses/${this.state.businessId}/orders`).then((rows: any[]) => this.setState((st: any) => ({ orders: rows.map(toDesignOrder), ordSel: st.ordSel ?? null }))).catch((e: any) => this.setState({ ordErr: e?.message ?? "We couldn’t load the orders." })); };
   loadOverview = (period = this.state.period) => { if (this.state.businessId) api(`/api/v1/businesses/${this.state.businessId}/whatsapp/overview?period=${period}&tz=${new Date().getTimezoneOffset()}`).then(overview => { if (this.state.period === period) this.setState({ overview }); }).catch(() => undefined); };
   // Calls the status endpoint one step after another (an accepted order passes through "preparing" before "ready"), then refreshes the list.
@@ -273,7 +272,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
         panel: false, done: s.sub === "done", paying, stepPlans: s.planStep !== "pay", stepPay: s.planStep === "pay", stepLabel: s.planStep === "pay" ? "Step 2 of 2" : "Step 1 of 2", pad: narrow ? "24px 16px 32px" : "40px 32px 48px",
         onTrial: d !== null && !active, isPaid: active, paidName: paidPlan?.name ?? "", paidBg: pastDue ? "#FFF1DC" : "#E4F4EC", paidFg: pastDue ? "#8A4B00" : "#16704A",
         renewLine: pastDue ? A("Payment failed · update your card", "فشل الدفع · حدّث بطاقتك") : d?.cancelAtPeriodEnd && periodEnd ? A(`Ends ${fd(periodEnd)}`, `ينتهي في ${fd(periodEnd)}`) : periodEnd ? A(`Renews ${fd(periodEnd)}`, `يتجدد في ${fd(periodEnd)}`) : "",
-        canPortal: !!d?.canManage && !!d?.hasCustomer, portalLabel: pastDue ? A("Update payment", "تحديث الدفع") : A("Manage billing", "إدارة الفوترة"),
+        canPortal: active && !!d?.canManage, portalLabel: pastDue ? A("Update payment", "تحديث الدفع") : A("Manage billing", "إدارة الفوترة"),
         tag: A("Free trial", "تجربة مجانية"), choose: A("Choose a plan", "اختر باقة"), leftLabel: left === 1 ? A("1 day left", "متبقٍ يوم واحد") : A(`${left} days left`, `متبقٍ ${left} يوماً`), barW: Math.round(left / 14 * 100) + "%",
         title: left ? "You’re on a 14-day free trial" : "Your free trial has ended", body: left ? `Your trial ends on ${endDate}. Subscribe to a plan to keep receiving WhatsApp orders after that.` : "Subscribe to a plan to keep receiving WhatsApp orders.", later: left ? "Maybe later" : "Not now",
         trialLine: paidPlan ? `You’re on the ${paidPlan.name} plan.` : left ? `Your free trial ends on ${endDate}. Pick a plan to keep receiving WhatsApp orders.` : "Your free trial has ended. Pick a plan to keep receiving WhatsApp orders.",
@@ -292,7 +291,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       lockOpen: !!lk, lock: lk || LOCKS.customers, lockClose: () => this.setState({ lock: null }), lockUpgrade: () => this.setState({ lock: null, sub: null, plan: lk ? lk.id : s.plan, page: "Plans", planStep: "plans" }),
       subLater: () => this.setState({ sub: null }), subOpenPlans: () => this.setState({ sub: null, lock: null, page: "Plans", planStep: "plans", subErr: "" }), subClosePlans: () => { if (!paying) { this.unmountStripe(); this.setState({ page: "Overview", planStep: "plans", embedSecret: null }); } }, subBackPlans: () => { if (!paying) { this.unmountStripe(); this.setState({ planStep: "plans", embedSecret: null }); } }, subEmbedBack: () => { this.unmountStripe(); this.setState({ embedSecret: null }); }, stripeRef: this.stripeRef,
       subPay: (e: any) => { e?.preventDefault?.(); if (!addrOk) { this.setState({ addrTry: true }); return; } if (!paying) this.startPay(sel.id, s.bill, qty, addrVal.trim()); },
-      subPortal: this.openPortal, onAddr: (e: any) => this.setState({ addr: e.target.value }), termInc: () => this.setState({ termQty: Math.min(10, qty + 1) }), termDec: () => this.setState({ termQty: Math.max(1, qty - 1) }),
+      subPortal: () => { history.replaceState(null, "", `/dashboard?page=billing&businessId=${this.state.businessId}`); this.setState({ page: "Billing" }); }, onAddr: (e: any) => this.setState({ addr: e.target.value }), termInc: () => this.setState({ termQty: Math.min(10, qty + 1) }), termDec: () => this.setState({ termQty: Math.max(1, qty - 1) }),
       pagePlans: s.page === "Plans",
     };
   }
@@ -578,7 +577,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       setup: setupItems.map(([label0, done, fn], i) => { const lb = T.setup[i]; const label = Array.isArray(lb) ? lb[done ? 1 : 0] : lb; return { label, done, todo: !done, fg: done ? "#1A0815" : "#3D1C31", ul: !done && fn ? "underline" : "none", pick: fn || this.noopFn, bar: i < doneN ? "#16704A" : "rgba(26,8,21,.12)" }; }),
       setupLabel: ar ? `${doneN} من 5 مكتملة` : `${doneN} of 5 completed`, waSetupLabel: `${doneN} of 5 completed`,
       // whatsapp
-      pageMenu: s.page === "Menu", pageOverview: s.page === "Overview", pageOrders: s.page === "Orders", ...this.subVals(ar, narrow), ordLoading: s.orders === null && !s.ordErr && s.ordSlow, loaderNode: <ContentLoader/>, ovLoading: s.overview === null && s.ovSlow, ovReady: s.overview !== null, pageSettings: s.page === "Settings", notSettings: s.page !== "Settings", settingsNode: s.page === "Settings" ? <SettingsLoader businessId={s.businessId} query={`?businessId=${s.businessId}`} onPremium={() => this.setState({ lock: "branches" })}/> : null, ...this.overviewVm(ar, narrow), ...this.ordersVals(ar, narrow), pageWA: s.page === "WhatsApp", waOpen: !!s.wa, wa: { intro: s.wa === "intro", connecting: s.wa === "connecting", success: s.wa === "success", import: s.wa === "import", review: s.wa === "review", catalog: s.wa === "catalog", error: s.wa === "error", inUse: s.wa === "inUse" },
+      pageMenu: s.page === "Menu", pageOverview: s.page === "Overview", pageOrders: s.page === "Orders", pageBilling: s.page === "Billing", billingNode: s.page === "Billing" ? <BillingPage businessId={s.businessId} onChoosePlan={() => this.setState({ page: "Plans", planStep: "plans" })} onChanged={() => this.loadSub()}/> : null, ...this.subVals(ar, narrow), ordLoading: s.orders === null && !s.ordErr && s.ordSlow, loaderNode: <ContentLoader/>, ovLoading: s.overview === null && s.ovSlow, ovReady: s.overview !== null, pageSettings: s.page === "Settings", notSettings: s.page !== "Settings", settingsNode: s.page === "Settings" ? <SettingsLoader businessId={s.businessId} query={`?businessId=${s.businessId}`} onPremium={() => this.setState({ lock: "branches" })}/> : null, ...this.overviewVm(ar, narrow), ...this.ordersVals(ar, narrow), pageWA: s.page === "WhatsApp", waOpen: !!s.wa, wa: { intro: s.wa === "intro", connecting: s.wa === "connecting", success: s.wa === "success", import: s.wa === "import", review: s.wa === "review", catalog: s.wa === "catalog", error: s.wa === "error", inUse: s.wa === "inUse" },
       waLabel: ({ intro: "08 WhatsApp · Connect", connecting: "08a WhatsApp · Connecting", success: "08b WhatsApp · Connected", import: "08c WhatsApp · Import info", review: "08d WhatsApp · Review differences", catalog: "08e WhatsApp · Catalog found", error: "08g WhatsApp · Error", inUse: "08h WhatsApp · Number in use" } as any)[s.wa] || "08 WhatsApp",
       waClose: () => { this.connectToken++; this.clearTimers(); this.setState({ wa: null, confirmReplace: false }); }, openWA: this.openWA, startConnect: this.startConnect, continueSetup: () => { if (!waOn) this.openWA(); },
       cancelConnect: () => { this.connectToken++; this.setState({ wa: "intro" }); },

@@ -198,7 +198,7 @@ model Business {
   status String @default("DRAFT")
   revision Int @default(0)
   settings Json?
-  subscription Json?
+  stripeCustomerId String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   locations Location[]
@@ -636,4 +636,59 @@ model PhoneChallenge {
   sends Int @default(1)
   updatedAt DateTime @updatedAt
   @@map("phone_challenges")
+}
+
+// Subscriptions are run by Lumia: plan, period, renewals, retries and cancellation live here. Stripe only takes each payment and keeps the card.
+// (Unique indexes are created by scripts/mongo-indexes.ts.)
+model Subscription {
+  id String @id @default(uuid()) @map("_id")
+  businessId String
+  plan String
+  billing String
+  status String @default("ACTIVE")
+  terminals Int @default(1)
+  terminalAddress String?
+  terminal Json?
+  stripeCustomerId String?
+  stripePaymentMethodId String?
+  card Json?
+  currentPeriodStart DateTime
+  currentPeriodEnd DateTime
+  nextChargeAt DateTime?
+  cancelAtPeriodEnd Boolean @default(false)
+  pendingPlan String?
+  pendingBilling String?
+  failedAttempts Int @default(0)
+  lastFailure String?
+  processedSessions String[]
+  startedAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([status, nextChargeAt])
+  @@map("subscriptions")
+}
+model BillingInvoice {
+  id String @id @default(uuid()) @map("_id")
+  businessId String
+  subscriptionId String
+  number String
+  kind String
+  status String
+  lines Json
+  subtotalMinor Int
+  vatMinor Int
+  totalMinor Int
+  currency String @default("AED")
+  periodStart DateTime
+  periodEnd DateTime
+  stripePaymentIntentId String?
+  billedTo Json?
+  createdAt DateTime @default(now())
+  @@index([businessId, createdAt])
+  @@map("billing_invoices")
+}
+model BillingCounter {
+  id String @id @map("_id")
+  value Int
+  @@map("billing_counters")
 }

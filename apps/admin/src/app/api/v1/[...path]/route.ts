@@ -4,7 +4,7 @@ import { extractMenu, confirmImport } from "@/modules/menu/import";
 import { setLanguage } from "@/modules/auth/profile";
 import { connectWhatsApp, getWhatsAppStatus, getImportInfo, applyImport, useCatalog, disconnectWhatsApp } from "@/modules/whatsapp/link";
 import { createMessageTemplate } from "@/modules/whatsapp/templates";
-import { getSubscription, startCheckout, openPortal } from "@/modules/billing/service";
+import { getSubscription, startCheckout, startCardUpdate, confirmSession, quotePlanChange, changePlan, setCancel, listInvoices } from "@/modules/billing/service";
 import { getSettings, saveSettingsSection } from "@/modules/settings/service";
 import { getMessageStats, getOverview, listConversations } from "@/modules/messages/inbound";
 import { getConversation, sendReply } from "@/modules/messages/reply";
@@ -44,8 +44,16 @@ async function handle(request: Request, context: Context) {
     }
     if (section === "subscription") {
       if (method === "GET" && path.length === 3) return getSubscription(userId, businessId);
-      if (method === "POST" && subId === "checkout" && path.length === 4) return startCheckout(userId, businessId, await jsonBody(request));
-      if (method === "POST" && subId === "portal" && path.length === 4) return openPortal(userId, businessId);
+      if (method === "GET" && subId === "invoices" && path.length === 4) return listInvoices(userId, businessId);
+      if (method === "POST" && path.length === 4) {
+        if (subId === "checkout") return startCheckout(userId, businessId, await jsonBody(request));
+        if (subId === "card") return startCardUpdate(userId, businessId);
+        if (subId === "confirm") return confirmSession(userId, businessId, await jsonBody(request));
+        if (subId === "quote") return quotePlanChange(userId, businessId, await jsonBody(request));
+        if (subId === "change") return changePlan(userId, businessId, await jsonBody(request));
+        if (subId === "cancel") return setCancel(userId, businessId, true);
+        if (subId === "resume") return setCancel(userId, businessId, false);
+      }
     }
     if (section === "settings") {
       if (method === "GET" && path.length === 3) return getSettings(userId, businessId);

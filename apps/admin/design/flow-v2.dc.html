@@ -533,6 +533,8 @@ input::placeholder{color:#B89AA8}
       </sc-if>
       </sc-if>
 
+      <sc-if value="{{ pageBilling }}" hint-placeholder-val="{{ false }}">{{ billingNode }}</sc-if>
+
       <!-- Orders page -->
       <sc-if value="{{ pageOrders }}" hint-placeholder-val="{{ false }}">
       <div data-screen-label="06b Dashboard · Orders" style="display:flex;flex-direction:column;gap:18px">
