@@ -84,7 +84,8 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "AI_REPLY_REJECTED", status: r.status, apiCode: r.code })); return "skipped"; }
   const lang = r.data.language; const parts = [r.data.reply];
   const data: { needsHuman?: boolean; draftOrder?: object | null } = {};
-  if (r.data.needsHuman) data.needsHuman = true;
+  // Muting the assistant is for real complaints and questions it cannot answer. Cancelling or changing an order in progress never needs a person.
+  if (r.data.needsHuman && (r.data.intent === "complaint" || !stored)) data.needsHuman = true;
   // The model must send the whole draft every turn, but it sometimes drops a field it already knew (emirate, area, address, name). Keep what was
   // already agreed, otherwise the confirmation would not match what the customer was shown and the order would never be placed.
   const sameAddress = !!r.data.order && !!stored && (!r.data.order.address?.trim() || r.data.order.address.trim() === stored.address); // a new address must not inherit the old one's details
