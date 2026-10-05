@@ -67,7 +67,7 @@ export async function sendReply(userId: string, businessId: string, conversation
   const now = new Date();
   return transaction(async tx => {
     const message = await tx.message.create({ data: { conversationId, externalMessageId: messageId, direction: "OUTBOUND", senderType: "STAFF", messageType: "TEXT", textContent: text, status: "SENT", createdAt: now }, select: { id: true, direction: true, senderType: true, messageType: true, textContent: true, status: true, createdAt: true } });
-    await tx.conversation.update({ where: { id: conversationId }, data: { lastMessageAt: now, needsHuman: false } });
+    await tx.conversation.update({ where: { id: conversationId }, data: { lastMessageAt: now, needsHuman: false, aiPausedUntil: null } });
     // The message text is never written to the audit log.
     await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "Conversation", entityId: conversationId, action: "message.sent", requestId } });
     return { id: message.id, direction: message.direction, senderType: message.senderType, type: message.messageType, text: message.textContent ?? "", status: message.status, createdAt: message.createdAt };

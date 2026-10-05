@@ -407,6 +407,8 @@ model Conversation {
   status String @default("OPEN")
   assignedUserId String?
   needsHuman Boolean?
+  // A complaint pauses the assistant until this time (or until staff reply). Other "needs you" flags only mark the chat for staff and never silence it.
+  aiPausedUntil DateTime?
   draftOrder Json?
   customerLocation Json?
   // Pro with a menu per branch: the branch this chat is being served by (set from the shared location pin, or chosen by the customer).

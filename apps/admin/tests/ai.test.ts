@@ -67,14 +67,19 @@ describe.skipIf(!enabled)("AI replies", () => {
     calls = []; await inbound("", { type: "image", textBody: undefined });
     expect(calls.map(c => c.path)).toEqual(["/internal/whatsapp/send"]); // no text to read: only the "please type" notice, never the AI
   });
-  it("sends the holding reply for orders, flags the conversation, then stays quiet until staff handle it", async () => {
+  it("flags the chat for staff when it cannot handle something, but keeps answering; only a complaint pauses it until staff reply", async () => {
     calls = []; ai = { intent: "order_request", language: "en", reply: "One Classic, 28 AED. The team will confirm shortly.", needsHuman: true }; setup();
     await inbound("I want one classic burger");
     expect(calls.some(c => c.path === "/internal/whatsapp/send")).toBe(true);
-    expect((await listConversations(owner, biz))[0]).toMatchObject({ needsHuman: true });
+    expect((await listConversations(owner, biz))[0]).toMatchObject({ needsHuman: true }); // the badge for staff
     calls = []; await inbound("also fries");
-    expect(calls).toEqual([]); // flagged: a person must answer
-    await sendReply(owner, biz, (await db.conversation.findFirstOrThrow({ where: { businessId: biz } })).id, { text: "Confirmed!" }, "t");
+    expect(calls.some(c => c.path === "/internal/whatsapp/send")).toBe(true); // flagged, but the assistant is not silenced: the customer may start something new
+    // A complaint is different: the assistant stops until staff reply.
+    calls = []; ai = { intent: "complaint", language: "en", reply: "Sorry about that, the team will contact you.", needsHuman: true }; setup();
+    await inbound("my food was cold");
+    expect(calls.some(c => c.path === "/internal/whatsapp/send")).toBe(true);
+    calls = []; await inbound("hello?"); expect(calls).toEqual([]); // paused: a person must answer
+    await sendReply(owner, biz, (await db.conversation.findFirstOrThrow({ where: { businessId: biz }, orderBy: { lastMessageAt: "desc" } })).id, { text: "Confirmed!" }, "t");
     expect((await listConversations(owner, biz))[0]).toMatchObject({ needsHuman: false });
     calls = []; await inbound("thanks"); expect(calls).toEqual([]); // staff replied minutes ago: AI stays out
   });
@@ -83,11 +88,12 @@ describe.skipIf(!enabled)("AI replies", () => {
     calls = []; ai = Response.json({ error: { code: "AI_FAILED" } }, { status: 502 }); setup();
     const before = await db.message.count({ where: { conversation: { businessId: biz } } });
     await expect(inbound("any update?")).resolves.toMatchObject({ stored: 1 });
-    expect(await db.message.count({ where: { conversation: { businessId: biz } } })).toBe(before + 1);
-    expect(calls.some(c => c.path === "/internal/whatsapp/send")).toBe(false);
+    expect(await db.message.count({ where: { conversation: { businessId: biz } } })).toBe(before + 2); // the message is kept, and the customer is told to send it again (never silence)
+    expect(calls.filter(c => c.path === "/internal/whatsapp/send").map(c => c.body.text).join("")).toContain("Please send your message again");
   });
   it("a failed delivery does not flag the chat or silence later replies", async () => {
-    await db.conversation.updateMany({ where: { businessId: biz }, data: { needsHuman: false } });
+    await db.conversation.updateMany({ where: { businessId: biz }, data: { needsHuman: false, aiPausedUntil: null } });
+    await db.message.updateMany({ where: { direction: "INBOUND", conversation: { businessId: biz } }, data: { createdAt: new Date(Date.now() - 5 * 60000) } }); // earlier messages in this file would trip the flood guard
     await db.message.updateMany({ where: { senderType: "STAFF", conversation: { businessId: biz } }, data: { createdAt: new Date(Date.now() - 3600000) } });
     calls = []; ai = { intent: "complaint", language: "en", reply: "Sorry about that, a team member will follow up.", needsHuman: true };
     vi.stubGlobal("fetch", vi.fn(async (url: string, init: RequestInit) => { const path = new URL(url).pathname; calls.push({ path, body: JSON.parse(String(init.body)) }); return path === "/internal/ai/reply" ? Response.json(ai) : Response.json({ error: { code: "WHATSAPP_SEND_FAILED" } }, { status: 502 }); }));
@@ -108,16 +114,17 @@ describe.skipIf(!enabled)("AI replies", () => {
     calls = []; await inbound("", { type: "image", textBody: undefined }); expect(calls).toEqual([]); // already told them a moment ago
     calls = []; await inbound("", { type: "sticker", textBody: undefined }); expect(calls).toEqual([]); // stickers and reactions are ignored
   });
-  it("takes the chat back when it was flagged for the team and nobody answered for 30 minutes", async () => {
+  it("a complaint pause ends after 30 minutes if nobody answered", async () => {
     const conv = await db.conversation.findFirstOrThrow({ where: { businessId: biz, customer: { phone: "+971504074115" } }, orderBy: { lastMessageAt: "desc" } }); // the chat the next message lands in
-    await db.conversation.update({ where: { id: conv.id }, data: { needsHuman: true } });
-    await db.message.updateMany({ where: { direction: "OUTBOUND", conversationId: conv.id }, data: { createdAt: new Date(Date.now() - 10 * 60000) } });
-    calls = []; ai = { intent: "greeting", language: "en", reply: "Hello again!", needsHuman: false }; setup();
-    await inbound("are you there?"); expect(calls).toEqual([]); // the team was told 10 minutes ago: still their turn
-    await db.message.updateMany({ where: { direction: "OUTBOUND", conversationId: conv.id }, data: { createdAt: new Date(Date.now() - 31 * 60000) } });
+    await db.conversation.update({ where: { id: conv.id }, data: { needsHuman: true, aiPausedUntil: new Date(Date.now() + 10 * 60000) } });
+    await db.message.updateMany({ where: { senderType: "STAFF", conversationId: conv.id }, data: { createdAt: new Date(Date.now() - 3600000) } });
     await db.message.updateMany({ where: { direction: "INBOUND", conversationId: conv.id }, data: { createdAt: new Date(Date.now() - 5 * 60000) } }); // earlier messages in this test file would trip the flood guard
+    calls = []; ai = { intent: "greeting", language: "en", reply: "Hello again!", needsHuman: false }; setup();
+    await inbound("are you there?"); expect(calls).toEqual([]); // still paused
+    await db.conversation.update({ where: { id: conv.id }, data: { aiPausedUntil: new Date(Date.now() - 1000) } }); // the pause ran out
+    await db.message.updateMany({ where: { direction: "INBOUND", conversationId: conv.id }, data: { createdAt: new Date(Date.now() - 5 * 60000) } });
     calls = []; await inbound("hello?");
-    expect(calls.some(c => c.path === "/internal/whatsapp/send")).toBe(true); expect((await db.conversation.findUniqueOrThrow({ where: { id: conv.id } })).needsHuman).toBe(false);
+    expect(calls.some(c => c.path === "/internal/whatsapp/send")).toBe(true);
   });
   it("stays quiet only if it was explicitly disabled by us", async () => {
     await setAiSettings(owner, biz, { enabled: false }, "t"); await db.conversation.updateMany({ where: { businessId: biz }, data: { needsHuman: false } });

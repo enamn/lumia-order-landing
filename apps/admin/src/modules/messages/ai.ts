@@ -15,8 +15,8 @@ import { confirmPendingOrder, createOrderFromDraft, discardPendingOrders, findPe
 
 // The AI assistant answers customers' WhatsApp messages from the restaurant's own menu. It only replies when the owner turned it on,
 // never keeps talking once a person has taken over, and hands anything it cannot answer (orders, complaints, unknown facts) to staff.
-// "Needs a person" silences the assistant, but only while the team can still answer: if nobody has replied for this long, the assistant takes the chat back.
-const HUMAN_FLAG_MS = 30 * 60 * 1000;
+// A complaint pauses the assistant for this long (staff replying also keeps it quiet). "Needs you" on its own only marks the chat for staff.
+const COMPLAINT_PAUSE_MS = 30 * 60 * 1000;
 const HUMAN_ACTIVE_MS = 15 * 60 * 1000; const MAX_AI_PER_HOUR = 20;
 // Abuse guards: one person sending more than RATE_BURST messages in two minutes is told once to slow down, then ignored for a while; very long messages are cut.
 const RATE_BURST = 10; const MAX_TEXT = 1000;
@@ -63,11 +63,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const now = Date.now();
   const recent = await db.message.findMany({ where: { conversationId: t.conversationId }, orderBy: { createdAt: "desc" }, take: 12, select: { externalMessageId: true, direction: true, senderType: true, messageType: true, textContent: true, createdAt: true } });
   // Answer only the newest customer message, and stay quiet while a person is actively replying.
-  if (conversation.needsHuman === true) {
-    const lastOut = recent.find(m => m.direction === "OUTBOUND");
-    if (lastOut && now - lastOut.createdAt.getTime() < HUMAN_FLAG_MS) return "skipped"; // the team was just told: give them time
-    await db.conversation.update({ where: { id: t.conversationId }, data: { needsHuman: false } }); // nobody answered in a while: the assistant takes over again
-  }
+  if (conversation.aiPausedUntil && conversation.aiPausedUntil.getTime() > now) return "skipped"; // a complaint is with the team
   const latestInbound = recent.find(m => m.direction === "INBOUND");
   if (!latestInbound || latestInbound.externalMessageId !== t.externalMessageId || !latestInbound.textContent) return "skipped";
   if (recent.some(m => m.senderType === "STAFF" && now - m.createdAt.getTime() < HUMAN_ACTIVE_MS)) return "skipped";
@@ -135,7 +131,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; branch?: string; askLocation?: boolean; locationConfirmed?: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, delivery: deliveryHint, ...(branchNeeded ? { branchNeeded: true, branches: branchList.map(b => ({ id: b.id, name: b.name })), ...(lastBranch ? { lastBranch } : {}) } : {}), ...(wantsPin && candidate ? { candidate: candidate.formatted } : {}), customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
   if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "AI_REPLY_REJECTED", status: r.status, apiCode: r.code })); await refund(t.businessId, "ai", taken); return sendNotice(t, TRY_AGAIN, 300000).catch(() => "skipped" as const); } // an AI failure must never leave the customer in silence
   const lang = r.data.language; const parts = [r.data.reply];
-  const data: { needsHuman?: boolean; draftOrder?: object | null; branchId?: string | null; customerLocation?: object; candidateLocation?: object | null } = {};
+  const data: { needsHuman?: boolean; aiPausedUntil?: Date | null; draftOrder?: object | null; branchId?: string | null; customerLocation?: object; candidateLocation?: object | null } = {};
   if (newCandidate) data.candidateLocation = newCandidate;
   // The customer confirmed the place we found for their typed address: from now on it works like a shared pin.
   if (wantsPin && candidate && r.data.locationConfirmed) { data.customerLocation = { latitude: candidate.latitude, longitude: candidate.longitude, name: "", address: "", at: new Date().toISOString(), emirate: candidate.emirate, area: candidate.area, street: candidate.street, place: candidate.place, formatted: candidate.formatted, source: "address" }; data.candidateLocation = null; }
@@ -146,7 +142,8 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   if (branchNeeded) r.data.order = null;
   if (chosen) data.branchId = chosen.realId;
   // Muting the assistant is for real complaints and questions it cannot answer. Cancelling or changing an order in progress never needs a person.
-  if (r.data.needsHuman && (r.data.intent === "complaint" || !stored)) data.needsHuman = true;
+  if (r.data.needsHuman && (r.data.intent === "complaint" || !stored)) data.needsHuman = true; // the badge for staff
+  if (r.data.intent === "complaint") data.aiPausedUntil = new Date(now + COMPLAINT_PAUSE_MS); // only a complaint silences the assistant
   // The model must send the whole draft every turn, but it sometimes drops a field it already knew (emirate, area, address, name). Keep what was
   // already agreed, otherwise the confirmation would not match what the customer was shown and the order would never be placed.
   const sameAddress = !!r.data.order && !!stored && (!r.data.order.address?.trim() || r.data.order.address.trim() === stored.address); // a new address must not inherit the old one's details
@@ -236,7 +233,7 @@ async function sendNotice(t: Target, text: string, repeatAfterMs = 600000): Prom
   if (!isOn(agent)) return "skipped";
   const account = await db.whatsAppAccount.findFirst({ where: { businessId: t.businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
   const conversation = await db.conversation.findFirst({ where: { id: t.conversationId, businessId: t.businessId }, include: { customer: { select: { phone: true } } } });
-  if (!account || !conversation || conversation.needsHuman === true) return "skipped";
+  if (!account || !conversation || (conversation.aiPausedUntil && conversation.aiPausedUntil.getTime() > Date.now())) return "skipped";
   const now = Date.now();
   const recent = await db.message.findMany({ where: { conversationId: t.conversationId }, orderBy: { createdAt: "desc" }, take: 12, select: { senderType: true, textContent: true, createdAt: true } });
   if (recent.some(m => m.senderType === "STAFF" && now - m.createdAt.getTime() < HUMAN_ACTIVE_MS)) return "skipped";
