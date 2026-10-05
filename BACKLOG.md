@@ -2,7 +2,11 @@
 
 ## Super admin (internal tool, not built yet)
 - **Company and VAT settings.** Lumia's legal name, tax registration number (TRN) and address. While there is no TRN: no VAT is charged, no VAT line is shown, and invoices say "Invoice". With a TRN: VAT (5%) is added and invoices say "Tax invoice" with the number. Decide then whether prices stay "plus VAT". (Today the app always adds 5% VAT and invoices show "Lumia Order" only. Env vars `LUMIA_LEGAL_NAME`, `LUMIA_TRN`, `LUMIA_ADDRESS` exist for the invoice page.)
-- **Terminal shipping.** Set stage (preparing / shipped / out for delivery / delivered) and tracking number per subscription. Today this is edited by hand in the database.
+- **Terminal shipments.** See every terminal order, set its stage (preparing / shipped / out for delivery / delivered) and tracking number, and see the delivery address. Today this is edited by hand in the database.
+- **Orders and clients.** View all restaurants and their customers, and the orders across restaurants (read-only to start).
+- **Support.** Look up a restaurant, see its plan, payments, connection status and recent errors, and help the owner. Includes the actions below.
+- **AI failure logs.** A list of the cases where the AI could not answer or order (reply failed, voice transcription failed, order draft rejected, WhatsApp not connected, and so on), with the reason, the time, the restaurant and the conversation, so the cause of each error can be checked. (Today these only appear in the server logs as `AI_REPLY_FAILED`, `VOICE_TRANSCRIBE_FAILED` and similar.)
+- **Analytics.** Landing page: visitors, clicks on "Sign up" / "Sign in", and how many go on to create an account. Also sign-ups per day, trials started, trial-to-paid conversion, active restaurants, orders and messages per day. (The landing page has no tracking yet.)
 - **Subscriptions.** View, extend a trial, give a free plan, refund, fix a failed renewal.
 
 ## Billing
