@@ -942,6 +942,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                       )}
                       {vm.pageMenu && (
                         <>
+                        {vm.menuScopeNode}
                         <div style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
                           <div>
                             <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
@@ -1616,7 +1617,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                                 </span>
                                               </div>
                                               <span style={S("font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty")}>
-                                                Receives, accepts and prints your orders. Every subscription includes at least one terminal.
+                                                The Lumia Order terminal for your restaurant. Orders are handled from your dashboard. Every subscription includes at least one terminal.
                                               </span>
                                               <span style={S("display:flex;align-items:baseline;gap:8px;margin-top:4px;font-variant-numeric:tabular-nums")}>
                                                 <span style={S("font-size:14px;color:#8A5A6E;text-decoration:line-through")}>

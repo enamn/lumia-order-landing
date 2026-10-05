@@ -27,12 +27,15 @@ rep('''    <div style="flex:{{ L.spacer }};min-height:24px"></div>''', '''    <s
 # 5 dashboard: page-level error under the setup banner
 rep('''      <sc-if value="{{ pageMenu }}" hint-placeholder-val="{{ true }}">''', '''      <!-- LUMIA-EXT dash error -->
       <sc-if value="{{ dashErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="''' + ERR + '''">{{ dashErr }}</div></sc-if>
-      <sc-if value="{{ pageMenu }}" hint-placeholder-val="{{ true }}">''') if s.count('      <sc-if value="{{ pageMenu }}" hint-placeholder-val="{{ true }}">') == 1 else None
+      <sc-if value="{{ pageMenu }}" hint-placeholder-val="{{ true }}">
+        {{ menuScopeNode }}''') if s.count('      <sc-if value="{{ pageMenu }}" hint-placeholder-val="{{ true }}">') == 1 else None
 # 6 wire the buttons the design leaves as no-ops
 rep('onClick="{{ noop }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">{{ t.addItem }}', 'onClick="{{ openAddItem }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">{{ t.addItem }}')
 rep('>Add item manually</button>', '>Add item manually</button>')
 s = s.replace('<button type="button" onClick="{{ noop }}" style="height:46px;padding:0 20px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Add item manually', '<button type="button" onClick="{{ openAddItem }}" style="height:46px;padding:0 20px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Add item manually')
 a = s.index('+ {{ t.addAr }}'); b = s.rfind('onClick="{{ noop }}"', 0, a); s = s[:b] + 'onClick="{{ it.editAr }}"' + s[b + len('onClick="{{ noop }}"'):]
+# 6a the terminal does not receive or print orders yet: orders are handled in the dashboard, so do not promise it
+rep('Receives, accepts and prints your orders. Every subscription includes at least one terminal.', 'The Lumia Order terminal for your restaurant. Orders are handled from your dashboard. Every subscription includes at least one terminal.')
 # 6b WhatsApp catalog counts
 for old, new in [(">37</span>", ">{{ waCatTotal }}</span>"), (">products · 5 categories</span>", ">products · {{ waCatCount }} categories</span>"), ("by 37 products from", "by {{ waCatTotal }} products from")]: s = s.replace(old, new)
 # 6c real legal links

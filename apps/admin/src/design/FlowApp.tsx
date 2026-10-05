@@ -8,6 +8,7 @@ import "./dc-hover.css";
 import { DcTemplate } from "./DcTemplate";
 import { PageLoader, ContentLoader } from "@/components/lumia-loader";
 import { SettingsLoader, prefetchSettings } from "./SettingsApp";
+import { MenuScope, type Scope } from "./MenuScope";
 import { BillingPage } from "./BillingPage";
 import { mountEmbeddedCheckout } from "@/lib/stripe-embed";
 import { authClient } from "@/lib/auth-client";
@@ -93,7 +94,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu)) > 0, cat: "All", menu: toCats(props.menu), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
       page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", embedId: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
-      lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
+      menuScope: null as Scope | null, menuBranch: "", scopeBusy: false, scopeErr: "", lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
     };
   }
   later(ms: number, fn: () => void) { const t = setTimeout(fn, ms); this.timers.push(t); return t; }
@@ -107,7 +108,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     if (this.state.step === "dash" && this.state.page === "WhatsApp") this.loadStats();
     if (this.state.step === "dash" && this.state.businessId) {
       const q = new URLSearchParams(window.location.search), billing = q.get("billing");
-      this.loadSub();
+      this.loadSub(); this.loadScopes();
       if (billing) { q.delete("billing"); history.replaceState(null, "", `${window.location.pathname}${q.toString() ? "?" + q.toString() : ""}`); if (billing === "success") this.confirmPayment(); }
     }
     if (this.state.step === "dash" && this.state.page === "Overview") { this.loadOverview(); this.showOverviewLoader(); }
@@ -127,10 +128,17 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     if (step === "name") this.focus(this.nameRef); if (step === "phone") this.focus(this.phoneRef);
   }
   // ---- data helpers
+  // Pro: the menu shown and edited is the shared one, or the selected branch's own. A branch with no menu of its own shows (and edits) the shared one.
+  menuQuery = (forWrite = false) => { const s = this.state, b = s.menuScope?.branches.find((x: any) => x.id === s.menuBranch); return b && (!forWrite || b.hasOwnMenu) ? `?branchId=${b.id}` : ""; };
   async refreshMenu() {
-    const data: MenuCat[] = await api(`/api/v1/businesses/${this.state.businessId}/menu`);
+    const data: MenuCat[] = await api(`/api/v1/businesses/${this.state.businessId}/menu${this.menuQuery()}`);
     const menu = toCats(data); this.setState({ menu, menuDone: count(menu) > 0 });
   }
+  async loadScopes() {
+    if (!this.state.businessId) return;
+    try { const menuScope: Scope = await api(`/api/v1/businesses/${this.state.businessId}/menu/scopes`); this.setState((st: any) => ({ menuScope, menuBranch: menuScope.menuPerBranch && menuScope.branches.some(b => b.id === st.menuBranch) ? st.menuBranch : "" })); } catch { /* the selector is optional */ }
+  }
+  scopeAct = async (fn: () => Promise<unknown>) => { this.setState({ scopeBusy: true, scopeErr: "" }); try { await fn(); await this.loadScopes(); await this.refreshMenu(); } catch (e: any) { this.setState({ scopeErr: e.message }); } this.setState({ scopeBusy: false }); };
   // The loader only appears if the first load is slow, so fast loads never flash it.
   showOrdersLoader = () => { if (this.state.orders === null) { this.setState({ ordSlow: false }); this.later(350, () => { if (this.state.orders === null) this.setState({ ordSlow: true }); }); } };
   showOverviewLoader = () => { if (this.state.overview === null) { this.setState({ ovSlow: false }); this.later(350, () => { if (this.state.overview === null) this.setState({ ovSlow: true }); }); } };
@@ -381,7 +389,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const draft: Draft[] = this.state.draft; if (draft.some(c => c.items.some(i => i.flag)) || this.state.busy) return;
     this.setState({ busy: true, readyErr: "" });
     try {
-      await api(`/api/v1/businesses/${this.state.businessId}/menu/import/confirm`, "POST", { categories: draft.map(c => ({ name: c.arOnly ? "" : c.cat, nameAr: c.arOnly ? c.cat : c.catAr, items: c.items.map(i => ({ name: i.arOnly ? "" : i.n, nameAr: i.arOnly ? i.n : i.ar, price: priceNum(i.p) ?? 0 })) })) });
+      await api(`/api/v1/businesses/${this.state.businessId}/menu/import/confirm${this.menuQuery(true)}`, "POST", { categories: draft.map(c => ({ name: c.arOnly ? "" : c.cat, nameAr: c.arOnly ? c.cat : c.catAr, items: c.items.map(i => ({ name: i.arOnly ? "" : i.n, nameAr: i.arOnly ? i.n : i.ar, price: priceNum(i.p) ?? 0 })) })) });
       await this.refreshMenu(); this.setState({ busy: false }); this.go("dash", { cat: "All" });
     } catch (err) { this.setState({ busy: false, readyErr: err instanceof Error ? err.message : "Could not save the menu." }); }
   };
@@ -405,7 +413,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     fields: [{ key: "name", label: "Name (English)", placeholder: "Classic Burger" }, { key: "nameAr", label: "الاسم (عربي)", placeholder: "برجر كلاسيك", dir: "rtl" }, { key: "category", label: "Category", placeholder: "Burgers", value: this.state.cat !== "All" ? this.state.menu.find((c: Cat) => c.id === this.state.cat)?.cat ?? "" : "" }, { key: "price", label: "Price (AED)", placeholder: "28", mode: "decimal" }],
     save: async v => {
       const price = priceNum(v.price ?? ""); if (price === null) throw Error("Enter a price, for example 28.");
-      await api(`/api/v1/businesses/${this.state.businessId}/menu/items`, "POST", { name: v.name ?? "", nameAr: v.nameAr ?? "", category: v.category ?? "", categoryAr: "", price });
+      await api(`/api/v1/businesses/${this.state.businessId}/menu/items${this.menuQuery(true)}`, "POST", { name: v.name ?? "", nameAr: v.nameAr ?? "", category: v.category ?? "", categoryAr: "", price });
       await this.refreshMenu(); this.setState({ cat: "All", q: "" });
     } });
   editAr = (item: Item) => this.openDialog({ title: "Add Arabic name", hint: item.n, saveLabel: "Save", fields: [{ key: "nameAr", label: "الاسم (عربي)", placeholder: "الاسم بالعربية", dir: "rtl", value: item.ar }],
@@ -464,7 +472,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   };
   useCatalog = async () => {
     const mode = this.state.menuDone ? "replace" : "use";
-    try { await api(`/api/v1/businesses/${this.state.businessId}/whatsapp/catalog/use`, "POST", { mode }); await this.refreshMenu(); this.setState({ wa: null, confirmReplace: false, cat: "All", page: "Menu" }); }
+    try { await api(`/api/v1/businesses/${this.state.businessId}/whatsapp/catalog/use${this.menuQuery(true)}`, "POST", { mode }); await this.refreshMenu(); this.setState({ wa: null, confirmReplace: false, cat: "All", page: "Menu" }); }
     catch (err) { this.setState({ wa: "error", waErrText: err instanceof Error ? err.message : "Could not import the catalog.", confirmReplace: false }); }
   };
   doDisconnect = async () => {
@@ -577,6 +585,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       setup: setupItems.map(([label0, done, fn], i) => { const lb = T.setup[i]; const label = Array.isArray(lb) ? lb[done ? 1 : 0] : lb; return { label, done, todo: !done, fg: done ? "#1A0815" : "#3D1C31", ul: !done && fn ? "underline" : "none", pick: fn || this.noopFn, bar: i < doneN ? "#16704A" : "rgba(26,8,21,.12)" }; }),
       setupLabel: ar ? `${doneN} من 5 مكتملة` : `${doneN} of 5 completed`, waSetupLabel: `${doneN} of 5 completed`,
       // whatsapp
+      menuScopeNode: <MenuScope scope={s.menuScope} branchId={s.menuBranch} busy={s.scopeBusy} error={s.scopeErr} onPick={id => this.setState({ menuBranch: id, scopeErr: "" }, () => this.refreshMenu().catch(e => this.setState({ scopeErr: e.message })))} onCreate={copy => this.scopeAct(() => api(`/api/v1/businesses/${s.businessId}/menu/branches/${s.menuBranch}`, "POST", { copy }))} onRemove={() => this.scopeAct(() => api(`/api/v1/businesses/${s.businessId}/menu/branches/${s.menuBranch}`, "DELETE"))}/>,
       pageMenu: s.page === "Menu", pageOverview: s.page === "Overview", pageOrders: s.page === "Orders", pageBilling: s.page === "Billing", billingNode: s.page === "Billing" ? <BillingPage businessId={s.businessId} onChoosePlan={() => this.setState({ page: "Plans", planStep: "plans" })} onChanged={() => this.loadSub()}/> : null, ...this.subVals(ar, narrow), ordLoading: s.orders === null && !s.ordErr && s.ordSlow, loaderNode: <ContentLoader/>, ovLoading: s.overview === null && s.ovSlow, ovReady: s.overview !== null, pageSettings: s.page === "Settings", notSettings: s.page !== "Settings", settingsNode: s.page === "Settings" ? <SettingsLoader businessId={s.businessId} query={`?businessId=${s.businessId}`} onPremium={() => this.setState({ lock: "branches" })} onSaved={() => this.loadOverview()}/> : null, ...this.overviewVm(ar, narrow), ...this.ordersVals(ar, narrow), pageWA: s.page === "WhatsApp", waOpen: !!s.wa, wa: { intro: s.wa === "intro", connecting: s.wa === "connecting", success: s.wa === "success", import: s.wa === "import", review: s.wa === "review", catalog: s.wa === "catalog", error: s.wa === "error", inUse: s.wa === "inUse" },
       waLabel: ({ intro: "08 WhatsApp · Connect", connecting: "08a WhatsApp · Connecting", success: "08b WhatsApp · Connected", import: "08c WhatsApp · Import info", review: "08d WhatsApp · Review differences", catalog: "08e WhatsApp · Catalog found", error: "08g WhatsApp · Error", inUse: "08h WhatsApp · Number in use" } as any)[s.wa] || "08 WhatsApp",
       waClose: () => { this.connectToken++; this.clearTimers(); this.setState({ wa: null, confirmReplace: false }); }, openWA: this.openWA, startConnect: this.startConnect, continueSetup: () => { const f = s.overview?.setup; if (!waOn) this.openWA(); else if (!s.menuDone) this.setState({ page: "Menu" }); else if (!f?.delivery) { history.replaceState(null, "", `/dashboard?page=settings&businessId=${this.state.businessId}#delivery`); this.setState({ page: "Settings" }); } else if (!f?.tested) { const n = String(s.waPhone || this.props.wa.displayPhoneNumber || "").replace(/\D/g, ""); if (n) window.open("https://wa.me/" + n, "_blank"); } },

@@ -40,3 +40,11 @@
 - Overview banner and an email/WhatsApp alert to the owner at 80% and 100% of the orders (today: only on the Billing page and as unanswered chats in the inbox).
 - Super admin: change a restaurant's limits, grant free orders, set a global daily AI ceiling, block a number platform-wide.
 - Restaurant can block a customer number from the inbox.
+
+## Branches and menus (follow-ups)
+- Setup readiness (`readiness.ts`) is still business-wide: a Pro branch with its own empty menu is not flagged.
+- Pro branch choice: pin = nearest branch with a location pin, pickup = the customer names the branch. Delivery by area (no pin) does not pick a branch yet; the assistant asks for the pin. Area rules that name a branch could pick it.
+- The `wa` routing setting (one number for all branches / selected branches) is still saved but not used.
+- Removing a branch menu archives it (not deleted); there is no restore button.
+- Terminal: orders are handled from the dashboard. Printing / receiving orders needs pairing (the unused `Device` model has `locationId` for one terminal per branch). Marketing copy no longer promises it.
+- Check the Pro extra-branch price (AED 99/month, AED 990/year) and +80 orders per branch after real usage.

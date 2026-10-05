@@ -100,4 +100,4 @@ async function handle(request: Request, context: Context) {
     throw new AppError("NOT_FOUND", "Endpoint not found.", 404);
   });
 }
-export { handle as GET, handle as POST, handle as PATCH, handle as PUT };
+export { handle as GET, handle as POST, handle as PATCH, handle as PUT, handle as DELETE };
