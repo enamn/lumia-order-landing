@@ -100,9 +100,11 @@ export async function autoReply(t: { businessId: string; conversationId: string;
       if (resolved.removed.length) parts.push(removedText(resolved.removed, lang));
       // The customer said yes but this is not (yet) exactly what they were shown, or something is missing: never let the assistant claim the order
       // is placed. Show the summary again and ask them to confirm it.
-      if (model.confirmed) parts[0] = recheckText(lang);
+      const showSummary = stored?.shownKey !== key || resolved.removed.length > 0 || model.confirmed;
+      // The summary below asks for YES, so the assistant's own words must not say the order is already confirmed; a real question from it is kept.
+      if (model.confirmed || (showSummary && !/[?؟]/.test(parts[0] ?? ""))) parts[0] = recheckText(lang);
       // Show the exact summary whenever it changed, or an item was dropped, so the customer always confirms what we will really place.
-      if (stored?.shownKey !== key || resolved.removed.length || model.confirmed) parts.push(summaryText(resolved, lang, options));
+      if (showSummary) parts.push(summaryText(resolved, lang, options));
       data.draftOrder = { items: resolved.lines.map(l => ({ itemId: l.itemId, quantity: l.quantity, notes: l.notes })), fulfillment: resolved.fulfillment, address: resolved.address, emirate: resolved.emirate, area: resolved.area, label: resolved.label, savedId: resolved.savedId, name: model.customerName || "", shownKey: key, updatedAt: new Date().toISOString() };
     }
   }
