@@ -85,7 +85,11 @@ export async function getOverview(userId: string, businessId: string, period: st
   for (const o of cur.rows) for (const it of o.items) qty.set(it.itemNameSnapshot, (qty.get(it.itemNameSnapshot) ?? 0) + it.quantity);
   const top = [...qty].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([name, sold]) => ({ name, sold }));
   const strip = ({ rows: _rows, ...rest }: typeof cur) => rest;
-  return { period: period in PERIODS ? period : "week", currency: orders[0]?.currencyCode ?? "AED", current: strip(cur), previous: strip(prev), buckets, top };
+  // Setup checklist: delivery rules saved in Settings, and at least one order placed (a real or test order).
+  const biz = await db.business.findUniqueOrThrow({ where: { id: businessId }, select: { settings: true } });
+  const delivery = (biz.settings as { delivery?: { method?: string | null; status?: string } } | null)?.delivery;
+  const setup = { delivery: Boolean(delivery && (delivery.method || (delivery.status && delivery.status !== "available"))), tested: (await db.order.count({ where: { businessId } })) > 0 };
+  return { setup, period: period in PERIODS ? period : "week", currency: orders[0]?.currencyCode ?? "AED", current: strip(cur), previous: strip(prev), buckets, top };
 }
 
 export async function listConversations(userId: string, businessId: string) {

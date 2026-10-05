@@ -123,6 +123,7 @@ describe.skipIf(!enabled)("taking orders over WhatsApp", () => {
   it("summarises orders, revenue, chats and top items for the Overview page, only for members", async () => {
     const week = await getOverview(owner, biz, "week", 0);
     const total = await db.order.aggregate({ where: { businessId: biz, status: { in: ["AWAITING_BUSINESS_CONFIRMATION", "ACCEPTED", "PREPARING", "READY", "OUT_FOR_DELIVERY", "COMPLETED"] } }, _sum: { totalMinor: true }, _count: true });
+    expect(week.setup).toEqual({ delivery: false, tested: true }); // an order exists, delivery rules were never saved
     expect(week.current.orders).toBe(total._count); expect(week.current.revenueMinor).toBe(total._sum.totalMinor ?? 0);
     expect(week.current.avgMinor).toBe(Math.round((total._sum.totalMinor ?? 0) / Math.max(1, total._count))); expect(week.current.chats).toBeGreaterThan(0);
     expect(week.buckets).toHaveLength(7); expect(week.buckets.reduce((t, b) => t + b.orders, 0)).toBe(week.current.orders); expect(week.top[0]).toMatchObject({ name: "Classic" });

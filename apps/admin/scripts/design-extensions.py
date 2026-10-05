@@ -77,6 +77,10 @@ s, _n = _re.subn(r'<dc-import name="Lumia Order Restaurant Settings"[^>]*></dc-i
 FORM_OPEN = '<form onSubmit="{{ subPay }}" noValidate="{{ true }}" style="display:flex;flex-direction:column;gap:16px">'
 i = s.index(FORM_OPEN); j = s.index('</form>', i) + len('</form>')
 s = s[:i] + '<sc-if value="{{ sub.embed }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:12px;min-width:0"><button type="button" onClick="{{ subEmbedBack }}" style="align-self:flex-start;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px 0 8px;border-radius:10px;font-size:14px;font-weight:500;color:#3D1C31" style-hover="background:#FBF3F8;color:#1A0815">← Edit details</button><div ref="{{ stripeRef }}" style="min-height:420px;border:1.5px solid #ECD9E0;border-radius:16px;padding:12px;background:#fff"></div></div></sc-if>\n<sc-if value="{{ sub.notEmbed }}" hint-placeholder-val="{{ true }}">' + s[i:j] + '</sc-if>' + s[j:]
+# 15 the setup banner disappears once every step is done
+SB = '      <section style="border-radius:20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);padding:22px 24px;display:flex;flex-wrap:wrap;gap:18px 32px;align-items:center">'
+_i = s.index(SB); _j = s.index('      </section>', _i) + len('      </section>')
+s = s[:_i] + '      <sc-if value="{{ setupShow }}" hint-placeholder-val="{{ true }}">\n' + s[_i:_j] + '\n      </sc-if>' + s[_j:]
 # 14 billing page (our own: plan, card, plan changes, invoices) in the dashboard's content area
 rep('      <!-- Orders page -->', '      <sc-if value="{{ pageBilling }}" hint-placeholder-val="{{ false }}">{{ billingNode }}</sc-if>\n\n      <!-- Orders page -->')
 # 12 subscriptions. Payment is Stripe's hosted Checkout (no card fields in Lumia), the device preview becomes an icon, tracking is real data.

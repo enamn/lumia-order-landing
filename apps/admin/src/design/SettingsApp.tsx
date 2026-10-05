@@ -13,7 +13,7 @@ import { ContentLoader } from "@/components/lumia-loader";
 export interface SettingsProps {
   businessId: string;
   query: string;
-  onPremium?: () => void;
+  onPremium?: () => void; onSaved?: () => void;
   initial: { sections: any; branchLimit?: number; menu: { categories: number; items: number; missingPrices: number; soldOut: number; updatedAt: string | null }; whatsapp: { connected: boolean; displayPhoneNumber: string } };
 }
 type Props = SettingsProps;
@@ -87,7 +87,7 @@ class SettingsApp extends React.Component<Props, any> {
       const res = await api(`/api/v1/businesses/${this.props.businessId}/settings/${k}`, 'PUT', s.draft[k]);
       const next = s.blocked;
       this.setState((st: any) => ({ draft: { ...st.draft, [k]: clone(res.value) }, saved: { ...st.saved, [k]: clone(res.value) }, error: '', blocked: null, saving: false, ...(next ? { page: next } : {}) }));
-      this.flash(OK[s.page]); rememberSaved(this.props.businessId, k, res.value);
+      this.flash(OK[s.page]); rememberSaved(this.props.businessId, k, res.value); this.props.onSaved?.();
       if (k === 'branches') this.refreshAfterBranches();
     } catch (e: any) { this.setState({ error: e?.message ?? 'We couldn’t save. Please try again.', saving: false }); }
   }
@@ -338,7 +338,7 @@ export function prefetchSettings(businessId: string) {
 }
 function rememberSaved(businessId: string, key: string, value: unknown) { const d = cache.get(businessId)?.data; if (d) { d.sections[key] = value; const e = cache.get(businessId)!; e.at = Date.now(); } }
 
-export function SettingsLoader({ businessId, query, onPremium }: { businessId: string; query: string; onPremium?: () => void }) {
+export function SettingsLoader({ businessId, query, onPremium, onSaved }: { businessId: string; query: string; onPremium?: () => void; onSaved?: () => void }) {
   const [initial, setInitial] = React.useState<Loaded | null>(() => prefetchSettings(businessId).data ?? null);
   const [error, setError] = React.useState("");
   const [slow, setSlow] = React.useState(false);
@@ -350,5 +350,5 @@ export function SettingsLoader({ businessId, query, onPremium }: { businessId: s
   }, [businessId]);
   if (error) return <div className="dc" style={{ padding: 32, color: "#B42318", fontSize: 15 }}>{error}</div>;
   if (!initial) return <div className="dc" style={{ opacity: slow ? 1 : 0, transition: "opacity .2s" }}><ContentLoader/></div>;
-  return <SettingsApp businessId={businessId} query={query} initial={initial} onPremium={onPremium}/>;
+  return <SettingsApp businessId={businessId} query={query} initial={initial} onPremium={onPremium} onSaved={onSaved}/>;
 }
