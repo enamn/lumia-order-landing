@@ -113,6 +113,7 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
     vi.stubGlobal("fetch", vi.fn(async (url: string, init: RequestInit) => {
       const path = new URL(url).pathname; const body = JSON.parse(String(init.body)); calls.push({ path, body });
       if (path === "/internal/ai/reply") { const ids = (nm: string) => body.menu.find((m: any) => m.name === nm)?.id; return Response.json(ai.__make(ids)); }
+      if (path === "/internal/geo/reverse") return Response.json({ emirate: "Sharjah", area: "Al Majaz", street: "Al Majaz St", place: "", formatted: "Al Majaz St, Al Majaz, Sharjah" });
       return Response.json({ messageId: `wamid.out.${suffix}.${++out}` });
     }));
     owner = (await db.user.create({ data: { name: "own", email: `own-${suffix}@test.invalid`, phoneNumber: "+97150555" + String(Date.now()).slice(-4), phoneNumberVerified: true } })).id;
@@ -137,6 +138,17 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
     expect(r).toContain("Total 66 AED");
     const o = await db.order.findFirstOrThrow({ where: { businessId: biz }, include: { deliveryDetails: true } });
     expect(o).toMatchObject({ subtotalMinor: 5600, deliveryFeeMinor: 1000, totalMinor: 6600, locationId: branchId }); expect(o.deliveryDetails).toMatchObject({ recipientName: "Sara Khalid", emirate: "Sharjah", city: "Al Majaz", addressText: "Al Majaz St 5, building 2" });
+  });
+  it("a shared pin is looked up: the chat shows the place and a map link, and the emirate and area are not asked again", async () => {
+    await setRules({ method: "area" });
+    const other = "971500000777";
+    await turn(() => say("delivery order: 2 classic", other), id => draft(id, { emirate: null, area: "" }));
+    const r = await turn(() => inbound({ type: "location", location: { latitude: 25.3402, longitude: 55.3901 } }, other), id => draft(id, { address: "Villa 4", emirate: null, area: "" }));
+    const conv = await db.conversation.findFirstOrThrow({ where: { customer: { phone: "+" + other } }, include: { messages: { where: { messageType: "LOCATION" } } } });
+    expect(conv.messages[0]!.textContent).toBe("📍 Al Majaz St, Al Majaz, Sharjah\nhttps://maps.google.com/?q=25.3402,55.3901");
+    expect(conv.customerLocation).toMatchObject({ emirate: "Sharjah", area: "Al Majaz" });
+    expect(lastAi().delivery).toMatchObject({ emirate: "Sharjah", area: "Al Majaz", needs: null });
+    expect(r).toContain("Delivery fee: 10 AED");
   });
   it("by distance: a shared location pin sets the fee, is kept on the order, and the customer is told when it is out of range", async () => {
     await setRules({ method: "distance" });
@@ -196,7 +208,7 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
     expect((await db.order.findFirstOrThrow({ where: { businessId: biz, customer: { phone: "+" + p } }, include: { deliveryDetails: true } })).deliveryDetails).toMatchObject({ addressLabel: "Work" });
     // next order: the saved address is offered and picking it prices the order from its pin, no new pin needed
     r = await turn(() => say("same as last time, delivery to work", p), id => ({ ...draft(id), order: { items: [{ id: id("Classic"), quantity: 2, notes: "" }], fulfillment: "delivery", address: "", emirate: null, area: "", customerName: "", addressLabel: "", savedAddress: "1", confirmed: false } }));
-    expect(lastAi().savedAddresses).toEqual([{ id: "1", label: "Work", text: "Opus tower 804" }]);
+    expect(lastAi().savedAddresses).toEqual([{ id: "1", label: "Work", text: "Opus tower 804, Sharjah" }]);
     expect(r).toContain("Delivery to (Work): Opus tower 804"); expect(r).toContain("Delivery fee: 5 AED"); expect(r).toContain("Reply YES");
     r = await turn(() => say("yes", p), id => ({ ...draft(id), order: { items: [{ id: id("Classic"), quantity: 2, notes: "" }], fulfillment: "delivery", address: "", emirate: null, area: "", customerName: "", addressLabel: "", savedAddress: "1", confirmed: true } }));
     expect(r).toContain("Total 61 AED"); expect(await db.customerAddress.count({ where: { customer: { businessId: biz, phone: "+" + p } } })).toBe(1); // updated, not duplicated

@@ -5,6 +5,7 @@ import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
 import { autoReply, handleVoice, replyToUnreadable, UNREADABLE_TYPES } from "./ai";
 import { sendWelcome } from "./welcome";
+import { lumiaApi } from "@/server/lumia-api";
 
 // Messages customers send to a restaurant's linked WhatsApp number. lumia-order-api receives Meta's webhook and forwards them here;
 // we find the restaurant from the phone number ID, then keep one customer + conversation per person and one message per Meta message ID.
@@ -39,7 +40,7 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
         const conversation = open ?? await tx.conversation.create({ data: { businessId: account.businessId, customerId: customer.id, lastMessageAt: at } });
         // A shared location pin is kept on the conversation (for delivery pricing) and shown in the chat as readable text.
         const loc = m.type.toLowerCase() === "location" ? m.location : undefined;
-        const shown = loc ? `📍 ${[loc.name, loc.address].filter(Boolean).join(", ") || "Location"} (${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)})` : (m.textBody ?? null);
+        const shown = loc ? pinText(loc) : (m.textBody ?? null);
         await tx.message.create({ data: { conversationId: conversation.id, externalMessageId: m.messageId, direction: "INBOUND", senderType: "CUSTOMER", messageType: m.type.toUpperCase(), textContent: shown, status: "RECEIVED", createdAt: at } });
         if (loc) await tx.conversation.update({ where: { id: conversation.id }, data: { customerLocation: { latitude: loc.latitude, longitude: loc.longitude, name: loc.name ?? "", address: loc.address ?? "", at: at.toISOString() } } });
         if (loc) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "text" };
@@ -48,6 +49,8 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
         else if (UNREADABLE_TYPES.has(m.type.toUpperCase())) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "unreadable" };
         if (at > conversation.lastMessageAt) await tx.conversation.update({ where: { id: conversation.id }, data: { lastMessageAt: at } });
       });
+      // Look the pin up (emirate, area, street) so the chat and the delivery pricing use real place names instead of coordinates. A failed lookup changes nothing.
+      if (pending && m.type.toLowerCase() === "location" && m.location) await resolvePin(pending.conversationId, m.messageId, m.location).catch(() => undefined);
       result.stored++; if (pending) toAnswer.push(pending);
     } catch (error) {
       // Meta can deliver the same message more than once; the unique message ID makes that a no-op.
@@ -101,4 +104,20 @@ export async function listConversations(userId: string, businessId: string) {
   await authorize(userId, businessId);
   const rows = await db.conversation.findMany({ where: { businessId }, orderBy: { lastMessageAt: "desc" }, take: 30, include: { customer: { select: { displayName: true, phone: true } }, messages: { orderBy: { createdAt: "desc" }, take: 1, select: { direction: true, textContent: true, messageType: true, createdAt: true } } } });
   return rows.map(c => ({ id: c.id, status: c.status, needsHuman: c.needsHuman === true, lastMessageAt: c.lastMessageAt, customer: { name: c.customer.displayName ?? "", phone: c.customer.phone }, lastMessage: c.messages[0] ? { direction: c.messages[0].direction, text: c.messages[0].textContent ?? "", type: c.messages[0].messageType } : null }));
+}
+
+
+type Pin = { latitude: number; longitude: number; name?: string | undefined; address?: string | undefined };
+type Place = { emirate: string | null; area: string; street: string; place: string; formatted: string };
+export const mapLink = (p: { latitude: number; longitude: number }) => `https://maps.google.com/?q=${p.latitude},${p.longitude}`;
+// What the chat shows for a shared pin: the place WhatsApp sent or we looked up, never bare coordinates when we know better.
+export const pinText = (p: Pin, place?: Place | null) => `📍 ${[p.name, p.address].filter(Boolean).join(", ") || place?.formatted || "Location"}\n${mapLink(p)}`;
+async function resolvePin(conversationId: string, externalMessageId: string, pin: Pin) {
+  const r = await lumiaApi<Place>("/internal/geo/reverse", { latitude: pin.latitude, longitude: pin.longitude }, 6000);
+  if (!r.ok) return;
+  const place = r.data;
+  const conversation = await db.conversation.findUnique({ where: { id: conversationId }, select: { customerLocation: true } });
+  const current = (conversation?.customerLocation ?? {}) as Record<string, unknown>;
+  await db.conversation.update({ where: { id: conversationId }, data: { customerLocation: { ...current, emirate: place.emirate, area: place.area, street: place.street, place: place.place, formatted: place.formatted } } });
+  await db.message.updateMany({ where: { conversationId, externalMessageId }, data: { textContent: pinText(pin, place) } });
 }
