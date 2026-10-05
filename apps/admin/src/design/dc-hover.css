@@ -11,8 +11,11 @@
 .dch9:hover{background:#FFFBFC !important}
 .dch10:hover{background:#FDECEC !important}
 .dch11:hover{background:#3D1C31 !important}
-.dch12:hover{border-color:#FF5577 !important;box-shadow:0 24px 48px -30px rgba(201,61,255,.55) !important;transform:translateY(-2px) !important}
-.dch13:focus{border-color:#FF5577 !important;box-shadow:0 0 0 4px #FDEAF2 !important}
-.dch14:hover{background:#981B30 !important}
-.dch15:hover{border-color:#D9BFCB !important}
-.dch16:hover{color:#B4233B !important}
+.dch12:hover{background:#fff !important}
+.dch13:hover{background:#FFF7FA !important}
+.dch14:focus{border-color:#FF5577 !important;box-shadow:0 0 0 4px #FDEAF2 !important}
+.dch15:hover{border-color:#FF5577 !important;background:#FFF7FA !important}
+.dch16:hover{border-color:#FF5577 !important;box-shadow:0 24px 48px -30px rgba(201,61,255,.55) !important;transform:translateY(-2px) !important}
+.dch17:hover{background:#981B30 !important}
+.dch18:hover{border-color:#D9BFCB !important}
+.dch19:hover{color:#B4233B !important}

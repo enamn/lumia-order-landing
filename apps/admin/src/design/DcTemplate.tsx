@@ -1460,6 +1460,484 @@ export function DcTemplate({ vm }: { vm: any }) {
                         </div>
                         </>
                       )}
+                      {vm.pageCustomers && (
+                        <>
+                        <div data-screen-label="07 Dashboard \u00b7 Customers" dir="ltr" style={S("display:flex;flex-direction:column;gap:18px")}>
+                          <div style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
+                            <div style={S("flex:1 1 240px;min-width:0")}>
+                              <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                                Customers
+                              </h1>
+                              <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5")}>
+                                {vm.cu.sub}
+                              </p>
+                            </div>
+                            <label style={S("flex:0 1 300px;min-width:200px;height:44px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px")}>
+                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
+                                <circle cx="9" cy="9" r="5.5" stroke="#8A5A6E" strokeWidth="1.7" />
+                                <path d="m13.2 13.2 3.3 3.3" stroke="#8A5A6E" strokeWidth="1.7" strokeLinecap="round" />
+                              </svg>
+                              <input value={vm.cu.q} onChange={vm.cu.onQ} placeholder="Search name or number" aria-label="Search customers" style={S("flex:1;min-width:0;border:0;background:transparent;font-size:15px;height:100%")} />
+                            </label>
+                          </div>
+                          <div style={S(`display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 12px 10px 16px;border-radius:14px;background:${vm.cu.barBg};border:1px solid ${vm.cu.barBd}`)}>
+                            <button type="button" onClick={vm.cu.toggleAll} style={S("display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500")}>
+                              <span style={S(`width:20px;height:20px;border-radius:6px;flex:none;border:1.5px solid ${vm.cu.all.ckBd};background:${vm.cu.all.ckBg};display:flex;align-items:center;justify-content:center`)}>
+                                {vm.cu.all.sel && (
+                                  <>
+                                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
+                                    <path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                  </>
+                                )}
+                              </span>
+                              {vm.cu.selLabel}
+                            </button>
+                            <span style={S("flex:1")} />
+                            {vm.cu.hasSel && (
+                              <>
+                              <button type="button" onClick={vm.cu.clear} style={S("height:36px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:500;color:#3D1C31")} className="dch12">
+                                Clear
+                              </button>
+                              </>
+                            )}
+                            <button type="button" onClick={vm.cu.sendOffer} disabled={!!vm.cu.noSel} style={S(`height:40px;padding:0 16px;border-radius:11px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-size:14px;font-weight:600;opacity:${vm.cu.sendOp};display:flex;align-items:center;gap:8px`)}>
+                              <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
+                                <path d="M3.5 10.5 10.5 3.5H16.5V9.5L9.5 16.5z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+                                <circle cx="13" cy="7" r="1.2" fill="currentColor" />
+                              </svg>
+                              Send discount code
+                            </button>
+                          </div>
+                          <div style={S("display:flex;flex-direction:column;gap:10px;min-width:0")}>
+                            {(vm.cu.rows as any[]).map((c: any, __i: number) => (
+                              <Fragment key={__i}>
+                                <div style={S(`border-radius:14px;background:#fff;border:1px solid ${c.bd};overflow:clip`)}>
+                                  <div style={S("display:flex;align-items:center")}>
+                                    <button type="button" onClick={c.toggle} aria-label={c.ckLabel} style={S("align-self:stretch;padding:0 6px 0 16px;display:flex;align-items:center")}>
+                                      <span style={S(`width:20px;height:20px;border-radius:6px;flex:none;border:1.5px solid ${c.ckBd};background:${c.ckBg};display:flex;align-items:center;justify-content:center`)}>
+                                        {c.sel && (
+                                          <>
+                                          <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
+                                            <path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                                          </svg>
+                                          </>
+                                        )}
+                                      </span>
+                                    </button>
+                                    <button type="button" onClick={c.open} aria-expanded={c.isOpen} style={S("flex:1;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px;text-align:start;padding:14px 18px 14px 10px")}>
+                                      <span style={S("display:flex;align-items:center;gap:12px;flex:1 1 240px;min-width:0")}>
+                                        <span style={S(`width:40px;height:40px;border-radius:50%;flex:none;background:${c.av};color:#1A0815;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center`)}>
+                                          {c.ini}
+                                        </span>
+                                        <span style={S("display:flex;flex-direction:column;gap:2px;min-width:0")}>
+                                          <span style={S("font-size:15px;font-weight:600")}>
+                                            {c.name}
+                                          </span>
+                                          <span style={S("display:flex;align-items:center;gap:6px;font-size:14px;color:#3D1C31;font-variant-numeric:tabular-nums")}>
+                                            <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
+                                              <path d="M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z" stroke="#16704A" strokeWidth="1.7" strokeLinejoin="round" />
+                                            </svg>
+                                            {c.phone}
+                                          </span>
+                                        </span>
+                                      </span>
+                                      <span style={S("display:flex;gap:22px;font-size:14px;font-variant-numeric:tabular-nums;flex:none")}>
+                                        <span style={S("display:flex;flex-direction:column;gap:2px")}>
+                                          <span style={S("color:#8A5A6E;font-size:13px")}>
+                                            Orders
+                                          </span>
+                                          <span style={S("font-weight:600")}>
+                                            {c.orders}
+                                          </span>
+                                        </span>
+                                        <span style={S("display:flex;flex-direction:column;gap:2px")}>
+                                          <span style={S("color:#8A5A6E;font-size:13px")}>
+                                            Spent
+                                          </span>
+                                          <span style={S("font-weight:600")}>
+                                            {c.spent}
+                                          </span>
+                                        </span>
+                                        <span style={S("display:flex;flex-direction:column;gap:2px;min-width:86px")}>
+                                          <span style={S("color:#8A5A6E;font-size:13px")}>
+                                            Last order
+                                          </span>
+                                          <span style={S("font-weight:600")}>
+                                            {c.last}
+                                          </span>
+                                        </span>
+                                      </span>
+                                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={S(`flex:none;transform:rotate(${c.rot});transition:transform .15s`)}>
+                                        <path d="m4 6 4 4 4-4" stroke="#8A5A6E" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                  {c.isOpen && (
+                                    <>
+                                    <div style={S("padding:4px 18px 18px;border-top:1px solid #F6EEF2;display:flex;flex-direction:column;gap:12px")}>
+                                      <span style={S("font-size:14px;font-weight:600;margin-top:12px")}>
+                                        Saved addresses
+                                      </span>
+                                      <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px")}>
+                                        {(c.addrs as any[]).map((a: any, __i: number) => (
+                                          <Fragment key={__i}>
+                                            <div style={S("border:1px solid #F0E4E8;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;background:#FFFBFC")}>
+                                              <span style={S("display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600")}>
+                                                {a.label}
+                                                {a.def && (
+                                                  <>
+                                                  <span style={S("font-size:12px;font-weight:600;padding:2px 7px;border-radius:999px;background:#FDEAF2;color:#8A2040")}>
+                                                    Default
+                                                  </span>
+                                                  </>
+                                                )}
+                                              </span>
+                                              <span style={S("font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty")}>
+                                                {a.text}
+                                              </span>
+                                              <span style={S("font-size:13px;color:#8A5A6E")}>
+                                                {a.uses}
+                                              </span>
+                                            </div>
+                                          </Fragment>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    </>
+                                  )}
+                                </div>
+                              </Fragment>
+                            ))}
+                            {vm.cu.empty && (
+                              <>
+                              <p style={S("padding:32px;text-align:center;font-size:15px;color:#8A5A6E")}>
+                                No customers match your search.
+                              </p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        </>
+                      )}
+                      {vm.pageCampaigns && (
+                        <>
+                        <div data-screen-label="08 Dashboard \u00b7 Campaigns" dir="ltr" style={S("display:flex;flex-direction:column;gap:20px")}>
+                          <div>
+                            <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                              Campaigns
+                            </h1>
+                            <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5")}>
+                              Send offers to your customers on WhatsApp.
+                            </p>
+                          </div>
+                          <div role="tablist" style={S("display:flex;padding:3px;border-radius:12px;background:#F6EEF2;gap:2px;align-self:flex-start;max-width:100%")}>
+                            {(vm.cp.modes as any[]).map((m: any, __i: number) => (
+                              <Fragment key={__i}>
+                                <button type="button" role="tab" aria-selected={m.on} onClick={m.pick} style={S(`height:38px;padding:0 16px;border-radius:9px;font-size:14px;white-space:nowrap;font-weight:${m.fw};background:${m.bg};color:${m.fg};box-shadow:${m.sh}`)}>
+                                  {m.label}
+                                </button>
+                              </Fragment>
+                            ))}
+                          </div>
+                          <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px;align-items:start")}>
+                            <form onSubmit={vm.cp.send} noValidate={true} style={S("border:1px solid #F0E4E8;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0")}>
+                              {vm.cp.isAll && (
+                                <>
+                                <div style={S("display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:#FBF3F8")}>
+                                  <span style={S("width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none")}>
+                                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                                      <path d="M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5" stroke="#8A2040" strokeWidth="1.6" strokeLinecap="round" />
+                                    </svg>
+                                  </span>
+                                  <span style={S("display:flex;flex-direction:column;gap:2px")}>
+                                    <span style={S("font-size:15px;font-weight:600")}>
+                                      All customers
+                                    </span>
+                                    <span style={S("font-size:13px;color:#8A5A6E")}>
+                                      {vm.cp.allNote}
+                                    </span>
+                                  </span>
+                                </div>
+                                </>
+                              )}
+                              {vm.cp.isOffer && (
+                                <>
+                                <div style={S("display:flex;flex-direction:column;gap:8px")}>
+                                  <div style={S("display:flex;align-items:baseline;justify-content:space-between;gap:10px")}>
+                                    <span style={S("font-size:14px;font-weight:600")}>
+                                      Customers
+                                    </span>
+                                    <button type="button" onClick={vm.cu.toggleAll} style={S("font-size:14px;font-weight:500;color:#C0284F")}>
+                                      {vm.cp.allBtn}
+                                    </button>
+                                  </div>
+                                  <div style={S("border:1.5px solid #ECD9E0;border-radius:14px;max-height:232px;overflow-y:auto;display:flex;flex-direction:column")}>
+                                    {(vm.cp.pick as any[]).map((c: any, __i: number) => (
+                                      <Fragment key={__i}>
+                                        <button type="button" onClick={c.toggle} style={S(`display:flex;align-items:center;gap:12px;padding:10px 14px;text-align:start;border-bottom:1px solid #F6EEF2;background:${c.rowBg}`)} className="dch13">
+                                          <span style={S(`width:20px;height:20px;border-radius:6px;flex:none;border:1.5px solid ${c.ckBd};background:${c.ckBg};display:flex;align-items:center;justify-content:center`)}>
+                                            {c.sel && (
+                                              <>
+                                              <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
+                                                <path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                                              </svg>
+                                              </>
+                                            )}
+                                          </span>
+                                          <span style={S("flex:1;min-width:0;font-size:14px;font-weight:500")}>
+                                            {c.name}
+                                          </span>
+                                          <span style={S("font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                                            {c.phone}
+                                          </span>
+                                        </button>
+                                      </Fragment>
+                                    ))}
+                                  </div>
+                                  <span style={S(`font-size:13px;color:${vm.cp.selFg}`)}>
+                                    {vm.cp.selNote}
+                                  </span>
+                                </div>
+                                </>
+                              )}
+                              {vm.cp.isAll && (
+                                <>
+                                <button type="button" onClick={vm.cp.toggleCode} role="switch" aria-checked={vm.cp.withCode} style={S("display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:start")}>
+                                  <span style={S("display:flex;flex-direction:column;gap:2px")}>
+                                    <span style={S("font-size:14px;font-weight:600")}>
+                                      Include a discount code
+                                    </span>
+                                    <span style={S("font-size:13px;color:#8A5A6E")}>
+                                      Everyone gets the same code
+                                    </span>
+                                  </span>
+                                  <span style={S(`width:40px;height:24px;border-radius:12px;flex:none;background:${vm.cp.swBg};position:relative;transition:background .15s`)}>
+                                    <span style={S(`position:absolute;top:3px;left:${vm.cp.swX};width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(26,8,21,.2);transition:left .15s`)} />
+                                  </span>
+                                </button>
+                                </>
+                              )}
+                              {vm.cp.showCode && (
+                                <>
+                                <div style={S("display:flex;flex-direction:column;gap:14px;padding:14px;border-radius:14px;background:#FFF7FA;border:1px dashed #F3B8CB")}>
+                                  <div style={S("display:flex;flex-direction:column;gap:8px")}>
+                                    <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                      Discount
+                                    </span>
+                                    <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
+                                      {(vm.cp.pcts as any[]).map((o: any, __i: number) => (
+                                        <Fragment key={__i}>
+                                          <button type="button" onClick={o.pick} style={S(`height:36px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;border:1.5px solid ${o.bd};background:${o.bg};color:${o.fg}`)}>
+                                            {o.label}
+                                          </button>
+                                        </Fragment>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px")}>
+                                    <label style={S("display:flex;flex-direction:column;gap:8px")}>
+                                      <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                        Code
+                                      </span>
+                                      <input value={vm.cp.code} onChange={vm.cp.onCode} style={S("height:44px;padding:0 12px;border-radius:11px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-weight:600;letter-spacing:.04em")} className="dch14" />
+                                    </label>
+                                    <div style={S("display:flex;flex-direction:column;gap:8px")}>
+                                      <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                        Valid for
+                                      </span>
+                                      <div style={S("display:flex;gap:6px")}>
+                                        {(vm.cp.days as any[]).map((o: any, __i: number) => (
+                                          <Fragment key={__i}>
+                                            <button type="button" onClick={o.pick} style={S(`flex:1;height:44px;border-radius:11px;font-size:14px;font-weight:500;border:1.5px solid ${o.bd};background:${o.bg};color:${o.fg}`)}>
+                                              {o.label}
+                                            </button>
+                                          </Fragment>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                </>
+                              )}
+                              <div style={S("display:flex;flex-direction:column;gap:8px")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                  Offer image
+                                </span>
+                                {vm.cp.noImg && (
+                                  <>
+                                  <label style={S("height:132px;border-radius:14px;border:1.5px dashed #E3CBD4;background:#FFFBFC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;text-align:center;padding:0 16px")} className="dch15">
+                                    <input type="file" accept="image/png,image/jpeg,image/webp" onChange={vm.cp.onImg} style={S("position:absolute;width:1px;height:1px;opacity:0;pointer-events:none")}>
+                                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <rect x="3.5" y="4.5" width="17" height="15" rx="3" stroke="#C0284F" strokeWidth="1.6" />
+                                        <circle cx="9" cy="10" r="1.8" stroke="#C0284F" strokeWidth="1.6" />
+                                        <path d="m4 17 5-4.5 4 3.5 2.5-2 4.5 4" stroke="#C0284F" strokeWidth="1.6" strokeLinejoin="round" />
+                                      </svg>
+                                      <span style={S("font-size:14px;font-weight:600")}>
+                                        Upload an image
+                                      </span>
+                                      <span style={S("font-size:13px;color:#8A5A6E")}>
+                                        JPG or PNG, up to 5 MB. Square images work best.
+                                      </span>
+                                    </input>
+                                  </label>
+                                  </>
+                                )}
+                                {vm.cp.hasImg && (
+                                  <>
+                                  <div style={S("display:flex;align-items:center;gap:12px;padding:10px;border-radius:14px;border:1.5px solid #ECD9E0")}>
+                                    <div style={S(`width:64px;height:64px;border-radius:10px;flex:none;background-color:#FBF3F8;background-image:${vm.cp.imgBg};background-size:cover;background-position:center`)} />
+                                    <span style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:2px")}>
+                                      <span style={S("font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>
+                                        {vm.cp.imgName}
+                                      </span>
+                                      <span style={S("font-size:13px;color:#8A5A6E")}>
+                                        Sent above your message
+                                      </span>
+                                    </span>
+                                    <label style={S("height:36px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:500;display:flex;align-items:center;cursor:pointer;flex:none")} className="dch0">
+                                      <input type="file" accept="image/png,image/jpeg,image/webp" onChange={vm.cp.onImg} style={S("position:absolute;width:1px;height:1px;opacity:0;pointer-events:none")}>
+                                        Replace
+                                      </input>
+                                    </label>
+                                    <button type="button" onClick={vm.cp.clearImg} aria-label="Remove image" style={S("width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
+                                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                                        <path d="m4 4 8 8M12 4l-8 8" stroke="#3D1C31" strokeWidth="1.7" strokeLinecap="round" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                  </>
+                                )}
+                              </div>
+                              <label style={S("display:flex;flex-direction:column;gap:8px")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                  Message
+                                </span>
+                                <textarea value={vm.cp.msg} onChange={vm.cp.onMsg} rows={4} style={S("padding:12px 14px;border-radius:12px;border:1.5px solid #ECD9E0;font-size:15px;line-height:1.5;resize:vertical;font-family:inherit")} className="dch14" />
+                                <span style={S("font-size:13px;color:#8A5A6E")}>
+                                  {vm.cp.tokens}
+                                </span>
+                              </label>
+                              <button type="submit" disabled={!!vm.cp.cant} style={S(`height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;opacity:${vm.cp.sendOp};display:flex;align-items:center;justify-content:center;gap:10px`)}>
+                                {vm.cp.sending && (
+                                  <>
+                                  <span style={S("width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:lo-spin .8s linear infinite")} />
+                                  </>
+                                )}
+                                {vm.cp.sendLabel}
+                              </button>
+                            </form>
+                            <div style={S("display:flex;flex-direction:column;gap:10px;min-width:0")}>
+                              <span style={S("font-size:14px;font-weight:600")}>
+                                Preview
+                              </span>
+                              <div style={S("border-radius:20px;background:#EFE7DD;padding:18px 16px 22px;display:flex;flex-direction:column;gap:10px")}>
+                                <span style={S("align-self:center;font-size:12px;padding:3px 10px;border-radius:8px;background:rgba(255,255,255,.75);color:#3D1C31")}>
+                                  {"To "}{vm.cp.previewTo}
+                                </span>
+                                <div style={S("align-self:flex-start;max-width:88%;width:300px;background:#fff;border-radius:4px 14px 14px 14px;padding:4px 4px 8px;box-shadow:0 1px 1px rgba(26,8,21,.08);display:flex;flex-direction:column;gap:8px")}>
+                                  {vm.cp.hasImg && (
+                                    <>
+                                    <div role="img" aria-label="Offer image" style={S(`width:100%;aspect-ratio:1/1;border-radius:11px 11px 4px 4px;background-color:#F6EEF2;background-image:${vm.cp.imgBg};background-size:cover;background-position:center`)} />
+                                    </>
+                                  )}
+                                  {vm.cp.noImg && (
+                                    <>
+                                    <span style={S("display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:16/9;border-radius:11px 11px 4px 4px;background:#F6EEF2;font-size:13px;color:#8A5A6E")}>
+                                      Your offer image
+                                    </span>
+                                    </>
+                                  )}
+                                  <div style={S("padding:0 8px;display:flex;flex-direction:column;gap:8px")}>
+                                    <span style={S("font-size:13px;font-weight:600;color:#C0284F")}>
+                                      Burger House
+                                    </span>
+                                    <span style={S("font-size:15px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere")}>
+                                      {vm.cp.preview}
+                                    </span>
+                                    {vm.cp.showCode && (
+                                      <>
+                                      <span style={S("display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:10px;background:#FFF1F4;border:1px dashed #F3B8CB")}>
+                                        <span style={S("font-size:15px;font-weight:600;letter-spacing:.05em")}>
+                                          {vm.cp.code}
+                                        </span>
+                                        <span style={S("font-size:13px;color:#8A2040")}>
+                                          {vm.cp.pctLabel}{" off \u00b7 "}{vm.cp.until}
+                                        </span>
+                                      </span>
+                                      </>
+                                    )}
+                                    <span style={S("align-self:flex-end;font-size:11px;color:#8A5A6E")}>
+                                      12:04
+                                    </span>
+                                  </div>
+                                </div>
+                                <div style={S("align-self:flex-start;max-width:88%;display:flex;flex-direction:column;gap:6px;width:300px")}>
+                                  <span style={S("height:38px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:#027EB5")}>
+                                    Order now
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <section style={S("display:flex;flex-direction:column;gap:10px")}>
+                            <h2 style={S("font-size:18px;font-weight:600;letter-spacing:-0.015em")}>
+                              Sent campaigns
+                            </h2>
+                            {(vm.cp.history as any[]).map((hx: any, __i: number) => (
+                              <Fragment key={__i}>
+                                <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding:14px 18px;border:1px solid #F0E4E8;border-radius:14px")}>
+                                  <span style={S("flex:1 1 240px;min-width:0;display:flex;flex-direction:column;gap:3px")}>
+                                    <span style={S("font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>
+                                      {hx.title}
+                                    </span>
+                                    <span style={S("font-size:13px;color:#8A5A6E")}>
+                                      {hx.meta}
+                                    </span>
+                                  </span>
+                                  <span style={S("display:flex;gap:22px;font-size:14px;font-variant-numeric:tabular-nums")}>
+                                    <span style={S("display:flex;flex-direction:column;gap:2px")}>
+                                      <span style={S("color:#8A5A6E;font-size:13px")}>
+                                        Sent
+                                      </span>
+                                      <span style={S("font-weight:600")}>
+                                        {hx.sent}
+                                      </span>
+                                    </span>
+                                    <span style={S("display:flex;flex-direction:column;gap:2px")}>
+                                      <span style={S("color:#8A5A6E;font-size:13px")}>
+                                        Read
+                                      </span>
+                                      <span style={S("font-weight:600")}>
+                                        {hx.read}
+                                      </span>
+                                    </span>
+                                    <span style={S("display:flex;flex-direction:column;gap:2px")}>
+                                      <span style={S("color:#8A5A6E;font-size:13px")}>
+                                        Code used
+                                      </span>
+                                      <span style={S("font-weight:600")}>
+                                        {hx.used}
+                                      </span>
+                                    </span>
+                                  </span>
+                                </div>
+                              </Fragment>
+                            ))}
+                          </section>
+                          {vm.cp.toast && (
+                            <>
+                            <div role="status" style={S("position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:50;background:#1A0815;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;box-shadow:0 12px 30px -10px rgba(26,8,21,.5)")}>
+                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                                <path d="m5 10.5 3.2 3L15 7" stroke="#7BE0A8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                              {vm.cp.toast}
+                            </div>
+                            </>
+                          )}
+                        </div>
+                        </>
+                      )}
                       {vm.pagePlans && (
                         <>
                         <div dir="ltr" style={S("position:fixed;inset:0;z-index:55;background:#fff;display:flex;flex-direction:column")}>
@@ -1517,7 +1995,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                   <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px;align-items:stretch")}>
                                     {(vm.sub.plans as any[]).map((p: any, __i: number) => (
                                       <Fragment key={__i}>
-                                        <button type="button" onClick={p.choose} aria-label={p.cta} style={S(`text-align:start;border:2px solid ${p.bd};background:${p.bg};border-radius:20px;padding:22px;display:flex;flex-direction:column;transition:border-color .15s,box-shadow .15s,transform .15s`)} className="dch12">
+                                        <button type="button" onClick={p.choose} aria-label={p.cta} style={S(`text-align:start;border:2px solid ${p.bd};background:${p.bg};border-radius:20px;padding:22px;display:flex;flex-direction:column;transition:border-color .15s,box-shadow .15s,transform .15s`)} className="dch16">
                                           <span style={S("font-size:19px;font-weight:600")}>
                                             {p.name}
                                           </span>
@@ -1652,7 +2130,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                             <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                               Delivery address for the terminal
                                             </span>
-                                            <input autoComplete="street-address" placeholder="Building, street, area, emirate" value={vm.sub.addr} onChange={vm.onAddr} style={S(`height:48px;padding:0 14px;border-radius:12px;border:1.5px solid ${vm.sub.addrBd};background:#fff;font-size:15px`)} className="dch13" />
+                                            <input autoComplete="street-address" placeholder="Building, street, area, emirate" value={vm.sub.addr} onChange={vm.onAddr} style={S(`height:48px;padding:0 14px;border-radius:12px;border:1.5px solid ${vm.sub.addrBd};background:#fff;font-size:15px`)} className="dch14" />
                                           </label>
                                           {vm.sub.addrErr && (
                                             <>
@@ -1882,7 +2360,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                               <button type="button" onClick={vm.cancelDisconnect} style={S("flex:1 1 140px;height:48px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
                                 Cancel
                               </button>
-                              <button type="button" onClick={vm.doDisconnect} style={S("flex:1 1 180px;height:48px;padding:0 18px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px")} className="dch14">
+                              <button type="button" onClick={vm.doDisconnect} style={S("flex:1 1 180px;height:48px;padding:0 18px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px")} className="dch17">
                                 Disconnect WhatsApp
                               </button>
                             </div>
@@ -2200,7 +2678,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           <div style={S("display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px")}>
                                             {(d.opts as any[]).map((o: any, __i: number) => (
                                               <Fragment key={__i}>
-                                                <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`text-align:start;border-radius:14px;border:1.5px solid ${o.bd};background:${o.bg};padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-height:88px`)} className="dch15">
+                                                <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`text-align:start;border-radius:14px;border:1.5px solid ${o.bd};background:${o.bg};padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-height:88px`)} className="dch18">
                                                   <span style={S("display:flex;align-items:center;gap:8px;font-size:12px;color:#8A5A6E")}>
                                                     <span style={S(`width:16px;height:16px;border-radius:50%;border:${o.dotBd};background:#fff;flex:none`)} />
                                                     {o.src}
@@ -2307,7 +2785,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     <button type="button" onClick={vm.toggleCat} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
                                       {vm.catBtn}
                                     </button>
-                                    <button type="button" onClick={vm.askReplace} style={S("height:40px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch16">
+                                    <button type="button" onClick={vm.askReplace} style={S("height:40px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch19">
                                       Replace current menu
                                     </button>
                                   </div>
@@ -2342,7 +2820,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                         <button type="button" onClick={vm.cancelReplace} style={S("flex:1 1 120px;height:48px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
                                           Cancel
                                         </button>
-                                        <button type="button" onClick={vm.useCatalog} style={S("flex:1 1 140px;height:48px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px")} className="dch14">
+                                        <button type="button" onClick={vm.useCatalog} style={S("flex:1 1 140px;height:48px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px")} className="dch17">
                                           Replace menu
                                         </button>
                                       </div>

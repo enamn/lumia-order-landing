@@ -1,5 +1,6 @@
 import { api, jsonBody } from "@/server/api";
 import { getMenu, addItem, setItemAvailability, getMenuScopes, createBranchMenu, removeBranchMenu } from "@/modules/menu/service";
+import { listCustomers } from "@/modules/customers/service";
 import { extractMenu, confirmImport } from "@/modules/menu/import";
 import { setLanguage } from "@/modules/auth/profile";
 import { connectWhatsApp, getWhatsAppStatus, getImportInfo, applyImport, useCatalog, disconnectWhatsApp } from "@/modules/whatsapp/link";
@@ -86,6 +87,7 @@ async function handle(request: Request, context: Context) {
       if (method === "GET" && path.length === 4) return getConversation(userId, businessId, subId);
       if (method === "POST" && subId2 === "messages" && path.length === 5) return sendReply(userId, businessId, subId, await jsonBody(request, 16384), requestId);
     }
+    if (section === "customers" && method === "GET" && path.length === 3) return listCustomers(userId, businessId);
     if (section === "menu") {
       const branchId = new URL(request.url).searchParams.get("branchId"); // Pro: which branch's menu (none = the shared menu)
       if (method === "GET" && path.length === 3) return getMenu(userId, businessId, branchId);

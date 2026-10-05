@@ -6,11 +6,12 @@ import { lumiaApi } from "@/server/lumia-api";
 import { decryptSecret } from "@/server/crypto";
 import { deliverOrderReview, deliverText, type Interactive } from "./reply";
 import { welcomeFor } from "./welcome-text";
-import { DRAFT_TTL_MS, type SavedAddr, draftKey, isComplete, meetsMinimum, money, orderItemLines, placedText, recheckText, langOf, removedText, resolveDraft, summaryText, type DeliveryContext, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
+import { DRAFT_TTL_MS, type SavedAddr, draftKey, isComplete, meetsMinimum, money, orderItemLines, placedText, recheckText, codeText, langOf, removedText, resolveDraft, summaryText, type DeliveryContext, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
 import { branchFromText, looksLikeAddress, nearestBranch, quoteDelivery, type BranchPoint, type DeliveryRules } from "@/modules/orders/delivery";
 import { catalogIdFor } from "@/modules/menu/catalog";
 import { canPersonalize, entitlementsFor } from "@/modules/billing/service";
 import { canStartOrder, consume, refund } from "@/modules/billing/usage";
+import { checkCode } from "@/modules/campaigns/codes";
 import { confirmPendingOrder, createOrderFromDraft, discardPendingOrders, findPendingOrder } from "@/modules/orders/service";
 
 // The AI assistant answers customers' WhatsApp messages from the restaurant's own menu. It only replies when the owner turned it on,
@@ -99,7 +100,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const savedRows = await db.customerAddress.findMany({ where: { customerId: conversation.customerId }, orderBy: { isDefault: "desc" }, take: 6 });
   const saved: SavedAddr[] = savedRows.map((a, i) => ({ id: String(i + 1), label: a.label, text: a.addressText, emirate: a.emirate, area: a.city, latitude: a.latitude, longitude: a.longitude }));
   const ctx: DeliveryContext = { rules, branches, profileName: conversation.customer.displayName ?? "", saved, ...(pin ? { pin } : {}) };
-  const apiDraft = stored ? { items: stored.items.flatMap(l => byItem.has(l.itemId) ? [{ id: byItem.get(l.itemId)!, quantity: l.quantity, notes: l.notes }] : []), fulfillment: stored.fulfillment, address: stored.address, emirate: stored.emirate ?? pinPlace.emirate, area: stored.area || pinPlace.area, customerName: stored.name ?? "", addressLabel: stored.label ?? "", savedAddress: stored.savedId ?? "", confirmed: false } : null;
+  const apiDraft = stored ? { items: stored.items.flatMap(l => byItem.has(l.itemId) ? [{ id: byItem.get(l.itemId)!, quantity: l.quantity, notes: l.notes }] : []), fulfillment: stored.fulfillment, address: stored.address, emirate: stored.emirate ?? pinPlace.emirate, area: stored.area || pinPlace.area, customerName: stored.name ?? "", addressLabel: stored.label ?? "", savedAddress: stored.savedId ?? "", discountCode: stored.discountCode ?? "", confirmed: false } : null;
   const known = apiDraft ? resolveDraft(menu, { ...apiDraft, fulfillment: "delivery" }, options, ctx) : null;
   const preQuote = known?.delivery ?? quoteDelivery(rules, branches, { emirate: stored?.emirate ?? pinPlace.emirate, area: stored?.area || pinPlace.area, ...(pin ?? {}) }, 0, options.minimumMinor);
   const deliveryHint = options.delivery ? { method: rules?.method ?? null, needs: preQuote.status === "needs" ? preQuote.need : null, pinReceived: Boolean(pin), emirate: known?.emirate ?? stored?.emirate ?? pinPlace.emirate, area: stored?.area || pinPlace.area, note: pinPlace.formatted ? `The location pin the customer shared is at: ${pinPlace.formatted}. Do not ask for the emirate or area again; still ask for the building, flat or landmark if the address text is missing.` : "" } : null;
@@ -128,7 +129,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   }
   const lastBranch = branchNeeded ? branches.find(b => b.id === conversation.customer.lastBranchId)?.name : undefined;
   const branchList = branches.map((b, i) => ({ id: String(i + 1), realId: b.id, name: b.name }));
-  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; branch?: string; askLocation?: boolean; locationConfirmed?: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, delivery: deliveryHint, ...(branchNeeded ? { branchNeeded: true, branches: branchList.map(b => ({ id: b.id, name: b.name })), ...(lastBranch ? { lastBranch } : {}) } : {}), ...(wantsPin && candidate ? { candidate: candidate.formatted } : {}), customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
+  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; branch?: string; askLocation?: boolean; locationConfirmed?: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; discountCode?: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, delivery: deliveryHint, ...(branchNeeded ? { branchNeeded: true, branches: branchList.map(b => ({ id: b.id, name: b.name })), ...(lastBranch ? { lastBranch } : {}) } : {}), ...(wantsPin && candidate ? { candidate: candidate.formatted } : {}), customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
   if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "AI_REPLY_REJECTED", status: r.status, apiCode: r.code })); await refund(t.businessId, "ai", taken); return sendNotice(t, TRY_AGAIN, 300000).catch(() => "skipped" as const); } // an AI failure must never leave the customer in silence
   const lang = r.data.language; const parts = [r.data.reply];
   const data: { needsHuman?: boolean; aiPausedUntil?: Date | null; draftOrder?: object | null; branchId?: string | null; customerLocation?: object; candidateLocation?: object | null } = {};
@@ -147,12 +148,15 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   // The model must send the whole draft every turn, but it sometimes drops a field it already knew (emirate, area, address, name). Keep what was
   // already agreed, otherwise the confirmation would not match what the customer was shown and the order would never be placed.
   const sameAddress = !!r.data.order && !!stored && (!r.data.order.address?.trim() || r.data.order.address.trim() === stored.address); // a new address must not inherit the old one's details
-  const merged = r.data.order && stored ? { ...r.data.order, address: r.data.order.address?.trim() || stored.address, customerName: r.data.order.customerName?.trim() || stored.name || "", ...(sameAddress ? { emirate: r.data.order.emirate ?? stored.emirate ?? pinPlace.emirate, area: r.data.order.area?.trim() || stored.area || "", addressLabel: r.data.order.addressLabel?.trim() || stored.label || "", savedAddress: r.data.order.savedAddress || stored.savedId || "" } : {}) } : r.data.order;
+  const merged = r.data.order && stored ? { ...r.data.order, discountCode: r.data.order.discountCode?.trim() || stored.discountCode || "", address: r.data.order.address?.trim() || stored.address, customerName: r.data.order.customerName?.trim() || stored.name || "", ...(sameAddress ? { emirate: r.data.order.emirate ?? stored.emirate ?? pinPlace.emirate, area: r.data.order.area?.trim() || stored.area || "", addressLabel: r.data.order.addressLabel?.trim() || stored.label || "", savedAddress: r.data.order.savedAddress || stored.savedId || "" } : {}) } : r.data.order;
   // The place the shared pin resolved to fills in what the assistant left out.
   const model = merged ? { ...merged, emirate: merged.emirate ?? pinPlace.emirate, area: merged.area?.trim() || pinPlace.area } : merged;
   let reviewId: string | null = null;
+  // A discount code is checked here, never by the assistant: valid for this customer now, or the customer is told why not.
+  const codeCheck = model ? await checkCode(t.businessId, conversation.customerId, model.discountCode) : null;
+  const priced: DeliveryContext = codeCheck?.ok ? { ...ctx, discount: { id: codeCheck.id, code: codeCheck.code, percent: codeCheck.percent } } : ctx;
   if (model) {
-    const resolved = resolveDraft(menu, model, options, ctx); const key = draftKey(resolved);
+    const resolved = resolveDraft(menu, model, options, priced); const key = draftKey(resolved);
     // An order is placed only when the customer confirmed the exact summary we showed them (same items, type and address), and it is complete.
     if (model.confirmed && isComplete(resolved) && meetsMinimum(resolved, options) && stored?.shownKey === key && resolved.fulfillment) {
       // The order counts against the plan's monthly orders (a little past the limit is allowed to finish one already started).
@@ -171,6 +175,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
     } else if (!resolved.lines.length) { await discardPendingOrders(t.conversationId); data.draftOrder = null as never; if (resolved.removed.length) parts.push(removedText(resolved.removed, lang)); }
     else {
       if (resolved.removed.length) parts.push(removedText(resolved.removed, lang));
+      if (codeCheck && !codeCheck.ok) parts.push(codeText(codeCheck.reason, lang));
       // The customer said yes but this is not (yet) exactly what they were shown, or something is missing: never let the assistant claim the order
       // is placed. Show the summary again and ask them to confirm it.
       const showSummary = stored?.shownKey !== key || resolved.removed.length > 0 || model.confirmed;
@@ -180,7 +185,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
       // A complete order is reviewed with the approved template: the order is saved with its number but only the customer sees it, and the template's
       // Confirm / Change buttons decide what happens next. If the template cannot be sent, the text summary and YES work as before.
       let reviewed = false;
-      if (asksYes && showSummary && !model.confirmed && !resolved.removed.length && resolved.fulfillment) {
+      if (asksYes && showSummary && !model.confirmed && !resolved.removed.length && !(codeCheck && !codeCheck.ok) && resolved.fulfillment) {
         try {
           await discardPendingOrders(t.conversationId);
           const pending = await createOrderFromDraft({ businessId: t.businessId, conversationId: t.conversationId, customerId: conversation.customerId, customerName: conversation.customer.displayName ?? "", customerPhone: conversation.customer.phone, resolved: { ...resolved, fulfillment: resolved.fulfillment }, branchId: perBranch ? branchId : null, pending: true });
@@ -194,7 +199,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
         // Show the exact summary whenever it changed, or an item was dropped, so the customer always confirms what we will really place.
         if (showSummary) parts.push(summaryText(resolved, lang, options));
       }
-      data.draftOrder = { items: resolved.lines.map(l => ({ itemId: l.itemId, quantity: l.quantity, notes: l.notes })), fulfillment: resolved.fulfillment, address: resolved.address, emirate: resolved.emirate, area: resolved.area, label: resolved.label, savedId: resolved.savedId, name: model.customerName || "", shownKey: key, updatedAt: new Date().toISOString() };
+      data.draftOrder = { items: resolved.lines.map(l => ({ itemId: l.itemId, quantity: l.quantity, notes: l.notes })), fulfillment: resolved.fulfillment, address: resolved.address, emirate: resolved.emirate, area: resolved.area, label: resolved.label, savedId: resolved.savedId, name: model.customerName || "", discountCode: codeCheck?.ok ? codeCheck.code : "", shownKey: key, updatedAt: new Date().toISOString() };
     }
   }
   // First contact: if nobody has answered this customer yet (and Meta's own welcome event didn't already), greet them before answering.

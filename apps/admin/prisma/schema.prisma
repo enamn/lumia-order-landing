@@ -373,6 +373,9 @@ model Customer {
   phone String
   // The branch of their last order (Pro with a menu per branch): offered first next time.
   lastBranchId String?
+  // Replied STOP: never included in campaigns again.
+  marketingOptOut Boolean?
+  marketingOptOutAt DateTime?
   email String?
   preferredLanguage String?
   createdAt DateTime @default(now())
@@ -456,6 +459,8 @@ model Order {
   currencyCode String @default("AED")
   subtotalMinor Int
   discountTotalMinor Int @default(0)
+  discountCode String?
+  discountCodeId String?
   taxTotalMinor Int @default(0)
   deliveryFeeMinor Int @default(0)
   serviceFeeMinor Int @default(0)
@@ -721,4 +726,72 @@ model UsageCounter {
   used Int @default(0)
   updatedAt DateTime @updatedAt
   @@map("usage_counters")
+}
+
+// ---- Campaigns: offers sent to customers on WhatsApp (Plus and Pro) ----
+model Campaign {
+  id String @id @default(uuid()) @map("_id")
+  businessId String
+  createdByUserId String?
+  mode String // ALL (every customer) or OFFER (the customers picked)
+  title String
+  message String
+  imageName String?
+  imageMediaId String?
+  discountCodeId String?
+  discountCode String?
+  discountPercent Int?
+  validUntil DateTime?
+  recipientCount Int @default(0)
+  sentCount Int @default(0)
+  deliveredCount Int @default(0)
+  readCount Int @default(0)
+  failedCount Int @default(0)
+  usedCount Int @default(0)
+  status String @default("SENDING")
+  createdAt DateTime @default(now())
+  @@index([businessId, createdAt])
+  @@map("campaigns")
+}
+model CampaignRecipient {
+  id String @id @default(uuid()) @map("_id")
+  campaignId String
+  businessId String
+  customerId String
+  phone String
+  status String @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
+  messageId String?
+  error String?
+  sentAt DateTime?
+  deliveredAt DateTime?
+  readAt DateTime?
+  @@index([campaignId])
+  @@index([messageId])
+  @@map("campaign_recipients")
+}
+// A code a customer can type in the chat for a percentage off the items of one order.
+model DiscountCode {
+  id String @id @default(uuid()) @map("_id")
+  businessId String
+  code String
+  percent Int
+  startsAt DateTime
+  expiresAt DateTime
+  campaignId String?
+  usedCount Int @default(0)
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  @@index([businessId, code])
+  @@map("discount_codes")
+}
+// One use of a code by one customer (a customer can use a code once).
+model DiscountRedemption {
+  id String @id @default(uuid()) @map("_id")
+  codeId String
+  businessId String
+  customerId String
+  orderId String
+  createdAt DateTime @default(now())
+  @@index([codeId, customerId])
+  @@map("discount_redemptions")
 }

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import type { OrderStatus } from "@prisma/client";
 import { db } from "@/server/db";
+import { redeemCode } from "@/modules/campaigns/codes";
 import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
 import { AppError } from "@/server/errors";
@@ -32,12 +33,13 @@ export async function createOrderFromDraft(input: { businessId: string; conversa
         const orderNumber = await nextOrderNumber(tx, businessId);
         const order = await tx.order.create({ data: {
           businessId, locationId: location.id, customerId: input.customerId, conversationId: input.conversationId, orderNumber, channel: "WHATSAPP",
-          fulfillmentType: r.fulfillment === "delivery" ? "DELIVERY" : "PICKUP", status, subtotalMinor: r.subtotalMinor, deliveryFeeMinor: r.feeMinor, totalMinor: r.totalMinor, ...(r.delivery?.status === "ok" && r.delivery.manual ? { internalNotes: "Delivery fee not included: confirm it with the customer." } : {}),
+          fulfillmentType: r.fulfillment === "delivery" ? "DELIVERY" : "PICKUP", status, subtotalMinor: r.subtotalMinor, deliveryFeeMinor: r.feeMinor, discountTotalMinor: r.discountMinor, ...(r.discountId ? { discountCode: r.discountCode, discountCodeId: r.discountId } : {}), totalMinor: r.totalMinor, ...(r.delivery?.status === "ok" && r.delivery.manual ? { internalNotes: "Delivery fee not included: confirm it with the customer." } : {}),
           items: { create: r.lines.map(l => ({ catalogItemId: l.itemId, itemNameSnapshot: l.name || l.nameAr, quantity: l.quantity, unitPriceMinor: l.unitMinor, subtotalMinor: l.totalMinor, taxAmountMinor: 0, totalMinor: l.totalMinor, notes: l.notes || null })) },
           ...(r.fulfillment === "delivery" ? { deliveryDetails: { create: { recipientName: r.name || input.customerName || "Customer", recipientPhone: input.customerPhone, addressText: r.address, city: r.area || location.city, ...(r.emirate ? { emirate: r.emirate } : {}), ...(r.label ? { addressLabel: r.label } : {}), ...(r.pin ? { latitude: r.pin.latitude, longitude: r.pin.longitude } : {}) } } } : {}),
           history: { create: { newStatus: status, changedByType: "AI" } },
         }, select: { id: true, orderNumber: true, status: true, totalMinor: true } });
         if (input.pending) return order; // nothing else changes until the customer confirms
+        if (r.discountId) await redeemCode(tx, { codeId: r.discountId, businessId, customerId: input.customerId, orderId: order.id });
         await tx.conversation.update({ where: { id: input.conversationId }, data: { draftOrder: null } });
         // Remember the address under the name the customer gave it (Home, Work, ...), so next time it can simply be picked.
         if (r.fulfillment === "delivery" && r.address && r.label) {
@@ -77,6 +79,7 @@ export async function confirmPendingOrder(input: { businessId: string; orderId: 
     const status: OrderStatus = settings?.requiresOrderAcceptance === false ? "ACCEPTED" : "AWAITING_BUSINESS_CONFIRMATION";
     const order = await tx.order.update({ where: { id: o.id }, data: { status, history: { create: { previousStatus: "AWAITING_CUSTOMER_CONFIRMATION", newStatus: status, changedByType: "CUSTOMER" } } }, select: { id: true, orderNumber: true, status: true, totalMinor: true, fulfillmentType: true } });
     if (o.conversationId) await tx.conversation.update({ where: { id: o.conversationId }, data: { draftOrder: null } });
+    if (o.discountCodeId) await redeemCode(tx, { codeId: o.discountCodeId, businessId: input.businessId, customerId: o.customerId, orderId: o.id }); // the code counts once the order is with the restaurant
     await tx.customer.update({ where: { id: o.customerId }, data: { lastBranchId: o.locationId } });
     const d = o.deliveryDetails;
     if (d && d.addressText && d.addressLabel) {
@@ -93,7 +96,7 @@ export async function confirmPendingOrder(input: { businessId: string; orderId: 
 export async function listOrders(userId: string, businessId: string) {
   await authorize(userId, businessId);
   const rows = await db.order.findMany({ where: { businessId, status: { not: "AWAITING_CUSTOMER_CONFIRMATION" } }, orderBy: { createdAt: "desc" }, take: 60, include: { items: true, history: { select: { newStatus: true, createdAt: true, reason: true }, orderBy: { createdAt: "asc" } }, customer: { select: { displayName: true, phone: true } }, deliveryDetails: { select: { addressText: true, addressLabel: true, recipientName: true, latitude: true, longitude: true } } } });
-  return rows.map(o => ({ id: o.id, number: o.orderNumber, status: o.status, fulfillment: o.fulfillmentType, total: o.totalMinor / 100, currency: o.currencyCode, createdAt: o.createdAt, conversationId: o.conversationId, note: o.customerNotes ?? "", subtotal: o.subtotalMinor / 100, deliveryFee: o.deliveryFeeMinor / 100, history: o.history.map(h => ({ status: h.newStatus, at: h.createdAt, reason: h.reason ?? "" })), address: [o.deliveryDetails?.addressLabel ? `${o.deliveryDetails.addressLabel}: ${o.deliveryDetails.addressText}` : o.deliveryDetails?.addressText, o.deliveryDetails?.latitude != null ? `https://maps.google.com/?q=${o.deliveryDetails.latitude},${o.deliveryDetails.longitude}` : ""].filter(Boolean).join("\n"), customer: { name: o.deliveryDetails?.recipientName || o.customer.displayName || "", phone: o.customer.phone }, items: o.items.map(i => ({ name: i.itemNameSnapshot, quantity: i.quantity, notes: i.notes ?? "", total: i.totalMinor / 100 })) }));
+  return rows.map(o => ({ id: o.id, number: o.orderNumber, status: o.status, fulfillment: o.fulfillmentType, total: o.totalMinor / 100, currency: o.currencyCode, createdAt: o.createdAt, conversationId: o.conversationId, note: o.customerNotes ?? "", subtotal: o.subtotalMinor / 100, discount: o.discountTotalMinor / 100, discountCode: o.discountCode ?? "", deliveryFee: o.deliveryFeeMinor / 100, history: o.history.map(h => ({ status: h.newStatus, at: h.createdAt, reason: h.reason ?? "" })), address: [o.deliveryDetails?.addressLabel ? `${o.deliveryDetails.addressLabel}: ${o.deliveryDetails.addressText}` : o.deliveryDetails?.addressText, o.deliveryDetails?.latitude != null ? `https://maps.google.com/?q=${o.deliveryDetails.latitude},${o.deliveryDetails.longitude}` : ""].filter(Boolean).join("\n"), customer: { name: o.deliveryDetails?.recipientName || o.customer.displayName || "", phone: o.customer.phone }, items: o.items.map(i => ({ name: i.itemNameSnapshot, quantity: i.quantity, notes: i.notes ?? "", total: i.totalMinor / 100 })) }));
 }
 
 const NEXT: Record<string, OrderStatus[]> = {

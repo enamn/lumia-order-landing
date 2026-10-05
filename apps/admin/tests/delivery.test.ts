@@ -455,4 +455,37 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
       } finally { await restore(); }
     });
   });
+  describe("discount codes from campaigns", () => {
+    const base = { address: "Al Majaz 2, flat 9", emirate: "Sharjah", area: "Al Majaz" };
+    const code = (c: string, over: object = {}) => db.discountCode.create({ data: { businessId: biz, code: c, percent: 20, startsAt: new Date(Date.now() - 3600000), expiresAt: new Date(Date.now() + 7 * 86400000), ...over } });
+    it("takes the percentage off the items (not the delivery fee), shows it in the summary, stores it on the order and counts the use once", async () => {
+      await setRules({ method: "area" }); reviewOn = false; const campaign = await db.campaign.create({ data: { businessId: biz, mode: "ALL", title: "t", message: "m" } });
+      const c = "WK" + suffix.toUpperCase(); const row = await code(c, { campaignId: campaign.id }); const who = "971500000951";
+      let r = await turn(() => say("delivery order: 2 classic", who), id => draft(id, { ...base, discountCode: c.toLowerCase().replace("wk", "wk-") })); // typed in another way: normalised
+      expect(r).toContain(`Subtotal: 56 AED`); expect(r).toContain(`Discount (${c}, 20%): -11.20 AED`); expect(r).toContain("Delivery fee: 10 AED"); expect(r).toContain("Total: 54.80 AED");
+      r = await turn(() => say("yes", who), id => draft(id, { ...base, discountCode: c, confirmed: true }));
+      expect(r).toContain("Total 54.80 AED");
+      const o = await db.order.findFirstOrThrow({ where: { businessId: biz, discountCodeId: row.id } }); expect(o).toMatchObject({ subtotalMinor: 5600, discountTotalMinor: 1120, deliveryFeeMinor: 1000, totalMinor: 5480, discountCode: c });
+      expect(await db.discountRedemption.count({ where: { codeId: row.id } })).toBe(1); expect((await db.discountCode.findUniqueOrThrow({ where: { id: row.id } })).usedCount).toBe(1); expect((await db.campaign.findUniqueOrThrow({ where: { id: campaign.id } })).usedCount).toBe(1);
+      // The same customer cannot use it twice; another customer can.
+      r = await turn(() => say("delivery order: 2 classic", who), id => draft(id, { ...base, discountCode: c }));
+      expect(r).toContain("That code was already used on your account."); expect(r).not.toContain("Discount ("); expect(r).toContain("Total: 66 AED");
+      r = await turn(() => say("delivery order: 2 classic", "971500000952"), id => draft(id, { ...base, discountCode: c })); expect(r).toContain("Discount ("); expect((await db.discountRedemption.count({ where: { codeId: row.id } })).valueOf()).toBe(1); // shown, but only counted when the order is sent
+    });
+    it("tells the customer when a code is unknown or expired, and prices the order normally", async () => {
+      await setRules({ method: "area" }); reviewOn = false; const old = "OLD" + suffix.toUpperCase();
+      await code(old, { startsAt: new Date(Date.now() - 20 * 86400000), expiresAt: new Date(Date.now() - 86400000) });
+      let r = await turn(() => say("delivery order: 2 classic", "971500000953"), id => draft(id, { ...base, discountCode: old })); expect(r).toContain("Sorry, that code has expired."); expect(r).toContain("Total: 66 AED");
+      r = await turn(() => say("delivery order: 2 classic", "971500000954"), id => draft(id, { ...base, discountCode: "NOSUCHCODE" })); expect(r).toContain("Sorry, that code isn't valid."); expect(r).toContain("Total: 66 AED");
+    });
+    it("with the review template the discounted total is what the customer reviews, and the use is counted when they tap Confirm order", async () => {
+      await setRules({ method: "area" }); reviewOn = true; const c = "RV" + suffix.toUpperCase(); const row = await code(c); const who = "971500000955";
+      try {
+        await turn(() => say("delivery order: 2 classic", who), id => draft(id, { ...base, discountCode: c }));
+        expect(calls.find(x => x.path === "/internal/whatsapp/order-review")!.body.total).toBe("54.80 AED"); expect(await db.discountRedemption.count({ where: { codeId: row.id } })).toBe(0);
+        await turn(() => say("Confirm order", who), () => ({}));
+        expect(await db.discountRedemption.count({ where: { codeId: row.id } })).toBe(1); expect((await db.order.findFirstOrThrow({ where: { discountCodeId: row.id } })).totalMinor).toBe(5480);
+      } finally { reviewOn = false; }
+    });
+  });
 });

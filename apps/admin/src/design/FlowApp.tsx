@@ -63,7 +63,7 @@ function toDesignOrder(o: any) {
   for (const h of o.history ?? []) { const k = slot[h.status]; if (k && !t[k]) t[k] = tClock(h.at); }
   const why = (o.history ?? []).filter((h: any) => h.reason).at(-1)?.reason ?? "";
   return { uuid: o.id, raw: o.status, id: Number(o.number) || o.number, st: stOf[o.status] ?? "new", min: Math.max(0, Math.round((Date.now() - new Date(o.createdAt).getTime()) / 60000)), placed: tClock(o.createdAt), type: o.fulfillment === "DELIVERY" ? "delivery" : "pickup",
-    name: o.customer?.name || o.customer?.phone || "Customer", phone: "+" + String(o.customer?.phone ?? "").replace(/^\+/, ""), addr: o.address ?? "", fee: o.deliveryFee ?? 0, sub: o.subtotal ?? 0, total: o.total ?? 0, note: o.note ?? "", reason: why,
+    name: o.customer?.name || o.customer?.phone || "Customer", phone: "+" + String(o.customer?.phone ?? "").replace(/^\+/, ""), addr: o.address ?? "", fee: o.deliveryFee ?? 0, disc: o.discount ?? 0, code: o.discountCode ?? "", sub: o.subtotal ?? 0, total: o.total ?? 0, note: o.note ?? "", reason: why,
     items: (o.items ?? []).map((i: any) => [i.name, i.quantity, i.quantity ? i.total / i.quantity : i.total, i.notes || ""]), t };
 }
 
@@ -251,7 +251,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       name: o.name, phone: o.phone, addr: o.addr, isDelivery: o.type === "delivery",
       hasNote: !!o.note, note: o.note,
       items: o.items.map(([n, qn, pr, nt]: any) => ({ q: qn + "×", name: n, alt: "", hasAlt: false, note: nt || "", hasNote: !!nt, price: money(qn * pr) })),
-      totals: [[A("Subtotal", "المجموع الفرعي"), money(o.sub)], ...(o.type === "delivery" ? [[A("Delivery fee", "رسوم التوصيل"), o.fee ? money(o.fee) : A("Free", "مجاني")]] : [])].map(([k, v]) => ({ k, v })),
+      totals: [[A("Subtotal", "المجموع الفرعي"), money(o.sub)], ...(o.disc ? [[A(`Discount (${o.code})`, `خصم (${o.code})`), "-" + money(o.disc)]] : []), ...(o.type === "delivery" ? [[A("Delivery fee", "رسوم التوصيل"), o.fee ? money(o.fee) : A("Free", "مجاني")]] : [])].map(([k, v]) => ({ k, v })),
       total: money(o.total), steps,
     };
     rows.forEach(r => { if (r.oid === o.id) r.d = od; });

@@ -459,6 +459,7 @@ input::placeholder{color:#B89AA8}
       <!-- LUMIA-EXT dash error -->
       <sc-if value="{{ dashErr }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:14px;color:#B4233B">{{ dashErr }}</div></sc-if>
       <sc-if value="{{ pageMenu }}" hint-placeholder-val="{{ true }}">
+        {{ menuScopeNode }}
       <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
         <div>
           <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">{{ t.menu }}</h1>
@@ -701,6 +702,185 @@ input::placeholder{color:#B89AA8}
       </div>
       </sc-if>
 
+      <!-- Customers page -->
+      <sc-if value="{{ pageCustomers }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="07 Dashboard · Customers" dir="ltr" style="display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
+          <div style="flex:1 1 240px;min-width:0">
+            <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Customers</h1>
+            <p style="font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5">{{ cu.sub }}</p>
+          </div>
+          <label style="flex:0 1 300px;min-width:200px;height:44px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style="flex:none"><circle cx="9" cy="9" r="5.5" stroke="#8A5A6E" stroke-width="1.7"></circle><path d="m13.2 13.2 3.3 3.3" stroke="#8A5A6E" stroke-width="1.7" stroke-linecap="round"></path></svg>
+            <input value="{{ cu.q }}" onChange="{{ cu.onQ }}" placeholder="Search name or number" aria-label="Search customers" style="flex:1;min-width:0;border:0;background:transparent;font-size:15px;height:100%">
+          </label>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 12px 10px 16px;border-radius:14px;background:{{ cu.barBg }};border:1px solid {{ cu.barBd }}">
+          <button type="button" onClick="{{ cu.toggleAll }}" style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500"><span style="width:20px;height:20px;border-radius:6px;flex:none;border:1.5px solid {{ cu.all.ckBd }};background:{{ cu.all.ckBg }};display:flex;align-items:center;justify-content:center"><sc-if value="{{ cu.all.sel }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if></span>{{ cu.selLabel }}</button>
+          <span style="flex:1"></span>
+          <sc-if value="{{ cu.hasSel }}" hint-placeholder-val="{{ false }}">
+            <button type="button" onClick="{{ cu.clear }}" style="height:36px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:500;color:#3D1C31" style-hover="background:#fff">Clear</button>
+          </sc-if>
+          <button type="button" onClick="{{ cu.sendOffer }}" disabled="{{ cu.noSel }}" style="height:40px;padding:0 16px;border-radius:11px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-size:14px;font-weight:600;opacity:{{ cu.sendOp }};display:flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M3.5 10.5 10.5 3.5H16.5V9.5L9.5 16.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path><circle cx="13" cy="7" r="1.2" fill="currentColor"></circle></svg>Send discount code</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+          <sc-for list="{{ cu.rows }}" as="c" hint-placeholder-count="5">
+            <div style="border-radius:14px;background:#fff;border:1px solid {{ c.bd }};overflow:clip">
+              <div style="display:flex;align-items:center">
+                <button type="button" onClick="{{ c.toggle }}" aria-label="{{ c.ckLabel }}" style="align-self:stretch;padding:0 6px 0 16px;display:flex;align-items:center"><span style="width:20px;height:20px;border-radius:6px;flex:none;border:1.5px solid {{ c.ckBd }};background:{{ c.ckBg }};display:flex;align-items:center;justify-content:center"><sc-if value="{{ c.sel }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if></span></button>
+                <button type="button" onClick="{{ c.open }}" aria-expanded="{{ c.isOpen }}" style="flex:1;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px;text-align:start;padding:14px 18px 14px 10px">
+                  <span style="display:flex;align-items:center;gap:12px;flex:1 1 240px;min-width:0">
+                    <span style="width:40px;height:40px;border-radius:50%;flex:none;background:{{ c.av }};color:#1A0815;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center">{{ c.ini }}</span>
+                    <span style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                      <span style="font-size:15px;font-weight:600">{{ c.name }}</span>
+                      <span style="display:flex;align-items:center;gap:6px;font-size:14px;color:#3D1C31;font-variant-numeric:tabular-nums"><svg width="13" height="13" viewBox="0 0 20 20" fill="none" style="flex:none"><path d="M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z" stroke="#16704A" stroke-width="1.7" stroke-linejoin="round"></path></svg>{{ c.phone }}</span>
+                    </span>
+                  </span>
+                  <span style="display:flex;gap:22px;font-size:14px;font-variant-numeric:tabular-nums;flex:none">
+                    <span style="display:flex;flex-direction:column;gap:2px"><span style="color:#8A5A6E;font-size:13px">Orders</span><span style="font-weight:600">{{ c.orders }}</span></span>
+                    <span style="display:flex;flex-direction:column;gap:2px"><span style="color:#8A5A6E;font-size:13px">Spent</span><span style="font-weight:600">{{ c.spent }}</span></span>
+                    <span style="display:flex;flex-direction:column;gap:2px;min-width:86px"><span style="color:#8A5A6E;font-size:13px">Last order</span><span style="font-weight:600">{{ c.last }}</span></span>
+                  </span>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex:none;transform:rotate({{ c.rot }});transition:transform .15s"><path d="m4 6 4 4 4-4" stroke="#8A5A6E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </button>
+              </div>
+              <sc-if value="{{ c.isOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:4px 18px 18px;border-top:1px solid #F6EEF2;display:flex;flex-direction:column;gap:12px">
+                  <span style="font-size:14px;font-weight:600;margin-top:12px">Saved addresses</span>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px">
+                    <sc-for list="{{ c.addrs }}" as="a" hint-placeholder-count="3">
+                      <div style="border:1px solid #F0E4E8;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;background:#FFFBFC">
+                        <span style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600">{{ a.label }}<sc-if value="{{ a.def }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;font-weight:600;padding:2px 7px;border-radius:999px;background:#FDEAF2;color:#8A2040">Default</span></sc-if></span>
+                        <span style="font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty">{{ a.text }}</span>
+                        <span style="font-size:13px;color:#8A5A6E">{{ a.uses }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ cu.empty }}" hint-placeholder-val="{{ false }}"><p style="padding:32px;text-align:center;font-size:15px;color:#8A5A6E">No customers match your search.</p></sc-if>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- Campaigns page -->
+      <sc-if value="{{ pageCampaigns }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="08 Dashboard · Campaigns" dir="ltr" style="display:flex;flex-direction:column;gap:20px">
+        <div>
+          <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Campaigns</h1>
+          <p style="font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5">Send offers to your customers on WhatsApp.</p>
+        </div>
+        <div role="tablist" style="display:flex;padding:3px;border-radius:12px;background:#F6EEF2;gap:2px;align-self:flex-start;max-width:100%">
+          <sc-for list="{{ cp.modes }}" as="m" hint-placeholder-count="2"><button type="button" role="tab" aria-selected="{{ m.on }}" onClick="{{ m.pick }}" style="height:38px;padding:0 16px;border-radius:9px;font-size:14px;white-space:nowrap;font-weight:{{ m.fw }};background:{{ m.bg }};color:{{ m.fg }};box-shadow:{{ m.sh }}">{{ m.label }}</button></sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px;align-items:start">
+          <form onSubmit="{{ cp.send }}" noValidate="{{ true }}" style="border:1px solid #F0E4E8;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0">
+            <sc-if value="{{ cp.isAll }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:#FBF3F8">
+                <span style="width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5" stroke="#8A2040" stroke-width="1.6" stroke-linecap="round"></path></svg></span>
+                <span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:600">All customers</span><span style="font-size:13px;color:#8A5A6E">{{ cp.allNote }}</span></span>
+              </div>
+            </sc-if>
+            <sc-if value="{{ cp.isOffer }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px"><span style="font-size:14px;font-weight:600">Customers</span><button type="button" onClick="{{ cu.toggleAll }}" style="font-size:14px;font-weight:500;color:#C0284F">{{ cp.allBtn }}</button></div>
+                <div style="border:1.5px solid #ECD9E0;border-radius:14px;max-height:232px;overflow-y:auto;display:flex;flex-direction:column">
+                  <sc-for list="{{ cp.pick }}" as="c" hint-placeholder-count="5">
+                    <button type="button" onClick="{{ c.toggle }}" style="display:flex;align-items:center;gap:12px;padding:10px 14px;text-align:start;border-bottom:1px solid #F6EEF2;background:{{ c.rowBg }}" style-hover="background:#FFF7FA"><span style="width:20px;height:20px;border-radius:6px;flex:none;border:1.5px solid {{ c.ckBd }};background:{{ c.ckBg }};display:flex;align-items:center;justify-content:center"><sc-if value="{{ c.sel }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if></span><span style="flex:1;min-width:0;font-size:14px;font-weight:500">{{ c.name }}</span><span style="font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums">{{ c.phone }}</span></button>
+                  </sc-for>
+                </div>
+                <span style="font-size:13px;color:{{ cp.selFg }}">{{ cp.selNote }}</span>
+              </div>
+            </sc-if>
+            <sc-if value="{{ cp.isAll }}" hint-placeholder-val="{{ true }}">
+              <button type="button" onClick="{{ cp.toggleCode }}" role="switch" aria-checked="{{ cp.withCode }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:start">
+                <span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:600">Include a discount code</span><span style="font-size:13px;color:#8A5A6E">Everyone gets the same code</span></span>
+                <span style="width:40px;height:24px;border-radius:12px;flex:none;background:{{ cp.swBg }};position:relative;transition:background .15s"><span style="position:absolute;top:3px;left:{{ cp.swX }};width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(26,8,21,.2);transition:left .15s"></span></span>
+              </button>
+            </sc-if>
+            <sc-if value="{{ cp.showCode }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:14px;padding:14px;border-radius:14px;background:#FFF7FA;border:1px dashed #F3B8CB">
+                <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Discount</span>
+                  <div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ cp.pcts }}" as="o" hint-placeholder-count="4"><button type="button" onClick="{{ o.pick }}" style="height:36px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;border:1.5px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for></div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+                  <label style="display:flex;flex-direction:column;gap:8px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Code</span><input value="{{ cp.code }}" onChange="{{ cp.onCode }}" style="height:44px;padding:0 12px;border-radius:11px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-weight:600;letter-spacing:.04em" style-focus="border-color:#FF5577;box-shadow:0 0 0 4px #FDEAF2"></label>
+                  <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Valid for</span>
+                    <div style="display:flex;gap:6px"><sc-for list="{{ cp.days }}" as="o" hint-placeholder-count="3"><button type="button" onClick="{{ o.pick }}" style="flex:1;height:44px;border-radius:11px;font-size:14px;font-weight:500;border:1.5px solid {{ o.bd }};background:{{ o.bg }};color:{{ o.fg }}">{{ o.label }}</button></sc-for></div>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:14px;font-weight:500;color:#3D1C31">Offer image</span>
+              <sc-if value="{{ cp.noImg }}" hint-placeholder-val="{{ true }}">
+                <label style="height:132px;border-radius:14px;border:1.5px dashed #E3CBD4;background:#FFFBFC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;text-align:center;padding:0 16px" style-hover="border-color:#FF5577;background:#FFF7FA">
+                  <input type="file" accept="image/png,image/jpeg,image/webp" onChange="{{ cp.onImg }}" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4.5" width="17" height="15" rx="3" stroke="#C0284F" stroke-width="1.6"></rect><circle cx="9" cy="10" r="1.8" stroke="#C0284F" stroke-width="1.6"></circle><path d="m4 17 5-4.5 4 3.5 2.5-2 4.5 4" stroke="#C0284F" stroke-width="1.6" stroke-linejoin="round"></path></svg>
+                  <span style="font-size:14px;font-weight:600">Upload an image</span>
+                  <span style="font-size:13px;color:#8A5A6E">JPG or PNG, up to 5 MB. Square images work best.</span>
+                </label>
+              </sc-if>
+              <sc-if value="{{ cp.hasImg }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:14px;border:1.5px solid #ECD9E0">
+                  <div style="width:64px;height:64px;border-radius:10px;flex:none;background-color:#FBF3F8;background-image:{{ cp.imgBg }};background-size:cover;background-position:center"></div>
+                  <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ cp.imgName }}</span><span style="font-size:13px;color:#8A5A6E">Sent above your message</span></span>
+                  <label style="height:36px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:500;display:flex;align-items:center;cursor:pointer;flex:none" style-hover="background:#FBF3F8"><input type="file" accept="image/png,image/jpeg,image/webp" onChange="{{ cp.onImg }}" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">Replace</label>
+                  <button type="button" onClick="{{ cp.clearImg }}" aria-label="Remove image" style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none" style-hover="background:#FBF3F8"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="m4 4 8 8M12 4l-8 8" stroke="#3D1C31" stroke-width="1.7" stroke-linecap="round"></path></svg></button>
+                </div>
+              </sc-if>
+            </div>
+            <label style="display:flex;flex-direction:column;gap:8px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Message</span>
+              <textarea value="{{ cp.msg }}" onChange="{{ cp.onMsg }}" rows="4" style="padding:12px 14px;border-radius:12px;border:1.5px solid #ECD9E0;font-size:15px;line-height:1.5;resize:vertical;font-family:inherit" style-focus="border-color:#FF5577;box-shadow:0 0 0 4px #FDEAF2"></textarea>
+              <span style="font-size:13px;color:#8A5A6E">{{ cp.tokens }}</span>
+            </label>
+            <button type="submit" disabled="{{ cp.cant }}" style="height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;opacity:{{ cp.sendOp }};display:flex;align-items:center;justify-content:center;gap:10px">
+              <sc-if value="{{ cp.sending }}" hint-placeholder-val="{{ false }}"><span style="width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:lo-spin .8s linear infinite"></span></sc-if>{{ cp.sendLabel }}
+            </button>
+          </form>
+          <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+            <span style="font-size:14px;font-weight:600">Preview</span>
+            <div style="border-radius:20px;background:#EFE7DD;padding:18px 16px 22px;display:flex;flex-direction:column;gap:10px">
+              <span style="align-self:center;font-size:12px;padding:3px 10px;border-radius:8px;background:rgba(255,255,255,.75);color:#3D1C31">To {{ cp.previewTo }}</span>
+              <div style="align-self:flex-start;max-width:88%;width:300px;background:#fff;border-radius:4px 14px 14px 14px;padding:4px 4px 8px;box-shadow:0 1px 1px rgba(26,8,21,.08);display:flex;flex-direction:column;gap:8px">
+                <sc-if value="{{ cp.hasImg }}" hint-placeholder-val="{{ false }}"><div role="img" aria-label="Offer image" style="width:100%;aspect-ratio:1/1;border-radius:11px 11px 4px 4px;background-color:#F6EEF2;background-image:{{ cp.imgBg }};background-size:cover;background-position:center"></div></sc-if>
+                <sc-if value="{{ cp.noImg }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:16/9;border-radius:11px 11px 4px 4px;background:#F6EEF2;font-size:13px;color:#8A5A6E">Your offer image</span></sc-if>
+                <div style="padding:0 8px;display:flex;flex-direction:column;gap:8px">
+                <span style="font-size:13px;font-weight:600;color:#C0284F">Burger House</span>
+                <span style="font-size:15px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere">{{ cp.preview }}</span>
+                <sc-if value="{{ cp.showCode }}" hint-placeholder-val="{{ false }}">
+                  <span style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:10px;background:#FFF1F4;border:1px dashed #F3B8CB"><span style="font-size:15px;font-weight:600;letter-spacing:.05em">{{ cp.code }}</span><span style="font-size:13px;color:#8A2040">{{ cp.pctLabel }} off · {{ cp.until }}</span></span>
+                </sc-if>
+                <span style="align-self:flex-end;font-size:11px;color:#8A5A6E">12:04</span>
+                </div>
+              </div>
+              <div style="align-self:flex-start;max-width:88%;display:flex;flex-direction:column;gap:6px;width:300px">
+                <span style="height:38px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:#027EB5">Order now</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <section style="display:flex;flex-direction:column;gap:10px">
+          <h2 style="font-size:18px;font-weight:600;letter-spacing:-0.015em">Sent campaigns</h2>
+          <sc-for list="{{ cp.history }}" as="hx" hint-placeholder-count="2">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding:14px 18px;border:1px solid #F0E4E8;border-radius:14px">
+              <span style="flex:1 1 240px;min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ hx.title }}</span><span style="font-size:13px;color:#8A5A6E">{{ hx.meta }}</span></span>
+              <span style="display:flex;gap:22px;font-size:14px;font-variant-numeric:tabular-nums">
+                <span style="display:flex;flex-direction:column;gap:2px"><span style="color:#8A5A6E;font-size:13px">Sent</span><span style="font-weight:600">{{ hx.sent }}</span></span>
+                <span style="display:flex;flex-direction:column;gap:2px"><span style="color:#8A5A6E;font-size:13px">Read</span><span style="font-weight:600">{{ hx.read }}</span></span>
+                <span style="display:flex;flex-direction:column;gap:2px"><span style="color:#8A5A6E;font-size:13px">Code used</span><span style="font-weight:600">{{ hx.used }}</span></span>
+              </span>
+            </div>
+          </sc-for>
+        </section>
+        <sc-if value="{{ cp.toast }}" hint-placeholder-val="{{ false }}">
+          <div role="status" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:50;background:#1A0815;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;box-shadow:0 12px 30px -10px rgba(26,8,21,.5)"><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="m5 10.5 3.2 3L15 7" stroke="#7BE0A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>{{ cp.toast }}</div>
+        </sc-if>
+      </div>
+      </sc-if>
+
       <!-- Plans & payment page -->
       <sc-if value="{{ pagePlans }}" hint-placeholder-val="{{ false }}">
       <div dir="ltr" style="position:fixed;inset:0;z-index:55;background:#fff;display:flex;flex-direction:column">
@@ -758,7 +938,7 @@ input::placeholder{color:#B89AA8}
                   <div style="flex:none;width:64px;height:112px;position:relative;overflow:hidden;border-radius:10px;background:#fff"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C0284F"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div></div>
                   <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
                     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><span style="font-size:16px;font-weight:600">Lumia Order Terminal</span><span style="font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#1A0815;color:#fff">Required</span></div>
-                    <span style="font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty">Receives, accepts and prints your orders. Every subscription includes at least one terminal.</span>
+                    <span style="font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty">The Lumia Order terminal for your restaurant. Orders are handled from your dashboard. Every subscription includes at least one terminal.</span>
                     <span style="display:flex;align-items:baseline;gap:8px;margin-top:4px;font-variant-numeric:tabular-nums"><span style="font-size:14px;color:#8A5A6E;text-decoration:line-through">AED 699</span><span style="font-size:18px;font-weight:600">{{ sub.termPrice }}</span><span style="font-size:13px;color:#8A5A6E">one-time</span></span>
                   </div>
                 </div>
@@ -1194,7 +1374,7 @@ input::placeholder{color:#B89AA8}
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;trialDaysLeft&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:14,&quot;min&quot;:0,&quot;max&quot;:14,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Flow&quot;,&quot;1 Mobile number&quot;,&quot;2 OTP&quot;,&quot;2 OTP · incorrect&quot;,&quot;2 OTP · expired&quot;,&quot;2 Number verified&quot;,&quot;3 Restaurant name&quot;,&quot;4 Menu upload&quot;,&quot;5 AI processing&quot;,&quot;5B Menu ready&quot;,&quot;Dashboard · menu&quot;,&quot;Dashboard · empty menu&quot;,&quot;WA · Connect&quot;,&quot;WA · Connecting&quot;,&quot;WA · Connected&quot;,&quot;WA · Connected, no catalog&quot;,&quot;WA · Import info&quot;,&quot;WA · Review differences&quot;,&quot;WA · Catalog found&quot;,&quot;WA · Replace menu confirm&quot;,&quot;WA · Error&quot;,&quot;WA · Number in use&quot;,&quot;Dashboard · WhatsApp connected&quot;,&quot;WhatsApp page · connected&quot;,&quot;WhatsApp page · disconnect&quot;,&quot;WhatsApp page · disconnected&quot;,&quot;Orders · list&quot;,&quot;Orders · no orders yet&quot;,&quot;Orders · no orders, WhatsApp not connected&quot;,&quot;Trial · panel&quot;,&quot;Trial · choose plan&quot;,&quot;Trial · payment&quot;,&quot;Trial · subscribed&quot;,&quot;Terminal · preparing&quot;,&quot;Terminal · shipped&quot;,&quot;Terminal · out for delivery&quot;,&quot;Terminal · delivered&quot;,&quot;Premium · Customers&quot;,&quot;Premium · Add branch&quot;],&quot;default&quot;:&quot;Flow&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screens&quot;},&quot;viewport&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Auto&quot;,&quot;Mobile frame&quot;],&quot;default&quot;:&quot;Auto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screens&quot;},&quot;otpResult&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Correct&quot;,&quot;Incorrect&quot;,&quot;Expired&quot;],&quot;default&quot;:&quot;Correct&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;waResult&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Success · catalog&quot;,&quot;Success · no catalog&quot;,&quot;Permission cancelled&quot;,&quot;Business unavailable&quot;,&quot;Number already connected&quot;],&quot;default&quot;:&quot;Success · catalog&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;dashLanguage&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;English&quot;,&quot;Arabic&quot;],&quot;default&quot;:&quot;English&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;trialDaysLeft&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:14,&quot;min&quot;:0,&quot;max&quot;:14,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Flow&quot;,&quot;1 Mobile number&quot;,&quot;2 OTP&quot;,&quot;2 OTP · incorrect&quot;,&quot;2 OTP · expired&quot;,&quot;2 Number verified&quot;,&quot;3 Restaurant name&quot;,&quot;4 Menu upload&quot;,&quot;5 AI processing&quot;,&quot;5B Menu ready&quot;,&quot;Dashboard · menu&quot;,&quot;Dashboard · empty menu&quot;,&quot;WA · Connect&quot;,&quot;WA · Connecting&quot;,&quot;WA · Connected&quot;,&quot;WA · Connected, no catalog&quot;,&quot;WA · Import info&quot;,&quot;WA · Review differences&quot;,&quot;WA · Catalog found&quot;,&quot;WA · Replace menu confirm&quot;,&quot;WA · Error&quot;,&quot;WA · Number in use&quot;,&quot;Dashboard · WhatsApp connected&quot;,&quot;WhatsApp page · connected&quot;,&quot;WhatsApp page · disconnect&quot;,&quot;WhatsApp page · disconnected&quot;,&quot;Orders · list&quot;,&quot;Orders · no orders yet&quot;,&quot;Orders · no orders, WhatsApp not connected&quot;,&quot;Trial · panel&quot;,&quot;Trial · choose plan&quot;,&quot;Trial · payment&quot;,&quot;Trial · subscribed&quot;,&quot;Terminal · preparing&quot;,&quot;Terminal · shipped&quot;,&quot;Terminal · out for delivery&quot;,&quot;Terminal · delivered&quot;,&quot;Customers · list&quot;,&quot;Customers · selected&quot;,&quot;Campaigns · message all&quot;,&quot;Campaigns · custom offer&quot;,&quot;Premium · Campaigns&quot;,&quot;Premium · Customers&quot;,&quot;Premium · Add branch&quot;],&quot;default&quot;:&quot;Flow&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screens&quot;},&quot;viewport&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Auto&quot;,&quot;Mobile frame&quot;],&quot;default&quot;:&quot;Auto&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screens&quot;},&quot;otpResult&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Correct&quot;,&quot;Incorrect&quot;,&quot;Expired&quot;],&quot;default&quot;:&quot;Correct&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;waResult&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Success · catalog&quot;,&quot;Success · no catalog&quot;,&quot;Permission cancelled&quot;,&quot;Business unavailable&quot;,&quot;Number already connected&quot;],&quot;default&quot;:&quot;Success · catalog&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;dashLanguage&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;English&quot;,&quot;Arabic&quot;],&quot;default&quot;:&quot;English&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
 const COUNTRIES = [
   { flag: '🇦🇪', name: 'United Arab Emirates', dial: '+971', len: 9, groups: [2,3,4], ex: '50 123 4567', re: /^5[024568]\d{7}$/, label: 'UAE' },
   { flag: '🇸🇦', name: 'Saudi Arabia', dial: '+966', len: 9, groups: [2,3,4], ex: '50 123 4567', re: /^5\d{8}$/, label: 'Saudi' },
@@ -1226,7 +1406,7 @@ const WA_CAT = [
 const WA_ERR = { 'Permission cancelled': 'Permission was cancelled before setup finished.', 'Business unavailable': "The business account you selected isn't available right now." };
 const AR = { 'Classic Burger':'برجر كلاسيك','Chicken Burger':'برجر دجاج','Cheese Burger':'تشيز برجر','Double Smash':'دبل سماش','Mushroom Swiss':'مشروم سويس','Spicy Jalapeño':'برجر هالبينو حار','Beef Bacon Burger':'برجر لحم بيكون','Veggie Burger':'برجر نباتي','Classic Burger Meal':'وجبة برجر كلاسيك','Chicken Burger Meal':'وجبة برجر دجاج','Cheese Burger Meal':'وجبة تشيز برجر','Double Smash Meal':'وجبة دبل سماش','Mushroom Swiss Meal':'وجبة مشروم سويس','Spicy Jalapeño Meal':'وجبة هالبينو حار','Beef Bacon Meal':'وجبة لحم بيكون','Veggie Meal':'وجبة نباتية','Chicken Strips Meal':'وجبة ستربس دجاج','Kids Meal':'وجبة أطفال','Combo for Two':'كومبو لشخصين','Family Box':'بوكس العائلة','Pepsi':'بيبسي','Diet Pepsi':'بيبسي دايت','7Up':'سفن أب','Mirinda':'ميرندا','Water':'ماء','Sparkling Water':'مياه فوارة','Fresh Orange':'عصير برتقال طازج','Lemon Mint':'ليمون بالنعناع','Iced Tea':'شاي مثلج','Milkshake':'ميلك شيك','Chocolate Brownie':'براوني بالشوكولاتة','Cheesecake':'تشيز كيك','Vanilla Sundae':'صنداي فانيلا','Cookie':'كوكيز','Churros':'تشوروز','Apple Pie':'فطيرة التفاح','Fries':'بطاطس مقلية','Curly Fries':'بطاطس كيرلي','Onion Rings':'حلقات البصل','Coleslaw':'كول سلو','BBQ Burger':'برجر باربكيو','Truffle Burger':'برجر ترافل','Classic Combo':'كومبو كلاسيك','Chicken Combo':'كومبو دجاج','Cheese Combo':'كومبو تشيز','Smash Combo':'كومبو سماش','Kids Combo':'كومبو أطفال','Strips Combo':'كومبو ستربس','Veggie Combo':'كومبو نباتي','Loaded Fries':'بطاطس محمّلة','Nuggets':'ناجتس','Brownie':'براوني','Sundae':'صنداي' };
 const CAT_AR = { Burgers: 'برجر', Meals: 'وجبات', Drinks: 'مشروبات', Desserts: 'حلويات', Sides: 'أطباق جانبية', Other: 'إضافات', Combos: 'كومبو' };
-const NAV_AR = { Overview: 'نظرة عامة', Orders: 'الطلبات', Menu: 'القائمة', WhatsApp: 'واتساب', Customers: 'العملاء', Delivery: 'التوصيل', Settings: 'الإعدادات' };
+const NAV_AR = { Overview: 'نظرة عامة', Orders: 'الطلبات', Menu: 'القائمة', WhatsApp: 'واتساب', Customers: 'العملاء', Campaigns: 'الحملات', Delivery: 'التوصيل', Settings: 'الإعدادات' };
 const T_EN = { menu: 'Menu', items: 'items', categories: 'categories', created: 'Created by Lumia AI', addItem: 'Add item', search: 'Search items', all: 'All items', soldOut: 'Sold out', addAr: 'Add Arabic name', noResults: 'No items match your search.', setupTitle: 'Get Lumia ready to receive orders', continueSetup: 'Continue setup', setup: ['Restaurant created', 'Menu added', ['Connect WhatsApp', 'WhatsApp connected'], 'Set delivery & order settings', 'Test Lumia'] };
 const T_AR = { menu: 'القائمة', items: 'صنف', categories: 'فئات', created: 'أنشأتها Lumia AI', addItem: 'إضافة صنف', search: 'ابحث عن صنف', all: 'كل الأصناف', soldOut: 'نفد', addAr: 'أضف الاسم بالعربية', noResults: 'لا توجد أصناف مطابقة لبحثك.', setupTitle: 'جهّز Lumia لاستقبال الطلبات', continueSetup: 'متابعة الإعداد', setup: ['تم إنشاء المطعم', 'تمت إضافة القائمة', ['ربط واتساب', 'تم ربط واتساب'], 'إعداد التوصيل والطلبات', 'تجربة Lumia'] };
 const count = (m) => m.reduce((a, c) => a + c.items.length, 0);
@@ -1270,6 +1450,11 @@ const SCREENS = {
   'Terminal · shipped': D({ paid: 'plus', termStage: 2, addr: 'Shop 4, Al Majaz 2, Sharjah' }),
   'Terminal · out for delivery': D({ paid: 'plus', termStage: 3, addr: 'Shop 4, Al Majaz 2, Sharjah' }),
   'Terminal · delivered': D({ paid: 'plus', termStage: 4, addr: 'Shop 4, Al Majaz 2, Sharjah' }),
+  'Customers · list': D({ paid: 'plus', page: 'Customers', custOpen: 'c1' }),
+  'Customers · selected': D({ paid: 'plus', page: 'Customers', custSel: ['c1', 'c3', 'c4'] }),
+  'Campaigns · message all': D({ paid: 'plus', page: 'Campaigns' }),
+  'Campaigns · custom offer': D({ paid: 'plus', page: 'Campaigns', campMode: 'offer', custSel: ['c1', 'c3', 'c4'] }),
+  'Premium · Campaigns': D({ lock: 'campaigns' }),
   'Premium · Customers': D({ lock: 'customers' }),
   'Premium · Add branch': D({ page: 'Settings', settingsPage: 'branches', lock: 'branches' }),
   'Trial · subscribed': D({ sub: 'done', plan: 'plus', paid: 'plus' }),
@@ -1280,7 +1465,22 @@ const SUB_PLANS = [
   { id: 'pro', name: 'Pro', desc: 'For established restaurants and multi-branch operations.', m: 399, y: 3990, sy: 4788, inc: 'Everything in Plus, plus:', feats: ['Up to 3 branches', 'Up to 3 WhatsApp Business numbers', 'Up to 10 staff accounts', 'Advanced automation', 'Multi-branch management', 'Priority support', 'Assisted onboarding', '0% commission on orders'] },
 ];
 const TERM = { starter: 549, plus: 499, pro: 399 };
-const SUB_BASE = { termStage: 0, termQty: 1, addr: '', addrTry: false, planStep: 'plans', lock: null, sub: null, paid: null, plan: 'plus', bill: 'yearly', card: '', exp: '', cvc: '', holder: '' };
+const CUSTOMERS = [
+  ['c1', 'Ahmed Al Mansoori', '+971 50 214 7781', 14, 1186, 'Today', [['Home', 'Villa 12, Street 7, Al Nahda 2, Dubai', 9], ['Work', 'Office 1804, Churchill Tower, Business Bay, Dubai', 4], ['Mum’s house', 'Building 3, Al Qusais 1, Dubai', 1]]],
+  ['c2', 'Fatima Hassan', '+971 55 903 1264', 9, 742, 'Yesterday', [['Home', 'Apt 607, Al Majaz Tower, Al Majaz 2, Sharjah', 6], ['Work', 'Sharjah Research Park, University City, Sharjah', 2], ['Gym', 'Fitness First, Sahara Centre, Al Nahda, Sharjah', 1]]],
+  ['c3', 'Omar Khalil', '+971 52 487 0039', 6, 455, '2 Oct', [['Home', 'Apt 2203, Marina Pinnacle, Dubai Marina', 4], ['Work', 'Building 9, Dubai Internet City', 1], ['Friend', 'Villa 41, Arabian Ranches 2, Dubai', 1]]],
+  ['c4', 'Mariam Al Suwaidi', '+971 56 330 9182', 21, 1904, '1 Oct', [['Home', 'Villa 5, Al Rahmaniya 3, Sharjah', 15], ['Work', 'Sharjah City Centre, Al Wahda Street', 4], ['Sister', 'Apt 410, Al Taawun Mall Tower, Sharjah', 2]]],
+  ['c5', 'Rahul Menon', '+971 50 776 4410', 4, 268, '28 Sep', [['Home', 'Apt 112, Al Nahda Tower 2, Al Nahda 1, Dubai', 3], ['Work', 'Dubai Airport Freezone, Building 6W', 1], ['Other', 'Al Qasba, Al Khan, Sharjah', 0]]],
+  ['c6', 'Layla Haddad', '+971 54 119 2287', 3, 191, '24 Sep', [['Home', 'Apt 905, Al Khan Corniche, Sharjah', 2], ['Work', 'American University of Sharjah, University City', 1], ['Other', 'Mega Mall, Al Qasimia, Sharjah', 0]]],
+  ['c7', 'Yousef Al Hammadi', '+971 58 640 5513', 11, 963, '20 Sep', [['Home', 'Villa 22, Mirdif, Dubai', 8], ['Work', 'Emirates Group HQ, Al Garhoud, Dubai', 2], ['Farm', 'Al Faya Road, Sharjah', 1]]],
+  ['c8', 'Sara Nasser', '+971 52 228 6604', 2, 124, '12 Sep', [['Home', 'Apt 304, Al Mamzar Centre, Deira, Dubai', 2], ['Work', 'Al Ghurair Centre, Deira, Dubai', 0], ['Other', 'Al Mamzar Beach Park, Dubai', 0]]],
+].map(([id, name, phone, orders, spent, last, addrs]) => ({ id, name, phone, orders, spent, last, addrs }));
+const AV_BG = ['#FDEAF2', '#F1E6FF', '#FFF1DC', '#E4F4EC'];
+const CAMP_HIST = [
+  { title: 'Ramadan iftar boxes, 15% off', meta: 'All customers · 18 Sep', sent: 8, read: 7, used: 3 },
+  { title: 'Thank-you code for regulars', meta: 'Custom offer · 3 customers · 2 Sep', sent: 3, read: 3, used: 2 },
+];
+const SUB_BASE = { custSel: [], custOpen: null, custQ: '', campMode: 'all', campCode: true, campPct: 20, campDays: 7, campMsgAll: 'Hi {name}, this weekend only: 20% off all burgers at Burger House. Reply here to order.', campMsgOffer: 'Hi {name}, thanks for ordering with us. Here’s a discount on your next order from Burger House.', campCodeTxt: 'WEEKEND20', campSending: false, campToast: '', campHist: CAMP_HIST, campImg: '', campImgName: '', termStage: 0, termQty: 1, addr: '', addrTry: false, planStep: 'plans', lock: null, sub: null, paid: null, plan: 'plus', bill: 'yearly', card: '', exp: '', cvc: '', holder: '' };
 const SETTINGS = 'Lumia Order Restaurant Settings.dc.html';
 const goSettings = (hash) => { window.location.href = SETTINGS + (hash ? '#' + hash : ''); };
 const ORDERS = [
@@ -1403,6 +1603,7 @@ class Component extends DCLogic {
     const finish = () => { this.setState({ sub: 'paying' }); this.later(1600, () => this.setState({ sub: 'done', paid: sel.id, page: 'Overview', planStep: 'plans', termStage: 0 })); };
     const tab = (v, label) => { const on = s.bill === v; return { label, on, fw: on ? 600 : 500, bg: on ? '#fff' : 'transparent', fg: on ? '#1A0815' : '#8A5A6E', sh: on ? '0 1px 3px rgba(26,8,21,.12)' : 'none', pick: () => this.setState({ bill: v }) }; };
     const LOCKS = {
+      campaigns: { id: 'plus', tag: 'Plus feature', title: 'Campaigns are available on Plus and Pro', body: 'Send offers and discount codes to your customers on WhatsApp, to everyone at once or to the customers you pick.', feats: ['Promotions / customer campaigns', 'Full customer history', 'Advanced analytics'], cta: 'Upgrade to Plus' },
       customers: { id: 'plus', tag: 'Plus feature', title: 'Customers is available on Plus and Pro', body: 'See everyone who ordered from you on WhatsApp, what they ordered and how often they come back.', feats: ['Full customer history', 'Advanced analytics', 'Promotions / customer campaigns'], cta: 'Upgrade to Plus' },
       branches: { id: 'pro', tag: 'Pro feature', title: 'Add more branches with Pro', body: 'Your plan includes 1 branch. Pro lets you run up to 3 branches from one dashboard.', feats: ['Up to 3 branches', 'Up to 3 WhatsApp Business numbers', 'Multi-branch management'], cta: 'Upgrade to Pro' },
     };
@@ -1464,6 +1665,70 @@ class Component extends DCLogic {
       onAddr: (e) => this.setState({ addr: e.target.value }),
       termInc: () => this.setState({ termQty: Math.min(10, qty + 1) }),
       termDec: () => this.setState({ termQty: Math.max(1, qty - 1) }),
+    };
+  }
+  custVals(s) {
+    const sel = s.custSel || [], q = (s.custQ || '').trim().toLowerCase();
+    const isSel = (id) => sel.includes(id);
+    const toggle = (id) => this.setState(st => ({ custSel: st.custSel.includes(id) ? st.custSel.filter(x => x !== id) : [...st.custSel, id] }));
+    const allOn = sel.length === CUSTOMERS.length;
+    const ck = (on) => ({ sel: on, ckBd: on ? '#FF5577' : '#D9BFCB', ckBg: on ? '#FF5577' : '#fff' });
+    const ini = (n) => n.split(' ').filter(w => w !== 'Al').map(w => w[0]).slice(0, 2).join('');
+    const first = (n) => n.split(' ')[0];
+    const list = CUSTOMERS.filter(c => !q || c.name.toLowerCase().includes(q) || c.phone.replace(/\s/g, '').includes(q.replace(/\s/g, '')));
+    const mode = s.campMode || 'all', isOffer = mode === 'offer';
+    const withCode = isOffer || s.campCode;
+    const recips = isOffer ? CUSTOMERS.filter(c => isSel(c.id)) : CUSTOMERS;
+    const pct = s.campPct, days = s.campDays;
+    const until = 'valid until ' + new Date(2026, 9, 5 + days).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    const msg = isOffer ? s.campMsgOffer : s.campMsgAll;
+    const who = recips[0] ? first(recips[0].name) : 'there';
+    const chip = (on) => ({ bd: on ? '#FF5577' : '#ECD9E0', bg: on ? '#FDEAF2' : '#fff', fg: on ? '#8A2040' : '#3D1C31' });
+    const n = recips.length, cant = !n || !msg.trim() || (withCode && !s.campCodeTxt.trim()) || s.campSending;
+    const tab = (v, label) => { const on = mode === v; return { label, on, fw: on ? 600 : 500, bg: on ? '#fff' : 'transparent', fg: on ? '#1A0815' : '#8A5A6E', sh: on ? '0 1px 3px rgba(26,8,21,.12)' : 'none', pick: () => this.setState({ campMode: v }) }; };
+    return {
+      cu: {
+        sub: `${CUSTOMERS.length} customers who ordered from you on WhatsApp`, q: s.custQ || '', onQ: (e) => this.setState({ custQ: e.target.value }),
+        all: ck(allOn), hasSel: sel.length > 0, noSel: !sel.length, sendOp: sel.length ? 1 : 0.45,
+        selLabel: sel.length ? `${sel.length} selected` : 'Select all',
+        barBg: sel.length ? '#FFF7FA' : '#FBF8F9', barBd: sel.length ? '#F3B8CB' : '#F0E4E8',
+        toggleAll: () => this.setState({ custSel: allOn ? [] : CUSTOMERS.map(c => c.id) }),
+        clear: () => this.setState({ custSel: [] }),
+        sendOffer: () => this.setState({ page: 'Campaigns', campMode: 'offer' }),
+        empty: !list.length,
+        rows: list.map((c, i) => { const on = isSel(c.id), open = s.custOpen === c.id; return { ...ck(on), name: c.name, phone: c.phone, ini: ini(c.name), av: AV_BG[i % 4],
+          orders: c.orders, spent: 'AED ' + c.spent.toLocaleString('en-US'), last: c.last, isOpen: open, rot: open ? '180deg' : '0deg', bd: on ? '#F3B8CB' : '#F0E4E8',
+          ckLabel: (on ? 'Deselect ' : 'Select ') + c.name, toggle: () => toggle(c.id), open: () => this.setState({ custOpen: open ? null : c.id }),
+          addrs: c.addrs.map(([label, text, u], j) => ({ label, text, def: j === 0, uses: u ? (u === 1 ? 'Used for 1 order' : `Used for ${u} orders`) : 'Not used yet' })) }; }),
+      },
+      cp: {
+        modes: [tab('all', 'Message all customers'), tab('offer', 'Custom offer')],
+        isAll: !isOffer, isOffer, withCode, showCode: withCode,
+        allNote: `${CUSTOMERS.length} customers will receive this message`,
+        allBtn: allOn ? 'Clear all' : 'Select all',
+        pick: CUSTOMERS.map(c => { const on = isSel(c.id); return { ...ck(on), name: c.name, phone: c.phone, rowBg: on ? '#FFF7FA' : '#fff', toggle: () => toggle(c.id) }; }),
+        selNote: n ? (n === 1 ? '1 customer selected' : `${n} customers selected`) : 'Select at least one customer', selFg: n ? '#8A5A6E' : '#B42318',
+        swBg: s.campCode ? '#FF5577' : '#D9BFCB', swX: s.campCode ? '19px' : '3px', toggleCode: () => this.setState(st => ({ campCode: !st.campCode })),
+        pcts: [10, 15, 20, 25].map(v => ({ label: v + '%', ...chip(v === pct), pick: () => this.setState(st => ({ campPct: v, campCodeTxt: st.campCodeTxt.replace(/\d+$/, '') + v })) })),
+        days: [7, 14, 30].map(v => ({ label: v + ' days', ...chip(v === days), pick: () => this.setState({ campDays: v }) })),
+        code: s.campCodeTxt, onCode: (e) => this.setState({ campCodeTxt: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 14) }),
+        pctLabel: pct + '%', until,
+        imgBg: s.campImg ? `url("${s.campImg}")` : 'none', imgName: s.campImgName, hasImg: !!s.campImg, noImg: !s.campImg,
+        onImg: (e) => { const f = e.target.files && e.target.files[0]; if (!f || !/^image\//.test(f.type)) return; if (s.campImg && s.campImg.startsWith('blob:')) URL.revokeObjectURL(s.campImg); this.setState({ campImg: URL.createObjectURL(f), campImgName: f.name }); e.target.value = ''; },
+        clearImg: () => { if (s.campImg && s.campImg.startsWith('blob:')) URL.revokeObjectURL(s.campImg); this.setState({ campImg: '', campImgName: '' }); },
+        msg, onMsg: (e) => this.setState(isOffer ? { campMsgOffer: e.target.value } : { campMsgAll: e.target.value }),
+        tokens: 'Use {name} to add each customer’s first name.',
+        preview: msg.replace(/\{name\}/g, who), previewTo: recips[0] ? (n > 1 ? `${recips[0].name} and ${n - 1} more` : recips[0].name) : 'no one yet',
+        cant, sendOp: cant && !s.campSending ? 0.45 : 1, sending: s.campSending,
+        sendLabel: s.campSending ? 'Sending…' : n === 1 ? 'Send to 1 customer' : `Send to ${n} customers`,
+        history: s.campHist,
+        toast: s.campToast,
+        send: (e) => { e && e.preventDefault && e.preventDefault(); if (cant) return;
+          this.setState({ campSending: true });
+          this.later(1200, () => { this.setState(st => ({ campSending: false, campToast: n === 1 ? 'Sent to 1 customer' : `Sent to ${n} customers`, custSel: isOffer ? [] : st.custSel,
+            campHist: [{ title: (withCode ? pct + '% off · ' + s.campCodeTxt : msg.slice(0, 48)), meta: (s.campImg ? 'With image · ' : '') + (isOffer ? `Custom offer · ${n} customer${n === 1 ? '' : 's'}` : 'All customers') + ' · Today', sent: n, read: 0, used: 0 }, ...st.campHist] }));
+            this.later(2600, () => this.setState({ campToast: '' })); }); },
+      },
     };
   }
   takeFile(f) { if (!f) return; this.setState({ fileName: f.name, drag: false, step: 'processing' }); this.startProcessing(); }
@@ -1717,7 +1982,7 @@ class Component extends DCLogic {
       sections, noResults: sections.length === 0,
       cats: [['All', T.all, count(M)], ...M.map(g => [g.cat, catName(g.cat), g.items.length])].map(([k, label, n]) => { const on = !q && s.cat === k; return { label, count: n, on, pick: () => this.setState({ cat: k, q: '' }), bg: on ? '#FDEAF2' : 'transparent', fg: on ? '#8A2040' : '#3D1C31', fw: on ? 600 : 400, countFg: on ? '#8A2040' : '#8A5A6E', chipBg: on ? '#1A0815' : '#fff', chipFg: on ? '#fff' : '#3D1C31', chipBd: on ? '#1A0815' : '#ECD9E0' }; }),
       // whatsapp
-      pageMenu: s.page === 'Menu', pagePlans: s.page === 'Plans', pageWA: s.page === 'WhatsApp',
+      pageMenu: s.page === 'Menu', pagePlans: s.page === 'Plans', pageCustomers: s.page === 'Customers', pageCampaigns: s.page === 'Campaigns', ...this.custVals(s), pageWA: s.page === 'WhatsApp',
       waOpen: !!s.wa, wa: { intro: s.wa === 'intro', connecting: s.wa === 'connecting', success: s.wa === 'success', import: s.wa === 'import', review: s.wa === 'review', catalog: s.wa === 'catalog', error: s.wa === 'error', inUse: s.wa === 'inUse' },
       waLabel: { intro: '08 WhatsApp · Connect', connecting: '08a WhatsApp · Connecting', success: '08b WhatsApp · Connected', import: '08c WhatsApp · Import info', review: '08d WhatsApp · Review differences', catalog: '08e WhatsApp · Catalog found', error: '08g WhatsApp · Error', inUse: '08h WhatsApp · Number in use' }[s.wa] || '08 WhatsApp',
       waClose: () => { this.clearTimers(); this.setState({ wa: null, confirmReplace: false }); },
@@ -1783,7 +2048,7 @@ class Component extends DCLogic {
           L: { ...L, split2: narrow ? 'minmax(0,1fr)' : 'minmax(0,1.6fr) minmax(0,1fr)' },
         };
       })(),
-      nav: [['Overview', 'M3 10.5 10 4l7 6.5M5 9v7.5h10V9'], ['Orders', 'M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0'], ['Menu', 'M5 4.5h10M5 10h10M5 15.5h6'], ['WhatsApp', 'M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z'], ['Customers', 'M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5'], ['Settings', 'M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4']].map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e) => { e && e.preventDefault && e.preventDefault(); if (l === 'Settings') this.setState({ page: 'Settings', settingsPage: '' }); else if (l === 'Overview' || l === 'Orders' || l === 'Menu' || l === 'WhatsApp') this.setState({ page: l }); else if (l === 'Customers' && !['plus', 'pro'].includes(s.paid)) this.setState({ lock: 'customers' }); }, fg: on ? '#1A0815' : '#3D1C31', fw: on ? 600 : 400, bg: on ? '#FDEAF2' : 'transparent', bd: on ? '#FF5577' : 'transparent', lock: l === 'Customers' && !['plus', 'pro'].includes(s.paid) }; }),
+      nav: [['Overview', 'M3 10.5 10 4l7 6.5M5 9v7.5h10V9'], ['Orders', 'M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0'], ['Menu', 'M5 4.5h10M5 10h10M5 15.5h6'], ['WhatsApp', 'M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z'], ['Customers', 'M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5'], ['Campaigns', 'M4 8v4h2.5L12 15.5v-11L6.5 8zM15 7.5a3.5 3.5 0 0 1 0 5'], ['Settings', 'M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4']].map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e) => { e && e.preventDefault && e.preventDefault(); if (l === 'Settings') this.setState({ page: 'Settings', settingsPage: '' }); else if (l === 'Overview' || l === 'Orders' || l === 'Menu' || l === 'WhatsApp') this.setState({ page: l }); else if (l === 'Customers' || l === 'Campaigns') { if (['plus', 'pro'].includes(s.paid)) this.setState({ page: l }); else this.setState({ lock: l.toLowerCase() }); } }, fg: on ? '#1A0815' : '#3D1C31', fw: on ? 600 : 400, bg: on ? '#FDEAF2' : 'transparent', bd: on ? '#FF5577' : 'transparent', lock: (l === 'Customers' || l === 'Campaigns') && !['plus', 'pro'].includes(s.paid) }; }),
       setup: setupItems.map(([label0, done, fn], i) => { const lb = T.setup[i]; const label = Array.isArray(lb) ? lb[done ? 1 : 0] : lb; return { label, done, todo: !done, fg: done ? '#1A0815' : '#3D1C31', ul: !done && fn ? 'underline' : 'none', pick: fn || this.noopFn, bar: i < doneN ? '#16704A' : 'rgba(26,8,21,.12)' }; }),
       setupLabel: ar ? `${doneN} من 5 مكتملة` : `${doneN} of 5 completed`, waSetupLabel: `${doneN} of 5 completed`,
       chips: [{ cat: 'All', count: count(M) }, ...M.map(g => ({ cat: g.cat, count: g.items.length }))].map(x => { const on = x.cat === s.cat; return { ...x, bg: on ? '#1A0815' : '#fff', fg: on ? '#fff' : '#3D1C31', bd: on ? '#1A0815' : '#ECD9E0', pick: () => this.setState({ cat: x.cat }) }; }),
