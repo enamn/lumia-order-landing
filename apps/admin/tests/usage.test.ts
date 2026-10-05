@@ -2,8 +2,8 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { db } from "../src/server/db";
 import { ensureMongoIndexes } from "../scripts/mongo-indexes";
 import { createBusiness } from "../src/modules/business/service";
-import { LIMITS, TRIAL_LIMITS, TOPUPS, quoteTopUp } from "../src/modules/billing/plans";
-import { consume, refund, usagePeriod, usageSummary, addCredits } from "../src/modules/billing/usage";
+import { LIMITS, TRIAL_LIMITS, TOPUPS, REPLIES_PER_ORDER, quoteTopUp } from "../src/modules/billing/plans";
+import { consume, refund, usagePeriod, usageSummary, addCredits, canStartOrder } from "../src/modules/billing/usage";
 import { buyTopUp, getSubscription } from "../src/modules/billing/service";
 const enabled = process.env.RUN_DB_TESTS === "true";
 
@@ -16,8 +16,8 @@ describe("monthly periods and top-up prices", () => {
     expect(usagePeriod(new Date("2026-10-04T10:00:00Z"), new Date("2026-10-04T09:00:00Z")).start).toEqual(new Date("2026-10-04T10:00:00Z"));
   });
   it("prices a top-up with 5% VAT as its own amount", () => {
-    expect(quoteTopUp("ai500")).toMatchObject({ subtotalMinor: 6900, vatMinor: 345, totalMinor: 7245 });
-    expect(TOPUPS.ai2000.replies).toBe(2000); expect(LIMITS.pro.aiReplies).toBeGreaterThan(LIMITS.plus.aiReplies); expect(TRIAL_LIMITS.aiReplies).toBeLessThan(LIMITS.starter.aiReplies);
+    expect(quoteTopUp("orders50")).toMatchObject({ subtotalMinor: 7900, vatMinor: 395, totalMinor: 8295 });
+    expect(TOPUPS.orders200.orders).toBe(200); expect(LIMITS.pro.orders).toBeGreaterThan(LIMITS.plus.orders); expect(LIMITS.plus.orders).toBeGreaterThan(LIMITS.starter.orders); expect(TRIAL_LIMITS.orders).toBeLessThan(LIMITS.starter.orders); expect(TRIAL_LIMITS.imports).toBe(2);
   });
 });
 
@@ -36,46 +36,49 @@ describe.skipIf(!enabled)("plan allowances, buffer, credits and top-ups", () => 
   afterAll(async () => { vi.unstubAllGlobals(); await db.$disconnect(); });
 
   it("gives a trial the trial allowance, then stops at the limit", async () => {
-    expect((await usageSummary(biz)).aiReplies).toEqual({ used: 0, limit: TRIAL_LIMITS.aiReplies });
+    expect((await usageSummary(biz)).orders).toEqual({ used: 0, limit: TRIAL_LIMITS.orders });
+    expect((await usageSummary(biz)).aiReplies.limit).toBe(REPLIES_PER_ORDER * TRIAL_LIMITS.orders);
     await consume(biz, "voice"); await fill("voice", TRIAL_LIMITS.voice);
     expect(await consume(biz, "voice")).toEqual({ ok: false });
-    expect((await usageSummary(biz)).voice).toEqual({ used: TRIAL_LIMITS.voice, limit: TRIAL_LIMITS.voice });
   });
-  it("uses the plan's allowance, lets an order in progress finish with a 10% buffer, and refuses everyone else", async () => {
-    await setPlan("starter"); const limit = LIMITS.starter.aiReplies;
-    const first = await consume(biz, "ai"); expect(first).toMatchObject({ ok: true, from: "plan" });
-    await fill("ai", limit);
-    expect(await consume(biz, "ai")).toEqual({ ok: false });
-    expect(await consume(biz, "ai", { inProgress: true })).toMatchObject({ ok: true, from: "buffer" });
-    await fill("ai", limit + Math.ceil(limit * 0.1));
-    expect(await consume(biz, "ai", { inProgress: true })).toEqual({ ok: false });
-    await setPlan("plus"); expect((await usageSummary(biz)).aiReplies.limit).toBe(LIMITS.plus.aiReplies); // upgrading raises the limit straight away
+  it("uses the plan's orders, lets an order in progress finish with a 10% buffer, and refuses everyone else", async () => {
+    await setPlan("starter"); const limit = LIMITS.starter.orders;
+    expect(await consume(biz, "orders")).toMatchObject({ ok: true, from: "plan" });
+    await fill("orders", limit - 1); expect(await canStartOrder(biz)).toBe(true);
+    await fill("orders", limit); expect(await canStartOrder(biz)).toBe(false);
+    expect(await consume(biz, "orders")).toEqual({ ok: false });
+    expect(await consume(biz, "orders", { inProgress: true })).toMatchObject({ ok: true, from: "buffer" });
+    await fill("orders", limit + Math.ceil(limit * 0.1));
+    expect(await consume(biz, "orders", { inProgress: true })).toEqual({ ok: false });
+    await setPlan("plus"); expect((await usageSummary(biz)).orders.limit).toBe(LIMITS.plus.orders); expect(await canStartOrder(biz)).toBe(true); // upgrading raises the limit straight away
   });
-  it("counts two simultaneous messages correctly: only the last free unit is given out once", async () => {
-    await fill("ai", LIMITS.plus.aiReplies - 1);
-    const results = await Promise.all([consume(biz, "ai"), consume(biz, "ai"), consume(biz, "ai")]);
+  it("counts simultaneous orders correctly: only the last free one is given out once", async () => {
+    await fill("orders", LIMITS.plus.orders - 1);
+    const results = await Promise.all([consume(biz, "orders"), consume(biz, "orders"), consume(biz, "orders")]);
     expect(results.filter(r => r.ok)).toHaveLength(1);
   });
-  it("uses bought credits after the allowance, never loses them, and gives a unit back when the work failed", async () => {
-    await fill("ai", LIMITS.plus.aiReplies); await addCredits(biz, 2);
-    const a = await consume(biz, "ai"), b = await consume(biz, "ai"), c = await consume(biz, "ai");
-    expect([a, b, c].map(r => r.ok)).toEqual([true, true, false]); expect((await usageSummary(biz)).credits).toBe(0);
-    await refund(biz, "ai", a as any); expect((await usageSummary(biz)).credits).toBe(1);
+  it("uses bought orders after the monthly ones, never loses them, and gives one back when the order was not saved", async () => {
+    await fill("orders", LIMITS.plus.orders); await addCredits(biz, 2);
+    expect(await canStartOrder(biz)).toBe(true);
+    const a = await consume(biz, "orders"), b = await consume(biz, "orders"), c = await consume(biz, "orders");
+    expect([a, b, c].map(r => r.ok)).toEqual([true, true, false]); expect((await usageSummary(biz)).credits).toBe(0); expect(await canStartOrder(biz)).toBe(false);
+    await refund(biz, "orders", a as any); expect((await usageSummary(biz)).credits).toBe(1);
     const p = await consume(biz, "imports"); expect((await usageSummary(biz)).imports.used).toBe(1); await refund(biz, "imports", p as any); expect((await usageSummary(biz)).imports.used).toBe(0);
+    expect((await usageSummary(biz)).aiReplies.limit).toBe(REPLIES_PER_ORDER * (LIMITS.plus.orders + 1)); // bought orders widen the fair-use reply pool too
   });
-  it("sells a top-up with the card on file: charged with VAT once, credits added, invoice written, nothing added when the card fails", async () => {
+  it("sells extra orders with the card on file: charged with VAT once, orders added, invoice written, nothing added when the card fails", async () => {
     calls = []; charge = { status: "failed", failureMessage: "Declined" };
-    await expect(buyTopUp(owner, biz, { pack: "ai500", requestId: "req-aaaaaaaa" })).rejects.toMatchObject({ code: "PAYMENT_FAILED" });
+    await expect(buyTopUp(owner, biz, { pack: "orders50", requestId: "req-aaaaaaaa" })).rejects.toMatchObject({ code: "PAYMENT_FAILED" });
     const before = (await usageSummary(biz)).credits;
     charge = { status: "succeeded", paymentIntentId: "pi_topup" };
-    const s = await buyTopUp(owner, biz, { pack: "ai500", requestId: "req-bbbbbbbb" });
-    expect(calls.at(-1)).toMatchObject({ path: "/internal/billing/charge", body: { amountMinor: 7245, idempotencyKey: `topup:sub-${suffix}:req-bbbbbbbb` } });
-    expect(s.usage.credits).toBe(before + 500);
-    expect(await db.billingInvoice.findFirstOrThrow({ where: { businessId: biz, kind: "TOPUP" } })).toMatchObject({ totalMinor: 7245, vatMinor: 345 });
-    expect(s.topups.map(t => t.id)).toEqual(["ai500", "ai2000"]);
+    const s = await buyTopUp(owner, biz, { pack: "orders50", requestId: "req-bbbbbbbb" });
+    expect(calls.at(-1)).toMatchObject({ path: "/internal/billing/charge", body: { amountMinor: 8295, idempotencyKey: `topup:sub-${suffix}:req-bbbbbbbb` } });
+    expect(s.usage.credits).toBe(before + 50);
+    expect(await db.billingInvoice.findFirstOrThrow({ where: { businessId: biz, kind: "TOPUP" } })).toMatchObject({ totalMinor: 8295, vatMinor: 395 });
+    expect(s.topups.map(t => t.id)).toEqual(["orders50", "orders200"]);
     await expect(buyTopUp(owner, biz, { pack: "nope", requestId: "req-cccccccc" })).rejects.toBeTruthy();
     await db.subscription.update({ where: { id: `sub-${suffix}` }, data: { stripePaymentMethodId: null } });
-    await expect(buyTopUp(owner, biz, { pack: "ai500", requestId: "req-dddddddd" })).rejects.toMatchObject({ code: "NO_CARD" });
-    expect((await getSubscription(owner, biz)).usage.aiReplies.limit).toBe(LIMITS.plus.aiReplies);
+    await expect(buyTopUp(owner, biz, { pack: "orders50", requestId: "req-dddddddd" })).rejects.toMatchObject({ code: "NO_CARD" });
+    expect((await getSubscription(owner, biz)).usage.orders.limit).toBe(LIMITS.plus.orders);
   });
 });

@@ -9,7 +9,7 @@ import { welcomeFor } from "./welcome-text";
 import { DRAFT_TTL_MS, type SavedAddr, draftKey, isComplete, meetsMinimum, placedText, recheckText, removedText, resolveDraft, summaryText, type DeliveryContext, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
 import { quoteDelivery, type BranchPoint, type DeliveryRules } from "@/modules/orders/delivery";
 import { canPersonalize } from "@/modules/billing/service";
-import { consume, refund } from "@/modules/billing/usage";
+import { canStartOrder, consume, refund } from "@/modules/billing/usage";
 import { createOrderFromDraft } from "@/modules/orders/service";
 
 // The AI assistant answers customers' WhatsApp messages from the restaurant's own menu. It only replies when the owner turned it on,
@@ -89,7 +89,9 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   // Abuse guard: a flood from one customer.
   const burst = await db.message.count({ where: { conversationId: t.conversationId, direction: "INBOUND", createdAt: { gte: new Date(now - 120000) } } });
   if (burst > RATE_BURST) { if (burst === RATE_BURST + 1) await sendNotice(t, SLOW_DOWN).catch(() => undefined); return "skipped"; }
-  // The plan's monthly AI replies (then bought credits). Someone halfway through an order may finish it; everyone else gets a plain notice and the owner sees the message in the inbox.
+  // The plan's monthly orders (then bought ones). Someone halfway through an order may finish it; everyone else gets a plain notice and the owner sees the message in the inbox.
+  if (!stored && !await canStartOrder(t.businessId)) return sendNotice(t, BUSY, 3600000);
+  // Behind that, a fair-use pool of AI replies so endless chatting cannot run up costs.
   const taken = await consume(t.businessId, "ai", { inProgress: Boolean(stored) });
   if (!taken.ok) return sendNotice(t, BUSY, 3600000);
   const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, delivery: deliveryHint, customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
@@ -108,8 +110,15 @@ export async function autoReply(t: { businessId: string; conversationId: string;
     const resolved = resolveDraft(menu, model, options, ctx); const key = draftKey(resolved);
     // An order is placed only when the customer confirmed the exact summary we showed them (same items, type and address), and it is complete.
     if (model.confirmed && isComplete(resolved) && meetsMinimum(resolved, options) && stored?.shownKey === key && resolved.fulfillment) {
-      const order = await createOrderFromDraft({ businessId: t.businessId, conversationId: t.conversationId, customerId: conversation.customerId, customerName: conversation.customer.displayName ?? "", customerPhone: conversation.customer.phone, resolved: { ...resolved, fulfillment: resolved.fulfillment } });
-      parts.length = 0; parts.push(placedText(order.orderNumber, order.totalMinor, resolved.fulfillment, lang));
+      // The order counts against the plan's monthly orders (a little past the limit is allowed to finish one already started).
+      const slot = await consume(t.businessId, "orders", { inProgress: true });
+      if (!slot.ok) { parts.length = 0; parts.push(BUSY); data.draftOrder = prev as never; }
+      else {
+        let order: Awaited<ReturnType<typeof createOrderFromDraft>>;
+        try { order = await createOrderFromDraft({ businessId: t.businessId, conversationId: t.conversationId, customerId: conversation.customerId, customerName: conversation.customer.displayName ?? "", customerPhone: conversation.customer.phone, resolved: { ...resolved, fulfillment: resolved.fulfillment } }); }
+        catch (e) { await refund(t.businessId, "orders", slot); throw e; } // an order that was not saved does not count
+        parts.length = 0; parts.push(placedText(order.orderNumber, order.totalMinor, resolved.fulfillment, lang));
+      }
     } else if (!resolved.lines.length) { data.draftOrder = null as never; if (resolved.removed.length) parts.push(removedText(resolved.removed, lang)); }
     else {
       if (resolved.removed.length) parts.push(removedText(resolved.removed, lang));
@@ -143,7 +152,7 @@ const TYPE_ONLY = "Sorry, I can only read text messages for now. Please type you
 const UNSUPPORTED_LANGUAGE = "Sorry, I can only understand voice messages in Arabic or English. Please send your message in Arabic or English, or type it 🙏\nعذراً، أفهم الرسائل الصوتية بالعربية والإنجليزية فقط. فضلاً أرسل رسالتك بالعربية أو الإنجليزية أو اكتبها 🙏";
 const NOT_CLEAR = "Sorry, I couldn't hear that clearly. Could you send it again, or type your message? 🙏\nعذراً، لم أستطع سماع الرسالة بوضوح. هل يمكنك إعادة إرسالها أو كتابتها؟ 🙏";
 const SLOW_DOWN = "You're sending messages very quickly. Please wait a moment and I'll reply 🙏\nأنت ترسل الرسائل بسرعة كبيرة. فضلاً انتظر قليلاً وسأرد عليك 🙏";
-const BUSY = "Thanks for your message! The restaurant has received it and will reply shortly 🙏\nشكراً لرسالتك! وصلت رسالتك إلى المطعم وسيرد عليك قريباً 🙏";
+const BUSY = "Thanks for your message! Someone from the restaurant will assist you soon 🙏\nشكراً لرسالتك! سيقوم أحد من المطعم بمساعدتك قريباً 🙏";
 const TRY_AGAIN = "Sorry, I couldn't process that. Please send your message again 🙏\nعذراً، لم أتمكن من معالجة رسالتك. فضلاً أرسلها مرة أخرى 🙏";
 type Target = { businessId: string; conversationId: string; externalMessageId: string };
 

@@ -1,12 +1,12 @@
 import { Prisma } from "@prisma/client";
 import { db } from "@/server/db";
-import { LIMITS, ORDER_BUFFER, TRIAL_LIMITS, type Limits, type PlanId } from "./plans";
+import { LIMITS, ORDER_BUFFER, REPLIES_PER_ORDER, TRIAL_LIMITS, type PlanId } from "./plans";
 import { getSubscriptionFor, trialInfo } from "./service";
 
-// Monthly allowances per plan. Every AI reply, voice note and menu import is counted here before it costs anything, and the count is claimed atomically
-// so two messages arriving together cannot both slip past the limit. Bought credits are used only after the monthly allowance and never expire.
-export type Kind = "ai" | "voice" | "imports";
-const FIELD: Record<Kind, keyof Limits> = { ai: "aiReplies", voice: "voice", imports: "imports" };
+// Monthly allowances per plan. WhatsApp orders are what the restaurant sees; AI replies (a fair-use pool of REPLIES_PER_ORDER per order), voice notes and menu
+// imports are counted before they cost anything. Counts are claimed atomically so two messages arriving together cannot both slip past a limit.
+// Bought extra orders ("credits") are used only after the monthly orders and never expire.
+export type Kind = "orders" | "ai" | "voice" | "imports";
 const FOREVER = new Date(0);
 
 const monthAfter = (anchor: Date, n: number) => {
@@ -45,24 +45,31 @@ export type Claim = { ok: true; from: "plan" | "buffer" | "credits"; periodStart
 // Takes one unit of an allowance. `inProgress` lets someone finish an order they already started, a little past the limit.
 export async function consume(businessId: string, kind: Kind, opts: { inProgress?: boolean; now?: Date } = {}): Promise<Claim> {
   const { limits, period } = await allowanceFor(businessId, opts.now);
-  const limit = limits[FIELD[kind]], counter = await row(businessId, period.start, kind);
+  const credits = await db.usageCounter.findFirst({ where: { businessId, periodStart: FOREVER, kind: "credits" } });
+  // The reply pool grows with the orders the restaurant has (including bought ones), so buying orders never starves the chat.
+  const limit = kind === "ai" ? REPLIES_PER_ORDER * (limits.orders + (credits?.used ?? 0)) : kind === "orders" ? limits.orders : limits[kind], counter = await row(businessId, period.start, kind);
   if (await claim(counter.id, limit)) return { ok: true, from: "plan", periodStart: period.start };
-  if (kind === "ai") {
-    const credits = await db.usageCounter.findFirst({ where: { businessId, periodStart: FOREVER, kind: "credits" } });
+  if (kind === "orders") {
     if (credits && (await db.usageCounter.updateMany({ where: { id: credits.id, used: { gt: 0 } }, data: { used: { decrement: 1 } } })).count === 1) return { ok: true, from: "credits", periodStart: period.start };
   }
   if (opts.inProgress && await claim(counter.id, limit + Math.ceil(limit * ORDER_BUFFER))) return { ok: true, from: "buffer", periodStart: period.start };
   return { ok: false };
 }
-// Gives a unit back when the work it paid for did not happen (the AI call failed).
+// Can a customer who has no order in progress still start one? (Monthly orders left, or bought ones.)
+export async function canStartOrder(businessId: string, now = new Date()) {
+  const { limits, period } = await allowanceFor(businessId, now);
+  const [used, credits] = await Promise.all([db.usageCounter.findFirst({ where: { businessId, periodStart: period.start, kind: "orders" } }), db.usageCounter.findFirst({ where: { businessId, periodStart: FOREVER, kind: "credits" } })]);
+  return (used?.used ?? 0) < limits.orders || (credits?.used ?? 0) > 0;
+}
+// Gives a unit back when the work it paid for did not happen (the AI call failed, the order was not saved).
 export async function refund(businessId: string, kind: Kind, taken: Extract<Claim, { ok: true }>) {
   if (taken.from === "credits") { const credits = await row(businessId, FOREVER, "credits"); await db.usageCounter.update({ where: { id: credits.id }, data: { used: { increment: 1 } } }); return; }
   const counter = await row(businessId, taken.periodStart, kind);
   await db.usageCounter.updateMany({ where: { id: counter.id, used: { gt: 0 } }, data: { used: { decrement: 1 } } });
 }
-export async function addCredits(businessId: string, replies: number) {
+export async function addCredits(businessId: string, orders: number) {
   const credits = await row(businessId, FOREVER, "credits");
-  await db.usageCounter.update({ where: { id: credits.id }, data: { used: { increment: replies } } });
+  await db.usageCounter.update({ where: { id: credits.id }, data: { used: { increment: orders } } });
 }
 
 // What the Billing page shows.
@@ -72,6 +79,6 @@ export async function usageSummary(businessId: string, now = new Date()) {
   const used = (kind: string, at: Date) => rows.find(r => r.kind === kind && r.periodStart.getTime() === at.getTime())?.used ?? 0;
   return {
     source, periodStart: period.start.toISOString(), periodEnd: period.end.toISOString(), credits: used("credits", FOREVER),
-    aiReplies: { used: used("ai", period.start), limit: limits.aiReplies }, voice: { used: used("voice", period.start), limit: limits.voice }, imports: { used: used("imports", period.start), limit: limits.imports },
+    orders: { used: used("orders", period.start), limit: limits.orders }, aiReplies: { used: used("ai", period.start), limit: REPLIES_PER_ORDER * (limits.orders + used("credits", FOREVER)) }, voice: { used: used("voice", period.start), limit: limits.voice }, imports: { used: used("imports", period.start), limit: limits.imports },
   };
 }

@@ -230,23 +230,44 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
     await db.subscription.updateMany({ where: { businessId: biz }, data: { plan: "plus" } });
     await turn(() => say("one more", p), id => draft(id)); expect(lastAi().customer.useName).toBe(true);
   });
-  it("keeps the customer informed when the plan's AI replies are used up, when the AI fails, and when someone floods the chat", async () => {
+  it("keeps the customer informed when the plan's orders are used up, when the AI fails, and when someone floods the chat", async () => {
     const { allowanceFor, usageSummary } = await import("../src/modules/billing/usage");
-    const setUsed = async (used: number) => { const { period } = await allowanceFor(biz); await db.usageCounter.updateMany({ where: { businessId: biz, periodStart: period.start, kind: "ai" }, data: { used } }); };
-    const limit = (await usageSummary(biz)).aiReplies.limit;
-    // Used up: a plain notice instead of an AI answer (no AI call), and the same notice is not repeated within the hour.
-    await setUsed(limit); const a = "971500000901";
+    const setUsed = async (kind: string, used: number) => { const { period } = await allowanceFor(biz); const w = { businessId: biz, periodStart: period.start, kind }; if (await db.usageCounter.findFirst({ where: w })) await db.usageCounter.updateMany({ where: w, data: { used } }); else await db.usageCounter.create({ data: { ...w, used } }); };
+    const limit = (await usageSummary(biz)).orders.limit;
+    // Orders used up: a customer with no order in progress gets a plain notice instead of an AI answer (no AI call), not repeated within the hour.
+    await setUsed("orders", limit); const a = "971500000901";
     let r = await turn(() => say("hello", a), id => draft(id));
-    expect(calls.some(c => c.path === "/internal/ai/reply")).toBe(false); expect(r).toContain("The restaurant has received it"); expect(r).toContain("وصلت رسالتك");
+    expect(calls.some(c => c.path === "/internal/ai/reply")).toBe(false); expect(r).toContain("Someone from the restaurant will assist you soon"); expect(r).toContain("سيقوم أحد من المطعم بمساعدتك");
     r = await turn(() => say("hello?", a), id => draft(id)); expect(r).toBe(""); expect(calls.some(c => c.path === "/internal/ai/reply")).toBe(false);
     // The AI itself fails: the customer is told to send it again (never silence) and no allowance is spent.
-    await setUsed(0); ai = { __fail: true }; calls = []; await say("a failing message", "971500000902"); ai = null;
+    await setUsed("orders", 0); await setUsed("ai", 0); ai = { __fail: true }; calls = []; await say("a failing message", "971500000902"); ai = null;
     expect(sent().at(-1)).toContain("Please send your message again"); expect((await usageSummary(biz)).aiReplies.used).toBe(0);
     // A flood: the 11th message in two minutes gets one "slow down", later ones are ignored.
     const f = "971500000903"; let last = "";
     for (let i = 1; i <= 10; i++) last = await turn(() => say(`msg ${i}`, f), id => draft(id)); expect(last).not.toContain("quickly");
     r = await turn(() => say("msg 11", f), id => draft(id)); expect(r).toContain("very quickly");
     r = await turn(() => say("msg 12", f), id => draft(id)); expect(r).toBe("");
+    await setUsed("ai", 0);
+  });
+  it("counts a placed order, finishes an order already started past the limit, and refuses to place one beyond the buffer", async () => {
+    const { allowanceFor, usageSummary } = await import("../src/modules/billing/usage");
+    const setUsed = async (used: number) => { const { period } = await allowanceFor(biz); await db.usageCounter.updateMany({ where: { businessId: biz, periodStart: period.start, kind: "orders" }, data: { used } }); };
+    const before = (await usageSummary(biz)).orders; const who = "971500000904";
+    await turn(() => say("delivery order: 2 classic", who), id => draft(id, { address: "Al Majaz 2, flat 3", emirate: "Sharjah", area: "Al Majaz" }));
+    let r = await turn(() => say("yes", who), id => draft(id, { address: "Al Majaz 2, flat 3", emirate: "Sharjah", area: "Al Majaz", confirmed: true }));
+    expect(r).toContain("received"); expect((await usageSummary(biz)).orders.used).toBe(before.used + 1);
+    // Limit reached while a second customer is already mid-order: still allowed (10% buffer)...
+    const w2 = "971500000905", w3 = "971500000906";
+    await turn(() => say("delivery order: 2 classic", w2), id => draft(id, { address: "Al Majaz 2, flat 4", emirate: "Sharjah", area: "Al Majaz" }));
+    await turn(() => say("delivery order: 2 classic", w3), id => draft(id, { address: "Al Majaz 2, flat 5", emirate: "Sharjah", area: "Al Majaz" }));
+    await setUsed(before.limit);
+    r = await turn(() => say("yes", w2), id => draft(id, { address: "Al Majaz 2, flat 4", emirate: "Sharjah", area: "Al Majaz", confirmed: true }));
+    expect(r).toContain("received"); expect((await usageSummary(biz)).orders.used).toBe(before.limit + 1);
+    // ...but not past the buffer: the customer is told the restaurant will reply and nothing is placed.
+    await setUsed(before.limit + Math.ceil(before.limit * 0.1));
+    const orders = await db.order.count({ where: { businessId: biz } });
+    r = await turn(() => say("yes", w3), id => draft(id, { address: "Al Majaz 2, flat 5", emirate: "Sharjah", area: "Al Majaz", confirmed: true }));
+    expect(r).toContain("Someone from the restaurant will assist you soon"); expect(await db.order.count({ where: { businessId: biz } })).toBe(orders);
     await setUsed(0);
   });
 });

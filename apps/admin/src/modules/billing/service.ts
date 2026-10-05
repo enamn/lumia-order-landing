@@ -54,7 +54,7 @@ export async function getSubscription(userId: string, businessId: string) {
     card: (sub?.card as Card | null) ?? undefined, terminals: sub?.terminals, terminalAddress: sub?.terminalAddress ?? undefined, terminal: (sub?.terminal as Terminal | null) ?? undefined, startedAt: iso(sub?.startedAt),
     hasCustomer: Boolean(sub?.stripeCustomerId || b.stripeCustomerId), defaults: { address: known.address }, canManage: member.role === "OWNER" || member.role === "ADMIN",
     trial: trialInfo(b.createdAt), entitlements: entitlements(sub), usage,
-    topups: TOPUP_IDS.map(id => ({ id, replies: TOPUPS[id].replies, totalMinor: quoteTopUp(id).totalMinor, subtotalMinor: quoteTopUp(id).subtotalMinor })),
+    topups: TOPUP_IDS.map(id => ({ id, orders: TOPUPS[id].orders, totalMinor: quoteTopUp(id).totalMinor, subtotalMinor: quoteTopUp(id).subtotalMinor })),
   };
 }
 
@@ -257,7 +257,7 @@ export async function getInvoice(userId: string, businessId: string, invoiceId: 
   return inv;
 }
 
-// Extra AI replies, paid with the card on file. The credits are added only after the payment succeeded; the request ID makes a double click charge once.
+// Extra orders, paid with the card on file. The credits are added only after the payment succeeded; the request ID makes a double click charge once.
 const topUpSchema = z.object({ pack: z.enum(TOPUP_IDS as [string, ...string[]]), requestId: z.string().min(8).max(80) }).strict();
 export async function buyTopUp(userId: string, businessId: string, input: unknown, now = new Date()) {
   const { pack, requestId } = topUpSchema.parse(input);
@@ -267,9 +267,9 @@ export async function buyTopUp(userId: string, businessId: string, input: unknow
   if (!s!.stripeCustomerId || !s!.stripePaymentMethodId) throw new AppError("NO_CARD", "Add a card first.", 409);
   if (s!.status === "PAST_DUE") throw new AppError("PAYMENT_OVERDUE", "Update your card and pay the overdue renewal first.", 409);
   const id = pack as keyof typeof TOPUPS, q = quoteTopUp(id);
-  const charge = await api<ChargeReply>("/internal/billing/charge", { customerId: s!.stripeCustomerId, paymentMethodId: s!.stripePaymentMethodId, amountMinor: q.totalMinor, description: `Lumia Order ${TOPUPS[id].replies} AI replies`, idempotencyKey: `topup:${s!.id}:${requestId}`, metadata: { kind: "topup", subscriptionId: s!.id, businessId, pack: id } });
+  const charge = await api<ChargeReply>("/internal/billing/charge", { customerId: s!.stripeCustomerId, paymentMethodId: s!.stripePaymentMethodId, amountMinor: q.totalMinor, description: `Lumia Order ${TOPUPS[id].orders} extra orders`, idempotencyKey: `topup:${s!.id}:${requestId}`, metadata: { kind: "topup", subscriptionId: s!.id, businessId, pack: id } });
   if (charge.status !== "succeeded") throw new AppError("PAYMENT_FAILED", charge.failureMessage ?? "The payment did not go through. Try another card.", 402);
-  await addCredits(businessId, TOPUPS[id].replies);
+  await addCredits(businessId, TOPUPS[id].orders);
   await writeInvoice(s!, "TOPUP", q, { start: now, end: now }, charge.paymentIntentId, now);
   return getSubscription(userId, businessId);
 }
