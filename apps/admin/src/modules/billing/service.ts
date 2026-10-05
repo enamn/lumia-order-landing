@@ -61,11 +61,12 @@ export async function startCheckout(userId: string, businessId: string, input: u
   const email = known.email || (user?.email && !user.email.endsWith(".invalid") ? user.email : undefined);
   const customer = { name: known.name, ...(known.phone ? { phone: known.phone } : {}), ...(known.trn ? { trn: known.trn } : {}), ...(known.line1 || known.city || known.state ? { address: { line1: known.line1, city: known.city, state: known.state } } : {}), language: user?.preferredLanguage === "ar" ? "ar" : "en" };
   const base = `${appUrl()}/dashboard?businessId=${businessId}`;
-  const result = await lumiaApi<{ url: string; customerId?: string }>("/internal/billing/checkout", { businessId, ...data.data, customer, ...(email ? { email } : {}), ...(sub.stripeCustomerId ? { customerId: sub.stripeCustomerId } : {}), successUrl: `${base}&billing=success`, cancelUrl: `${base}&billing=cancel` }, 25_000);
+  const result = await lumiaApi<{ url?: string; clientSecret?: string; publishableKey?: string; customerId?: string }>("/internal/billing/checkout", { businessId, ...data.data, customer, embedded: true, ...(email ? { email } : {}), ...(sub.stripeCustomerId ? { customerId: sub.stripeCustomerId } : {}), successUrl: `${base}&billing=success`, cancelUrl: `${base}&billing=cancel` }, 25_000);
   if (!result.ok) throw new AppError(result.code === "BILLING_NOT_CONFIGURED" ? "BILLING_NOT_CONFIGURED" : "BILLING_UNAVAILABLE", result.code === "BILLING_NOT_CONFIGURED" ? "Payments are not switched on yet. Please contact Lumia to subscribe." : "We couldn’t open the payment page. Please try again.", 503);
   // Remember the Stripe customer so a second attempt reuses it (and so renewals can be matched to this restaurant).
   if (result.data.customerId && result.data.customerId !== sub.stripeCustomerId) await db.business.update({ where: { id: businessId }, data: { subscription: { ...sub, stripeCustomerId: result.data.customerId } as unknown as Prisma.InputJsonValue } });
-  return { url: result.data.url };
+  // clientSecret + publishableKey: the form is drawn inside the dashboard; url: Stripe's own page (when no public key is configured).
+  return { url: result.data.url, clientSecret: result.data.clientSecret, publishableKey: result.data.publishableKey };
 }
 export async function openPortal(userId: string, businessId: string) {
   await authorize(userId, businessId, "business.manage");

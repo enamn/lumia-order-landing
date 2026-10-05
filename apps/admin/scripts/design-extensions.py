@@ -73,6 +73,10 @@ rep('        </section>\n      </div>\n      </sc-if>\n\n      <!-- LUMIA-EXT da
 # 8 the design embeds the Settings file with <dc-import>; the app renders its Settings component in that slot
 import re as _re
 s, _n = _re.subn(r'<dc-import name="Lumia Order Restaurant Settings"[^>]*></dc-import>', '<div style="flex:1;min-width:0;height:100%">{{ settingsNode }}</div>', s); assert _n == 1
+# 13 payment step: the Stripe form is drawn inside this page (Embedded Checkout); our fields are hidden while it is shown
+FORM_OPEN = '<form onSubmit="{{ subPay }}" noValidate="{{ true }}" style="display:flex;flex-direction:column;gap:16px">'
+i = s.index(FORM_OPEN); j = s.index('</form>', i) + len('</form>')
+s = s[:i] + '<sc-if value="{{ sub.embed }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:12px;min-width:0"><button type="button" onClick="{{ subEmbedBack }}" style="align-self:flex-start;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px 0 8px;border-radius:10px;font-size:14px;font-weight:500;color:#3D1C31" style-hover="background:#FBF3F8;color:#1A0815">← Edit details</button><div ref="{{ stripeRef }}" style="min-height:420px;border:1.5px solid #ECD9E0;border-radius:16px;padding:12px;background:#fff"></div></div></sc-if>\n<sc-if value="{{ sub.notEmbed }}" hint-placeholder-val="{{ true }}">' + s[i:j] + '</sc-if>' + s[j:]
 # 12 subscriptions. Payment is Stripe's hosted Checkout (no card fields in Lumia), the device preview becomes an icon, tracking is real data.
 ICON = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C0284F"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>'
 s, _n = _re.subn(r'<div style="position:absolute;top:-?\d+px;left:50%;margin-left:-150px;transform:scale\([\d.]+\);transform-origin:top center;height:704px"><dc-import name="LumiaTerminal"[^>]*></dc-import></div>', ICON, s); assert _n == 2, _n

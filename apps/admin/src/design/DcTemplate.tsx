@@ -1575,97 +1575,111 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     Payment
                                   </h1>
                                   <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:20px;align-items:start")}>
-                                    <form onSubmit={vm.subPay} noValidate={true} style={S("display:flex;flex-direction:column;gap:16px")}>
-                                      <section style={S("border:2px solid #FF5577;background:#FFF7FA;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px")}>
-                                        <div style={S("display:flex;gap:14px;align-items:flex-start")}>
-                                          <div style={S("flex:none;width:64px;height:112px;position:relative;overflow:hidden;border-radius:10px;background:#fff")}>
-                                            <div style={S("width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C0284F")}>
-                                              <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
-                                                <path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                              </svg>
+                                    {vm.sub.embed && (
+                                      <>
+                                      <div style={S("display:flex;flex-direction:column;gap:12px;min-width:0")}>
+                                        <button type="button" onClick={vm.subEmbedBack} style={S("align-self:flex-start;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px 0 8px;border-radius:10px;font-size:14px;font-weight:500;color:#3D1C31")} className="dch6">
+                                          ← Edit details
+                                        </button>
+                                        <div ref={vm.stripeRef} style={S("min-height:420px;border:1.5px solid #ECD9E0;border-radius:16px;padding:12px;background:#fff")} />
+                                      </div>
+                                      </>
+                                    )}
+                                    {vm.sub.notEmbed && (
+                                      <>
+                                      <form onSubmit={vm.subPay} noValidate={true} style={S("display:flex;flex-direction:column;gap:16px")}>
+                                        <section style={S("border:2px solid #FF5577;background:#FFF7FA;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px")}>
+                                          <div style={S("display:flex;gap:14px;align-items:flex-start")}>
+                                            <div style={S("flex:none;width:64px;height:112px;position:relative;overflow:hidden;border-radius:10px;background:#fff")}>
+                                              <div style={S("width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C0284F")}>
+                                                <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
+                                                  <path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                              </div>
+                                            </div>
+                                            <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:4px")}>
+                                              <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px")}>
+                                                <span style={S("font-size:16px;font-weight:600")}>
+                                                  Lumia Order Terminal
+                                                </span>
+                                                <span style={S("font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#1A0815;color:#fff")}>
+                                                  Required
+                                                </span>
+                                              </div>
+                                              <span style={S("font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty")}>
+                                                Receives, accepts and prints your orders. Every subscription includes at least one terminal.
+                                              </span>
+                                              <span style={S("display:flex;align-items:baseline;gap:8px;margin-top:4px;font-variant-numeric:tabular-nums")}>
+                                                <span style={S("font-size:14px;color:#8A5A6E;text-decoration:line-through")}>
+                                                  AED 699
+                                                </span>
+                                                <span style={S("font-size:18px;font-weight:600")}>
+                                                  {vm.sub.termPrice}
+                                                </span>
+                                                <span style={S("font-size:13px;color:#8A5A6E")}>
+                                                  one-time
+                                                </span>
+                                              </span>
                                             </div>
                                           </div>
-                                          <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:4px")}>
-                                            <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px")}>
-                                              <span style={S("font-size:16px;font-weight:600")}>
-                                                Lumia Order Terminal
+                                          <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding-top:12px;border-top:1px solid #F3D6E2")}>
+                                            <span style={S("font-size:14px;color:#3D1C31")}>
+                                              {vm.sub.termQtyNote}
+                                            </span>
+                                            <div style={S("display:flex;align-items:center;border:1.5px solid #ECD9E0;border-radius:10px;background:#fff")}>
+                                              <button type="button" onClick={vm.termDec} disabled={!!vm.sub.termMin} aria-label="Fewer terminals" style={S(`width:36px;height:36px;font-size:18px;opacity:${vm.sub.decOp}`)}>
+                                                −
+                                              </button>
+                                              <span style={S("min-width:28px;text-align:center;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums")}>
+                                                {vm.sub.termQty}
                                               </span>
-                                              <span style={S("font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#1A0815;color:#fff")}>
-                                                Required
-                                              </span>
+                                              <button type="button" onClick={vm.termInc} aria-label="More terminals" style={S("width:36px;height:36px;font-size:18px")}>
+                                                +
+                                              </button>
                                             </div>
-                                            <span style={S("font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty")}>
-                                              Receives, accepts and prints your orders. Every subscription includes at least one terminal.
-                                            </span>
-                                            <span style={S("display:flex;align-items:baseline;gap:8px;margin-top:4px;font-variant-numeric:tabular-nums")}>
-                                              <span style={S("font-size:14px;color:#8A5A6E;text-decoration:line-through")}>
-                                                AED 699
-                                              </span>
-                                              <span style={S("font-size:18px;font-weight:600")}>
-                                                {vm.sub.termPrice}
-                                              </span>
-                                              <span style={S("font-size:13px;color:#8A5A6E")}>
-                                                one-time
-                                              </span>
-                                            </span>
                                           </div>
-                                        </div>
-                                        <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding-top:12px;border-top:1px solid #F3D6E2")}>
-                                          <span style={S("font-size:14px;color:#3D1C31")}>
-                                            {vm.sub.termQtyNote}
-                                          </span>
-                                          <div style={S("display:flex;align-items:center;border:1.5px solid #ECD9E0;border-radius:10px;background:#fff")}>
-                                            <button type="button" onClick={vm.termDec} disabled={!!vm.sub.termMin} aria-label="Fewer terminals" style={S(`width:36px;height:36px;font-size:18px;opacity:${vm.sub.decOp}`)}>
-                                              −
-                                            </button>
-                                            <span style={S("min-width:28px;text-align:center;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums")}>
-                                              {vm.sub.termQty}
+                                          <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                                            <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                              Delivery address for the terminal
                                             </span>
-                                            <button type="button" onClick={vm.termInc} aria-label="More terminals" style={S("width:36px;height:36px;font-size:18px")}>
-                                              +
-                                            </button>
-                                          </div>
-                                        </div>
-                                        <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                                            Delivery address for the terminal
+                                            <input autoComplete="street-address" placeholder="Building, street, area, emirate" value={vm.sub.addr} onChange={vm.onAddr} style={S(`height:48px;padding:0 14px;border-radius:12px;border:1.5px solid ${vm.sub.addrBd};background:#fff;font-size:15px`)} className="dch13" />
+                                          </label>
+                                          {vm.sub.addrErr && (
+                                            <>
+                                            <span style={S("font-size:13px;color:#B42318;margin-top:-6px")}>
+                                              Add a delivery address for your terminal to continue.
+                                            </span>
+                                            </>
+                                          )}
+                                          <span style={S("font-size:13px;color:#8A5A6E;margin-top:-4px")}>
+                                            Estimated delivery: 10–15 business days.
                                           </span>
-                                          <input autoComplete="street-address" placeholder="Building, street, area, emirate" value={vm.sub.addr} onChange={vm.onAddr} style={S(`height:48px;padding:0 14px;border-radius:12px;border:1.5px solid ${vm.sub.addrBd};background:#fff;font-size:15px`)} className="dch13" />
-                                        </label>
-                                        {vm.sub.addrErr && (
+                                        </section>
+                                        <button type="submit" disabled={!!vm.sub.invalid} style={S(`height:54px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;opacity:${vm.sub.payOp};display:flex;align-items:center;justify-content:center;gap:10px;font-variant-numeric:tabular-nums`)}>
+                                          {vm.sub.paying && (
+                                            <>
+                                            <span style={S("width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:lo-spin .8s linear infinite")} />
+                                            </>
+                                          )}
+                                          {vm.sub.payLabel}
+                                        </button>
+                                        <p style={S("display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:1.45;color:#8A5A6E")}>
+                                          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style={S("flex:none;margin-top:2px")}>
+                                            <rect x="4.5" y="9" width="11" height="8" rx="2" stroke="currentColor" strokeWidth="1.6" />
+                                            <path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" strokeWidth="1.6" />
+                                          </svg>
+                                          You pay on Stripe’s secure page, so Lumia never sees your card. Cancel anytime from Manage billing.
+                                        </p>
+                                        {vm.sub.err && (
                                           <>
-                                          <span style={S("font-size:13px;color:#B42318;margin-top:-6px")}>
-                                            Add a delivery address for your terminal to continue.
-                                          </span>
+                                          <div role="alert" style={S("font-size:14px;color:#B4233B")}>
+                                            {vm.sub.err}
+                                          </div>
                                           </>
                                         )}
-                                        <span style={S("font-size:13px;color:#8A5A6E;margin-top:-4px")}>
-                                          Estimated delivery: 10–15 business days.
-                                        </span>
-                                      </section>
-                                      <button type="submit" disabled={!!vm.sub.invalid} style={S(`height:54px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;opacity:${vm.sub.payOp};display:flex;align-items:center;justify-content:center;gap:10px;font-variant-numeric:tabular-nums`)}>
-                                        {vm.sub.paying && (
-                                          <>
-                                          <span style={S("width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:lo-spin .8s linear infinite")} />
-                                          </>
-                                        )}
-                                        {vm.sub.payLabel}
-                                      </button>
-                                      <p style={S("display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:1.45;color:#8A5A6E")}>
-                                        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style={S("flex:none;margin-top:2px")}>
-                                          <rect x="4.5" y="9" width="11" height="8" rx="2" stroke="currentColor" strokeWidth="1.6" />
-                                          <path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" strokeWidth="1.6" />
-                                        </svg>
-                                        You pay on Stripe’s secure page, so Lumia never sees your card. Cancel anytime from Manage billing.
-                                      </p>
-                                      {vm.sub.err && (
-                                        <>
-                                        <div role="alert" style={S("font-size:14px;color:#B4233B")}>
-                                          {vm.sub.err}
-                                        </div>
-                                        </>
-                                      )}
-                                    </form>
+                                      </form>
+                                      </>
+                                    )}
                                     <aside style={S("background:#FBF3F8;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:14px")}>
                                       <div style={S("display:flex;align-items:flex-start;justify-content:space-between;gap:12px")}>
                                         <div style={S("display:flex;flex-direction:column;gap:3px")}>

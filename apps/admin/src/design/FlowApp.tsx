@@ -90,7 +90,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu)) > 0, cat: "All", menu: toCats(props.menu), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
-      page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
+      page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
       lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
     };
   }
@@ -115,8 +115,8 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     this.ordersTimer = setInterval(() => { if (this.state.step === "dash" && this.state.page === "Orders" && !this.state.ordBusy) this.loadOrders(); }, 15000);
     if (this.state.step === "phone") this.focus(this.phoneRef); if (this.state.step === "name") this.focus(this.nameRef);
   }
-  componentWillUnmount() { window.removeEventListener("resize", this.onResize); this.ro?.disconnect(); clearInterval(this.tick); clearInterval(this.statsTimer); clearInterval(this.ordersTimer); this.clearTimers(); }
-  componentDidUpdate() { if (this.prevStep !== this.state.step) { this.prevStep = this.state.step; if (this.devRef.current) this.devRef.current.scrollTop = 0; window.scrollTo(0, 0); } }
+  componentWillUnmount() { window.removeEventListener("resize", this.onResize); this.ro?.disconnect(); clearInterval(this.tick); clearInterval(this.statsTimer); clearInterval(this.ordersTimer); this.unmountStripe(); this.clearTimers(); }
+  componentDidUpdate() { if (this.state.embedSecret) this.mountStripe(); if (this.prevStep !== this.state.step) { this.prevStep = this.state.step; if (this.devRef.current) this.devRef.current.scrollTop = 0; window.scrollTo(0, 0); } }
   focus(ref: React.RefObject<HTMLElement | null>) { setTimeout(() => ref.current?.focus(), 60); }
   go(step: string, extra: any = {}) {
     this.setState({ step, ...extra });
@@ -139,9 +139,26 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     for (let i = 0; i < 15; i++) { const d = await this.loadSub(); if (d && (d.status === "ACTIVE" || d.status === "PAST_DUE")) { this.setState({ sub: "done", page: "Overview" }); return; } await new Promise(r => setTimeout(r, 2000)); }
     this.setState({ sub: null, subErr: "" }); // still processing: it will appear on its own
   };
+  stripeRef = React.createRef<HTMLDivElement>(); stripeForm: any = null;
+  // Stripe's Embedded Checkout: the card form is drawn inside the payment step. Card details go straight to Stripe's frame.
+  mountStripe = async () => {
+    const { embedSecret, embedKey } = this.state; if (this.stripeForm || !embedSecret || !this.stripeRef.current) return;
+    const w = window as any;
+    if (!w.Stripe) await new Promise<void>((resolve, reject) => { const t = document.createElement("script"); t.src = "https://js.stripe.com/v3/"; t.onload = () => resolve(); t.onerror = () => reject(Error("We couldn’t load the payment form.")); document.head.appendChild(t); }).catch((e: any) => this.setState({ embedSecret: null, subErr: e.message }));
+    if (!w.Stripe || !this.stripeRef.current || this.state.embedSecret !== embedSecret) return;
+    try {
+      const form = await w.Stripe(embedKey).initEmbeddedCheckout({ clientSecret: embedSecret, onComplete: () => { this.unmountStripe(); this.setState({ embedSecret: null }); this.confirmPayment(); } });
+      if (!this.stripeRef.current) { form.destroy(); return; }
+      this.stripeForm = form; form.mount(this.stripeRef.current);
+    } catch { this.setState({ embedSecret: null, subErr: "We couldn’t load the payment form. Please try again." }); }
+  };
+  unmountStripe = () => { try { this.stripeForm?.destroy(); } catch { /* already gone */ } this.stripeForm = null; };
   startPay = async (plan: string, bill: string, terminals: number, address: string) => {
     this.setState({ sub: "paying", subErr: "" });
-    try { const r = await api(`/api/v1/businesses/${this.state.businessId}/subscription/checkout`, "POST", { plan, billing: bill, terminals, address }); window.location.assign(r.url); }
+    try {
+      const r = await api(`/api/v1/businesses/${this.state.businessId}/subscription/checkout`, "POST", { plan, billing: bill, terminals, address });
+      if (r.clientSecret && r.publishableKey) this.setState({ sub: null, embedSecret: r.clientSecret, embedKey: r.publishableKey }); else window.location.assign(r.url);
+    }
     catch (e: any) { this.setState({ sub: null, subErr: e?.message ?? "We couldn’t open the payment page. Please try again." }); }
   };
   openPortal = async () => { try { const r = await api(`/api/v1/businesses/${this.state.businessId}/subscription/portal`, "POST", {}); window.location.assign(r.url); } catch (e: any) { this.setState({ dashErr: e?.message ?? "We couldn’t open billing." }); } };
@@ -266,14 +283,14 @@ export default class FlowApp extends React.Component<FlowProps, any> {
         selName: sel.name + " plan", selBilling: yr ? "Billed yearly" : "Billed monthly", planAmt: money(planAmt), termAmt: money(termAmt), termLine: qty > 1 ? `Terminal × ${qty}` : "Terminal", termPrice: money(tPrice(sel.id)), termQty: qty, termMin: qty <= 1, decOp: qty <= 1 ? 0.3 : 1,
         termQtyNote: qty > 1 ? "Extra terminals AED 599 each" : "Need one per branch?", addr: addrVal, addrErr: s.addrTry && !addrOk, addrBd: s.addrTry && !addrOk ? "#B42318" : "#ECD9E0",
         subtotal: money(base), vat: money(vat), total: money(tot), payLabel: paying ? "Opening secure payment…" : "Continue to payment · " + money(tot), renew: fd(new Date(Date.now() + (yr ? 365 : 30) * 86_400_000)), invalid: paying, payOp: paying ? 0.7 : 1,
-        cols: narrow || s.w < 1100 ? "minmax(0,1fr)" : "minmax(0,1.5fr) minmax(340px,1fr)", err: s.subErr,
+        cols: narrow || s.w < 1100 ? "minmax(0,1fr)" : "minmax(0,1.5fr) minmax(340px,1fr)", err: s.subErr, embed: !!s.embedSecret, notEmbed: !s.embedSecret,
       },
       term: { show: active && !!T, label: STEPS[st], pillBg: pill[0], pillFg: pill[1], msg: MSG[st], no: "#LT-" + String(d?.terminalNo ?? d?.startedAt ?? "").replace(/\D/g, "").slice(-5).padStart(5, "0"), qtyLabel: (d?.terminals ?? 1) === 1 ? "1 terminal" : (d?.terminals ?? 1) + " terminals", addr: d?.terminalAddress ?? "",
         etaLabel: st >= 4 ? "Delivered on" : "Estimated delivery", eta: st >= 4 ? short(T?.dates?.[4]) : st === 3 ? "Today" : `${eta(10)}–${eta(17)}`, hasCourier: st >= 2 && st < 4 && !!T?.tracking, tracking: T?.tracking ?? "",
         steps: STEPS.map((label, i) => { const done = i < st || (i === st && st === 4), now = i === st && st < 4; return { label, done, now, date: i <= st ? short(T?.dates?.[i] ?? (i === 0 ? placed : undefined)) : i === 4 ? "Expected" : "", dot: done ? "#FF5577" : "#fff", ring: done || now ? "#FF5577" : "#E3CBD4", line: i === 4 ? "transparent" : i < st ? "#FF5577" : "#F0E4E8", fw: now ? 600 : done ? 500 : 400, fg: done || now ? "#1A0815" : "#8A5A6E" }; }) },
       noopPrevent: (e: any) => e?.preventDefault?.(),
       lockOpen: !!lk, lock: lk || LOCKS.customers, lockClose: () => this.setState({ lock: null }), lockUpgrade: () => this.setState({ lock: null, sub: null, plan: lk ? lk.id : s.plan, page: "Plans", planStep: "plans" }),
-      subLater: () => this.setState({ sub: null }), subOpenPlans: () => this.setState({ sub: null, lock: null, page: "Plans", planStep: "plans", subErr: "" }), subClosePlans: () => { if (!paying) this.setState({ page: "Overview", planStep: "plans" }); }, subBackPlans: () => { if (!paying) this.setState({ planStep: "plans" }); },
+      subLater: () => this.setState({ sub: null }), subOpenPlans: () => this.setState({ sub: null, lock: null, page: "Plans", planStep: "plans", subErr: "" }), subClosePlans: () => { if (!paying) { this.unmountStripe(); this.setState({ page: "Overview", planStep: "plans", embedSecret: null }); } }, subBackPlans: () => { if (!paying) { this.unmountStripe(); this.setState({ planStep: "plans", embedSecret: null }); } }, subEmbedBack: () => { this.unmountStripe(); this.setState({ embedSecret: null }); }, stripeRef: this.stripeRef,
       subPay: (e: any) => { e?.preventDefault?.(); if (!addrOk) { this.setState({ addrTry: true }); return; } if (!paying) this.startPay(sel.id, s.bill, qty, addrVal.trim()); },
       subPortal: this.openPortal, onAddr: (e: any) => this.setState({ addr: e.target.value }), termInc: () => this.setState({ termQty: Math.min(10, qty + 1) }), termDec: () => this.setState({ termQty: Math.max(1, qty - 1) }),
       pagePlans: s.page === "Plans",
