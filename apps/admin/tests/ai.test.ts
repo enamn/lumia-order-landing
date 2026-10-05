@@ -108,6 +108,17 @@ describe.skipIf(!enabled)("AI replies", () => {
     calls = []; await inbound("", { type: "image", textBody: undefined }); expect(calls).toEqual([]); // already told them a moment ago
     calls = []; await inbound("", { type: "sticker", textBody: undefined }); expect(calls).toEqual([]); // stickers and reactions are ignored
   });
+  it("takes the chat back when it was flagged for the team and nobody answered for 30 minutes", async () => {
+    const conv = await db.conversation.findFirstOrThrow({ where: { businessId: biz, customer: { phone: "+971504074115" } }, orderBy: { lastMessageAt: "desc" } }); // the chat the next message lands in
+    await db.conversation.update({ where: { id: conv.id }, data: { needsHuman: true } });
+    await db.message.updateMany({ where: { direction: "OUTBOUND", conversationId: conv.id }, data: { createdAt: new Date(Date.now() - 10 * 60000) } });
+    calls = []; ai = { intent: "greeting", language: "en", reply: "Hello again!", needsHuman: false }; setup();
+    await inbound("are you there?"); expect(calls).toEqual([]); // the team was told 10 minutes ago: still their turn
+    await db.message.updateMany({ where: { direction: "OUTBOUND", conversationId: conv.id }, data: { createdAt: new Date(Date.now() - 31 * 60000) } });
+    await db.message.updateMany({ where: { direction: "INBOUND", conversationId: conv.id }, data: { createdAt: new Date(Date.now() - 5 * 60000) } }); // earlier messages in this test file would trip the flood guard
+    calls = []; await inbound("hello?");
+    expect(calls.some(c => c.path === "/internal/whatsapp/send")).toBe(true); expect((await db.conversation.findUniqueOrThrow({ where: { id: conv.id } })).needsHuman).toBe(false);
+  });
   it("stays quiet only if it was explicitly disabled by us", async () => {
     await setAiSettings(owner, biz, { enabled: false }, "t"); await db.conversation.updateMany({ where: { businessId: biz }, data: { needsHuman: false } });
     await db.message.updateMany({ where: { senderType: "STAFF", conversation: { businessId: biz } }, data: { createdAt: new Date(Date.now() - 3600000) } });

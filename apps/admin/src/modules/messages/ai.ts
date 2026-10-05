@@ -15,6 +15,8 @@ import { confirmPendingOrder, createOrderFromDraft, discardPendingOrders, findPe
 
 // The AI assistant answers customers' WhatsApp messages from the restaurant's own menu. It only replies when the owner turned it on,
 // never keeps talking once a person has taken over, and hands anything it cannot answer (orders, complaints, unknown facts) to staff.
+// "Needs a person" silences the assistant, but only while the team can still answer: if nobody has replied for this long, the assistant takes the chat back.
+const HUMAN_FLAG_MS = 30 * 60 * 1000;
 const HUMAN_ACTIVE_MS = 15 * 60 * 1000; const MAX_AI_PER_HOUR = 20;
 // Abuse guards: one person sending more than RATE_BURST messages in two minutes is told once to slow down, then ignored for a while; very long messages are cut.
 const RATE_BURST = 10; const MAX_TEXT = 1000;
@@ -57,10 +59,15 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const account = await db.whatsAppAccount.findFirst({ where: { businessId: t.businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
   if (!account?.phoneNumberId || !account.accessTokenEncrypted) return "skipped";
   const conversation = await db.conversation.findFirst({ where: { id: t.conversationId, businessId: t.businessId }, include: { customer: { select: { phone: true, displayName: true, lastBranchId: true } }, business: { select: { name: true } } } });
-  if (!conversation || conversation.needsHuman === true) return "skipped";
+  if (!conversation) return "skipped";
   const now = Date.now();
   const recent = await db.message.findMany({ where: { conversationId: t.conversationId }, orderBy: { createdAt: "desc" }, take: 12, select: { externalMessageId: true, direction: true, senderType: true, messageType: true, textContent: true, createdAt: true } });
   // Answer only the newest customer message, and stay quiet while a person is actively replying.
+  if (conversation.needsHuman === true) {
+    const lastOut = recent.find(m => m.direction === "OUTBOUND");
+    if (lastOut && now - lastOut.createdAt.getTime() < HUMAN_FLAG_MS) return "skipped"; // the team was just told: give them time
+    await db.conversation.update({ where: { id: t.conversationId }, data: { needsHuman: false } }); // nobody answered in a while: the assistant takes over again
+  }
   const latestInbound = recent.find(m => m.direction === "INBOUND");
   if (!latestInbound || latestInbound.externalMessageId !== t.externalMessageId || !latestInbound.textContent) return "skipped";
   if (recent.some(m => m.senderType === "STAFF" && now - m.createdAt.getTime() < HUMAN_ACTIVE_MS)) return "skipped";
