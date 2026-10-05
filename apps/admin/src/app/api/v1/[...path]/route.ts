@@ -1,5 +1,5 @@
 import { api, jsonBody } from "@/server/api";
-import { getMenu, addItem, setItemAvailability } from "@/modules/menu/service";
+import { getMenu, addItem, setItemAvailability, getMenuScopes, createBranchMenu, removeBranchMenu } from "@/modules/menu/service";
 import { extractMenu, confirmImport } from "@/modules/menu/import";
 import { setLanguage } from "@/modules/auth/profile";
 import { connectWhatsApp, getWhatsAppStatus, getImportInfo, applyImport, useCatalog, disconnectWhatsApp } from "@/modules/whatsapp/link";
@@ -87,10 +87,14 @@ async function handle(request: Request, context: Context) {
       if (method === "POST" && subId2 === "messages" && path.length === 5) return sendReply(userId, businessId, subId, await jsonBody(request, 16384), requestId);
     }
     if (section === "menu") {
-      if (method === "GET" && path.length === 3) return getMenu(userId, businessId);
+      const branchId = new URL(request.url).searchParams.get("branchId"); // Pro: which branch's menu (none = the shared menu)
+      if (method === "GET" && path.length === 3) return getMenu(userId, businessId, branchId);
+      if (method === "GET" && subId === "scopes" && path.length === 4) return getMenuScopes(userId, businessId);
+      if (subId === "branches" && method === "POST" && path.length === 5) return createBranchMenu(userId, businessId, subId2, await jsonBody(request), requestId);
+      if (subId === "branches" && method === "DELETE" && path.length === 5) return removeBranchMenu(userId, businessId, subId2, requestId);
       if (subId === "import" && method === "POST" && path.length === 4) return extractMenu(userId, businessId, await jsonBody(request, 12 * 1048576));
-      if (subId === "import" && subId2 === "confirm" && method === "POST" && path.length === 5) return confirmImport(userId, businessId, await jsonBody(request, 262144), requestId);
-      if (subId === "items" && method === "POST" && path.length === 4) return addItem(userId, businessId, await jsonBody(request), requestId);
+      if (subId === "import" && subId2 === "confirm" && method === "POST" && path.length === 5) return confirmImport(userId, businessId, await jsonBody(request, 262144), requestId, branchId);
+      if (subId === "items" && method === "POST" && path.length === 4) return addItem(userId, businessId, await jsonBody(request), requestId, branchId);
       if (subId === "items" && method === "PATCH" && path.length === 5) return setItemAvailability(userId, businessId, subId2, await jsonBody(request), requestId);
     }
     throw new AppError("NOT_FOUND", "Endpoint not found.", 404);

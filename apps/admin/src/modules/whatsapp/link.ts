@@ -6,6 +6,7 @@ import { AppError } from "@/server/errors";
 import { lumiaApi } from "@/server/lumia-api";
 import { decryptSecret, encryptSecret } from "@/server/crypto";
 import { linkTestMode, devLinkMode } from "@/modules/auth/phone";
+import { SHARED } from "@/modules/menu/catalog";
 import { saveMenu, type SaveCategory } from "@/modules/menu/import";
 
 // Links the owner's own WhatsApp Business account (Meta Embedded Signup). Meta calls run in lumia-order-api;
@@ -94,8 +95,8 @@ export async function getImportInfo(userId: string, businessId: string) {
   }
   const catalog = await fetchCatalog(a);
   const location = await db.location.findFirst({ where: { businessId }, orderBy: { createdAt: "asc" } });
-  const items = await db.catalogItem.count({ where: { catalog: { businessId }, status: "ACTIVE" } });
-  const cats = await db.catalogCategory.count({ where: { catalog: { businessId }, items: { some: { status: "ACTIVE" } } } });
+  const items = await db.catalogItem.count({ where: { catalog: { businessId, ...SHARED }, status: "ACTIVE" } });
+  const cats = await db.catalogCategory.count({ where: { catalog: { businessId, ...SHARED }, items: { some: { status: "ACTIVE" } } } });
   return {
     profile: { name: profile.name, phone: profile.phone, address: profile.address, hasLogo: Boolean(profile.logoUrl) },
     catalog: { total: catalog.categories.reduce((n, c) => n + c.items.length, 0), categories: catalog.categories.map(c => ({ name: c.name, count: c.items.length, sample: c.items.slice(0, 4).map(i => i.name) })) },
@@ -124,7 +125,7 @@ export async function applyImport(userId: string, businessId: string, input: unk
   return { ok: true };
 }
 
-export async function useCatalog(userId: string, businessId: string, input: unknown, requestId: string) {
+export async function useCatalog(userId: string, businessId: string, input: unknown, requestId: string, branchId?: string | null) {
   const { mode } = catalogUseSchema.parse(input);
   await authorize(userId, businessId, "operations.manage");
   const a = await currentAccount(businessId);
@@ -132,7 +133,7 @@ export async function useCatalog(userId: string, businessId: string, input: unkn
   const catalog = await fetchCatalog(a);
   const categories: SaveCategory[] = catalog.categories.filter(c => c.items.length).map(c => ({ name: c.name, items: c.items.map(i => ({ name: i.name, price: i.price ?? 0 })) }));
   if (!categories.length) throw new AppError("WHATSAPP_CATALOG_EMPTY", "No WhatsApp catalog was found.", 404);
-  return transaction(async tx => { const { business } = await authorize(userId, businessId, "operations.manage", tx); return saveMenu(tx, business, userId, businessId, categories, requestId, "menu.imported.whatsapp", mode === "replace"); });
+  return transaction(async tx => { const { business } = await authorize(userId, businessId, "operations.manage", tx); return saveMenu(tx, business, userId, businessId, categories, requestId, "menu.imported.whatsapp", mode === "replace", branchId); });
 }
 
 export async function disconnectWhatsApp(userId: string, businessId: string, requestId: string) {

@@ -16,13 +16,14 @@ async function nextOrderNumber(tx: Tx, businessId: string): Promise<string> {
 }
 
 // Creates the order from a confirmed draft. Called by the AI assistant after the customer confirmed the exact summary we showed.
-export async function createOrderFromDraft(input: { businessId: string; conversationId: string; customerId: string; customerName: string; customerPhone: string; resolved: Resolved & { fulfillment: "delivery" | "pickup" } }) {
+export async function createOrderFromDraft(input: { businessId: string; conversationId: string; customerId: string; customerName: string; customerPhone: string; resolved: Resolved & { fulfillment: "delivery" | "pickup" }; branchId?: string | null }) {
   const { businessId, resolved: r } = input;
   for (let attempt = 0; ; attempt++) {
     try {
       return await transaction(async tx => {
         // The branch that serves this customer (nearest, or the one the delivery rule names); otherwise the first active branch.
-        const wanted = r.delivery?.status === "ok" ? r.delivery.branchId : null;
+        // Pro with a menu per branch: the order goes to the branch whose menu it was taken from.
+        const wanted = input.branchId ?? (r.delivery?.status === "ok" ? r.delivery.branchId : null);
         const location = (wanted ? await tx.location.findFirst({ where: { id: wanted, businessId, status: "ACTIVE" } }) : null) ?? await tx.location.findFirst({ where: { businessId, status: "ACTIVE" }, orderBy: { createdAt: "asc" } });
         if (!location) throw new AppError("NO_LOCATION", "This business has no active location.", 409);
         const settings = await tx.orderSettings.findUnique({ where: { businessId } });

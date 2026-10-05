@@ -3,6 +3,7 @@ import { authorize } from "@/server/authorization";
 import { transaction } from "@/server/transaction";
 import { AppError } from "@/server/errors";
 import { consume, refund } from "@/modules/billing/usage";
+import { SHARED, writableBranchCatalogId } from "./catalog";
 import { lumiaApi } from "@/server/lumia-api";
 
 const MAX_FILE_BYTES = 8 * 1048576;
@@ -32,9 +33,10 @@ type Tx = Parameters<Parameters<typeof transaction>[0]>[0];
 export interface SaveItem { name: string; nameAr?: string; price: number }
 export interface SaveCategory { name: string; nameAr?: string; items: SaveItem[] }
 // Writes categories/items into the business's active catalog. `replace` archives the existing active items first.
-export async function saveMenu(tx: Tx, business: { organizationId: string }, userId: string, businessId: string, categories: SaveCategory[], requestId: string, action: string, replace = false) {
+export async function saveMenu(tx: Tx, business: { organizationId: string }, userId: string, businessId: string, categories: SaveCategory[], requestId: string, action: string, replace = false, branchId?: string | null) {
   const withRels = { categories: true, items: { where: { status: "ACTIVE" }, select: { categoryId: true, name: true, nameAr: true } } } as const;
-  const catalog = await tx.catalog.findFirst({ where: { businessId, status: "ACTIVE" }, orderBy: { createdAt: "asc" }, include: withRels }) ?? await tx.catalog.create({ data: { businessId, name: "Menu", status: "ACTIVE" }, include: withRels });
+  const ownId = await writableBranchCatalogId(tx, businessId, branchId);
+  const catalog = (ownId ? await tx.catalog.findUnique({ where: { id: ownId }, include: withRels }) : null) ?? await tx.catalog.findFirst({ where: { businessId, status: "ACTIVE", ...SHARED }, orderBy: { createdAt: "asc" }, include: withRels }) ?? await tx.catalog.create({ data: { businessId, name: "Menu", status: "ACTIVE" }, include: withRels });
   if (replace) await tx.catalogItem.updateMany({ where: { catalogId: catalog.id, status: "ACTIVE" }, data: { status: "ARCHIVED" } });
   const existing = new Set(replace ? [] : catalog.items.map(i => `${i.categoryId}|${(i.name || i.nameAr || "").toLowerCase()}`)); let order = catalog.categories.length; let created = 0;
   for (const c of categories) {
@@ -47,7 +49,7 @@ export async function saveMenu(tx: Tx, business: { organizationId: string }, use
   await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "Catalog", entityId: catalog.id, action, requestId, afterData: { items: created, replace } } });
   return { created };
 }
-export async function confirmImport(userId: string, businessId: string, input: unknown, requestId: string) {
+export async function confirmImport(userId: string, businessId: string, input: unknown, requestId: string, branchId?: string | null) {
   const { categories } = confirmSchema.parse(input);
-  return transaction(async tx => { const { business } = await authorize(userId, businessId, "operations.manage", tx); return saveMenu(tx, business, userId, businessId, categories, requestId, "menu.imported"); });
+  return transaction(async tx => { const { business } = await authorize(userId, businessId, "operations.manage", tx); return saveMenu(tx, business, userId, businessId, categories, requestId, "menu.imported", false, branchId); });
 }

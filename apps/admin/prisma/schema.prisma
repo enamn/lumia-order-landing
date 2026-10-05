@@ -278,6 +278,8 @@ model OnboardingStep {
 model Catalog {
   id String @id @default(uuid()) @map("_id")
   businessId String
+  // null = the menu shared by all branches; set = the menu of that one branch (Pro only).
+  locationId String?
   business Business @relation(fields: [businessId], references: [id])
   name String
   type String @default("PRODUCT")
@@ -288,6 +290,7 @@ model Catalog {
   categories CatalogCategory[]
   items CatalogItem[]
   @@index([businessId, status])
+  @@index([businessId, locationId, status])
   @@map("catalogs")
 }
 model CatalogCategory {
@@ -404,6 +407,8 @@ model Conversation {
   needsHuman Boolean?
   draftOrder Json?
   customerLocation Json?
+  // Pro with a menu per branch: the branch this chat is being served by (set from the shared location pin, or chosen by the customer).
+  branchId String?
   lastMessageAt DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

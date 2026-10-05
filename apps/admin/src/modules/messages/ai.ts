@@ -7,8 +7,9 @@ import { decryptSecret } from "@/server/crypto";
 import { deliverText } from "./reply";
 import { welcomeFor } from "./welcome-text";
 import { DRAFT_TTL_MS, type SavedAddr, draftKey, isComplete, meetsMinimum, placedText, recheckText, removedText, resolveDraft, summaryText, type DeliveryContext, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
-import { quoteDelivery, type BranchPoint, type DeliveryRules } from "@/modules/orders/delivery";
-import { canPersonalize } from "@/modules/billing/service";
+import { nearestBranch, quoteDelivery, type BranchPoint, type DeliveryRules } from "@/modules/orders/delivery";
+import { catalogIdFor } from "@/modules/menu/catalog";
+import { canPersonalize, entitlementsFor } from "@/modules/billing/service";
 import { canStartOrder, consume, refund } from "@/modules/billing/usage";
 import { createOrderFromDraft } from "@/modules/orders/service";
 
@@ -41,8 +42,10 @@ export async function setAiSettings(userId: string, businessId: string, input: u
   });
 }
 
-async function loadMenu(businessId: string): Promise<(MenuEntry & { category: string })[]> {
-  const catalog = await db.catalog.findFirst({ where: { businessId, status: "ACTIVE" }, orderBy: { createdAt: "asc" }, include: { categories: true, items: { where: { status: "ACTIVE" }, orderBy: { sortOrder: "asc" }, take: 400 } } });
+// The menu a customer is served from: the shared menu, or (Pro) the branch's own.
+async function loadMenu(businessId: string, branchId?: string | null): Promise<(MenuEntry & { category: string })[]> {
+  const id = await catalogIdFor(db, businessId, branchId);
+  const catalog = id ? await db.catalog.findUnique({ where: { id }, include: { categories: true, items: { where: { status: "ACTIVE" }, orderBy: { sortOrder: "asc" }, take: 400 } } }) : null;
   if (!catalog) return [];
   const names = new Map(catalog.categories.map(c => [c.id, c.name]));
   return catalog.items.map((i, n) => ({ index: String(n + 1), itemId: i.id, category: (i.categoryId && names.get(i.categoryId)) || "Other", name: i.name, nameAr: i.nameAr ?? "", priceMinor: i.basePriceMinor, available: i.isAvailable }));
@@ -65,10 +68,8 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const history = recent.slice().reverse().filter(m => m.textContent && m.externalMessageId !== t.externalMessageId).map(m => ({ from: m.direction === "INBOUND" ? "customer" : "restaurant", text: m.textContent! }));
   const settings = await db.orderSettings.findUnique({ where: { businessId: t.businessId } });
   const options: Options = { delivery: settings?.supportsDelivery ?? true, pickup: settings?.supportsPickup ?? true, minimumMinor: settings?.minimumOrderAmountMinor ?? 0 };
-  const menu = await loadMenu(t.businessId);
-  const byItem = new Map(menu.map(m => [m.itemId, m.index]));
   const prev = conversation.draftOrder as StoredDraft | null;
-  const stored = prev && Date.now() - new Date(prev.updatedAt).getTime() < DRAFT_TTL_MS ? prev : null;
+  let stored = prev && Date.now() - new Date(prev.updatedAt).getTime() < DRAFT_TTL_MS ? prev : null;
   // Delivery: the restaurant's pricing rules, its branches, the customer's shared location pin and WhatsApp name. The fee itself is worked out here, never by the assistant.
   const bizRow = await db.business.findUniqueOrThrow({ where: { id: t.businessId }, select: { settings: true, locations: { where: { status: "ACTIVE" }, select: { id: true, name: true, latitude: true, longitude: true } } } });
   const rules = ((bizRow.settings as { delivery?: DeliveryRules } | null)?.delivery ?? null) as DeliveryRules | null;
@@ -78,6 +79,19 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const pin = fresh ? { latitude: fresh.latitude, longitude: fresh.longitude } : undefined;
   // What the pin resolved to: the emirate and area are known, so the customer is not asked for them again (the street/building still is).
   const pinPlace = { emirate: fresh?.emirate ?? null, area: fresh?.area ?? "", formatted: fresh?.formatted ?? "" };
+  // Pro with a menu for each branch: the branch decides the menu. A shared pin picks the nearest branch (a different branch drops a half-made order, its menu differs);
+  // otherwise the customer is asked which branch. Until it is known the assistant has no menu and can't take an order.
+  const perBranch = (await entitlementsFor(t.businessId)).menuPerBranch && (await db.catalog.findMany({ where: { businessId: t.businessId, status: "ACTIVE" }, select: { locationId: true } })).some(c => c.locationId);
+  let branchId: string | null = perBranch && conversation.branchId && branches.some(b => b.id === conversation.branchId) ? conversation.branchId : null;
+  let branchSwitched = false;
+  if (perBranch) {
+    const near = pin ? nearestBranch(branches, pin) : null;
+    if (near && near !== branchId) { branchSwitched = Boolean(branchId); if (branchSwitched) stored = null; branchId = near; }
+    if (!branchId && branches.length === 1) branchId = branches[0]!.id;
+  }
+  const branchNeeded = perBranch && !branchId;
+  const menu = branchNeeded ? [] : await loadMenu(t.businessId, perBranch ? branchId : null);
+  const byItem = new Map(menu.map(m => [m.itemId, m.index]));
   const savedRows = await db.customerAddress.findMany({ where: { customerId: conversation.customerId }, orderBy: { isDefault: "desc" }, take: 6 });
   const saved: SavedAddr[] = savedRows.map((a, i) => ({ id: String(i + 1), label: a.label, text: a.addressText, emirate: a.emirate, area: a.city, latitude: a.latitude, longitude: a.longitude }));
   const ctx: DeliveryContext = { rules, branches, profileName: conversation.customer.displayName ?? "", saved, ...(pin ? { pin } : {}) };
@@ -94,10 +108,17 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   // Behind that, a fair-use pool of AI replies so endless chatting cannot run up costs.
   const taken = await consume(t.businessId, "ai", { inProgress: Boolean(stored) });
   if (!taken.ok) return sendNotice(t, BUSY, 3600000);
-  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, delivery: deliveryHint, customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
+  const branchList = branches.map((b, i) => ({ id: String(i + 1), realId: b.id, name: b.name }));
+  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; branch?: string; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, delivery: deliveryHint, ...(branchNeeded ? { branchNeeded: true, branches: branchList.map(b => ({ id: b.id, name: b.name })) } : {}), customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
   if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "AI_REPLY_REJECTED", status: r.status, apiCode: r.code })); await refund(t.businessId, "ai", taken); return sendNotice(t, TRY_AGAIN, 300000).catch(() => "skipped" as const); } // an AI failure must never leave the customer in silence
   const lang = r.data.language; const parts = [r.data.reply];
-  const data: { needsHuman?: boolean; draftOrder?: object | null } = {};
+  const data: { needsHuman?: boolean; draftOrder?: object | null; branchId?: string | null } = {};
+  if (branchSwitched) data.draftOrder = null as never; // the other branch's menu has different items
+  if (perBranch && branchId !== (conversation.branchId ?? null)) data.branchId = branchId;
+  // Pickup: the customer named a branch. Nothing is ordered in this turn (there was no menu yet); the next message uses that branch's menu.
+  const chosen = branchNeeded ? branchList.find(b => b.id === r.data.branch) : undefined;
+  if (branchNeeded) r.data.order = null;
+  if (chosen) data.branchId = chosen.realId;
   // Muting the assistant is for real complaints and questions it cannot answer. Cancelling or changing an order in progress never needs a person.
   if (r.data.needsHuman && (r.data.intent === "complaint" || !stored)) data.needsHuman = true;
   // The model must send the whole draft every turn, but it sometimes drops a field it already knew (emirate, area, address, name). Keep what was
@@ -115,7 +136,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
       if (!slot.ok) { parts.length = 0; parts.push(BUSY); data.draftOrder = prev as never; }
       else {
         let order: Awaited<ReturnType<typeof createOrderFromDraft>>;
-        try { order = await createOrderFromDraft({ businessId: t.businessId, conversationId: t.conversationId, customerId: conversation.customerId, customerName: conversation.customer.displayName ?? "", customerPhone: conversation.customer.phone, resolved: { ...resolved, fulfillment: resolved.fulfillment } }); }
+        try { order = await createOrderFromDraft({ businessId: t.businessId, conversationId: t.conversationId, customerId: conversation.customerId, customerName: conversation.customer.displayName ?? "", customerPhone: conversation.customer.phone, resolved: { ...resolved, fulfillment: resolved.fulfillment }, branchId: perBranch ? branchId : null }); }
         catch (e) { await refund(t.businessId, "orders", slot); throw e; } // an order that was not saved does not count
         parts.length = 0; parts.push(placedText(order.orderNumber, order.totalMinor, resolved.fulfillment, lang));
       }
@@ -185,7 +206,7 @@ export async function handleVoice(t: Target & { mediaId: string }): Promise<"sen
   if (!account?.accessTokenEncrypted) return "skipped";
   const voice = await consume(t.businessId, "voice"); // over the plan's voice notes: ask the customer to type instead
   if (!voice.ok) return sendNotice(t, TYPE_ONLY);
-  const r = await lumiaApi<{ text: string; language: "ar" | "en" | "mixed" | "other"; usable: boolean }>("/internal/whatsapp/transcribe", { accessToken: decryptSecret(account.accessTokenEncrypted), mediaId: t.mediaId, hotwords: (await loadMenu(t.businessId)).flatMap(m => [m.name, m.nameAr]).filter(Boolean).slice(0, 80) }, 90000);
+  const r = await lumiaApi<{ text: string; language: "ar" | "en" | "mixed" | "other"; usable: boolean }>("/internal/whatsapp/transcribe", { accessToken: decryptSecret(account.accessTokenEncrypted), mediaId: t.mediaId, hotwords: (await loadMenu(t.businessId, (await db.conversation.findUnique({ where: { id: t.conversationId }, select: { branchId: true } }))?.branchId)).flatMap(m => [m.name, m.nameAr]).filter(Boolean).slice(0, 80) }, 90000);
   if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "VOICE_TRANSCRIBE_FAILED", status: r.status, apiCode: r.code })); await refund(t.businessId, "voice", voice); return sendNotice(t, TYPE_ONLY); }
   if (r.data.text) await db.message.updateMany({ where: { externalMessageId: t.externalMessageId }, data: { textContent: r.data.text, transcription: r.data.text } });
   if (r.data.language === "other") return sendNotice(t, r.data.text ? UNSUPPORTED_LANGUAGE : NOT_CLEAR);

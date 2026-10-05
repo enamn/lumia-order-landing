@@ -5,6 +5,7 @@ import { authorize, can } from "@/server/authorization";
 import { AppError } from "@/server/errors";
 import { updateProgress } from "../business/service";
 import { entitlements, entitlementsFor, getSubscriptionFor } from "../billing/service";
+import { SHARED } from "../menu/catalog";
 import { EXTRA_BRANCH, quoteExtraBranch, type Billing } from "../billing/plans";
 import { SECTIONS, sectionSchemas, EMIRATES, type Section, type Profile, type Branch, type Delivery, type Hours } from "./schema";
 
@@ -60,7 +61,7 @@ async function branchOffer(businessId: string) {
 export async function getSettings(userId: string, businessId: string) {
   const { member } = await authorize(userId, businessId);
   const b = await load(businessId);
-  const catalog = await db.catalog.findFirst({ where: { businessId, status: { not: "ARCHIVED" } }, orderBy: { createdAt: "asc" } });
+  const catalog = await db.catalog.findFirst({ where: { businessId, status: { not: "ARCHIVED" }, ...SHARED }, orderBy: { createdAt: "asc" } });
   const items = catalog ? await db.catalogItem.findMany({ where: { catalogId: catalog.id, status: { not: "ARCHIVED" } }, select: { basePriceMinor: true, isAvailable: true, updatedAt: true, categoryId: true } }) : [];
   const wa = await db.whatsAppAccount.findFirst({ where: { businessId, status: "CONNECTED" }, select: { displayPhoneNumber: true } });
   return {

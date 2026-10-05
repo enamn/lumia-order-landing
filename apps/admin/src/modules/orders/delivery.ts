@@ -37,6 +37,11 @@ export function distanceKm(a: { latitude: number; longitude: number }, b: { lati
   const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.latitude)) * Math.cos(r(b.latitude)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(h));
 }
+// The closest active branch that has a location pin of its own.
+export function nearestBranch(branches: BranchPoint[], pin: { latitude: number; longitude: number }): string | null {
+  const ranked = branches.filter(b => b.active && b.latitude !== null && b.longitude !== null).map(b => ({ id: b.id, km: distanceKm(pin, { latitude: b.latitude!, longitude: b.longitude! }) })).sort((x, y) => x.km - y.km);
+  return ranked[0]?.id ?? null;
+}
 const firstBranch = (branches: BranchPoint[]) => branches.find(b => b.active)?.id ?? null;
 const hasPin = (c: CustomerPlace): c is CustomerPlace & { latitude: number; longitude: number } => typeof c.latitude === "number" && typeof c.longitude === "number";
 

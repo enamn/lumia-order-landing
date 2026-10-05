@@ -270,4 +270,36 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
     expect(r).toContain("Someone from the restaurant will assist you soon"); expect(await db.order.count({ where: { businessId: biz } })).toBe(orders);
     await setUsed(0);
   });
+  it("Pro with a menu per branch: no menu until the branch is known (pickup asks, a pin picks the nearest), then that branch's menu, and the order goes to that branch", async () => {
+    const { createBranchMenu, addItem } = await import("../src/modules/menu/service");
+    const subId = `sub-${suffix}`;
+    await db.subscription.create({ data: { id: subId, businessId: biz, plan: "pro", billing: "monthly", status: "ACTIVE", currentPeriodStart: new Date(), currentPeriodEnd: new Date(Date.now() + 30 * 86400000), startedAt: new Date() } });
+    try {
+      const second = (await db.location.create({ data: { businessId: biz, name: "Ajman Branch", code: `AJ${suffix}`.toUpperCase(), status: "ACTIVE", latitude: 25.4052, longitude: 55.4451 } })).id;
+      await createBranchMenu(owner, biz, second, { copy: false }, "r"); await addItem(owner, biz, { name: "Ajman Special", category: "Grill", price: 35 }, "r", second);
+      const reply = (extra: object = {}) => ({ intent: "other", language: "en", reply: "Which branch would you like?", needsHuman: false, order: null, ...extra });
+      const who = "971500000911";
+      // 1. Pickup, no branch known: the assistant has no menu and is offered the branches; it names the chosen one.
+      await turn(() => say("I want to order for pickup", who), () => reply());
+      expect(lastAi()).toMatchObject({ branchNeeded: true, menu: [] }); const ajman = lastAi().branches.find((b: any) => b.name === "Ajman Branch").id; expect(lastAi().branches).toHaveLength(2);
+      await turn(() => say("the Ajman one", who), () => reply({ reply: "Great, Ajman Branch. What would you like?", branch: ajman }));
+      expect((await db.conversation.findFirstOrThrow({ where: { customer: { phone: "+" + who } } })).branchId).toBe(second);
+      // 2. Next turn: that branch's own menu (not the shared one), and the order is placed at that branch.
+      const pickup = (id: (n: string) => string, confirmed = false) => ({ ...reply({ reply: "Sure", intent: "order_request" }), order: { items: [{ id: id("Ajman Special"), quantity: 1, notes: "" }], fulfillment: "pickup", address: "", emirate: null, area: "", customerName: "", addressLabel: "", savedAddress: "", confirmed } });
+      await turn(() => say("one Ajman Special", who), id => pickup(id));
+      expect(lastAi().branchNeeded).toBeUndefined(); expect(lastAi().menu.map((m: any) => m.name)).toEqual(["Ajman Special"]);
+      const r = await turn(() => say("yes", who), id => pickup(id, true));
+      expect(r).toContain("received"); expect((await db.order.findFirstOrThrow({ where: { businessId: biz, locationId: second }, orderBy: { createdAt: "desc" } })).locationId).toBe(second);
+      // 3. A location pin picks the nearest branch with no question: near the Sharjah branch the shared menu is used, then a pin near Ajman switches branch and drops the half-made order.
+      const w = "971500000912";
+      await turn(() => inbound({ type: "location", location: { latitude: 25.3402, longitude: 55.3901 } }, w), () => reply({ reply: "Thanks" }));
+      expect(lastAi().branchNeeded).toBeUndefined(); expect(lastAi().menu.map((m: any) => m.name)).toContain("Classic");
+      expect((await db.conversation.findFirstOrThrow({ where: { customer: { phone: "+" + w } } })).branchId).toBe(branchId);
+      await turn(() => say("2 classic for pickup", w), id => ({ ...pickup(id), order: { ...pickup(id).order, items: [{ id: id("Classic"), quantity: 2, notes: "" }] } }));
+      expect((await db.conversation.findFirstOrThrow({ where: { customer: { phone: "+" + w } } })).draftOrder).toBeTruthy();
+      await turn(() => inbound({ type: "location", location: { latitude: 25.4052, longitude: 55.4451 } }, w), () => reply({ reply: "Now at Ajman" }));
+      const conv = await db.conversation.findFirstOrThrow({ where: { customer: { phone: "+" + w } } });
+      expect(conv.branchId).toBe(second); expect(conv.draftOrder).toBeNull(); expect(lastAi().menu.map((m: any) => m.name)).toEqual(["Ajman Special"]);
+    } finally { await db.subscription.delete({ where: { id: subId } }); }
+  });
 });
