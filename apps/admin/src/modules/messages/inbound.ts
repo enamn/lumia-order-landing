@@ -11,7 +11,7 @@ import { sendWelcome } from "./welcome";
 export const inboundSchema = z.object({ messages: z.array(z.object({
   phoneNumberId: z.string().regex(/^\d{5,30}$/), wabaId: z.string().regex(/^\d{5,30}$/).optional(),
   messageId: z.string().min(1).max(200), senderId: z.string().regex(/^\d{6,20}$/), timestamp: z.string().regex(/^\d{9,12}$/),
-  type: z.string().min(1).max(40), mediaId: z.string().regex(/^\d{5,30}$/).optional(), textBody: z.string().max(8192).optional(), senderName: z.string().max(200).optional(),
+  type: z.string().min(1).max(40), location: z.object({ latitude: z.number().min(-90).max(90), longitude: z.number().min(-180).max(180), name: z.string().max(200).optional(), address: z.string().max(300).optional() }).strict().optional(), mediaId: z.string().regex(/^\d{5,30}$/).optional(), textBody: z.string().max(8192).optional(), senderName: z.string().max(200).optional(),
 }).strict()).min(1).max(100) }).strict();
 
 export type InboundResult = { stored: number; duplicates: number; unmatched: number; welcomed?: number };
@@ -37,8 +37,13 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
         if (m.senderName && !customer.displayName) await tx.customer.update({ where: { id: customer.id }, data: { displayName: m.senderName } });
         const open = await tx.conversation.findFirst({ where: { businessId: account.businessId, customerId: customer.id, status: "OPEN" }, orderBy: { lastMessageAt: "desc" } });
         const conversation = open ?? await tx.conversation.create({ data: { businessId: account.businessId, customerId: customer.id, lastMessageAt: at } });
-        await tx.message.create({ data: { conversationId: conversation.id, externalMessageId: m.messageId, direction: "INBOUND", senderType: "CUSTOMER", messageType: m.type.toUpperCase(), textContent: m.textBody ?? null, status: "RECEIVED", createdAt: at } });
-        if (m.type.toLowerCase() === "text" && m.textBody) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "text" };
+        // A shared location pin is kept on the conversation (for delivery pricing) and shown in the chat as readable text.
+        const loc = m.type.toLowerCase() === "location" ? m.location : undefined;
+        const shown = loc ? `📍 ${[loc.name, loc.address].filter(Boolean).join(", ") || "Location"} (${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)})` : (m.textBody ?? null);
+        await tx.message.create({ data: { conversationId: conversation.id, externalMessageId: m.messageId, direction: "INBOUND", senderType: "CUSTOMER", messageType: m.type.toUpperCase(), textContent: shown, status: "RECEIVED", createdAt: at } });
+        if (loc) await tx.conversation.update({ where: { id: conversation.id }, data: { customerLocation: { latitude: loc.latitude, longitude: loc.longitude, name: loc.name ?? "", address: loc.address ?? "", at: at.toISOString() } } });
+        if (loc) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "text" };
+        else if (m.type.toLowerCase() === "text" && m.textBody) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "text" };
         else if (m.type.toLowerCase() === "audio" && m.mediaId) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "voice", mediaId: m.mediaId };
         else if (UNREADABLE_TYPES.has(m.type.toUpperCase())) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "unreadable" };
         if (at > conversation.lastMessageAt) await tx.conversation.update({ where: { id: conversation.id }, data: { lastMessageAt: at } });

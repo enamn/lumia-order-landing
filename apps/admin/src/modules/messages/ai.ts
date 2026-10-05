@@ -6,7 +6,9 @@ import { lumiaApi } from "@/server/lumia-api";
 import { decryptSecret } from "@/server/crypto";
 import { deliverText } from "./reply";
 import { welcomeFor } from "./welcome-text";
-import { DRAFT_TTL_MS, draftKey, isComplete, meetsMinimum, placedText, removedText, resolveDraft, summaryText, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
+import { DRAFT_TTL_MS, draftKey, isComplete, meetsMinimum, placedText, removedText, resolveDraft, summaryText, type DeliveryContext, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
+import { quoteDelivery, type BranchPoint, type DeliveryRules } from "@/modules/orders/delivery";
+import { canPersonalize } from "@/modules/billing/service";
 import { createOrderFromDraft } from "@/modules/orders/service";
 
 // The AI assistant answers customers' WhatsApp messages from the restaurant's own menu. It only replies when the owner turned it on,
@@ -64,15 +66,26 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const byItem = new Map(menu.map(m => [m.itemId, m.index]));
   const prev = conversation.draftOrder as StoredDraft | null;
   const stored = prev && Date.now() - new Date(prev.updatedAt).getTime() < DRAFT_TTL_MS ? prev : null;
-  const apiDraft = stored ? { items: stored.items.flatMap(l => byItem.has(l.itemId) ? [{ id: byItem.get(l.itemId)!, quantity: l.quantity, notes: l.notes }] : []), fulfillment: stored.fulfillment, address: stored.address, confirmed: false } : null;
-  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent, ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
+  // Delivery: the restaurant's pricing rules, its branches, the customer's shared location pin and WhatsApp name. The fee itself is worked out here, never by the assistant.
+  const bizRow = await db.business.findUniqueOrThrow({ where: { id: t.businessId }, select: { settings: true, locations: { where: { status: "ACTIVE" }, select: { id: true, name: true, latitude: true, longitude: true } } } });
+  const rules = ((bizRow.settings as { delivery?: DeliveryRules } | null)?.delivery ?? null) as DeliveryRules | null;
+  const branches: BranchPoint[] = bizRow.locations.map(l => ({ id: l.id, name: l.name, active: true, latitude: l.latitude, longitude: l.longitude }));
+  const shared = conversation.customerLocation as { latitude: number; longitude: number; at: string } | null;
+  const pin = shared && now - new Date(shared.at).getTime() < 24 * 3600 * 1000 ? { latitude: shared.latitude, longitude: shared.longitude } : undefined;
+  const ctx: DeliveryContext = { rules, branches, profileName: conversation.customer.displayName ?? "", ...(pin ? { pin } : {}) };
+  const apiDraft = stored ? { items: stored.items.flatMap(l => byItem.has(l.itemId) ? [{ id: byItem.get(l.itemId)!, quantity: l.quantity, notes: l.notes }] : []), fulfillment: stored.fulfillment, address: stored.address, emirate: stored.emirate ?? null, area: stored.area ?? "", customerName: stored.name ?? "", confirmed: false } : null;
+  const known = apiDraft ? resolveDraft(menu, { ...apiDraft, fulfillment: "delivery" }, options, ctx) : null;
+  const preQuote = known?.delivery ?? quoteDelivery(rules, branches, { emirate: stored?.emirate ?? null, area: stored?.area ?? "", ...(pin ?? {}) }, 0, options.minimumMinor);
+  const deliveryHint = options.delivery ? { method: rules?.method ?? null, needs: preQuote.status === "needs" ? preQuote.need : null, pinReceived: Boolean(pin), emirate: known?.emirate ?? stored?.emirate ?? null, area: stored?.area ?? "", note: "" } : null;
+  const useName = await canPersonalize(t.businessId);
+  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, delivery: deliveryHint, customer: { name: conversation.customer.displayName ?? "", useName }, options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent, ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
   if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "AI_REPLY_REJECTED", status: r.status, apiCode: r.code })); return "skipped"; }
   const lang = r.data.language; const parts = [r.data.reply];
   const data: { needsHuman?: boolean; draftOrder?: object | null } = {};
   if (r.data.needsHuman) data.needsHuman = true;
   const model = r.data.order;
   if (model) {
-    const resolved = resolveDraft(menu, model, options); const key = draftKey(resolved);
+    const resolved = resolveDraft(menu, model, options, ctx); const key = draftKey(resolved);
     // An order is placed only when the customer confirmed the exact summary we showed them (same items, type and address), and it is complete.
     if (model.confirmed && isComplete(resolved) && meetsMinimum(resolved, options) && stored?.shownKey === key && resolved.fulfillment) {
       const order = await createOrderFromDraft({ businessId: t.businessId, conversationId: t.conversationId, customerId: conversation.customerId, customerName: conversation.customer.displayName ?? "", customerPhone: conversation.customer.phone, resolved: { ...resolved, fulfillment: resolved.fulfillment } });
@@ -82,7 +95,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
       if (resolved.removed.length) parts.push(removedText(resolved.removed, lang));
       // Show the exact summary whenever it changed, or an item was dropped, so the customer always confirms what we will really place.
       if (stored?.shownKey !== key || resolved.removed.length) parts.push(summaryText(resolved, lang, options));
-      data.draftOrder = { items: resolved.lines.map(l => ({ itemId: l.itemId, quantity: l.quantity, notes: l.notes })), fulfillment: resolved.fulfillment, address: resolved.address, shownKey: key, updatedAt: new Date().toISOString() };
+      data.draftOrder = { items: resolved.lines.map(l => ({ itemId: l.itemId, quantity: l.quantity, notes: l.notes })), fulfillment: resolved.fulfillment, address: resolved.address, emirate: resolved.emirate, area: resolved.area, name: model.customerName || stored?.name || "", shownKey: key, updatedAt: new Date().toISOString() };
     }
   }
   // First contact: if nobody has answered this customer yet (and Meta's own welcome event didn't already), greet them before answering.

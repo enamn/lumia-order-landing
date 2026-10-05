@@ -26,6 +26,12 @@ export const trialInfo = (createdAt: Date, now = Date.now()) => {
 };
 export const getSubscriptionFor = async (businessId: string) => db.subscription.findFirst({ where: { businessId } });
 export async function entitlementsFor(businessId: string) { return entitlements(await getSubscriptionFor(businessId)); }
+// Calling customers by name is for Plus and Pro, and for restaurants still in their free trial. Starter keeps replies impersonal.
+export async function canPersonalize(businessId: string): Promise<boolean> {
+  const [sub, b] = await Promise.all([getSubscriptionFor(businessId), db.business.findUniqueOrThrow({ where: { id: businessId }, select: { createdAt: true } })]);
+  if (isActive(sub)) return sub!.plan !== "starter";
+  return !sub && trialInfo(b.createdAt).daysLeft > 0;
+}
 
 // What we already know about the restaurant, used to pre-fill the payment page and Stripe so nobody types it twice.
 async function knownDetails(businessId: string) {

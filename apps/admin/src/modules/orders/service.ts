@@ -21,16 +21,18 @@ export async function createOrderFromDraft(input: { businessId: string; conversa
   for (let attempt = 0; ; attempt++) {
     try {
       return await transaction(async tx => {
-        const location = await tx.location.findFirst({ where: { businessId, status: "ACTIVE" }, orderBy: { createdAt: "asc" } });
+        // The branch that serves this customer (nearest, or the one the delivery rule names); otherwise the first active branch.
+        const wanted = r.delivery?.status === "ok" ? r.delivery.branchId : null;
+        const location = (wanted ? await tx.location.findFirst({ where: { id: wanted, businessId, status: "ACTIVE" } }) : null) ?? await tx.location.findFirst({ where: { businessId, status: "ACTIVE" }, orderBy: { createdAt: "asc" } });
         if (!location) throw new AppError("NO_LOCATION", "This business has no active location.", 409);
         const settings = await tx.orderSettings.findUnique({ where: { businessId } });
         const status: OrderStatus = settings?.requiresOrderAcceptance === false ? "ACCEPTED" : "AWAITING_BUSINESS_CONFIRMATION";
         const orderNumber = await nextOrderNumber(tx, businessId);
         const order = await tx.order.create({ data: {
           businessId, locationId: location.id, customerId: input.customerId, conversationId: input.conversationId, orderNumber, channel: "WHATSAPP",
-          fulfillmentType: r.fulfillment === "delivery" ? "DELIVERY" : "PICKUP", status, subtotalMinor: r.subtotalMinor, totalMinor: r.subtotalMinor,
+          fulfillmentType: r.fulfillment === "delivery" ? "DELIVERY" : "PICKUP", status, subtotalMinor: r.subtotalMinor, deliveryFeeMinor: r.feeMinor, totalMinor: r.totalMinor, ...(r.delivery?.status === "ok" && r.delivery.manual ? { internalNotes: "Delivery fee not included: confirm it with the customer." } : {}),
           items: { create: r.lines.map(l => ({ catalogItemId: l.itemId, itemNameSnapshot: l.name || l.nameAr, quantity: l.quantity, unitPriceMinor: l.unitMinor, subtotalMinor: l.totalMinor, taxAmountMinor: 0, totalMinor: l.totalMinor, notes: l.notes || null })) },
-          ...(r.fulfillment === "delivery" ? { deliveryDetails: { create: { recipientName: input.customerName || "Customer", recipientPhone: input.customerPhone, addressText: r.address, city: location.city } } } : {}),
+          ...(r.fulfillment === "delivery" ? { deliveryDetails: { create: { recipientName: r.name || input.customerName || "Customer", recipientPhone: input.customerPhone, addressText: r.address, city: r.area || location.city, ...(r.emirate ? { emirate: r.emirate } : {}), ...(r.pin ? { latitude: r.pin.latitude, longitude: r.pin.longitude } : {}) } } } : {}),
           history: { create: { newStatus: status, changedByType: "AI" } },
         }, select: { id: true, orderNumber: true, status: true, totalMinor: true } });
         await tx.conversation.update({ where: { id: input.conversationId }, data: { draftOrder: null } });
@@ -46,8 +48,8 @@ export async function createOrderFromDraft(input: { businessId: string; conversa
 
 export async function listOrders(userId: string, businessId: string) {
   await authorize(userId, businessId);
-  const rows = await db.order.findMany({ where: { businessId }, orderBy: { createdAt: "desc" }, take: 60, include: { items: true, history: { select: { newStatus: true, createdAt: true, reason: true }, orderBy: { createdAt: "asc" } }, customer: { select: { displayName: true, phone: true } }, deliveryDetails: { select: { addressText: true } } } });
-  return rows.map(o => ({ id: o.id, number: o.orderNumber, status: o.status, fulfillment: o.fulfillmentType, total: o.totalMinor / 100, currency: o.currencyCode, createdAt: o.createdAt, conversationId: o.conversationId, note: o.customerNotes ?? "", subtotal: o.subtotalMinor / 100, deliveryFee: o.deliveryFeeMinor / 100, history: o.history.map(h => ({ status: h.newStatus, at: h.createdAt, reason: h.reason ?? "" })), address: o.deliveryDetails?.addressText ?? "", customer: { name: o.customer.displayName ?? "", phone: o.customer.phone }, items: o.items.map(i => ({ name: i.itemNameSnapshot, quantity: i.quantity, notes: i.notes ?? "", total: i.totalMinor / 100 })) }));
+  const rows = await db.order.findMany({ where: { businessId }, orderBy: { createdAt: "desc" }, take: 60, include: { items: true, history: { select: { newStatus: true, createdAt: true, reason: true }, orderBy: { createdAt: "asc" } }, customer: { select: { displayName: true, phone: true } }, deliveryDetails: { select: { addressText: true, recipientName: true, latitude: true, longitude: true } } } });
+  return rows.map(o => ({ id: o.id, number: o.orderNumber, status: o.status, fulfillment: o.fulfillmentType, total: o.totalMinor / 100, currency: o.currencyCode, createdAt: o.createdAt, conversationId: o.conversationId, note: o.customerNotes ?? "", subtotal: o.subtotalMinor / 100, deliveryFee: o.deliveryFeeMinor / 100, history: o.history.map(h => ({ status: h.newStatus, at: h.createdAt, reason: h.reason ?? "" })), address: [o.deliveryDetails?.addressText, o.deliveryDetails?.latitude != null ? `https://maps.google.com/?q=${o.deliveryDetails.latitude},${o.deliveryDetails.longitude}` : ""].filter(Boolean).join("\n"), customer: { name: o.deliveryDetails?.recipientName || o.customer.displayName || "", phone: o.customer.phone }, items: o.items.map(i => ({ name: i.itemNameSnapshot, quantity: i.quantity, notes: i.notes ?? "", total: i.totalMinor / 100 })) }));
 }
 
 const NEXT: Record<string, OrderStatus[]> = {
