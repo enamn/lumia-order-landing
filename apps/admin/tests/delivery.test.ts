@@ -5,7 +5,7 @@ import { encryptSecret } from "../src/server/crypto";
 import { createBusiness } from "../src/modules/business/service";
 import { recordInbound } from "../src/modules/messages/inbound";
 import { setAiSettings } from "../src/modules/messages/ai";
-import { quoteDelivery, emirateFrom, distanceKm, type DeliveryRules, type BranchPoint } from "../src/modules/orders/delivery";
+import { quoteDelivery, emirateFrom, distanceKm, branchFromText, looksLikeAddress, type DeliveryRules, type BranchPoint } from "../src/modules/orders/delivery";
 import { draftKey, resolveDraft, summaryText, isComplete, type MenuEntry } from "../src/modules/orders/draft";
 const enabled = process.env.RUN_DB_TESTS === "true";
 
@@ -14,6 +14,24 @@ const rules = (over: Partial<DeliveryRules> = {}): DeliveryRules => ({ status: "
   ranges: [{ from: "0", to: "5", fee: "5", min: "30", eta: "35", on: true }, { from: "5", to: "10", fee: "10", min: "40", eta: "50", on: true }, { from: "10", to: "", fee: "15", min: "50", eta: "70", on: false }], ...over });
 const branches: BranchPoint[] = [{ id: "b1", name: "Sharjah", active: true, latitude: 25.3302, longitude: 55.3901 }, { id: "b2", name: "Ajman", active: true, latitude: 25.4052, longitude: 55.4467 }, { id: "b3", name: "No pin", active: true, latitude: null, longitude: null }];
 const place = (emirate: string | null, area = "", pin?: { latitude: number; longitude: number }) => ({ emirate, area, ...(pin ?? {}) });
+
+describe("finding the branch without a location pin", () => {
+  it("reads the restaurant's own area rules from what the customer wrote, English or Arabic", () => {
+    expect(branchFromText(rules(), branches, "I am in Al Majaz, Sharjah")).toBe("b1"); // a specific area rule that names a branch
+    expect(branchFromText(rules(), branches, "Nuaimiya Ajman building 4")).toBe("b2"); // only the emirate matched: its "All areas" rule names the branch
+    expect(branchFromText(rules(), branches, "في عجمان")).toBe("b2");
+    expect(branchFromText(rules(), branches, "somewhere in Sharjah")).toBeNull(); // that rule names no branch
+    expect(branchFromText(rules(), branches, "hello")).toBeNull();
+    expect(branchFromText(rules({ method: "distance" }), branches, "Al Majaz")).toBeNull(); // distance pricing needs a pin
+    expect(branchFromText(rules({ method: "free" }), branches, "Sharjah")).toBe("b1"); // free delivery names one branch
+    expect(branchFromText(rules(), branches.map(b => (b.id === "b1" ? { ...b, active: false } : b)), "Al Majaz")).toBeNull(); // a switched-off branch is never chosen
+    expect(branchFromText(null, branches, "Al Majaz")).toBeNull();
+  });
+  it("tells an address from small talk before it is looked up on a map", () => {
+    for (const t of ["Opus tower 804 Business Bay", "Villa 12 Al Majaz", "برج الخليج شارع 5", "behind the mall"]) expect(looksLikeAddress(t)).toBe(true);
+    for (const t of ["hello", "yes please", "2 burgers", "نعم", "ok thanks"]) expect(looksLikeAddress(t)).toBe(false);
+  });
+});
 
 describe("delivery fee rules", () => {
   it("finds the emirate in English or Arabic text", () => {
@@ -100,6 +118,7 @@ describe("address labels", () => {
 describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by location", () => {
   const suffix = crypto.randomUUID().slice(0, 8); const PNID = `5590${Date.now().toString().slice(-9)}`;
   let owner: string, biz: string, branchId: string; let calls: { path: string; body: any }[]; let ai: any; let n = 0; let out = 0;
+  let geoFound: any = { found: false }, reviewOn = false, rejectKind = false; // what the map lookup finds, whether the review template is accepted, whether WhatsApp refuses interactive messages
   const inbound = (extra: object, from = "971504074115", name = "Sara Khalid") => recordInbound({ messages: [{ phoneNumberId: PNID, messageId: `wamid.${suffix}.${++n}`, senderId: from, timestamp: String(Math.floor(Date.now() / 1000)), senderName: name, ...extra } as any] });
   const say = (text: string, from?: string) => inbound({ type: "text", textBody: text }, from);
   const sent = () => calls.filter(c => c.path === "/internal/whatsapp/send").map(c => c.body.text as string);
@@ -113,6 +132,9 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
     vi.stubGlobal("fetch", vi.fn(async (url: string, init: RequestInit) => {
       const path = new URL(url).pathname; const body = JSON.parse(String(init.body)); calls.push({ path, body });
       if (path === "/internal/ai/reply") { if (ai.__fail) return Response.json({ error: { code: "AI_FAILED" } }, { status: 502 }); const ids = (nm: string) => body.menu.find((m: any) => m.name === nm)?.id; return Response.json(ai.__make(ids)); }
+      if (path === "/internal/geo/search") return Response.json(geoFound);
+      if (path === "/internal/whatsapp/order-review") return reviewOn ? Response.json({ messageId: `wamid.rev.${suffix}.${++out}` }) : Response.json({ error: { code: "WHATSAPP_SEND_FAILED" } }, { status: 502 });
+      if (path === "/internal/whatsapp/send" && body.kind && rejectKind) return Response.json({ error: { code: "INVALID_REQUEST" } }, { status: 400 });
       if (path === "/internal/geo/reverse") return Response.json({ emirate: "Sharjah", area: "Al Majaz", street: "Al Majaz St", place: "", formatted: "Al Majaz St, Al Majaz, Sharjah" });
       return Response.json({ messageId: `wamid.out.${suffix}.${++out}` });
     }));
@@ -303,5 +325,82 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
       const conv = await db.conversation.findFirstOrThrow({ where: { customer: { phone: "+" + w } } });
       expect(conv.branchId).toBe(second); expect(conv.draftOrder).toBeNull(); expect(lastAi().menu.map((m: any) => m.name)).toEqual(["Ajman Special"]);
     } finally { if (prior) await db.subscription.update({ where: { id: prior.id }, data: { plan: prior.plan, billing: prior.billing, status: prior.status, currentPeriodStart: prior.currentPeriodStart, currentPeriodEnd: prior.currentPeriodEnd } }); else await db.subscription.delete({ where: { id: sub.id } }); }
+  });
+  it("sends the approved review template to the customer when the order is placed (the plain message is only the fallback)", async () => {
+    await setRules({ method: "area" }); reviewOn = true; const who = "971500000921";
+    try {
+      await turn(() => say("delivery order: 2 classic", who), id => draft(id, { address: "Al Majaz 2, flat 8", emirate: "Sharjah", area: "Al Majaz" }));
+      const r = await turn(() => say("yes", who), id => draft(id, { address: "Al Majaz 2, flat 8", emirate: "Sharjah", area: "Al Majaz", confirmed: true }));
+      const review = calls.find(c => c.path === "/internal/whatsapp/order-review")!.body;
+      expect(review).toMatchObject({ to: "+" + who, customerName: "Sara Khalid", restaurantName: "Delivery Burgers", items: "2× Classic", total: "66 AED" }); expect(review.orderNumber).toMatch(/^#\d+$/);
+      expect(r).toBe(""); // the template replaced the plain "order received" message
+      const stored = await db.message.findFirstOrThrow({ where: { externalMessageId: { startsWith: "wamid.rev." }, conversation: { customer: { phone: "+" + who } } } });
+      expect(stored.textContent).toContain("received"); expect(stored.senderType).toBe("AI"); // the inbox still shows what the customer was told
+    } finally { reviewOn = false; }
+  });
+  it("asks for the location with a one-tap Send location button, and sends plain text when WhatsApp refuses the button", async () => {
+    await setRules({ method: "distance" });
+    const ask = (id: (n: string) => string) => ({ ...draft(id), reply: "Please share your location", askLocation: true });
+    await turn(() => say("delivery order: 2 classic", "971500000922"), ask);
+    expect(calls.find(c => c.path === "/internal/whatsapp/send")!.body).toMatchObject({ kind: "location_request", text: expect.stringContaining("share your location") });
+    rejectKind = true;
+    try {
+      const r = await turn(() => say("delivery order: 2 classic", "971500000923"), ask);
+      const sends = calls.filter(c => c.path === "/internal/whatsapp/send"); expect(sends).toHaveLength(2); expect(sends[0]!.body.kind).toBe("location_request"); expect(sends[1]!.body.kind).toBeUndefined(); expect(r).toContain("share your location");
+    } finally { rejectKind = false; }
+    // Once a pin is known the button is not offered again.
+    await turn(() => inbound({ type: "location", location: { latitude: 25.3402, longitude: 55.3901 } }, "971500000922"), id => ask(id));
+    expect(calls.filter(c => c.path === "/internal/whatsapp/send").every(c => !c.body.kind)).toBe(true);
+  });
+  describe("Pro with a menu per branch: finding the branch without a pin", () => {
+    const pro = async () => {
+      const prior = await db.subscription.findFirst({ where: { businessId: biz } });
+      const fields = { plan: "pro", billing: "monthly", status: "ACTIVE", currentPeriodStart: new Date(), currentPeriodEnd: new Date(Date.now() + 30 * 86400000), startedAt: new Date() };
+      const sub = prior ? await db.subscription.update({ where: { id: prior.id }, data: fields }) : await db.subscription.create({ data: { businessId: biz, ...fields } });
+      const { createBranchMenu, addItem } = await import("../src/modules/menu/service");
+      let second = (await db.location.findFirst({ where: { businessId: biz, name: "Ajman Branch" } }))?.id;
+      if (!second) { second = (await db.location.create({ data: { businessId: biz, name: "Ajman Branch", code: `AJ2${suffix}`.toUpperCase(), status: "ACTIVE", latitude: 25.4052, longitude: 55.4451 } })).id; await createBranchMenu(owner, biz, second, { copy: false }, "r"); await addItem(owner, biz, { name: "Ajman Special", category: "Grill", price: 35 }, "r", second); }
+      return { second, restore: async () => { if (prior) await db.subscription.update({ where: { id: prior.id }, data: { plan: prior.plan, billing: prior.billing, status: prior.status, currentPeriodStart: prior.currentPeriodStart, currentPeriodEnd: prior.currentPeriodEnd } }); else await db.subscription.delete({ where: { id: sub.id } }); } };
+    };
+    const reply = (extra: object = {}) => ({ intent: "other", language: "en", reply: "Sure", needsHuman: false, order: null, ...extra });
+    const conv = (who: string) => db.conversation.findFirstOrThrow({ where: { customer: { phone: "+" + who } } });
+    it("uses the restaurant's own area rules: naming the area is enough", async () => {
+      const { second, restore } = await pro();
+      try {
+        await setRules({ method: "area", areas: [{ emirate: "Ajman", area: "Nuaimiya", fee: "20", min: "", eta: "60", branch: second, on: true }, { emirate: "Sharjah", area: "Al Majaz", fee: "10", min: "", eta: "30", branch: branchId, on: true }] });
+        const who = "971500000931";
+        await turn(() => say("I am in Nuaimiya, Ajman", who), () => reply());
+        expect(lastAi().branchNeeded).toBeUndefined(); expect(lastAi().menu.map((m: any) => m.name)).toEqual(["Ajman Special"]); expect((await conv(who)).branchId).toBe(second);
+      } finally { await restore(); }
+    });
+    it("looks up a typed address, asks the customer to confirm the place found, then treats it like a shared pin", async () => {
+      const { second, restore } = await pro();
+      try {
+        await setRules({ method: "distance" }); const who = "971500000932";
+        geoFound = { found: true, latitude: 25.4052, longitude: 55.4451, emirate: "Ajman", area: "Nuaimiya", street: "Sheikh Khalifa St", place: "Pearl Tower", formatted: "Pearl Tower, Sheikh Khalifa St, Nuaimiya, Ajman" };
+        await turn(() => say("Pearl tower 804 near the corniche", who), () => reply({ reply: "I found Pearl Tower, is that right?" }));
+        expect(calls.find(c => c.path === "/internal/geo/search")!.body.query).toContain("Pearl tower 804"); expect(lastAi().candidate).toBe("Pearl Tower, Sheikh Khalifa St, Nuaimiya, Ajman");
+        expect((await conv(who)).candidateLocation).toMatchObject({ formatted: "Pearl Tower, Sheikh Khalifa St, Nuaimiya, Ajman" }); expect((await conv(who)).customerLocation).toBeNull(); // nothing is trusted until they confirm
+        await turn(() => say("yes", who), () => reply({ reply: "Great", locationConfirmed: true }));
+        const c = await conv(who); expect(c.candidateLocation).toBeNull(); expect(c.customerLocation).toMatchObject({ latitude: 25.4052, longitude: 55.4451, emirate: "Ajman", area: "Nuaimiya", source: "address" });
+        await turn(() => say("2 specials please", who), () => reply());
+        expect(lastAi().branchNeeded).toBeUndefined(); expect(lastAi().menu.map((m: any) => m.name)).toEqual(["Ajman Special"]); expect((await conv(who)).branchId).toBe(second); // the nearest branch to the confirmed place
+        // Small talk is never looked up.
+        calls = []; await turn(() => say("hello there", "971500000933"), () => reply()); expect(calls.some(c => c.path === "/internal/geo/search")).toBe(false);
+      } finally { geoFound = { found: false }; await restore(); }
+    });
+    it("offers the branches as buttons for pickup and puts the customer's last branch first", async () => {
+      const { second, restore } = await pro();
+      try {
+        await setRules({ method: "distance" }); const who = "971500000934";
+        await turn(() => say("hi", who), () => reply({ reply: "Pickup or delivery?" }));
+        await db.customer.updateMany({ where: { phone: "+" + who }, data: { lastBranchId: second } });
+        await turn(() => say("pickup please", who), () => reply({ reply: "Which branch would you like?" }));
+        expect(lastAi()).toMatchObject({ branchNeeded: true, lastBranch: "Ajman Branch" });
+        const send = calls.filter(c => c.path === "/internal/whatsapp/send").at(-1)!.body;
+        expect(send.kind).toBe("buttons"); expect(send.options.map((o: any) => o.title).sort()).toEqual(["Ajman Branch", expect.any(String)].sort());
+        expect(send.options.length).toBeLessThanOrEqual(3);
+      } finally { await restore(); }
+    });
   });
 });

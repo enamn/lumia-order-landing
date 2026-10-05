@@ -6,12 +6,19 @@ import { createBusiness, setMember } from "../src/modules/business/service";
 import { recordInbound, getMessageStats, getOverview } from "../src/modules/messages/inbound";
 import { setAiSettings } from "../src/modules/messages/ai";
 import { listOrders, setOrderStatus } from "../src/modules/orders/service";
-import { draftKey, resolveDraft, summaryText, type MenuEntry } from "../src/modules/orders/draft";
+import { draftKey, orderItemLines, resolveDraft, summaryText, type MenuEntry } from "../src/modules/orders/draft";
 const enabled = process.env.RUN_DB_TESTS === "true";
 
 describe("order draft rules", () => {
   const menu: MenuEntry[] = [{ index: "1", itemId: "a", name: "Classic", nameAr: "كلاسيك", priceMinor: 2800, available: true }, { index: "2", itemId: "b", name: "Spicy", nameAr: "", priceMinor: 3200, available: false }];
   const opts = { delivery: true, pickup: false, minimumMinor: 0 };
+  it("formats any number of items as generic WhatsApp template lines", () => {
+    expect(orderItemLines([
+      { quantity: 2, name: "Burger Meal", nameAr: "وجبة برجر", notes: "" },
+      { quantity: 1, name: "Fries", nameAr: "بطاطا", notes: "large" },
+      { quantity: 3, name: "Cola", nameAr: "كولا", notes: "" },
+    ], "en")).toBe("2× Burger Meal\n1× Fries (large)\n3× Cola");
+  });
   it("prices from the menu, merges duplicate lines, drops unknown or unavailable items and disallowed types", () => {
     const r = resolveDraft(menu, { items: [{ id: "1", quantity: 1, notes: "" }, { id: "1", quantity: 2, notes: "" }, { id: "2", quantity: 1, notes: "" }, { id: "99", quantity: 5, notes: "" }], fulfillment: "pickup", address: "x" }, opts);
     expect(r).toMatchObject({ subtotalMinor: 8400, removed: ["Spicy"], fulfillment: null, address: "" }); expect(r.lines).toHaveLength(1); expect(r.lines[0]).toMatchObject({ quantity: 3, unitMinor: 2800, totalMinor: 8400 });
@@ -37,6 +44,7 @@ describe.skipIf(!enabled)("taking orders over WhatsApp", () => {
     vi.stubGlobal("fetch", vi.fn(async (url: string, init: RequestInit) => {
       const path = new URL(url).pathname; const body = JSON.parse(String(init.body)); calls.push({ path, body });
       if (path === "/internal/ai/reply") { const ids = (nm: string) => body.menu.find((m: any) => m.name === nm)?.id; return Response.json(ai.__make(ids)); }
+      if (path === "/internal/whatsapp/order-review") return Response.json({ error: { code: "WHATSAPP_SEND_FAILED" } }, { status: 502 }); // template not available here: the plain message goes out
       return Response.json({ messageId: `wamid.out.${suffix}.${++out}` });
     }));
     const mk = (nm: string, i: number) => db.user.create({ data: { name: nm, email: `${nm}-${suffix}@test.invalid`, phoneNumber: `+97150666${String(1000 + i)}`, phoneNumberVerified: true } });

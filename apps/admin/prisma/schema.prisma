@@ -371,6 +371,8 @@ model Customer {
   business Business @relation(fields: [businessId], references: [id])
   displayName String?
   phone String
+  // The branch of their last order (Pro with a menu per branch): offered first next time.
+  lastBranchId String?
   email String?
   preferredLanguage String?
   createdAt DateTime @default(now())
@@ -409,6 +411,8 @@ model Conversation {
   customerLocation Json?
   // Pro with a menu per branch: the branch this chat is being served by (set from the shared location pin, or chosen by the customer).
   branchId String?
+  // A place looked up from an address the customer typed, waiting for them to confirm it (then it becomes customerLocation).
+  candidateLocation Json?
   lastMessageAt DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -28,12 +28,30 @@ const ERRORS: Record<string, [string, string, number]> = {
 };
 
 // Sends one text through lumia-order-api from the restaurant's own number; returns Meta's message ID. Used for staff and AI replies.
-export async function deliverText(account: { phoneNumberId: string | null; accessTokenEncrypted: string | null }, to: string, text: string): Promise<string> {
+// A message that is more than text: the reply with a one-tap "Send location" button, reply buttons or a list (to pick a branch). If WhatsApp refuses the
+// interactive form (too long, not supported), the plain text goes out instead, so the customer always gets the answer.
+export interface Interactive { kind: "location_request" | "buttons" | "list"; options?: { id: string; title: string }[]; listButton?: string }
+export async function deliverText(account: { phoneNumberId: string | null; accessTokenEncrypted: string | null }, to: string, text: string, interactive?: Interactive): Promise<string> {
   if (!account.phoneNumberId || !account.accessTokenEncrypted) throw new AppError("WHATSAPP_NOT_CONNECTED", "Connect WhatsApp before replying to customers.", 409);
   if (linkTestMode() && account.phoneNumberId.startsWith("test-")) return `test.${crypto.randomUUID()}`;
-  const r = await lumiaApi<{ messageId: string }>("/internal/whatsapp/send", { accessToken: decryptSecret(account.accessTokenEncrypted), phoneNumberId: account.phoneNumberId, to, text }, 15000);
-  if (!r.ok) { const known = r.code ? ERRORS[r.code] : undefined; throw known ? new AppError(...known) : new AppError("SEND_FAILED", "We couldn’t send your reply. Please try again.", 502); }
-  return r.data.messageId;
+  const base = { accessToken: decryptSecret(account.accessTokenEncrypted), phoneNumberId: account.phoneNumberId, to, text };
+  for (const extra of interactive ? [interactive, undefined] : [undefined]) {
+    const r = await lumiaApi<{ messageId: string }>("/internal/whatsapp/send", { ...base, ...(extra ?? {}) }, 15000);
+    if (r.ok) return r.data.messageId;
+    const known = r.code ? ERRORS[r.code] : undefined;
+    if (extra && !known) continue; // the interactive form was refused: try the plain text
+    throw known ? new AppError(...known) : new AppError("SEND_FAILED", "We couldn’t send your reply. Please try again.", 502);
+  }
+  throw new AppError("SEND_FAILED", "We couldn’t send your reply. Please try again.", 502);
+}
+
+// The approved "review your order" template (customer name, order number, restaurant, items, total). Never throws: null means it was not sent and the caller sends the plain message.
+export async function deliverOrderReview(account: { phoneNumberId: string | null; accessTokenEncrypted: string | null }, to: string, review: { customerName: string; orderNumber: string; restaurantName: string; items: string; total: string }): Promise<string | null> {
+  if (!account.phoneNumberId || !account.accessTokenEncrypted) return null;
+  if (linkTestMode() && account.phoneNumberId.startsWith("test-")) return `test.${crypto.randomUUID()}`;
+  const r = await lumiaApi<{ messageId: string }>("/internal/whatsapp/order-review", { accessToken: decryptSecret(account.accessTokenEncrypted), phoneNumberId: account.phoneNumberId, to, ...review }, 15000);
+  if (!r.ok) console.error(JSON.stringify({ level: "warn", code: "ORDER_REVIEW_TEMPLATE_NOT_SENT", status: r.status, apiCode: r.code }));
+  return r.ok ? r.data.messageId : null;
 }
 
 export async function sendReply(userId: string, businessId: string, conversationId: string, input: unknown, requestId: string) {

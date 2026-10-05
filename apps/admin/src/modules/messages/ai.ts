@@ -4,10 +4,10 @@ import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
 import { lumiaApi } from "@/server/lumia-api";
 import { decryptSecret } from "@/server/crypto";
-import { deliverText } from "./reply";
+import { deliverOrderReview, deliverText, type Interactive } from "./reply";
 import { welcomeFor } from "./welcome-text";
-import { DRAFT_TTL_MS, type SavedAddr, draftKey, isComplete, meetsMinimum, placedText, recheckText, removedText, resolveDraft, summaryText, type DeliveryContext, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
-import { nearestBranch, quoteDelivery, type BranchPoint, type DeliveryRules } from "@/modules/orders/delivery";
+import { DRAFT_TTL_MS, type SavedAddr, draftKey, isComplete, meetsMinimum, money, orderItemLines, placedText, recheckText, removedText, resolveDraft, summaryText, type DeliveryContext, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
+import { branchFromText, looksLikeAddress, nearestBranch, quoteDelivery, type BranchPoint, type DeliveryRules } from "@/modules/orders/delivery";
 import { catalogIdFor } from "@/modules/menu/catalog";
 import { canPersonalize, entitlementsFor } from "@/modules/billing/service";
 import { canStartOrder, consume, refund } from "@/modules/billing/usage";
@@ -56,7 +56,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   if (!isOn(agent)) return "skipped";
   const account = await db.whatsAppAccount.findFirst({ where: { businessId: t.businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
   if (!account?.phoneNumberId || !account.accessTokenEncrypted) return "skipped";
-  const conversation = await db.conversation.findFirst({ where: { id: t.conversationId, businessId: t.businessId }, include: { customer: { select: { phone: true, displayName: true } }, business: { select: { name: true } } } });
+  const conversation = await db.conversation.findFirst({ where: { id: t.conversationId, businessId: t.businessId }, include: { customer: { select: { phone: true, displayName: true, lastBranchId: true } }, business: { select: { name: true } } } });
   if (!conversation || conversation.needsHuman === true) return "skipped";
   const now = Date.now();
   const recent = await db.message.findMany({ where: { conversationId: t.conversationId }, orderBy: { createdAt: "desc" }, take: 12, select: { externalMessageId: true, direction: true, senderType: true, messageType: true, textContent: true, createdAt: true } });
@@ -87,6 +87,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   if (perBranch) {
     const near = pin ? nearestBranch(branches, pin) : null;
     if (near && near !== branchId) { branchSwitched = Boolean(branchId); if (branchSwitched) stored = null; branchId = near; }
+    if (!branchId) branchId = branchFromText(rules, branches, latestInbound.textContent); // the restaurant's own area rules name a branch, so no pin is needed
     if (!branchId && branches.length === 1) branchId = branches[0]!.id;
   }
   const branchNeeded = perBranch && !branchId;
@@ -108,11 +109,25 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   // Behind that, a fair-use pool of AI replies so endless chatting cannot run up costs.
   const taken = await consume(t.businessId, "ai", { inProgress: Boolean(stored) });
   if (!taken.ok) return sendNotice(t, BUSY, 3600000);
+  // No pin: an address the customer typed is looked up on the map, and they are asked once to confirm the place that was found.
+  type Candidate = { query: string; latitude: number; longitude: number; emirate: string | null; area: string; street: string; place: string; formatted: string; at: string };
+  let candidate = conversation.candidateLocation as Candidate | null;
+  if (candidate && now - new Date(candidate.at).getTime() > 3600000) candidate = null;
+  const wantsPin = !pin && ((preQuote.status === "needs" && preQuote.need === "pin") || branchNeeded);
+  let newCandidate: Candidate | null = null;
+  if (wantsPin && looksLikeAddress(latestInbound.textContent) && candidate?.query !== latestInbound.textContent) {
+    const g = await lumiaApi<{ found: boolean; latitude: number; longitude: number; emirate: string | null; area: string; street: string; place: string; formatted: string }>("/internal/geo/search", { query: `${latestInbound.textContent.slice(0, 160)}, UAE` }, 6000);
+    if (g.ok && g.data.found) newCandidate = candidate = { query: latestInbound.textContent, latitude: g.data.latitude, longitude: g.data.longitude, emirate: g.data.emirate, area: g.data.area, street: g.data.street, place: g.data.place, formatted: g.data.formatted, at: new Date().toISOString() };
+  }
+  const lastBranch = branchNeeded ? branches.find(b => b.id === conversation.customer.lastBranchId)?.name : undefined;
   const branchList = branches.map((b, i) => ({ id: String(i + 1), realId: b.id, name: b.name }));
-  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; branch?: string; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, delivery: deliveryHint, ...(branchNeeded ? { branchNeeded: true, branches: branchList.map(b => ({ id: b.id, name: b.name })) } : {}), customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
+  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; branch?: string; askLocation?: boolean; locationConfirmed?: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, delivery: deliveryHint, ...(branchNeeded ? { branchNeeded: true, branches: branchList.map(b => ({ id: b.id, name: b.name })), ...(lastBranch ? { lastBranch } : {}) } : {}), ...(wantsPin && candidate ? { candidate: candidate.formatted } : {}), customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
   if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "AI_REPLY_REJECTED", status: r.status, apiCode: r.code })); await refund(t.businessId, "ai", taken); return sendNotice(t, TRY_AGAIN, 300000).catch(() => "skipped" as const); } // an AI failure must never leave the customer in silence
   const lang = r.data.language; const parts = [r.data.reply];
-  const data: { needsHuman?: boolean; draftOrder?: object | null; branchId?: string | null } = {};
+  const data: { needsHuman?: boolean; draftOrder?: object | null; branchId?: string | null; customerLocation?: object; candidateLocation?: object | null } = {};
+  if (newCandidate) data.candidateLocation = newCandidate;
+  // The customer confirmed the place we found for their typed address: from now on it works like a shared pin.
+  if (wantsPin && candidate && r.data.locationConfirmed) { data.customerLocation = { latitude: candidate.latitude, longitude: candidate.longitude, name: "", address: "", at: new Date().toISOString(), emirate: candidate.emirate, area: candidate.area, street: candidate.street, place: candidate.place, formatted: candidate.formatted, source: "address" }; data.candidateLocation = null; }
   if (branchSwitched) data.draftOrder = null as never; // the other branch's menu has different items
   if (perBranch && branchId !== (conversation.branchId ?? null)) data.branchId = branchId;
   // Pickup: the customer named a branch. Nothing is ordered in this turn (there was no menu yet); the next message uses that branch's menu.
@@ -127,6 +142,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const merged = r.data.order && stored ? { ...r.data.order, address: r.data.order.address?.trim() || stored.address, customerName: r.data.order.customerName?.trim() || stored.name || "", ...(sameAddress ? { emirate: r.data.order.emirate ?? stored.emirate ?? pinPlace.emirate, area: r.data.order.area?.trim() || stored.area || "", addressLabel: r.data.order.addressLabel?.trim() || stored.label || "", savedAddress: r.data.order.savedAddress || stored.savedId || "" } : {}) } : r.data.order;
   // The place the shared pin resolved to fills in what the assistant left out.
   const model = merged ? { ...merged, emirate: merged.emirate ?? pinPlace.emirate, area: merged.area?.trim() || pinPlace.area } : merged;
+  let reviewId: string | null = null;
   if (model) {
     const resolved = resolveDraft(menu, model, options, ctx); const key = draftKey(resolved);
     // An order is placed only when the customer confirmed the exact summary we showed them (same items, type and address), and it is complete.
@@ -139,6 +155,9 @@ export async function autoReply(t: { businessId: string; conversationId: string;
         try { order = await createOrderFromDraft({ businessId: t.businessId, conversationId: t.conversationId, customerId: conversation.customerId, customerName: conversation.customer.displayName ?? "", customerPhone: conversation.customer.phone, resolved: { ...resolved, fulfillment: resolved.fulfillment }, branchId: perBranch ? branchId : null }); }
         catch (e) { await refund(t.businessId, "orders", slot); throw e; } // an order that was not saved does not count
         parts.length = 0; parts.push(placedText(order.orderNumber, order.totalMinor, resolved.fulfillment, lang));
+        // The approved "review your order" template goes to the customer instead of the plain message (the plain message is the fallback and the inbox text).
+        reviewId = await deliverOrderReview(account, conversation.customer.phone, { customerName: resolved.name || conversation.customer.displayName || "", orderNumber: `#${order.orderNumber}`, restaurantName: conversation.business.name, items: orderItemLines(resolved.lines, lang), total: `${money(order.totalMinor)} AED` });
+        if (perBranch && branchId) await db.customer.update({ where: { id: conversation.customerId }, data: { lastBranchId: branchId } });
       }
     } else if (!resolved.lines.length) { data.draftOrder = null as never; if (resolved.removed.length) parts.push(removedText(resolved.removed, lang)); }
     else {
@@ -147,7 +166,9 @@ export async function autoReply(t: { businessId: string; conversationId: string;
       // is placed. Show the summary again and ask them to confirm it.
       const showSummary = stored?.shownKey !== key || resolved.removed.length > 0 || model.confirmed;
       // The summary below asks for YES, so the assistant's own words must not say the order is already confirmed; a real question from it is kept.
-      if (model.confirmed || (showSummary && !/[?؟]/.test(parts[0] ?? ""))) parts[0] = recheckText(lang);
+      // Only when the summary really asks for YES (complete order); an order still missing its location keeps the assistant's own question.
+      const asksYes = isComplete(resolved) && meetsMinimum(resolved, options);
+      if (model.confirmed || (showSummary && asksYes && !/[?؟]/.test(parts[0] ?? ""))) parts[0] = recheckText(lang);
       // Show the exact summary whenever it changed, or an item was dropped, so the customer always confirms what we will really place.
       if (showSummary) parts.push(summaryText(resolved, lang, options));
       data.draftOrder = { items: resolved.lines.map(l => ({ itemId: l.itemId, quantity: l.quantity, notes: l.notes })), fulfillment: resolved.fulfillment, address: resolved.address, emirate: resolved.emirate, area: resolved.area, label: resolved.label, savedId: resolved.savedId, name: model.customerName || "", shownKey: key, updatedAt: new Date().toISOString() };
@@ -158,7 +179,13 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const reply = parts.filter(Boolean).join("\n\n");
   // Flags and the saved draft change only together with a reply that was really sent, so a failed delivery never leaves the chat stuck as "needs you".
   if (!reply) { if (Object.keys(data).length) await db.conversation.update({ where: { id: t.conversationId }, data: data as never }); return "skipped"; }
-  const messageId = await deliverText(account, conversation.customer.phone, reply);
+  // One tap to share the location, or buttons / a list to pick a branch, instead of explaining the attach menu.
+  let interactive: Interactive | undefined;
+  if (!reviewId) {
+    if (r.data.askLocation && !pin) interactive = { kind: "location_request" };
+    else if (branchNeeded && !chosen && branchList.length && /[?؟]/.test(r.data.reply)) interactive = branchList.length <= 3 ? { kind: "buttons", options: branchList.map(b => ({ id: b.id, title: b.name })) } : { kind: "list", listButton: lang === "ar" ? "الفروع" : "Branches", options: branchList.slice(0, 10).map(b => ({ id: b.id, title: b.name })) };
+  }
+  const messageId = reviewId ?? await deliverText(account, conversation.customer.phone, reply, interactive);
   const at = new Date();
   await db.$transaction([
     db.message.create({ data: { conversationId: t.conversationId, externalMessageId: messageId, direction: "OUTBOUND", senderType: "AI", messageType: "TEXT", textContent: reply, status: "SENT", createdAt: at } }),

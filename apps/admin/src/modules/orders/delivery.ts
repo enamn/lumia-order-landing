@@ -42,6 +42,18 @@ export function nearestBranch(branches: BranchPoint[], pin: { latitude: number; 
   const ranked = branches.filter(b => b.active && b.latitude !== null && b.longitude !== null).map(b => ({ id: b.id, km: distanceKm(pin, { latitude: b.latitude!, longitude: b.longitude! }) })).sort((x, y) => x.km - y.km);
   return ranked[0]?.id ?? null;
 }
+// The branch the restaurant's own rules assign to a place the customer named in words (no pin needed): an area rule that names a branch, or the branch for free delivery.
+export function branchFromText(rules: DeliveryRules | null, branches: BranchPoint[], text: string): string | null {
+  if (!rules || !text.trim()) return null;
+  const t = norm(text), em = emirateFrom(text), live = (id: string) => (branches.some(b => b.id === id && b.active) ? id : null);
+  if (rules.method === "area") for (const r of rules.areas) { const a = norm(r.area); if (r.on && r.branch && a && !allAreas(r.area) && t.includes(a) && (!em || r.emirate === em) && live(r.branch)) return r.branch; }
+  // "All areas of <emirate>" rules, when the customer only named the emirate.
+  if (rules.method === "area" && em) for (const r of rules.areas) if (r.on && r.branch && allAreas(r.area) && r.emirate === em && live(r.branch)) return r.branch;
+  if (rules.method === "free" && em && rules.freeEm.includes(em) && rules.freeBranch) return live(rules.freeBranch);
+  return null;
+}
+// Is this message likely an address worth looking up on a map? (a place word such as tower, street or villa, and not a one-word reply; a quantity like "2 burgers" is not an address)
+export const looksLikeAddress = (text: string) => text.trim().length >= 8 && text.trim().split(/\s+/).length >= 2 && /tower|building|bldg|street|\bst\b|road|villa|flat|apt|apartment|near|behind|opposite|برج|شارع|مبنى|بناية|فيلا|شقة|قرب|بجانب|منطقة|حي|\bal\s+\w+/i.test(text);
 const firstBranch = (branches: BranchPoint[]) => branches.find(b => b.active)?.id ?? null;
 const hasPin = (c: CustomerPlace): c is CustomerPlace & { latitude: number; longitude: number } => typeof c.latitude === "number" && typeof c.longitude === "number";
 
