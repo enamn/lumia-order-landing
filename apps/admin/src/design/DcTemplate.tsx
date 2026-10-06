@@ -613,23 +613,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                         </Fragment>
                       ))}
                     </div>
-                    <div style={S("display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px")}>
-                      <span style={S("width:32px;height:32px;border-radius:9px;flex:none;overflow:hidden;background:linear-gradient(135deg,#FF5577,#C93DFF);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center")}>
-                        {vm.logo && (
-                          <>
-                          {vm.logoImg}
-                          </>
-                        )}
-                        {vm.noLogo && (
-                          <>
-                          {vm.initials}
-                          </>
-                        )}
-                      </span>
-                      <span style={S("font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0")}>
-                        {vm.nameOrDefault}
-                      </span>
-                    </div>
+                    {vm.accountNode}
                   </div>
                 </aside>
                 </>
@@ -662,18 +646,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                           </Fragment>
                         ))}
                       </div>
-                      <span style={S("width:32px;height:32px;border-radius:9px;flex:none;overflow:hidden;background:linear-gradient(135deg,#FF5577,#C93DFF);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center")}>
-                        {vm.logo && (
-                          <>
-                          {vm.logoImg}
-                          </>
-                        )}
-                        {vm.noLogo && (
-                          <>
-                          {vm.initials}
-                          </>
-                        )}
-                      </span>
+                      {vm.accountNodeMobile}
                     </div>
                     <nav style={S("display:flex;gap:20px;overflow-x:auto;padding:0 16px")}>
                       {(vm.nav as any[]).map((n: any, __i: number) => (

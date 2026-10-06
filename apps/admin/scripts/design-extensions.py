@@ -38,6 +38,10 @@ a = s.index('+ {{ t.addAr }}'); b = s.rfind('onClick="{{ noop }}"', 0, a); s = s
 rep('Receives, accepts and prints your orders. Every subscription includes at least one terminal.', 'The Lumia Order terminal for your restaurant. Orders are handled from your dashboard. Every subscription includes at least one terminal.')
 # 6c campaigns: show why a send failed (template not approved, plan limit, code already running) above the send button
 rep('            <button type="submit" disabled="{{ cp.cant }}"', '            <sc-if value="{{ cp.err }}" hint-placeholder-val="{{ false }}"><div role="alert" style="' + ERR + '">{{ cp.err }}</div></sc-if>\n            <button type="submit" disabled="{{ cp.cant }}"')
+# 6d the restaurant chip (bottom of the sidebar, avatar in the phone header) opens a menu with Settings, Billing and Log out: React draws it (AccountMenu), and the paid-plan banner is replaced by a plan badge on the chip
+import re as _re2
+s, _n = _re2.subn(r'<div style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px">\s*<span style="width:32px.*?\{\{ nameOrDefault \}\}</span>\s*</div>', '{{ accountNode }}', s, flags=_re2.S); assert _n == 1, _n
+s, _n = _re2.subn(r'<span style="width:32px;height:32px;border-radius:9px;flex:none;overflow:hidden;[^"]*">\s*<sc-if value="\{\{ logo \}\}"[^>]*>\{\{ logoImg \}\}</sc-if>\s*<sc-if value="\{\{ noLogo \}\}"[^>]*>\{\{ initials \}\}</sc-if>\s*</span>(?=\s*</div>\s*<nav style="display:flex;gap:20px)', '{{ accountNodeMobile }}', s, flags=_re2.S); assert _n == 1, _n
 # 6b WhatsApp catalog counts
 for old, new in [(">37</span>", ">{{ waCatTotal }}</span>"), (">products · 5 categories</span>", ">products · {{ waCatCount }} categories</span>"), ("by 37 products from", "by {{ waCatTotal }} products from")]: s = s.replace(old, new)
 # 6c real legal links

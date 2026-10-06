@@ -9,6 +9,7 @@ import { DcTemplate } from "./DcTemplate";
 import { PageLoader, ContentLoader } from "@/components/lumia-loader";
 import { SettingsLoader, prefetchSettings } from "./SettingsApp";
 import { MenuScope, type Scope } from "./MenuScope";
+import { AccountMenu } from "./AccountMenu";
 import { BillingPage } from "./BillingPage";
 import { mountEmbeddedCheckout } from "@/lib/stripe-embed";
 import { authClient } from "@/lib/auth-client";
@@ -283,7 +284,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     return {
       sub: {
         panel: false, done: s.sub === "done", paying, stepPlans: s.planStep !== "pay", stepPay: s.planStep === "pay", stepLabel: s.planStep === "pay" ? "Step 2 of 2" : "Step 1 of 2", pad: narrow ? "24px 16px 32px" : "40px 32px 48px",
-        onTrial: d !== null && !active, isPaid: active, paidName: paidPlan?.name ?? "", paidBg: pastDue ? "#FFF1DC" : "#E4F4EC", paidFg: pastDue ? "#8A4B00" : "#16704A",
+        onTrial: d !== null && !active, isPaid: false, /* the plan is shown as a badge on the account chip; the renewal date is in Billing */ paidName: paidPlan?.name ?? "", paidBg: pastDue ? "#FFF1DC" : "#E4F4EC", paidFg: pastDue ? "#8A4B00" : "#16704A",
         renewLine: pastDue ? A("Payment failed · update your card", "فشل الدفع · حدّث بطاقتك") : d?.cancelAtPeriodEnd && periodEnd ? A(`Ends ${fd(periodEnd)}`, `ينتهي في ${fd(periodEnd)}`) : periodEnd ? A(`Renews ${fd(periodEnd)}`, `يتجدد في ${fd(periodEnd)}`) : "",
         canPortal: active && !!d?.canManage, portalLabel: pastDue ? A("Update payment", "تحديث الدفع") : A("Manage billing", "إدارة الفوترة"),
         tag: A("Free trial", "تجربة مجانية"), choose: A("Choose a plan", "اختر باقة"), leftLabel: left === 1 ? A("1 day left", "متبقٍ يوم واحد") : A(`${left} days left`, `متبقٍ ${left} يوماً`), barW: Math.round(left / 14 * 100) + "%",
@@ -307,6 +308,19 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       subPortal: () => { history.replaceState(null, "", `/dashboard?page=billing&businessId=${this.state.businessId}`); this.setState({ page: "Billing" }); }, onAddr: (e: any) => this.setState({ addr: e.target.value }), termInc: () => this.setState({ termQty: Math.min(10, qty + 1) }), termDec: () => this.setState({ termQty: Math.max(1, qty - 1) }),
       pagePlans: s.page === "Plans",
     };
+  }
+  // The restaurant chip: plan badge, and a menu with Settings, Billing and Log out.
+  accountMenu(variant: "sidebar" | "header", s: any, name: string, initials: string, ar: boolean) {
+    const d = s.subData, live = d && (d.status === "ACTIVE" || d.status === "PAST_DUE"), due = d?.status === "PAST_DUE";
+    const planName: string | null = live ? SUB_PLANS.find(p => p.id === d.plan)?.name ?? null : null;
+    const bid = s.businessId, A = (en: string, arT: string) => (ar ? arT : en);
+    const items = [
+      { key: "settings", icon: "settings", label: A("Settings", "الإعدادات"), onPick: () => { this.setState({ page: "Settings" }); history.replaceState(null, "", `/dashboard?page=settings&businessId=${bid}`); } },
+      { key: "billing", icon: "billing", label: A("Billing", "الفوترة"), onPick: () => { history.replaceState(null, "", `/dashboard?page=billing&businessId=${bid}`); this.setState({ page: "Billing" }); } },
+      { key: "logout", icon: "logout", label: A("Log out", "تسجيل الخروج"), danger: true, onPick: () => { this.signOut(); } },
+    ];
+    const avatar = s.logo ? <img src={s.logo} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} /> : initials;
+    return <AccountMenu variant={variant} name={name} avatar={avatar} badge={due ? A("Payment due", "الدفع متأخر") : planName} badgeKind={due ? "due" : d?.plan === "pro" ? "pro" : d?.plan === "plus" ? "plus" : "starter"} active={s.page === "Settings" || s.page === "Billing"} ar={ar} items={items} />;
   }
   // Customers and Campaigns pages: real customers, saved addresses and campaigns; the sending itself is done by the server.
   custVals(s: any) {
@@ -620,7 +634,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       .map((r, i) => ({ ...r, bt: i ? "1px solid #F3EEF1" : "0", tagBg: r.tag === "New" ? "#E4F4EC" : "#FFF4E5", tagFg: r.tag === "New" ? "#16704A" : "#8A4B00" }));
     const dlg = s.dlg.open ? { open: true, title: s.dlg.title, hint: s.dlg.hint, error: s.dlg.error, busy: s.dlg.busy, op: s.dlg.busy ? 0.6 : 1, saveLabel: s.dlg.busy ? "Saving…" : s.dlg.saveLabel, cancel: this.closeDialog, submit: this.submitDialog,
       fields: s.dlg.fields.map((f: any, i: number) => ({ label: f.label, placeholder: f.placeholder, dir: f.dir ?? "ltr", mode: f.mode ?? "text", focus: i === 0, value: s.dlg.values[f.key] ?? "", onChange: (e: any) => this.setState((st: any) => ({ dlg: { ...st.dlg, values: { ...st.dlg.values, [f.key]: e.target.value } } })) })) } : { open: false, fields: [] };
-    const NAV: [string, string][] = [["Overview", "M3 10.5 10 4l7 6.5M5 9v7.5h10V9"], ["Orders", "M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0"], ["Menu", "M5 4.5h10M5 10h10M5 15.5h6"], ["WhatsApp", "M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z"], ["Customers", "M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5"], ["Campaigns", "M4 8v4h2.5L12 15.5v-11L6.5 8zM15 7.5a3.5 3.5 0 0 1 0 5"], ["Settings", "M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4"], ["Sign out", "M8 4.5H5.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H8M12.5 7l3 3-3 3M15.5 10H8.5"]];
+    const NAV: [string, string][] = [["Overview", "M3 10.5 10 4l7 6.5M5 9v7.5h10V9"], ["Orders", "M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0"], ["Menu", "M5 4.5h10M5 10h10M5 15.5h6"], ["WhatsApp", "M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z"], ["Customers", "M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5"], ["Campaigns", "M4 8v4h2.5L12 15.5v-11L6.5 8zM15 7.5a3.5 3.5 0 0 1 0 5"]];
     const noop = (e?: any) => e?.preventDefault?.();
     return {
       termsUrl: `${p.marketingUrl}/terms`, privacyUrl: `${p.marketingUrl}/privacy`,
@@ -644,6 +658,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       // name
       nameRef: this.nameRef, name: s.name, nameErr: s.nameErr, nameErrText: s.nameFail || "Enter your restaurant name to continue", nf: ring(s.nameErr, s.nameFocused, false), onName: (e: any) => this.setState({ name: e.target.value, nameErr: false, nameFail: "" }),
       nameFocus: () => this.setState({ nameFocused: true }), nameBlur: () => this.setState({ nameFocused: false }), submitName: this.submitName,
+      accountNode: this.accountMenu("sidebar", s, nm, initials, ar), accountNodeMobile: this.accountMenu("header", s, nm, initials, ar),
       logo: s.logo, noLogo: !s.logo, logoImg: s.logo ? ce("img", { key: "lg", src: s.logo, alt: "", style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } }) : null, logoBtn: s.logo ? "Change logo" : "Upload logo", logoTile: { bd: s.logo ? "transparent" : "#E3CBD4" }, onLogo: this.onLogo, initials, nameOrDefault: nm,
       // menu upload / processing
       dz: s.drag ? { bd: "#FF5577", bg: "#FFF5F8" } : { bd: "#E3CBD4", bg: "#FFFBFC" }, menuErr: s.menuErr,
