@@ -98,6 +98,15 @@ describe.skipIf(!enabled)("campaigns", () => {
     expect(await db.campaign.count({ where: { businessId: biz } })).toBe(campaigns); expect((await usageSummary(biz)).campaigns.used).toBe(before);
     expect((await db.discountCode.findFirstOrThrow({ where: { businessId: biz, code } })).active).toBe(false); // the code is not live for an offer nobody received
   });
+  it("when the messaging service cannot be reached, the owner is told that (not that the image is bad) and nothing is left behind", async () => {
+    const before = (await usageSummary(biz)).campaigns.used, count = await db.campaign.count({ where: { businessId: biz } }); const real = globalThis.fetch;
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("connect ECONNREFUSED"); }));
+    try {
+      await expect(send({ image: { name: "o.png", mimeType: "image/png", data: Buffer.from("89504e470d0a1a0a", "hex").toString("base64") } })).rejects.toMatchObject({ code: "API_UNAVAILABLE", message: expect.stringContaining("couldn’t reach the Lumia messaging service") });
+      await expect(send()).rejects.toMatchObject({ code: "API_UNAVAILABLE" });
+    } finally { vi.stubGlobal("fetch", real); }
+    expect(await db.campaign.count({ where: { businessId: biz } })).toBe(count); expect((await usageSummary(biz)).campaigns.used).toBe(before);
+  });
   it("delivery updates fill in Sent / Read, never go backwards, and failures after delivery are ignored", async () => {
     const r = await send(); const recs = await db.campaignRecipient.findMany({ where: { campaignId: r.id } }); const at = String(Math.floor(Date.now() / 1000));
     const [a, b, c] = recs;

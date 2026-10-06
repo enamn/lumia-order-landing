@@ -33,8 +33,11 @@ const REASONS: Record<string, [string, number]> = {
   WHATSAPP_TOKEN_INVALID: ["The WhatsApp connection needs to be reconnected before you can send offers.", 409],
   RATE_LIMITED: ["WhatsApp is limiting how fast messages can be sent right now. Please try again in a little while.", 429],
   MEDIA_UPLOAD_FAILED: ["We couldn’t upload the offer image. Try a different image.", 502],
+  API_UNAVAILABLE: ["We couldn’t reach the Lumia messaging service, so nothing was sent. Please try again in a moment.", 503],
 };
-const ABORT = new Set(["TEMPLATE_UNAVAILABLE", "WHATSAPP_TOKEN_INVALID", "RATE_LIMITED"]);
+const ABORT = new Set(["TEMPLATE_UNAVAILABLE", "WHATSAPP_TOKEN_INVALID", "RATE_LIMITED", "API_UNAVAILABLE"]);
+// A failed call with no error code at all means the messaging service could not be reached (not that WhatsApp refused something).
+const codeOf = (r: { status: number; code?: string | undefined }) => r.code ?? (r.status === 0 || r.status >= 500 ? "API_UNAVAILABLE" : undefined);
 
 export async function listCampaigns(userId: string, businessId: string) {
   await authorize(userId, businessId);
@@ -64,7 +67,7 @@ export async function sendCampaign(userId: string, businessId: string, input: un
     if (ids.campaignId) { await db.campaignRecipient.deleteMany({ where: { campaignId: ids.campaignId } }); await db.campaign.deleteMany({ where: { id: ids.campaignId } }); }
     if (ids.codeId) await db.discountCode.updateMany({ where: { id: ids.codeId }, data: { active: false, campaignId: null } });
   };
-  let codeRow: { id: string } | null = null, campaignId = "";
+  let codeRow: { id: string } | null = null, campaignId = "", cleaned = false;
   try {
     const until = code ? new Date(now.getTime() + code.days * 86_400_000) : null;
     if (code && until) {
@@ -83,7 +86,7 @@ export async function sendCampaign(userId: string, businessId: string, input: un
     let mediaId: string | undefined;
     if (body.image) {
       const up = await lumiaApi<{ mediaId: string }>("/internal/whatsapp/media", { accessToken: token, phoneNumberId: account.phoneNumberId, mimeType: body.image.mimeType, data: body.image.data }, 45_000);
-      if (!up.ok) { const [msg, status] = REASONS[up.code ?? ""] ?? REASONS.MEDIA_UPLOAD_FAILED!; throw new AppError(up.code ?? "MEDIA_UPLOAD_FAILED", msg, status); }
+      if (!up.ok) { const c = codeOf(up) ?? "MEDIA_UPLOAD_FAILED"; const [msg, status] = REASONS[c] ?? REASONS.MEDIA_UPLOAD_FAILED!; throw new AppError(c, msg, status); }
       mediaId = up.data.mediaId; await db.campaign.update({ where: { id: campaignId }, data: { imageMediaId: mediaId } });
     }
 
@@ -98,19 +101,20 @@ export async function sendCampaign(userId: string, businessId: string, input: un
         const personal = body.message.replace(/\{name\}/g, firstName(c.name, c.phone, ar));
         const r = await lumiaApi<{ messageId: string }>("/internal/whatsapp/campaign", { accessToken: token, phoneNumberId: account.phoneNumberId!, to: rec.phone, ...(mediaId ? { mediaId } : {}), message: personal, offer: line, restaurantName: restaurant }, 30_000);
         if (r.ok) { sent++; await db.campaignRecipient.update({ where: { id: rec.id }, data: { status: "SENT", messageId: r.data.messageId, sentAt: new Date() } }); }
-        else { if (r.code && ABORT.has(r.code)) aborted = r.code; await db.campaignRecipient.update({ where: { id: rec.id }, data: { status: "FAILED", error: r.code ?? `status ${r.status}` } }); }
+        else { const c = codeOf(r); if (c && ABORT.has(c)) aborted = c; await db.campaignRecipient.update({ where: { id: rec.id }, data: { status: "FAILED", error: c ?? `status ${r.status}` } }); }
       }
     };
     await Promise.all(Array.from({ length: Math.min(PARALLEL, recipients.length) }, worker));
     if (aborted) await db.campaignRecipient.updateMany({ where: { campaignId, status: "PENDING" }, data: { status: "FAILED", error: aborted } });
-    if (aborted && !sent) { const [msg, status] = REASONS[aborted]!; await undo({ campaignId, ...(codeRow ? { codeId: codeRow.id } : {}) }); await refundMany(businessId, "campaigns", picked.length, room.periodStart); throw new AppError(aborted, msg, status); }
+    if (aborted && !sent) { const [msg, status] = REASONS[aborted]!; await undo({ campaignId, ...(codeRow ? { codeId: codeRow.id } : {}) }); await refundMany(businessId, "campaigns", picked.length, room.periodStart); cleaned = true; throw new AppError(aborted, msg, status); }
     await refreshCounts(campaignId);
     const done = await db.campaign.update({ where: { id: campaignId }, data: { status: aborted ? "PARTIAL" : "DONE" } });
     if (done.failedCount) await refundMany(businessId, "campaigns", done.failedCount, room.periodStart); // messages that never left do not count against the month
     return { id: done.id, title: done.title, mode: body.mode, recipients: done.recipientCount, hasImage: Boolean(done.imageName), sent: done.sentCount, read: done.readCount, used: done.usedCount, failed: done.failedCount, status: done.status, createdAt: done.createdAt.toISOString() };
   } catch (e) {
-    if (!(e instanceof AppError && ABORT.has(e.code))) { // anything else that went wrong before sending: leave nothing half-made
-      const sentAny = campaignId ? await db.campaignRecipient.count({ where: { campaignId, status: { not: "PENDING" } } }) : 0;
+    // Anything that went wrong before a single message left: leave nothing half-made and give the allowance back.
+    if (!cleaned) {
+      const sentAny = campaignId ? await db.campaignRecipient.count({ where: { campaignId, status: { in: ["SENT", "DELIVERED", "READ"] } } }) : 0;
       if (!sentAny) { await undo({ ...(campaignId ? { campaignId } : {}), ...(codeRow ? { codeId: codeRow.id } : {}) }).catch(() => undefined); await refundMany(businessId, "campaigns", picked.length, room.periodStart).catch(() => undefined); }
     }
     throw e;
