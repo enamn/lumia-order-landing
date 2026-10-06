@@ -30,3 +30,9 @@ export async function listCustomers(userId: string, businessId: string): Promise
   });
   return { customers: rows.sort((a, b) => (b.lastOrderAt ?? "").localeCompare(a.lastOrderAt ?? "")) };
 }
+
+// Who a campaign can reach: everyone with an order that reached the restaurant, in one light query (the Customers page needs the totals, a campaign does not).
+export async function campaignAudience(businessId: string): Promise<{ id: string; name: string; phone: string; optedOut: boolean }[]> {
+  const rows = await db.customer.findMany({ where: { businessId, orders: { some: { status: { not: "AWAITING_CUSTOMER_CONFIRMATION" } } } }, select: { id: true, displayName: true, phone: true, marketingOptOut: true }, take: 5000 });
+  return rows.map(c => ({ id: c.id, name: c.displayName?.trim() || c.phone, phone: c.phone, optedOut: c.marketingOptOut === true }));
+}

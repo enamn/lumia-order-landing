@@ -4,7 +4,7 @@ import { authorize } from "@/server/authorization";
 import { AppError } from "@/server/errors";
 import { lumiaApi } from "@/server/lumia-api";
 import { decryptSecret } from "@/server/crypto";
-import { listCustomers } from "@/modules/customers/service";
+import { campaignAudience, requireCustomers } from "@/modules/customers/service";
 import { allowanceFor, consumeMany, refundMany } from "@/modules/billing/usage";
 import { normalizeCode } from "./codes";
 import { refreshCounts } from "./status";
@@ -41,17 +41,19 @@ const codeOf = (r: { status: number; code?: string | undefined }) => r.code ?? (
 
 export async function listCampaigns(userId: string, businessId: string) {
   await authorize(userId, businessId);
-  const { requireCustomers } = await import("@/modules/customers/service"); await requireCustomers(businessId);
+  await requireCustomers(businessId);
   const rows = await db.campaign.findMany({ where: { businessId }, orderBy: { createdAt: "desc" }, take: 30 });
   return { campaigns: rows.map(c => ({ id: c.id, title: c.title, mode: c.mode === "ALL" ? "all" : "offer", recipients: c.recipientCount, hasImage: Boolean(c.imageName), sent: c.sentCount, read: c.readCount, used: c.usedCount, failed: c.failedCount, status: c.status, createdAt: c.createdAt.toISOString() })) };
 }
 
 export async function sendCampaign(userId: string, businessId: string, input: unknown, now = new Date()) {
+  const t0 = Date.now(), lap: Record<string, number> = {};
   const body = sendSchema.parse(input);
   await authorize(userId, businessId, "business.manage");
   const account = await db.whatsAppAccount.findFirst({ where: { businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
   if (!account?.phoneNumberId || !account.accessTokenEncrypted) throw new AppError("WHATSAPP_NOT_CONNECTED", "Connect WhatsApp before sending offers.", 409);
-  const everyone = (await listCustomers(userId, businessId)).customers.filter(c => !c.optedOut); // customers who said STOP are never included
+  await requireCustomers(businessId);
+  const everyone = (await campaignAudience(businessId)).filter(c => !c.optedOut); // customers who said STOP are never included
   const picked = body.mode === "all" ? everyone : everyone.filter(c => body.customerIds.includes(c.id));
   if (!picked.length) throw new AppError("NO_RECIPIENTS", body.mode === "all" ? "You have no customers to message yet." : "Select at least one customer.", 400);
   if (picked.length > MAX_RECIPIENTS) throw new AppError("TOO_MANY_RECIPIENTS", `You can send an offer to up to ${MAX_RECIPIENTS} customers at a time.`, 400);
@@ -82,6 +84,7 @@ export async function sendCampaign(userId: string, businessId: string, input: un
     if (codeRow) await db.discountCode.update({ where: { id: codeRow.id }, data: { campaignId } });
     await db.campaignRecipient.createMany({ data: picked.map(c => ({ campaignId, businessId, customerId: c.id, phone: c.phone })) });
 
+    lap.prepare = Date.now() - t0;
     const token = decryptSecret(account.accessTokenEncrypted);
     let mediaId: string | undefined;
     if (body.image) {
@@ -90,6 +93,7 @@ export async function sendCampaign(userId: string, businessId: string, input: un
       mediaId = up.data.mediaId; await db.campaign.update({ where: { id: campaignId }, data: { imageMediaId: mediaId } });
     }
 
+    lap.upload = Date.now() - t0 - lap.prepare!;
     const ar = isArabic(body.message), line = offerLine(code, until, ar), restaurant = (await db.business.findUniqueOrThrow({ where: { id: businessId }, select: { name: true } })).name;
     let aborted: string | null = null, next = 0, sent = 0;
     const recipients = await db.campaignRecipient.findMany({ where: { campaignId } });
@@ -105,10 +109,12 @@ export async function sendCampaign(userId: string, businessId: string, input: un
       }
     };
     await Promise.all(Array.from({ length: Math.min(PARALLEL, recipients.length) }, worker));
+    lap.send = Date.now() - t0 - lap.prepare! - lap.upload!;
     if (aborted) await db.campaignRecipient.updateMany({ where: { campaignId, status: "PENDING" }, data: { status: "FAILED", error: aborted } });
     if (aborted && !sent) { const [msg, status] = REASONS[aborted]!; await undo({ campaignId, ...(codeRow ? { codeId: codeRow.id } : {}) }); await refundMany(businessId, "campaigns", picked.length, room.periodStart); cleaned = true; throw new AppError(aborted, msg, status); }
     await refreshCounts(campaignId);
     const done = await db.campaign.update({ where: { id: campaignId }, data: { status: aborted ? "PARTIAL" : "DONE" } });
+    console.info(JSON.stringify({ event: "campaign.sent", recipients: picked.length, sent: done.sentCount, failed: done.failedCount, hasImage: Boolean(body.image), ms: { ...lap, total: Date.now() - t0 } })); // where the time went: preparing (database), image upload, sending
     if (done.failedCount) await refundMany(businessId, "campaigns", done.failedCount, room.periodStart); // messages that never left do not count against the month
     return { id: done.id, title: done.title, mode: body.mode, recipients: done.recipientCount, hasImage: Boolean(done.imageName), sent: done.sentCount, read: done.readCount, used: done.usedCount, failed: done.failedCount, status: done.status, createdAt: done.createdAt.toISOString() };
   } catch (e) {
