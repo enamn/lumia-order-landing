@@ -340,6 +340,7 @@ input::placeholder{color:#B89AA8}
     </sc-if>
     <sc-if value="{{ notSettings }}" hint-placeholder-val="{{ true }}">
     <main style="flex:1;min-width:0;min-height:0;overflow-y:auto;padding:{{ L.dashPad }};display:flex;flex-direction:column;gap:26px">
+      {{ emailBannerNode }}
       <sc-if value="{{ pageOverview }}" hint-placeholder-val="{{ false }}">
       <div data-screen-label="06 Dashboard · Overview" style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px">
         <div style="flex:1 1 280px;min-width:0">
@@ -2050,6 +2051,6 @@ class Component extends DCLogic {
   }
 }
 </script>
-<!-- LUMIA-LOCK -->
+<!-- LUMIA-LOCK --><!-- LUMIA-EMAIL -->
 </body>
 </html>

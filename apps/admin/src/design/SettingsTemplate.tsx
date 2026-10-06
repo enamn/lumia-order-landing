@@ -234,6 +234,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                   Email
                                 </span>
                                 <input type="email" value={vm.prof.email.v} onChange={vm.prof.email.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
+                                {vm.emailVerifyNode}
                               </label>
                             </div>
                           </div>

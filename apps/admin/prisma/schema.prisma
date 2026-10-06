@@ -189,6 +189,8 @@ model Business {
   businessType BusinessType @default(RESTAURANT)
   phone String?
   email String?
+  // Set when the owner confirmed the address with a code emailed to it. Reminder emails go only to a verified address.
+  emailVerifiedAt DateTime?
   logoUrl String?
   countryCode String @default("AE")
   currencyCode String @default("AED")
@@ -805,4 +807,18 @@ model BillingNotice {
   sentAt DateTime @default(now())
   @@index([businessId])
   @@map("billing_notices")
+}
+
+// A pending email verification: one per restaurant, the code is stored hashed.
+model EmailChallenge {
+  id String @id @default(uuid()) @map("_id")
+  businessId String @unique
+  email String
+  codeHash String
+  expiresAt DateTime
+  attempts Int @default(0)
+  sentAt DateTime @default(now())
+  windowStart DateTime @default(now())
+  sendCount Int @default(1)
+  @@map("email_challenges")
 }

@@ -28,6 +28,7 @@ describe.skipIf(!enabled)("trial and plan expiry", () => {
     }));
     owner = (await db.user.create({ data: { name: "lo", email: `lo-${suffix}@example.com`, phoneNumber: "+97150444" + String(Date.now()).slice(-4), phoneNumberVerified: true } })).id;
     biz = (await createBusiness(owner, { name: "Burger House", locationName: "Main" }, "t")).id;
+    await db.business.update({ where: { id: biz }, data: { email: `lo-${suffix}@example.com`, emailVerifiedAt: new Date() } });
     await db.whatsAppAccount.create({ data: { businessId: biz, phoneNumberId: PNID, wabaId: "9990015", status: "CONNECTED", accessTokenEncrypted: encryptSecret("biz-token"), connectedAt: new Date() } });
     calls = [];
   });
@@ -47,11 +48,13 @@ describe.skipIf(!enabled)("trial and plan expiry", () => {
     await ageTrial(13); calls = []; await runReminders();
     mine = emails().filter(e => e.to === `lo-${suffix}@example.com`); expect(mine.map(e => e.subject)).toEqual(["Your free trial ends tomorrow"]);
   });
-  it("never emails a placeholder address, and uses the business email when there is one", async () => {
-    await db.user.update({ where: { id: owner }, data: { email: `${crypto.randomUUID()}@phone.lumia.invalid` } });
-    await db.business.update({ where: { id: biz }, data: { email: `shop-${suffix}@example.com` } }); await ageTrial(12); calls = []; await db.billingNotice.deleteMany({ where: { businessId: biz } });
-    await runReminders(); expect(emails().map(e => e.to)).toEqual([`shop-${suffix}@example.com`]);
-    await db.user.update({ where: { id: owner }, data: { email: `lo-${suffix}@example.com` } }); await db.business.update({ where: { id: biz }, data: { email: null } }); await db.billingNotice.deleteMany({ where: { businessId: biz } });
+  it("emails only a verified contact email, never a placeholder or an unverified one", async () => {
+    await ageTrial(12); await db.billingNotice.deleteMany({ where: { businessId: biz } });
+    await db.business.update({ where: { id: biz }, data: { emailVerifiedAt: null } }); calls = [];
+    await runReminders(); expect(emails().map(e => e.to)).not.toContain(`lo-${suffix}@example.com`); // unverified: nobody to tell, and the reminder is not marked as sent
+    await db.business.update({ where: { id: biz }, data: { emailVerifiedAt: new Date() } }); calls = [];
+    await runReminders(); expect(emails().map(e => e.to)).toContain(`lo-${suffix}@example.com`);
+    await db.billingNotice.deleteMany({ where: { businessId: biz } });
   });
   it("locks the dashboard and silences the assistant once the trial is over, and says so by email", async () => {
     await ageTrial(15); calls = [];

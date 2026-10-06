@@ -9,6 +9,7 @@ import { DcTemplate } from "./DcTemplate";
 import { PageLoader, ContentLoader } from "@/components/lumia-loader";
 import { SettingsLoader, prefetchSettings } from "./SettingsApp";
 import { MenuScope, type Scope } from "./MenuScope";
+import { EmailVerify } from "./EmailVerify";
 import { AccountMenu, PlanBadge } from "./AccountMenu";
 import { BillingPage } from "./BillingPage";
 import { mountEmbeddedCheckout } from "@/lib/stripe-embed";
@@ -687,6 +688,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       setupLabel: ar ? `${doneN} من 5 مكتملة` : `${doneN} of 5 completed`, waSetupLabel: `${doneN} of 5 completed`,
       // whatsapp
       menuScopeNode: <MenuScope scope={s.menuScope} branchId={s.menuBranch} busy={s.scopeBusy} error={s.scopeErr} onPick={id => this.setState({ menuBranch: id, scopeErr: "" }, () => this.refreshMenu().catch(e => this.setState({ scopeErr: e.message })))} onCreate={copy => this.scopeAct(() => api(`/api/v1/businesses/${s.businessId}/menu/branches/${s.menuBranch}`, "POST", { copy }))} onRemove={() => this.scopeAct(() => api(`/api/v1/businesses/${s.businessId}/menu/branches/${s.menuBranch}`, "DELETE"))}/>,
+      emailBannerNode: s.subData?.contactEmail && !s.subData.contactEmail.verified && s.subData.access?.active !== false && s.page !== "Plans" ? <EmailVerify key="email-banner" businessId={s.businessId} email={s.subData.contactEmail.email} verified={false} ar={ar} variant="banner" onVerified={() => this.loadSub()}/> : null,
       pageCustomers: s.page === "Customers", pageCampaigns: s.page === "Campaigns", ...this.custVals(s),
       pageMenu: s.page === "Menu", pageOverview: s.page === "Overview", pageOrders: s.page === "Orders", pageBilling: s.page === "Billing", billingNode: s.page === "Billing" ? <BillingPage businessId={s.businessId} onChoosePlan={() => this.setState({ page: "Plans", planStep: "plans" })} onChanged={() => this.loadSub()}/> : null, ...this.subVals(ar, narrow), ordLoading: s.orders === null && !s.ordErr && s.ordSlow, loaderNode: <ContentLoader/>, ovLoading: s.overview === null && s.ovSlow, ovReady: s.overview !== null, pageSettings: s.page === "Settings", notSettings: s.page !== "Settings", settingsNode: s.page === "Settings" ? <SettingsLoader businessId={s.businessId} query={`?businessId=${s.businessId}`} onPremium={() => this.setState({ lock: "branches" })} onSaved={() => this.loadOverview()}/> : null, ...this.overviewVm(ar, narrow), ...this.ordersVals(ar, narrow), pageWA: s.page === "WhatsApp", waOpen: !!s.wa, wa: { intro: s.wa === "intro", connecting: s.wa === "connecting", success: s.wa === "success", import: s.wa === "import", review: s.wa === "review", catalog: s.wa === "catalog", error: s.wa === "error", inUse: s.wa === "inUse" },
       waLabel: ({ intro: "08 WhatsApp · Connect", connecting: "08a WhatsApp · Connecting", success: "08b WhatsApp · Connected", import: "08c WhatsApp · Import info", review: "08d WhatsApp · Review differences", catalog: "08e WhatsApp · Catalog found", error: "08g WhatsApp · Error", inUse: "08h WhatsApp · Number in use" } as any)[s.wa] || "08 WhatsApp",

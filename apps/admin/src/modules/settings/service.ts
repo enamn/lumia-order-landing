@@ -69,6 +69,7 @@ export async function getSettings(userId: string, businessId: string) {
     business: { id: b.id, name: b.name, logoUrl: b.logoUrl },
     menu: { categories: new Set(items.map(i => i.categoryId).filter(Boolean)).size, items: items.length, missingPrices: items.filter(i => i.basePriceMinor <= 0).length, soldOut: items.filter(i => !i.isAvailable).length, updatedAt: items.reduce<Date | null>((m, i) => (!m || i.updatedAt > m ? i.updatedAt : m), null) },
     whatsapp: { connected: Boolean(wa), displayPhoneNumber: wa?.displayPhoneNumber ?? "" },
+    emailVerified: !!b.email && !!b.emailVerifiedAt,
     branchLimit: (await entitlementsFor(businessId)).branches,
     branchBuy: await branchOffer(businessId),
   };
@@ -87,7 +88,8 @@ export async function saveSettingsSection(userId: string, businessId: string, se
     if (key === "profile") {
       const p = data as Profile;
       next.profile = { name: p.name, cuisine: p.cuisine, support: p.support, lang: p.lang, greet: p.greet };
-      await tx.business.update({ where: { id: businessId }, data: { name: p.brand, phone: p.phone || null, email: p.email || null, logoUrl: p.logo, vatRegistered: p.vat, taxRegistrationNumber: p.vat ? digitsOnly(p.trn) : null, settings: next as Prisma.InputJsonValue, revision: { increment: 1 } } });
+      const before = await tx.business.findUnique({ where: { id: businessId }, select: { email: true } });
+      await tx.business.update({ where: { id: businessId }, data: { name: p.brand, phone: p.phone || null, email: p.email || null, ...((before?.email ?? "").toLowerCase() !== (p.email ?? "").trim().toLowerCase() ? { emailVerifiedAt: null } : {}), logoUrl: p.logo, vatRegistered: p.vat, taxRegistrationNumber: p.vat ? digitsOnly(p.trn) : null, settings: next as Prisma.InputJsonValue, revision: { increment: 1 } } });
       await updateProgress(tx, businessId);
     } else if (key === "branches") {
       const list = data as Branch[], eta: Record<string, string> = {};

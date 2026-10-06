@@ -34,13 +34,15 @@ export function renderEmail(kind: Kind, lang: "en" | "ar", vars: Vars, link: str
   return { subject, html, text: `${body}\n\n${link}` };
 }
 
+// Only the restaurant's confirmed contact email (Settings → Profile). Phone sign-ups have just a placeholder address, which is never used.
 async function recipients(businessId: string) {
-  const b = await db.business.findUnique({ where: { id: businessId }, select: { name: true, email: true, organizationId: true } });
+  const b = await db.business.findUnique({ where: { id: businessId }, select: { name: true, email: true, emailVerifiedAt: true, organizationId: true } });
   if (!b) return null;
-  const members = await db.membership.findMany({ where: { organizationId: b.organizationId, status: "ACTIVE", role: { in: ["OWNER", "ADMIN"] } }, select: { user: { select: { email: true, preferredLanguage: true, status: true } } } });
   const list = new Map<string, "en" | "ar">();
-  for (const m of members) if (m.user.status === "ACTIVE" && m.user.email && !m.user.email.endsWith(".invalid")) list.set(m.user.email.toLowerCase(), m.user.preferredLanguage === "ar" ? "ar" : "en");
-  if (b.email && !list.has(b.email.toLowerCase())) list.set(b.email.toLowerCase(), "en");
+  if (b.email && b.emailVerifiedAt) {
+    const owner = await db.membership.findFirst({ where: { organizationId: b.organizationId, status: "ACTIVE", role: "OWNER" }, select: { user: { select: { preferredLanguage: true } } } });
+    list.set(b.email.toLowerCase(), owner?.user.preferredLanguage === "ar" ? "ar" : "en");
+  }
   return { name: b.name, list };
 }
 

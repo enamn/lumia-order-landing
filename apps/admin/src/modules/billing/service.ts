@@ -69,7 +69,7 @@ async function knownDetails(businessId: string) {
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : undefined);
 export async function getSubscription(userId: string, businessId: string) {
   const { member } = await authorize(userId, businessId);
-  const [b, sub, known, usage] = await Promise.all([db.business.findUniqueOrThrow({ where: { id: businessId }, select: { createdAt: true, stripeCustomerId: true } }), getSubscriptionFor(businessId), knownDetails(businessId), usageSummary(businessId)]);
+  const [b, sub, known, usage] = await Promise.all([db.business.findUniqueOrThrow({ where: { id: businessId }, select: { createdAt: true, stripeCustomerId: true, email: true, emailVerifiedAt: true } }), getSubscriptionFor(businessId), knownDetails(businessId), usageSummary(businessId)]);
   const active = isActive(sub), nextPlan = (sub?.pendingPlan ?? sub?.plan) as PlanId | undefined, nextBilling = (sub?.pendingBilling ?? sub?.billing) as Billing | undefined;
   return {
     status: (sub?.status ?? "NONE") as SubStatus, plan: sub?.plan, billing: sub?.billing, currentPeriodStart: iso(sub?.currentPeriodStart), currentPeriodEnd: iso(sub?.currentPeriodEnd), cancelAtPeriodEnd: sub?.cancelAtPeriodEnd ?? false,
@@ -77,6 +77,7 @@ export async function getSubscription(userId: string, businessId: string) {
     nextCharge: active && !sub!.cancelAtPeriodEnd && nextPlan && nextBilling ? { at: iso(sub!.nextChargeAt ?? sub!.currentPeriodEnd)!, amountMinor: quoteRenewal(nextPlan, nextBilling, nextPlan === "pro" ? Math.max(0, sub!.pendingExtraBranches ?? sub!.extraBranches ?? 0) : 0).totalMinor } : null,
     card: (sub?.card as Card | null) ?? undefined, terminals: sub?.terminals, terminalAddress: sub?.terminalAddress ?? undefined, terminal: (sub?.terminal as Terminal | null) ?? undefined, startedAt: iso(sub?.startedAt),
     hasCustomer: Boolean(sub?.stripeCustomerId || b.stripeCustomerId), defaults: { address: known.address }, canManage: member.role === "OWNER" || member.role === "ADMIN",
+    contactEmail: { email: b.email ?? "", verified: !!b.email && !!b.emailVerifiedAt },
     access: accessOf(sub, b.createdAt), trial: trialInfo(b.createdAt), entitlements: entitlements(sub), usage,
     branches: { ...(await branchInfo(businessId, sub)) },
     topups: TOPUP_IDS.map(id => ({ id, orders: TOPUPS[id].orders, totalMinor: quoteTopUp(id).totalMinor, subtotalMinor: quoteTopUp(id).subtotalMinor })),

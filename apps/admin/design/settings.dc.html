@@ -7,6 +7,7 @@
 </head>
 <body>
 <x-dc>
+<!-- LUMIA-EMAIL -->
 <!-- LUMIA-EXT settings --><!-- LUMIA-EXT embedded --><!-- LUMIA-EXT logo -->
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -102,7 +103,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px 16px">
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Business phone</span><input value="{{ prof.phone.v }}" onChange="{{ prof.phone.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input></label>
                     <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Support WhatsApp number</span><input value="{{ prof.support.v }}" onChange="{{ prof.support.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums" style-focus="border-color:#C93DFF"></input><span style="font-size:13px;color:#8A5A6E">Customers are sent here if they ask for a person.</span></label>
-                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Email</span><input type="email" value="{{ prof.email.v }}" onChange="{{ prof.email.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input></label>
+                    <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500;color:#3D1C31">Email</span><input type="email" value="{{ prof.email.v }}" onChange="{{ prof.email.set }}" style="height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px" style-focus="border-color:#C93DFF"></input>{{ emailVerifyNode }}</label>
                   </div>
                 </div></sc-if></section>
                 <section style="border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0">

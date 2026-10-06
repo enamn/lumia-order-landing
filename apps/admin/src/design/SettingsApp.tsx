@@ -7,6 +7,7 @@ import React from "react";
 import "./dc-base.css";
 import "./settings-hover.css";
 import { SettingsTemplate } from "./SettingsTemplate";
+import { EmailVerify } from "./EmailVerify";
 import { logoToDataUrl } from "@/lib/logo";
 import { ContentLoader } from "@/components/lumia-loader";
 
@@ -14,7 +15,7 @@ export interface SettingsProps {
   businessId: string;
   query: string;
   onPremium?: () => void; onSaved?: () => void;
-  initial: { sections: any; branchLimit?: number; branchBuy?: { priceAed: number; period: string; payNowMinor: number; card: string | null; hasCard: boolean } | null; menu: { categories: number; items: number; missingPrices: number; soldOut: number; updatedAt: string | null }; whatsapp: { connected: boolean; displayPhoneNumber: string } };
+  initial: { sections: any; emailVerified?: boolean; branchLimit?: number; branchBuy?: { priceAed: number; period: string; payNowMinor: number; card: string | null; hasCard: boolean } | null; menu: { categories: number; items: number; missingPrices: number; soldOut: number; updatedAt: string | null }; whatsapp: { connected: boolean; displayPhoneNumber: string } };
 }
 type Props = SettingsProps;
 
@@ -269,6 +270,7 @@ class SettingsApp extends React.Component<Props, any> {
       nav, navGroups, steps, ready, todoSteps, doneSteps, hasDone: doneSteps.length > 0, setupOpen: todo.length > 0, setupDone: todo.length === 0,
       warnings, hasWarnings: warnings.length > 0, progressLabel: `${doneN} of ${steps.length} steps completed`,
       brand, initials, markDirty: () => {},
+      emailVerifyNode: React.createElement(EmailVerify, { key: String(this.props.initial.emailVerified), businessId: this.props.businessId, email: this.props.initial.sections.profile?.email ?? '', verified: !!this.props.initial.emailVerified, variant: 'settings', draft: pr.email, onVerified: (e: string) => { this.props.initial.emailVerified = true; this.props.initial.sections.profile = { ...this.props.initial.sections.profile, email: e }; this.props.onSaved?.(); } }),
       logoNode: pr.logo ? React.createElement('img', { src: pr.logo, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }) : initials,
       pickLogo: () => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/png,image/jpeg'; i.onchange = async () => { const f = i.files?.[0]; if (!f) return; try { const url = await logoToDataUrl(f); this.upd('profile', (x: any) => { x.logo = url; }); } catch (e: any) { this.setState({ error: e?.message ?? 'We couldn’t read that image.' }); } }; i.click(); },
       prof: bind('profile', ['name', 'brand', 'cuisine', 'phone', 'support', 'email', 'trn']),
@@ -339,7 +341,7 @@ const FRESH_MS = 60_000;
 export function prefetchSettings(businessId: string) {
   const hit = cache.get(businessId);
   if (hit && Date.now() - hit.at < FRESH_MS) return hit;
-  const entry: { at: number; promise: Promise<Loaded>; data?: Loaded } = { at: Date.now(), promise: api(`/api/v1/businesses/${businessId}/settings`).then((r: any) => ({ sections: r.sections, menu: r.menu, whatsapp: r.whatsapp, branchLimit: r.branchLimit, branchBuy: r.branchBuy })) };
+  const entry: { at: number; promise: Promise<Loaded>; data?: Loaded } = { at: Date.now(), promise: api(`/api/v1/businesses/${businessId}/settings`).then((r: any) => ({ sections: r.sections, menu: r.menu, whatsapp: r.whatsapp, branchLimit: r.branchLimit, branchBuy: r.branchBuy, emailVerified: r.emailVerified })) };
   entry.promise.then(d => { entry.data = d; }, () => { if (cache.get(businessId) === entry) cache.delete(businessId); });
   cache.set(businessId, entry);
   return entry;

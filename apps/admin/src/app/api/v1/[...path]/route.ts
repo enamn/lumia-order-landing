@@ -13,6 +13,7 @@ import { getConversation, sendReply } from "@/modules/messages/reply";
 import { getAiSettings, setAiSettings } from "@/modules/messages/ai";
 import { listOrders, setOrderStatus } from "@/modules/orders/service";
 import { AppError } from "@/server/errors";
+import { startEmailVerification, confirmEmailVerification } from "@/modules/business/contact-email";
 import { requireAccess } from "@/modules/billing/service";
 import { createBusiness, getBusiness, listBusinesses, updateBusiness, updateLocation, readiness, completeOnboarding, members, setMember } from "@/modules/business/service";
 export const dynamic = "force-dynamic";
@@ -33,7 +34,11 @@ async function handle(request: Request, context: Context) {
       if (method === "PATCH") return updateBusiness(userId, businessId, await jsonBody(request), requestId);
     }
     // Trial over or plan ended: only the plan and billing pages keep working until the restaurant subscribes.
-    if (section && section !== "subscription") await requireAccess(userId, businessId!);
+    if (section && section !== "subscription" && section !== "contact-email") await requireAccess(userId, businessId!);
+    if (section === "contact-email" && method === "POST") {
+      if (path.length === 3) return startEmailVerification(userId, businessId!, await jsonBody(request));
+      if (subId === "verify" && path.length === 4) return confirmEmailVerification(userId, businessId!, await jsonBody(request));
+    }
     if (section === "locations" && path.length === 4) {
       if (method === "PATCH") return updateLocation(userId, businessId, subId, await jsonBody(request), requestId);
       if (method === "GET") { const b = await getBusiness(userId, businessId); const location = b.locations.find(l => l.id === subId); if (!location) throw new AppError("NOT_FOUND", "Location not found.", 404); return location; }
