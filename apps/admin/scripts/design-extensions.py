@@ -42,6 +42,9 @@ rep('            <button type="submit" disabled="{{ cp.cant }}"', '            <
 import re as _re2
 s, _n = _re2.subn(r'<div style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px">\s*<span style="width:32px.*?\{\{ nameOrDefault \}\}</span>\s*</div>', '{{ accountNode }}', s, flags=_re2.S); assert _n == 1, _n
 s, _n = _re2.subn(r'<span style="width:32px;height:32px;border-radius:9px;flex:none;overflow:hidden;[^"]*">\s*<sc-if value="\{\{ logo \}\}"[^>]*>\{\{ logoImg \}\}</sc-if>\s*<sc-if value="\{\{ noLogo \}\}"[^>]*>\{\{ initials \}\}</sc-if>\s*</span>(?=\s*</div>\s*<nav style="display:flex;gap:20px)', '{{ accountNodeMobile }}', s, flags=_re2.S); assert _n == 1, _n
+# 6e the plan (Plus, Pro, ...) as one small badge next to the logo: in the sidebar after "Lumia Order", on phones before the restaurant name
+rep('<span style="font-size:16px;font-weight:700;letter-spacing:-0.035em">Lumia</span><span style="font-size:12px;letter-spacing:-0.01em">Order</span></span>', '<span style="font-size:16px;font-weight:700;letter-spacing:-0.035em">Lumia</span><span style="font-size:12px;letter-spacing:-0.01em">Order</span></span>{{ planBadge }}')
+rep('<span style="font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1">{{ nameOrDefault }}</span>', '{{ planBadge }}<span style="font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1">{{ nameOrDefault }}</span>')
 # 6b WhatsApp catalog counts
 for old, new in [(">37</span>", ">{{ waCatTotal }}</span>"), (">products · 5 categories</span>", ">products · {{ waCatCount }} categories</span>"), ("by 37 products from", "by {{ waCatTotal }} products from")]: s = s.replace(old, new)
 # 6c real legal links

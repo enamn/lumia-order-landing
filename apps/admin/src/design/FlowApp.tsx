@@ -9,7 +9,7 @@ import { DcTemplate } from "./DcTemplate";
 import { PageLoader, ContentLoader } from "@/components/lumia-loader";
 import { SettingsLoader, prefetchSettings } from "./SettingsApp";
 import { MenuScope, type Scope } from "./MenuScope";
-import { AccountMenu } from "./AccountMenu";
+import { AccountMenu, PlanBadge } from "./AccountMenu";
 import { BillingPage } from "./BillingPage";
 import { mountEmbeddedCheckout } from "@/lib/stripe-embed";
 import { authClient } from "@/lib/auth-client";
@@ -305,22 +305,28 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       lockOpen: !!lk, lock: lk || LOCKS.customers, lockClose: () => this.setState({ lock: null }), lockUpgrade: () => this.setState({ lock: null, sub: null, plan: lk ? lk.id : s.plan, page: "Plans", planStep: "plans" }),
       subLater: () => this.setState({ sub: null }), subOpenPlans: () => this.setState({ sub: null, lock: null, page: "Plans", planStep: "plans", subErr: "" }), subClosePlans: () => { if (!paying) { this.unmountStripe(); this.setState({ page: "Overview", planStep: "plans", embedSecret: null }); } }, subBackPlans: () => { if (!paying) { this.unmountStripe(); this.setState({ planStep: "plans", embedSecret: null }); } }, subEmbedBack: () => { this.unmountStripe(); this.setState({ embedSecret: null }); }, stripeRef: this.stripeRef,
       subPay: (e: any) => { e?.preventDefault?.(); if (!addrOk) { this.setState({ addrTry: true }); return; } if (!paying) this.startPay(sel.id, s.bill, qty, addrVal.trim()); },
-      subPortal: () => { history.replaceState(null, "", `/dashboard?page=billing&businessId=${this.state.businessId}`); this.setState({ page: "Billing" }); }, onAddr: (e: any) => this.setState({ addr: e.target.value }), termInc: () => this.setState({ termQty: Math.min(10, qty + 1) }), termDec: () => this.setState({ termQty: Math.max(1, qty - 1) }),
+      subPortal: () => this.openBilling(), onAddr: (e: any) => this.setState({ addr: e.target.value }), termInc: () => this.setState({ termQty: Math.min(10, qty + 1) }), termDec: () => this.setState({ termQty: Math.max(1, qty - 1) }),
       pagePlans: s.page === "Plans",
     };
   }
   // The restaurant chip: plan badge, and a menu with Settings, Billing and Log out.
   accountMenu(variant: "sidebar" | "header", s: any, name: string, initials: string, ar: boolean) {
-    const d = s.subData, live = d && (d.status === "ACTIVE" || d.status === "PAST_DUE"), due = d?.status === "PAST_DUE";
-    const planName: string | null = live ? SUB_PLANS.find(p => p.id === d.plan)?.name ?? null : null;
     const bid = s.businessId, A = (en: string, arT: string) => (ar ? arT : en);
     const items = [
       { key: "settings", icon: "settings", label: A("Settings", "الإعدادات"), onPick: () => { this.setState({ page: "Settings" }); history.replaceState(null, "", `/dashboard?page=settings&businessId=${bid}`); } },
-      { key: "billing", icon: "billing", label: A("Billing", "الفوترة"), onPick: () => { history.replaceState(null, "", `/dashboard?page=billing&businessId=${bid}`); this.setState({ page: "Billing" }); } },
+      { key: "billing", icon: "billing", label: A("Billing", "الفوترة"), onPick: () => this.openBilling() },
       { key: "logout", icon: "logout", label: A("Log out", "تسجيل الخروج"), danger: true, onPick: () => { this.signOut(); } },
     ];
     const avatar = s.logo ? <img src={s.logo} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} /> : initials;
-    return <AccountMenu variant={variant} name={name} avatar={avatar} badge={due ? A("Payment due", "الدفع متأخر") : planName} badgeKind={due ? "due" : d?.plan === "pro" ? "pro" : d?.plan === "plus" ? "plus" : "starter"} active={s.page === "Settings" || s.page === "Billing"} ar={ar} items={items} />;
+    return <AccountMenu variant={variant} name={name} avatar={avatar} active={s.page === "Settings" || s.page === "Billing"} ar={ar} items={items} />;
+  }
+  openBilling = () => { history.replaceState(null, "", `/dashboard?page=billing&businessId=${this.state.businessId}`); this.setState({ page: "Billing" }); };
+  // The plan as a small word next to the logo (nothing for a restaurant still on its trial: it has the trial banner).
+  planBadge(s: any, ar: boolean) {
+    const d = s.subData; if (!d || !(d.status === "ACTIVE" || d.status === "PAST_DUE")) return null;
+    const due = d.status === "PAST_DUE", name: string = SUB_PLANS.find(p => p.id === d.plan)?.name ?? "";
+    if (!due && !name) return null;
+    return <PlanBadge label={due ? (ar ? "الدفع متأخر" : "Payment due") : name} kind={due ? "due" : d.plan === "pro" ? "pro" : d.plan === "plus" ? "plus" : "starter"} onClick={this.openBilling} />;
   }
   // Customers and Campaigns pages: real customers, saved addresses and campaigns; the sending itself is done by the server.
   custVals(s: any) {
@@ -658,7 +664,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       // name
       nameRef: this.nameRef, name: s.name, nameErr: s.nameErr, nameErrText: s.nameFail || "Enter your restaurant name to continue", nf: ring(s.nameErr, s.nameFocused, false), onName: (e: any) => this.setState({ name: e.target.value, nameErr: false, nameFail: "" }),
       nameFocus: () => this.setState({ nameFocused: true }), nameBlur: () => this.setState({ nameFocused: false }), submitName: this.submitName,
-      accountNode: this.accountMenu("sidebar", s, nm, initials, ar), accountNodeMobile: this.accountMenu("header", s, nm, initials, ar),
+      planBadge: this.planBadge(s, ar), accountNode: this.accountMenu("sidebar", s, nm, initials, ar), accountNodeMobile: this.accountMenu("header", s, nm, initials, ar),
       logo: s.logo, noLogo: !s.logo, logoImg: s.logo ? ce("img", { key: "lg", src: s.logo, alt: "", style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } }) : null, logoBtn: s.logo ? "Change logo" : "Upload logo", logoTile: { bd: s.logo ? "transparent" : "#E3CBD4" }, onLogo: this.onLogo, initials, nameOrDefault: nm,
       // menu upload / processing
       dz: s.drag ? { bd: "#FF5577", bg: "#FFF5F8" } : { bd: "#E3CBD4", bg: "#FFFBFC" }, menuErr: s.menuErr,

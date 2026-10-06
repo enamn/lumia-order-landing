@@ -15,7 +15,7 @@ const BADGE: Record<string, React.CSSProperties> = {
   due: { background: "#FFF1DC", color: "#8A4B00" },
 };
 
-export function AccountMenu({ variant, name, avatar, badge, badgeKind, active, ar, items }: { variant: "sidebar" | "header"; name: string; avatar: React.ReactNode; badge: string | null; badgeKind: "starter" | "plus" | "pro" | "due"; active: boolean; ar: boolean; items: MenuItem[] }) {
+export function AccountMenu({ variant, name, avatar, active, ar, items }: { variant: "sidebar" | "header"; name: string; avatar: React.ReactNode; active: boolean; ar: boolean; items: MenuItem[] }) {
   const [open, setOpen] = React.useState(false);
   const box = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
@@ -27,16 +27,15 @@ export function AccountMenu({ variant, name, avatar, badge, badgeKind, active, a
   }, [open]);
   const side = variant === "sidebar";
   const avatarBox = <span style={{ width: 32, height: 32, borderRadius: 9, flex: "none", overflow: "hidden", background: "linear-gradient(135deg,#FF5577,#C93DFF)", color: "#fff", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center" }}>{avatar}</span>;
-  const pill = badge ? <span style={{ fontSize: 12, fontWeight: 600, padding: "2px 8px", borderRadius: 999, flex: "none", whiteSpace: "nowrap", ...BADGE[badgeKind] }}>{badge}</span> : null;
   return <div ref={box} dir={ar ? "rtl" : "ltr"} style={{ position: "relative", flex: side ? undefined : "none" }}>
     <button type="button" aria-haspopup="menu" aria-expanded={open} aria-label={side ? undefined : name} onClick={() => setOpen(o => !o)}
       style={side ? { width: "100%", display: "flex", alignItems: "center", gap: 10, padding: 8, borderRadius: 10, textAlign: "start", background: open || active ? "#FBF3F8" : "transparent" } : { display: "flex", alignItems: "center", gap: 4, padding: 0, borderRadius: 9, outlineOffset: 2 }}>
       {avatarBox}
-      {side && <span style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>{name}</span>{pill}</span>}
+      {side && <span style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>{name}</span></span>}
       {side && <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flex: "none", transform: open ? "rotate(0)" : "rotate(180deg)", transition: "transform .15s" }}><path d="m4 10 4-4 4 4" stroke="#8A5A6E" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>}
     </button>
     {open && <div role="menu" style={{ position: "absolute", zIndex: 30, minWidth: side ? undefined : 220, ...(side ? { bottom: "calc(100% + 6px)", insetInlineStart: 0, insetInlineEnd: 0 } : { top: "calc(100% + 8px)", insetInlineEnd: 0 }), background: "#fff", border: "1px solid #F0E4E8", borderRadius: 14, boxShadow: "0 18px 40px -16px rgba(26,8,21,.35)", padding: 6, display: "flex", flexDirection: "column" }}>
-      {!side && <div style={{ padding: "8px 10px 10px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid #F6EEF2", marginBottom: 4 }}><span style={{ fontSize: 14, fontWeight: 600, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>{pill}</div>}
+      {!side && <div style={{ padding: "8px 10px 10px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid #F6EEF2", marginBottom: 4 }}><span style={{ fontSize: 14, fontWeight: 600, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span></div>}
       {items.map((it, i) => <React.Fragment key={it.key}>
         {it.danger && i > 0 && <div style={{ height: 1, background: "#F6EEF2", margin: "4px 6px" }} />}
         <button type="button" role="menuitem" onClick={() => { setOpen(false); it.onPick(); }} className="am-item" style={{ height: 40, padding: "0 10px", borderRadius: 9, display: "flex", alignItems: "center", gap: 12, fontSize: 15, fontWeight: 500, textAlign: "start", color: it.danger ? "#B42318" : "#1A0815" }}>
@@ -47,4 +46,9 @@ export function AccountMenu({ variant, name, avatar, badge, badgeKind, active, a
     </div>}
     <style>{`.am-item:hover,.am-item:focus-visible{background:#FBF3F8}`}</style>
   </div>;
+}
+
+// The plan, as one small word next to the Lumia Order logo (it opens Billing). Amber and clearer when a renewal failed.
+export function PlanBadge({ label, kind, onClick }: { label: string; kind: "starter" | "plus" | "pro" | "due"; onClick: () => void }) {
+  return <button type="button" onClick={onClick} title={label} style={{ fontSize: 12, fontWeight: 600, lineHeight: 1, padding: "4px 8px", borderRadius: 999, flex: "none", whiteSpace: "nowrap", cursor: "pointer", ...BADGE[kind] }}>{label}</button>;
 }

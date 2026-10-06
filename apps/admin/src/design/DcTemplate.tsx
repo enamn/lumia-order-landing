@@ -541,6 +541,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                         Order
                       </span>
                     </span>
+                    {vm.planBadge}
                   </div>
                   <nav style={S("flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:2px")}>
                     {(vm.nav as any[]).map((n: any, __i: number) => (
@@ -634,6 +635,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                         <path d="M28 30V66H40" stroke="#1A0815" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
                         <circle cx="64" cy="55" r="11" stroke="url(#gPD2)" strokeWidth="10" />
                       </svg>
+                      {vm.planBadge}
                       <span style={S("font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1")}>
                         {vm.nameOrDefault}
                       </span>
