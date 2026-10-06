@@ -39,7 +39,7 @@ async function recipients(businessId: string) {
   if (!b) return null;
   const members = await db.membership.findMany({ where: { organizationId: b.organizationId, status: "ACTIVE", role: { in: ["OWNER", "ADMIN"] } }, select: { user: { select: { email: true, preferredLanguage: true, status: true } } } });
   const list = new Map<string, "en" | "ar">();
-  for (const m of members) if (m.user.status === "ACTIVE" && m.user.email) list.set(m.user.email.toLowerCase(), m.user.preferredLanguage === "ar" ? "ar" : "en");
+  for (const m of members) if (m.user.status === "ACTIVE" && m.user.email && !m.user.email.endsWith(".invalid")) list.set(m.user.email.toLowerCase(), m.user.preferredLanguage === "ar" ? "ar" : "en");
   if (b.email && !list.has(b.email.toLowerCase())) list.set(b.email.toLowerCase(), "en");
   return { name: b.name, list };
 }
