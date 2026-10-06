@@ -50,5 +50,5 @@ export function AccountMenu({ variant, name, avatar, active, ar, items }: { vari
 
 // The plan, as one small word next to the Lumia Order logo (it opens Billing). Amber and clearer when a renewal failed.
 export function PlanBadge({ label, kind, onClick }: { label: string; kind: "starter" | "plus" | "pro" | "due"; onClick: () => void }) {
-  return <button type="button" onClick={onClick} title={label} style={{ fontSize: 12, fontWeight: 600, lineHeight: 1, padding: "4px 8px", margin: "-4px 0", borderRadius: 999, flex: "none", whiteSpace: "nowrap", cursor: "pointer", ...BADGE[kind] }}>{label}</button>;
+  return <button type="button" onClick={onClick} title={label} style={{ fontSize: 12, fontWeight: 600, lineHeight: 1, padding: "3px 8px", margin: 0, borderRadius: 999, flex: "none", whiteSpace: "nowrap", cursor: "pointer", ...BADGE[kind] }}>{label}</button>;
 }

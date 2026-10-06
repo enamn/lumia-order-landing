@@ -537,7 +537,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                       <span style={S("font-size:16px;font-weight:700;letter-spacing:-0.035em")}>
                         Lumia
                       </span>
-                      <span style={S("display:flex;align-items:center;gap:5px")}>
+                      <span style={S("display:flex;align-items:center;gap:6px;margin-top:4px;line-height:1")}>
                         <span style={S("font-size:12px;letter-spacing:-0.01em")}>
                           Order
                         </span>
