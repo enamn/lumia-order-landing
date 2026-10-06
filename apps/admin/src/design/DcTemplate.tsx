@@ -1818,6 +1818,13 @@ export function DcTemplate({ vm }: { vm: any }) {
                                   {vm.cp.tokens}
                                 </span>
                               </label>
+                              {vm.cp.err && (
+                                <>
+                                <div role="alert" style={S("font-size:14px;color:#B4233B")}>
+                                  {vm.cp.err}
+                                </div>
+                                </>
+                              )}
                               <button type="submit" disabled={!!vm.cp.cant} style={S(`height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;opacity:${vm.cp.sendOp};display:flex;align-items:center;justify-content:center;gap:10px`)}>
                                 {vm.cp.sending && (
                                   <>

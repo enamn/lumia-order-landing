@@ -29,7 +29,7 @@ export interface FlowProps {
   wa: { status: "none" | "connected" | "disconnected"; displayPhoneNumber: string; verifiedName: string };
   meta: { appId: string; configId: string; graphVersion: string };
   marketingUrl: string;
-  initialPage?: "Overview" | "Orders" | "Menu" | "WhatsApp" | "Settings" | "Billing";
+  initialPage?: "Overview" | "Orders" | "Menu" | "WhatsApp" | "Settings" | "Billing" | "Customers" | "Campaigns";
 }
 export interface MenuCat { id: string; name: string; nameAr: string; items: { id: string; name: string; nameAr: string; priceMinor: number; isAvailable: boolean }[] }
 type Item = { id: string; n: string; ar: string; p: number; on: boolean };
@@ -37,7 +37,7 @@ type Cat = { id: string; cat: string; catAr: string; items: Item[] };
 type Draft = { cat: string; catAr: string; arOnly: boolean; items: { n: string; ar: string; arOnly: boolean; p: string; flag: boolean }[] };
 
 const PHASES = ["Reading your menu", "Finding categories", "Extracting items and prices", "Organizing your menu"];
-const NAV_AR: Record<string, string> = { Overview: "نظرة عامة", Orders: "الطلبات", Menu: "القائمة", Messages: "الرسائل", WhatsApp: "واتساب", Customers: "العملاء", Delivery: "التوصيل", Settings: "الإعدادات", "Sign out": "تسجيل الخروج" };
+const NAV_AR: Record<string, string> = { Overview: "نظرة عامة", Orders: "الطلبات", Menu: "القائمة", Messages: "الرسائل", WhatsApp: "واتساب", Customers: "العملاء", Campaigns: "الحملات", Delivery: "التوصيل", Settings: "الإعدادات", "Sign out": "تسجيل الخروج" };
 const T_EN = { menu: "Menu", items: "items", categories: "categories", created: "Created by Lumia AI", addItem: "Add item", search: "Search items", all: "All items", soldOut: "Sold out", addAr: "Add Arabic name", noResults: "No items match your search.", setupTitle: "Get Lumia ready to receive orders", continueSetup: "Continue setup", setup: ["Restaurant created", "Menu added", ["Connect WhatsApp", "WhatsApp connected"], "Set delivery & order settings", "Test Lumia"] as any[] };
 const T_AR = { menu: "القائمة", items: "صنف", categories: "فئات", created: "أنشأتها Lumia AI", addItem: "إضافة صنف", search: "ابحث عن صنف", all: "كل الأصناف", soldOut: "نفد", addAr: "أضف الاسم بالعربية", noResults: "لا توجد أصناف مطابقة لبحثك.", setupTitle: "جهّز Lumia لاستقبال الطلبات", continueSetup: "متابعة الإعداد", setup: ["تم إنشاء المطعم", "تمت إضافة القائمة", ["ربط واتساب", "تم ربط واتساب"], "إعداد التوصيل والطلبات", "تجربة Lumia"] as any[] };
 const aed = (p: number | string) => "AED " + p;
@@ -76,6 +76,7 @@ const SUB_PLANS = [
 const TERM: Record<string, number> = { starter: 549, plus: 499, pro: 399 };
 const LOCKS: Record<string, { id: string; tag: string; title: string; body: string; feats: string[]; cta: string }> = {
   customers: { id: "plus", tag: "Plus feature", title: "Customers is available on Plus and Pro", body: "See everyone who ordered from you on WhatsApp, what they ordered and how often they come back.", feats: ["Full customer history", "Advanced analytics", "Promotions / customer campaigns"], cta: "Upgrade to Plus" },
+  campaigns: { id: "plus", tag: "Plus feature", title: "Campaigns are available on Plus and Pro", body: "Send offers and discount codes to your customers on WhatsApp, to everyone at once or to the customers you pick.", feats: ["Promotions / customer campaigns", "Full customer history", "Advanced analytics"], cta: "Upgrade to Plus" },
   branches: { id: "pro", tag: "Pro feature", title: "Run more branches with Pro", body: "Starter includes 1 branch and Plus includes 3. Pro includes 3 and lets you add more for AED 99 a month each, with a menu for all branches or one per branch.", feats: ["3 branches included, add more any time", "A menu for all branches or one per branch", "Multi-branch management"], cta: "Upgrade to Pro" },
 };
 
@@ -94,6 +95,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu)) > 0, cat: "All", menu: toCats(props.menu), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
       page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", embedId: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
+      custList: null as any, custErr: "", custSel: [] as string[], custOpen: null as any, custQ: "", campMode: "all", campCode: true, campPct: 20, campDays: 7, campMsgAll: `Hi {name}, this weekend only: 20% off all burgers at ${business?.name ?? "our restaurant"}. Reply here to order.`, campMsgOffer: `Hi {name}, thanks for ordering with us. Here’s a discount on your next order from ${business?.name ?? "us"}.`, campCodeTxt: "WEEKEND20", campImg: "", campImgFile: null as any, campImgName: "", campSending: false, campToast: "", campErr: "", campHist: null as any,
       menuScope: null as Scope | null, menuBranch: "", scopeBusy: false, scopeErr: "", lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
     };
   }
@@ -111,6 +113,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       this.loadSub(); this.loadScopes();
       if (billing) { q.delete("billing"); history.replaceState(null, "", `${window.location.pathname}${q.toString() ? "?" + q.toString() : ""}`); if (billing === "success") this.confirmPayment(); }
     }
+    if (this.state.step === "dash" && (this.state.page === "Customers" || this.state.page === "Campaigns")) { this.loadCustomers(); if (this.state.page === "Campaigns") this.loadCampaigns(); }
     if (this.state.step === "dash" && this.state.page === "Overview") { this.loadOverview(); this.showOverviewLoader(); }
     if (this.state.step === "dash" && this.state.page === "Orders") { this.loadOrders(); this.showOrdersLoader(); }
     if (this.state.step === "dash" && this.state.page !== "Orders") this.later(1500, () => { if (this.state.orders === null) this.loadOrders(); }); // ready before the first visit
@@ -134,6 +137,8 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const data: MenuCat[] = await api(`/api/v1/businesses/${this.state.businessId}/menu${this.menuQuery()}`);
     const menu = toCats(data); this.setState({ menu, menuDone: count(menu) > 0 });
   }
+  loadCustomers = () => { const id = this.state.businessId; if (!id) return Promise.resolve(); return api(`/api/v1/businesses/${id}/customers`).then((r: any) => this.setState({ custList: r.customers, custErr: "" })).catch((e: any) => { if (e.code === "PLAN_REQUIRED") this.setState({ lock: "customers", page: "Overview" }); else this.setState({ custErr: e.message, custList: [] }); }); };
+  loadCampaigns = () => { const id = this.state.businessId; if (!id) return Promise.resolve(); return api(`/api/v1/businesses/${id}/campaigns`).then((r: any) => this.setState({ campHist: r.campaigns })).catch(() => this.setState({ campHist: [] })); };
   async loadScopes() {
     if (!this.state.businessId) return;
     try { const menuScope: Scope = await api(`/api/v1/businesses/${this.state.businessId}/menu/scopes`); this.setState((st: any) => ({ menuScope, menuBranch: menuScope.menuPerBranch && menuScope.branches.some(b => b.id === st.menuBranch) ? st.menuBranch : "" })); } catch { /* the selector is optional */ }
@@ -301,6 +306,78 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       subPay: (e: any) => { e?.preventDefault?.(); if (!addrOk) { this.setState({ addrTry: true }); return; } if (!paying) this.startPay(sel.id, s.bill, qty, addrVal.trim()); },
       subPortal: () => { history.replaceState(null, "", `/dashboard?page=billing&businessId=${this.state.businessId}`); this.setState({ page: "Billing" }); }, onAddr: (e: any) => this.setState({ addr: e.target.value }), termInc: () => this.setState({ termQty: Math.min(10, qty + 1) }), termDec: () => this.setState({ termQty: Math.max(1, qty - 1) }),
       pagePlans: s.page === "Plans",
+    };
+  }
+  // Customers and Campaigns pages: real customers, saved addresses and campaigns; the sending itself is done by the server.
+  custVals(s: any) {
+    const all: any[] = s.custList ?? [], eligible = all.filter(c => !c.optedOut), q = (s.custQ || "").trim().toLowerCase();
+    const sel: string[] = (s.custSel || []).filter((id: string) => eligible.some(c => c.id === id));
+    const isSel = (id: string) => sel.includes(id);
+    const toggle = (id: string) => this.setState((st: any) => ({ custSel: st.custSel.includes(id) ? st.custSel.filter((x: string) => x !== id) : [...st.custSel, id] }));
+    const allOn = eligible.length > 0 && sel.length === eligible.length;
+    const ck = (on: boolean) => ({ sel: on, ckBd: on ? "#FF5577" : "#D9BFCB", ckBg: on ? "#FF5577" : "#fff" });
+    const ini = (n: string) => n.split(" ").filter(w => w && w !== "Al").map(w => w[0]).slice(0, 2).join("") || "#";
+    const first = (n: string) => n.split(" ")[0];
+    const AV = ["#FDEAF2", "#F1E6FF", "#FFF1DC", "#E4F4EC"];
+    const phone = (p: string) => (/^\+971\d{9}$/.test(p) ? `+971 ${p.slice(4, 6)} ${p.slice(6, 9)} ${p.slice(9)}` : p);
+    const last = (iso: string | null) => { if (!iso) return "—"; const d = new Date(iso), days = Math.floor((Date.now() - d.getTime()) / 86400000); return days <= 0 ? "Today" : days === 1 ? "Yesterday" : d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }); };
+    const list = all.filter(c => !q || c.name.toLowerCase().includes(q) || c.phone.replace(/\s/g, "").includes(q.replace(/\s/g, "")));
+    const mode = s.campMode || "all", isOffer = mode === "offer", withCode = isOffer || s.campCode;
+    const recips = isOffer ? eligible.filter(c => isSel(c.id)) : eligible;
+    const pct = s.campPct, days = s.campDays;
+    const until = "valid until " + new Date(Date.now() + days * 86400000).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    const msg = isOffer ? s.campMsgOffer : s.campMsgAll;
+    const who = recips[0] ? first(recips[0].name) : "there";
+    const chip = (on: boolean) => ({ bd: on ? "#FF5577" : "#ECD9E0", bg: on ? "#FDEAF2" : "#fff", fg: on ? "#8A2040" : "#3D1C31" });
+    const n = recips.length, cant = !n || !msg.trim() || (withCode && s.campCodeTxt.trim().length < 3) || s.campSending;
+    const tab = (v: string, label: string) => { const on = mode === v; return { label, on, fw: on ? 600 : 500, bg: on ? "#fff" : "transparent", fg: on ? "#1A0815" : "#8A5A6E", sh: on ? "0 1px 3px rgba(26,8,21,.12)" : "none", pick: () => this.setState({ campMode: v, campErr: "" }) }; };
+    const hist = (s.campHist ?? []).map((c: any) => ({ title: c.title, meta: `${c.hasImage ? "With image · " : ""}${c.mode === "all" ? "All customers" : `Custom offer · ${c.recipients} customer${c.recipients === 1 ? "" : "s"}`} · ${last(c.createdAt)}`, sent: c.sent, read: c.read, used: c.used }));
+    return {
+      cu: {
+        sub: s.custList === null ? "Loading your customers…" : `${all.length} customer${all.length === 1 ? "" : "s"} who ordered from you on WhatsApp`, q: s.custQ || "", onQ: (e: any) => this.setState({ custQ: e.target.value }),
+        all: ck(allOn), hasSel: sel.length > 0, noSel: !sel.length, sendOp: sel.length ? 1 : 0.45,
+        selLabel: sel.length ? `${sel.length} selected` : "Select all",
+        barBg: sel.length ? "#FFF7FA" : "#FBF8F9", barBd: sel.length ? "#F3B8CB" : "#F0E4E8",
+        toggleAll: () => this.setState({ custSel: allOn ? [] : eligible.map(c => c.id) }),
+        clear: () => this.setState({ custSel: [] }),
+        sendOffer: () => { this.setState({ page: "Campaigns", campMode: "offer", campErr: "" }); this.loadCampaigns(); history.replaceState(null, "", `/dashboard?page=campaigns&businessId=${this.state.businessId}`); },
+        empty: s.custList !== null && !list.length,
+        rows: list.map((c: any, i: number) => { const on = isSel(c.id), open = s.custOpen === c.id; return { ...ck(on), name: c.name + (c.optedOut ? " · opted out of offers" : ""), phone: phone(c.phone), ini: ini(c.name), av: AV[i % 4],
+          orders: c.orders, spent: "AED " + Math.round(c.spentMinor / 100).toLocaleString("en-US"), last: last(c.lastOrderAt), isOpen: open, rot: open ? "180deg" : "0deg", bd: on ? "#F3B8CB" : "#F0E4E8",
+          ckLabel: (on ? "Deselect " : "Select ") + c.name, toggle: () => { if (!c.optedOut) toggle(c.id); }, open: () => this.setState({ custOpen: open ? null : c.id }),
+          addrs: c.addresses.map((a: any, j: number) => ({ label: a.label, text: a.text, def: a.isDefault || j === 0 && !c.addresses.some((x: any) => x.isDefault), uses: a.uses ? (a.uses === 1 ? "Used for 1 order" : `Used for ${a.uses} orders`) : "Not used yet" })) }; }),
+      },
+      cp: {
+        modes: [tab("all", "Message all customers"), tab("offer", "Custom offer")],
+        isAll: !isOffer, isOffer, withCode, showCode: withCode,
+        allNote: `${eligible.length} customers will receive this message`,
+        allBtn: allOn ? "Clear all" : "Select all",
+        pick: eligible.map(c => { const on = isSel(c.id); return { ...ck(on), name: c.name, phone: phone(c.phone), rowBg: on ? "#FFF7FA" : "#fff", toggle: () => toggle(c.id) }; }),
+        selNote: n ? (n === 1 ? "1 customer selected" : `${n} customers selected`) : "Select at least one customer", selFg: n ? "#8A5A6E" : "#B42318",
+        swBg: s.campCode ? "#FF5577" : "#D9BFCB", swX: s.campCode ? "19px" : "3px", toggleCode: () => this.setState((st: any) => ({ campCode: !st.campCode })),
+        pcts: [10, 15, 20, 25].map(v => ({ label: v + "%", ...chip(v === pct), pick: () => this.setState((st: any) => ({ campPct: v, campCodeTxt: st.campCodeTxt.replace(/\d+$/, "") + v })) })),
+        days: [7, 14, 30].map(v => ({ label: v + " days", ...chip(v === days), pick: () => this.setState({ campDays: v }) })),
+        code: s.campCodeTxt, onCode: (e: any) => this.setState({ campCodeTxt: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 14) }),
+        pctLabel: pct + "%", until,
+        imgBg: s.campImg ? `url("${s.campImg}")` : "none", imgName: s.campImgName, hasImg: !!s.campImg, noImg: !s.campImg,
+        onImg: (e: any) => { const f: File | undefined = e.target.files?.[0]; e.target.value = ""; if (!f) return; if (!/^image\/(png|jpeg|webp)$/.test(f.type)) { this.setState({ campErr: "Use a JPG, PNG or WebP image." }); return; } if (f.size > 5 * 1048576) { this.setState({ campErr: "Use an image under 5 MB." }); return; } if (s.campImg) URL.revokeObjectURL(s.campImg); this.setState({ campImg: URL.createObjectURL(f), campImgFile: f, campImgName: f.name, campErr: "" }); },
+        clearImg: () => { if (s.campImg) URL.revokeObjectURL(s.campImg); this.setState({ campImg: "", campImgFile: null, campImgName: "" }); },
+        msg, onMsg: (e: any) => this.setState(isOffer ? { campMsgOffer: e.target.value } : { campMsgAll: e.target.value }),
+        tokens: "Use {name} to add each customer’s first name.",
+        preview: msg.replace(/\{name\}/g, who), previewTo: recips[0] ? (n > 1 ? `${recips[0].name} and ${n - 1} more` : recips[0].name) : "no one yet",
+        cant, sendOp: cant && !s.campSending ? 0.45 : 1, sending: s.campSending, err: s.campErr,
+        sendLabel: s.campSending ? "Sending…" : n === 1 ? "Send to 1 customer" : `Send to ${n} customers`,
+        history: hist, toast: s.campToast,
+        send: async (e: any) => { e?.preventDefault?.(); if (cant) return;
+          this.setState({ campSending: true, campErr: "" });
+          try {
+            const file: File | null = s.campImgFile;
+            const body = { mode, customerIds: isOffer ? sel : [], message: msg, ...(withCode ? { code: { code: s.campCodeTxt, percent: pct, days } } : {}), ...(file ? { image: { name: file.name, mimeType: file.type, data: await toBase64(file) } } : {}) };
+            const row = await api(`/api/v1/businesses/${s.businessId}/campaigns`, "POST", body);
+            this.setState((st: any) => ({ campSending: false, campToast: row.sent === 1 ? "Sent to 1 customer" : `Sent to ${row.sent} customers`, custSel: isOffer ? [] : st.custSel, campHist: [row, ...(st.campHist ?? [])] }));
+            this.later(2600, () => this.setState({ campToast: "" }));
+          } catch (err: any) { this.setState({ campSending: false, campErr: err.message }); } },
+      },
     };
   }
   overviewVm(ar: boolean, narrow: boolean) {
@@ -543,7 +620,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       .map((r, i) => ({ ...r, bt: i ? "1px solid #F3EEF1" : "0", tagBg: r.tag === "New" ? "#E4F4EC" : "#FFF4E5", tagFg: r.tag === "New" ? "#16704A" : "#8A4B00" }));
     const dlg = s.dlg.open ? { open: true, title: s.dlg.title, hint: s.dlg.hint, error: s.dlg.error, busy: s.dlg.busy, op: s.dlg.busy ? 0.6 : 1, saveLabel: s.dlg.busy ? "Saving…" : s.dlg.saveLabel, cancel: this.closeDialog, submit: this.submitDialog,
       fields: s.dlg.fields.map((f: any, i: number) => ({ label: f.label, placeholder: f.placeholder, dir: f.dir ?? "ltr", mode: f.mode ?? "text", focus: i === 0, value: s.dlg.values[f.key] ?? "", onChange: (e: any) => this.setState((st: any) => ({ dlg: { ...st.dlg, values: { ...st.dlg.values, [f.key]: e.target.value } } })) })) } : { open: false, fields: [] };
-    const NAV: [string, string][] = [["Overview", "M3 10.5 10 4l7 6.5M5 9v7.5h10V9"], ["Orders", "M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0"], ["Menu", "M5 4.5h10M5 10h10M5 15.5h6"], ["WhatsApp", "M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z"], ["Customers", "M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5"], ["Settings", "M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4"], ["Sign out", "M8 4.5H5.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H8M12.5 7l3 3-3 3M15.5 10H8.5"]];
+    const NAV: [string, string][] = [["Overview", "M3 10.5 10 4l7 6.5M5 9v7.5h10V9"], ["Orders", "M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0"], ["Menu", "M5 4.5h10M5 10h10M5 15.5h6"], ["WhatsApp", "M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z"], ["Customers", "M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5"], ["Campaigns", "M4 8v4h2.5L12 15.5v-11L6.5 8zM15 7.5a3.5 3.5 0 0 1 0 5"], ["Settings", "M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4"], ["Sign out", "M8 4.5H5.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H8M12.5 7l3 3-3 3M15.5 10H8.5"]];
     const noop = (e?: any) => e?.preventDefault?.();
     return {
       termsUrl: `${p.marketingUrl}/terms`, privacyUrl: `${p.marketingUrl}/privacy`,
@@ -581,11 +658,12 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       q: s.q, hasQ: !!s.q, onSearch: (e: any) => this.setState({ q: e.target.value }), clearSearch: () => this.setState({ q: "" }), sections, noResults: sections.length === 0, dashErr: s.dashErr,
       cats: [["All", T.all, count(M)], ...M.map(g => [g.id, catName(g), g.items.length])].map(([k, label, n]: any) => { const on = !q && s.cat === k; return { label, count: n, on, pick: () => this.setState({ cat: k, q: "" }), bg: on ? "#FDEAF2" : "transparent", fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, countFg: on ? "#8A2040" : "#8A5A6E", chipBg: on ? "#1A0815" : "#fff", chipFg: on ? "#fff" : "#3D1C31", chipBd: on ? "#1A0815" : "#ECD9E0" }; }),
       menuDone: s.menuDone && count(M) > 0, menuEmpty: !(s.menuDone && count(M) > 0), dashNarrow: narrow, dashWide: !narrow, openAddItem: p.canEdit ? this.openAddItem : noop, dlg,
-      nav: NAV.map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e: any) => { e?.preventDefault?.(); if (l === "Overview" || l === "Orders" || l === "Menu" || l === "WhatsApp" || l === "Settings") { this.setState({ page: l }); if (l === "WhatsApp") this.loadStats(); if (l === "Overview") { this.loadOverview(); this.showOverviewLoader(); } if (l === "Orders") { this.loadOrders(); this.showOrdersLoader(); } history.replaceState(null, "", `/dashboard?page=${l.toLowerCase()}&businessId=${this.state.businessId}`); } else if (l === "Customers") { if (!this.state.subData?.entitlements?.customers) this.setState({ lock: "customers" }); } else if (l === "Sign out") this.signOut(); }, fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, bg: on ? "#FDEAF2" : "transparent", bd: on ? "#FF5577" : "transparent" }; }),
+      nav: NAV.map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l, icon, pick: (e: any) => { e?.preventDefault?.(); if (l === "Overview" || l === "Orders" || l === "Menu" || l === "WhatsApp" || l === "Settings") { this.setState({ page: l }); if (l === "WhatsApp") this.loadStats(); if (l === "Overview") { this.loadOverview(); this.showOverviewLoader(); } if (l === "Orders") { this.loadOrders(); this.showOrdersLoader(); } history.replaceState(null, "", `/dashboard?page=${l.toLowerCase()}&businessId=${this.state.businessId}`); } else if (l === "Customers" || l === "Campaigns") { if (!this.state.subData?.entitlements?.customers) this.setState({ lock: l === "Customers" ? "customers" : "campaigns" }); else { this.setState({ page: l, campErr: "" }); this.loadCustomers(); if (l === "Campaigns") this.loadCampaigns(); history.replaceState(null, "", `/dashboard?page=${l.toLowerCase()}&businessId=${this.state.businessId}`); } } else if (l === "Sign out") this.signOut(); }, fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, bg: on ? "#FDEAF2" : "transparent", bd: on ? "#FF5577" : "transparent" }; }),
       setup: setupItems.map(([label0, done, fn], i) => { const lb = T.setup[i]; const label = Array.isArray(lb) ? lb[done ? 1 : 0] : lb; return { label, done, todo: !done, fg: done ? "#1A0815" : "#3D1C31", ul: !done && fn ? "underline" : "none", pick: fn || this.noopFn, bar: i < doneN ? "#16704A" : "rgba(26,8,21,.12)" }; }),
       setupLabel: ar ? `${doneN} من 5 مكتملة` : `${doneN} of 5 completed`, waSetupLabel: `${doneN} of 5 completed`,
       // whatsapp
       menuScopeNode: <MenuScope scope={s.menuScope} branchId={s.menuBranch} busy={s.scopeBusy} error={s.scopeErr} onPick={id => this.setState({ menuBranch: id, scopeErr: "" }, () => this.refreshMenu().catch(e => this.setState({ scopeErr: e.message })))} onCreate={copy => this.scopeAct(() => api(`/api/v1/businesses/${s.businessId}/menu/branches/${s.menuBranch}`, "POST", { copy }))} onRemove={() => this.scopeAct(() => api(`/api/v1/businesses/${s.businessId}/menu/branches/${s.menuBranch}`, "DELETE"))}/>,
+      pageCustomers: s.page === "Customers", pageCampaigns: s.page === "Campaigns", ...this.custVals(s),
       pageMenu: s.page === "Menu", pageOverview: s.page === "Overview", pageOrders: s.page === "Orders", pageBilling: s.page === "Billing", billingNode: s.page === "Billing" ? <BillingPage businessId={s.businessId} onChoosePlan={() => this.setState({ page: "Plans", planStep: "plans" })} onChanged={() => this.loadSub()}/> : null, ...this.subVals(ar, narrow), ordLoading: s.orders === null && !s.ordErr && s.ordSlow, loaderNode: <ContentLoader/>, ovLoading: s.overview === null && s.ovSlow, ovReady: s.overview !== null, pageSettings: s.page === "Settings", notSettings: s.page !== "Settings", settingsNode: s.page === "Settings" ? <SettingsLoader businessId={s.businessId} query={`?businessId=${s.businessId}`} onPremium={() => this.setState({ lock: "branches" })} onSaved={() => this.loadOverview()}/> : null, ...this.overviewVm(ar, narrow), ...this.ordersVals(ar, narrow), pageWA: s.page === "WhatsApp", waOpen: !!s.wa, wa: { intro: s.wa === "intro", connecting: s.wa === "connecting", success: s.wa === "success", import: s.wa === "import", review: s.wa === "review", catalog: s.wa === "catalog", error: s.wa === "error", inUse: s.wa === "inUse" },
       waLabel: ({ intro: "08 WhatsApp · Connect", connecting: "08a WhatsApp · Connecting", success: "08b WhatsApp · Connected", import: "08c WhatsApp · Import info", review: "08d WhatsApp · Review differences", catalog: "08e WhatsApp · Catalog found", error: "08g WhatsApp · Error", inUse: "08h WhatsApp · Number in use" } as any)[s.wa] || "08 WhatsApp",
       waClose: () => { this.connectToken++; this.clearTimers(); this.setState({ wa: null, confirmReplace: false }); }, openWA: this.openWA, startConnect: this.startConnect, continueSetup: () => { const f = s.overview?.setup; if (!waOn) this.openWA(); else if (!s.menuDone) this.setState({ page: "Menu" }); else if (!f?.delivery) { history.replaceState(null, "", `/dashboard?page=settings&businessId=${this.state.businessId}#delivery`); this.setState({ page: "Settings" }); } else if (!f?.tested) { const n = String(s.waPhone || this.props.wa.displayPhoneNumber || "").replace(/\D/g, ""); if (n) window.open("https://wa.me/" + n, "_blank"); } },

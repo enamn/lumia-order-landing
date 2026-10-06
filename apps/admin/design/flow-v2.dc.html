@@ -836,6 +836,7 @@ input::placeholder{color:#B89AA8}
               <textarea value="{{ cp.msg }}" onChange="{{ cp.onMsg }}" rows="4" style="padding:12px 14px;border-radius:12px;border:1.5px solid #ECD9E0;font-size:15px;line-height:1.5;resize:vertical;font-family:inherit" style-focus="border-color:#FF5577;box-shadow:0 0 0 4px #FDEAF2"></textarea>
               <span style="font-size:13px;color:#8A5A6E">{{ cp.tokens }}</span>
             </label>
+            <sc-if value="{{ cp.err }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:14px;color:#B4233B">{{ cp.err }}</div></sc-if>
             <button type="submit" disabled="{{ cp.cant }}" style="height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;opacity:{{ cp.sendOp }};display:flex;align-items:center;justify-content:center;gap:10px">
               <sc-if value="{{ cp.sending }}" hint-placeholder-val="{{ false }}"><span style="width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:lo-spin .8s linear infinite"></span></sc-if>{{ cp.sendLabel }}
             </button>
