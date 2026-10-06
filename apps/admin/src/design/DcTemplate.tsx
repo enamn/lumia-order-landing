@@ -537,11 +537,13 @@ export function DcTemplate({ vm }: { vm: any }) {
                       <span style={S("font-size:16px;font-weight:700;letter-spacing:-0.035em")}>
                         Lumia
                       </span>
-                      <span style={S("font-size:12px;letter-spacing:-0.01em")}>
-                        Order
+                      <span style={S("display:flex;align-items:center;gap:5px")}>
+                        <span style={S("font-size:12px;letter-spacing:-0.01em")}>
+                          Order
+                        </span>
+                        {vm.planBadge}
                       </span>
                     </span>
-                    {vm.planBadge}
                   </div>
                   <nav style={S("flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:2px")}>
                     {(vm.nav as any[]).map((n: any, __i: number) => (
