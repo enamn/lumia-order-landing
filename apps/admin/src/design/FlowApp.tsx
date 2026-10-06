@@ -148,7 +148,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   // The loader only appears if the first load is slow, so fast loads never flash it.
   showOrdersLoader = () => { if (this.state.orders === null) { this.setState({ ordSlow: false }); this.later(350, () => { if (this.state.orders === null) this.setState({ ordSlow: true }); }); } };
   showOverviewLoader = () => { if (this.state.overview === null) { this.setState({ ovSlow: false }); this.later(350, () => { if (this.state.overview === null) this.setState({ ovSlow: true }); }); } };
-  loadSub = () => (this.state.businessId ? api(`/api/v1/businesses/${this.state.businessId}/subscription`).then((subData: any) => { this.setState({ subData }); return subData; }).catch(() => null) : Promise.resolve(null));
+  loadSub = () => (this.state.businessId ? api(`/api/v1/businesses/${this.state.businessId}/subscription`).then((subData: any) => { const locked = !!subData?.access && subData.access.active === false; this.setState(locked && this.state.page !== "Plans" ? { subData, page: "Plans", planStep: "plans", sub: null } : { subData }); return subData; }).catch(() => null) : Promise.resolve(null));
   // Back from Stripe: the webhook may take a few seconds to arrive, so check until the plan shows as active.
   confirmPayment = async (sessionId?: string) => {
     this.setState({ sub: "confirming" });
@@ -275,6 +275,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const periodEnd = d?.currentPeriodEnd ? new Date(d.currentPeriodEnd) : null, pastDue = d?.status === "PAST_DUE";
     const tab = (v: string, label: string) => { const on = s.bill === v; return { label, on, fw: on ? 600 : 500, bg: on ? "#fff" : "transparent", fg: on ? "#1A0815" : "#8A5A6E", sh: on ? "0 1px 3px rgba(26,8,21,.12)" : "none", pick: () => this.setState({ bill: v }) }; };
     const lk = s.lock ? LOCKS[s.lock] : null;
+    const locked = !!d?.access && d.access.active === false;
     const T = d?.terminal, st = Math.max(0, Math.min(4, T?.stage ?? 0)), placed = d?.startedAt ? new Date(d.startedAt) : new Date();
     const short = (x?: string | Date) => (x ? new Date(x).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "");
     const STEPS = [A("Order placed", "تم الطلب"), A("Preparing", "قيد التحضير"), A("Shipped", "تم الشحن"), A("Out for delivery", "خرج للتوصيل"), A("Delivered", "تم التسليم")];
@@ -283,6 +284,8 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const eta = (n: number) => short(new Date(placed.getTime() + n * 86_400_000));
     return {
       sub: {
+        locked, canClose: !locked, logout: this.signOut, logoutLabel: A("Log out", "تسجيل الخروج"),
+        lockedMsg: d?.access?.reason === "ended" ? A("Your plan has ended. The dashboard is locked and the WhatsApp assistant has stopped replying until you choose a plan.", "انتهت باقتك. تم قفل لوحة التحكم وتوقف مساعد واتساب عن الرد حتى تختار باقة.") : A("Your free trial has ended. The dashboard is locked and the WhatsApp assistant has stopped replying until you choose a plan.", "انتهت تجربتك المجانية. تم قفل لوحة التحكم وتوقف مساعد واتساب عن الرد حتى تختار باقة."),
         panel: false, done: s.sub === "done", paying, stepPlans: s.planStep !== "pay", stepPay: s.planStep === "pay", stepLabel: s.planStep === "pay" ? "Step 2 of 2" : "Step 1 of 2", pad: narrow ? "24px 16px 32px" : "40px 32px 48px",
         onTrial: d !== null && !active, isPaid: false, /* the plan is shown as a badge on the account chip; the renewal date is in Billing */ paidName: paidPlan?.name ?? "", paidBg: pastDue ? "#FFF1DC" : "#E4F4EC", paidFg: pastDue ? "#8A4B00" : "#16704A",
         renewLine: pastDue ? A("Payment failed · update your card", "فشل الدفع · حدّث بطاقتك") : d?.cancelAtPeriodEnd && periodEnd ? A(`Ends ${fd(periodEnd)}`, `ينتهي في ${fd(periodEnd)}`) : periodEnd ? A(`Renews ${fd(periodEnd)}`, `يتجدد في ${fd(periodEnd)}`) : "",

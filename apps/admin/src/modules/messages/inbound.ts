@@ -5,6 +5,7 @@ import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
 import { autoReply, handleVoice, replyToOptChange, replyToUnreadable, UNREADABLE_TYPES } from "./ai";
 import { sendWelcome } from "./welcome";
+import { accessFor } from "@/modules/billing/service";
 import { lumiaApi } from "@/server/lumia-api";
 
 // Messages customers send to a restaurant's linked WhatsApp number. lumia-order-api receives Meta's webhook and forwards them here;
@@ -27,7 +28,10 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
   for (const m of messages) {
     const account = await db.whatsAppAccount.findFirst({ where: { phoneNumberId: m.phoneNumberId, status: "CONNECTED" }, select: { businessId: true, wabaId: true } });
     if (!account || (account.wabaId && m.wabaId && account.wabaId !== m.wabaId)) { result.unmatched++; continue; }
+    // Trial over or plan ended (after the grace period): the assistant is off. Messages are still stored for the owner.
+    const live = (await accessFor(account.businessId)).active;
     if (m.type === "request_welcome") {
+      if (!live) continue;
       // Someone just opened the chat: greet them. A failed greeting must not fail the whole batch.
       const sent = await sendWelcome({ businessId: account.businessId, messageId: m.messageId, senderId: m.senderId, ...(m.senderName ? { senderName: m.senderName } : {}), timestamp: m.timestamp }).catch((e: { code?: unknown }) => { console.error(JSON.stringify({ level: "error", code: "WELCOME_FAILED", reason: typeof e?.code === "string" ? e.code : "UNKNOWN" })); return "skipped" as const; });
       if (sent === "sent") result.welcomed = (result.welcomed ?? 0) + 1;
@@ -58,8 +62,8 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
         if (at > conversation.lastMessageAt) await tx.conversation.update({ where: { id: conversation.id }, data: { lastMessageAt: at } });
       });
       // Look the pin up (emirate, area, street) so the chat and the delivery pricing use real place names instead of coordinates. A failed lookup changes nothing.
-      if (pending && m.type.toLowerCase() === "location" && m.location) await resolvePin(pending.conversationId, m.messageId, m.location).catch(() => undefined);
-      result.stored++; if (pending) toAnswer.push(pending);
+      if (pending && live && m.type.toLowerCase() === "location" && m.location) await resolvePin(pending.conversationId, m.messageId, m.location).catch(() => undefined);
+      result.stored++; if (pending && live) toAnswer.push(pending);
     } catch (error) {
       // Meta can deliver the same message more than once; the unique message ID makes that a no-op.
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") result.duplicates++; else throw error;

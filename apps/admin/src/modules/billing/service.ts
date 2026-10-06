@@ -28,6 +28,28 @@ export const trialInfo = (createdAt: Date, now = Date.now()) => {
   return { endsAt: endsAt.toISOString(), daysLeft: Math.max(0, Math.min(TRIAL_DAYS, Math.ceil((endsAt.getTime() - now) / 86_400_000))) };
 };
 export const getSubscriptionFor = async (businessId: string) => db.subscription.findFirst({ where: { businessId } });
+// Whether a restaurant may use the product right now. Free trial and paid plans: yes. A failed renewal keeps everything working through the retry window (a grace period);
+// once the trial is over, the plan is cancelled or the retries run out, the dashboard is locked and the assistant stops answering.
+export type AccessReason = "trial" | "paid" | "grace" | "trial_ended" | "ended";
+export interface Access { active: boolean; reason: AccessReason; graceEndsAt?: string }
+export function accessOf(sub: Pick<Subscription, "status" | "failedAttempts" | "nextChargeAt"> | null, createdAt: Date, now = Date.now()): Access {
+  if (!sub) return trialInfo(createdAt, now).daysLeft > 0 ? { active: true, reason: "trial" } : { active: false, reason: "trial_ended" };
+  if (sub.status === "ACTIVE") return { active: true, reason: "paid" };
+  if (sub.status === "PAST_DUE") {
+    const later = RETRY_DAYS.slice(Math.max(1, sub.failedAttempts)).reduce((a, d) => a + d, 0);
+    const end = (sub.nextChargeAt ?? new Date(now)).getTime() + later * 86_400_000;
+    return end > now ? { active: true, reason: "grace", graceEndsAt: new Date(end).toISOString() } : { active: false, reason: "ended" };
+  }
+  return { active: false, reason: "ended" };
+}
+export async function accessFor(businessId: string, now = Date.now()): Promise<Access> {
+  const [sub, b] = await Promise.all([getSubscriptionFor(businessId), db.business.findUnique({ where: { id: businessId }, select: { createdAt: true } })]);
+  return b ? accessOf(sub, b.createdAt, now) : { active: false, reason: "ended" };
+}
+export async function requireAccess(userId: string, businessId: string) {
+  await authorize(userId, businessId);
+  if (!(await accessFor(businessId)).active) throw new AppError("SUBSCRIPTION_REQUIRED", "Your plan has ended. Choose a plan to keep using Lumia Order.", 402);
+}
 export async function entitlementsFor(businessId: string) { return entitlements(await getSubscriptionFor(businessId)); }
 // Calling customers by name is for Plus and Pro, and for restaurants still in their free trial. Starter keeps replies impersonal.
 export async function canPersonalize(businessId: string): Promise<boolean> {
@@ -55,7 +77,7 @@ export async function getSubscription(userId: string, businessId: string) {
     nextCharge: active && !sub!.cancelAtPeriodEnd && nextPlan && nextBilling ? { at: iso(sub!.nextChargeAt ?? sub!.currentPeriodEnd)!, amountMinor: quoteRenewal(nextPlan, nextBilling, nextPlan === "pro" ? Math.max(0, sub!.pendingExtraBranches ?? sub!.extraBranches ?? 0) : 0).totalMinor } : null,
     card: (sub?.card as Card | null) ?? undefined, terminals: sub?.terminals, terminalAddress: sub?.terminalAddress ?? undefined, terminal: (sub?.terminal as Terminal | null) ?? undefined, startedAt: iso(sub?.startedAt),
     hasCustomer: Boolean(sub?.stripeCustomerId || b.stripeCustomerId), defaults: { address: known.address }, canManage: member.role === "OWNER" || member.role === "ADMIN",
-    trial: trialInfo(b.createdAt), entitlements: entitlements(sub), usage,
+    access: accessOf(sub, b.createdAt), trial: trialInfo(b.createdAt), entitlements: entitlements(sub), usage,
     branches: { ...(await branchInfo(businessId, sub)) },
     topups: TOPUP_IDS.map(id => ({ id, orders: TOPUPS[id].orders, totalMinor: quoteTopUp(id).totalMinor, subtotalMinor: quoteTopUp(id).subtotalMinor })),
   };

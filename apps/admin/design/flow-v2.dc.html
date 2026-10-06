@@ -880,7 +880,7 @@ input::placeholder{color:#B89AA8}
         <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style="display:block;flex:none"><defs><linearGradient id="gPD3" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF5577"></stop><stop offset="1" stop-color="#C93DFF"></stop></linearGradient></defs><path d="M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z" stroke="url(#gPD3)" stroke-width="8" stroke-linejoin="round"></path><path d="M28 30V66H40" stroke="#1A0815" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="64" cy="55" r="11" stroke="url(#gPD3)" stroke-width="10"></circle></svg>
         <span style="font-size:16px;font-weight:600;flex:1;min-width:0">Subscribe to Lumia Order</span>
         <span style="font-size:14px;color:#8A5A6E;flex:none">{{ sub.stepLabel }}</span>
-        <button type="button" onClick="{{ subClosePlans }}" aria-label="Close" style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none" style-hover="background:#FBF3F8"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="m4 4 8 8M12 4l-8 8" stroke="#1A0815" stroke-width="1.7" stroke-linecap="round"></path></svg></button>
+        <sc-if value="{{ sub.locked }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ sub.logout }}" style="height:40px;padding:0 14px;border-radius:12px;border:1.5px solid #ECD9E0;font-size:14px;font-weight:600;flex:none" style-hover="background:#FBF3F8">{{ sub.logoutLabel }}</button></sc-if><sc-if value="{{ sub.canClose }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ subClosePlans }}" aria-label="Close" style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none" style-hover="background:#FBF3F8"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="m4 4 8 8M12 4l-8 8" stroke="#1A0815" stroke-width="1.7" stroke-linecap="round"></path></svg></button></sc-if>
       </header>
       <div style="flex:1;min-height:0;overflow-y:auto">
       <div style="max-width:1100px;margin:0 auto;padding:{{ sub.pad }};display:flex;flex-direction:column;gap:22px;align-items:center">
@@ -890,6 +890,7 @@ input::placeholder{color:#B89AA8}
             <div style="flex:1 1 280px;min-width:0">
               <h1 style="font-size:28px;font-weight:600;letter-spacing:-0.035em">Choose your plan</h1>
               <p style="font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5;text-wrap:pretty">{{ sub.trialLine }}</p>
+              <sc-if value="{{ sub.locked }}" hint-placeholder-val="{{ false }}"><div role="alert" style="margin-top:12px;padding:12px 14px;border-radius:12px;background:#FFF1DC;color:#8A4B00;font-size:14px;font-weight:500;line-height:1.5">{{ sub.lockedMsg }}</div></sc-if>
             </div>
             <div role="radiogroup" aria-label="Billing" style="display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px">
               <sc-for list="{{ sub.bills }}" as="b" hint-placeholder-count="2"><button type="button" role="radio" aria-checked="{{ b.on }}" onClick="{{ b.pick }}" style="height:34px;padding:0 14px;border-radius:8px;font-size:14px;white-space:nowrap;font-weight:{{ b.fw }};background:{{ b.bg }};color:{{ b.fg }};box-shadow:{{ b.sh }}">{{ b.label }}</button></sc-for>
@@ -2049,5 +2050,6 @@ class Component extends DCLogic {
   }
 }
 </script>
+<!-- LUMIA-LOCK -->
 </body>
 </html>

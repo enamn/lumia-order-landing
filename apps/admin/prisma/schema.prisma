@@ -795,3 +795,14 @@ model DiscountRedemption {
   @@index([codeId, customerId])
   @@map("discount_redemptions")
 }
+
+// One row per reminder email already sent (kind + period), so the hourly job never sends the same email twice.
+model BillingNotice {
+  id String @id @default(uuid()) @map("_id")
+  businessId String
+  kind String
+  periodKey String
+  sentAt DateTime @default(now())
+  @@index([businessId])
+  @@map("billing_notices")
+}

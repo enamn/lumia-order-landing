@@ -1941,11 +1941,22 @@ export function DcTemplate({ vm }: { vm: any }) {
                             <span style={S("font-size:14px;color:#8A5A6E;flex:none")}>
                               {vm.sub.stepLabel}
                             </span>
-                            <button type="button" onClick={vm.subClosePlans} aria-label="Close" style={S("width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
-                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <path d="m4 4 8 8M12 4l-8 8" stroke="#1A0815" strokeWidth="1.7" strokeLinecap="round" />
-                              </svg>
-                            </button>
+                            {vm.sub.locked && (
+                              <>
+                              <button type="button" onClick={vm.sub.logout} style={S("height:40px;padding:0 14px;border-radius:12px;border:1.5px solid #ECD9E0;font-size:14px;font-weight:600;flex:none")} className="dch0">
+                                {vm.sub.logoutLabel}
+                              </button>
+                              </>
+                            )}
+                            {vm.sub.canClose && (
+                              <>
+                              <button type="button" onClick={vm.subClosePlans} aria-label="Close" style={S("width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                  <path d="m4 4 8 8M12 4l-8 8" stroke="#1A0815" strokeWidth="1.7" strokeLinecap="round" />
+                                </svg>
+                              </button>
+                              </>
+                            )}
                           </header>
                           <div style={S("flex:1;min-height:0;overflow-y:auto")}>
                             <div style={S(`max-width:1100px;margin:0 auto;padding:${vm.sub.pad};display:flex;flex-direction:column;gap:22px;align-items:center`)}>
@@ -1960,6 +1971,13 @@ export function DcTemplate({ vm }: { vm: any }) {
                                       <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5;text-wrap:pretty")}>
                                         {vm.sub.trialLine}
                                       </p>
+                                      {vm.sub.locked && (
+                                        <>
+                                        <div role="alert" style={S("margin-top:12px;padding:12px 14px;border-radius:12px;background:#FFF1DC;color:#8A4B00;font-size:14px;font-weight:500;line-height:1.5")}>
+                                          {vm.sub.lockedMsg}
+                                        </div>
+                                        </>
+                                      )}
                                     </div>
                                     <div role="radiogroup" aria-label="Billing" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px")}>
                                       {(vm.sub.bills as any[]).map((b: any, __i: number) => (
