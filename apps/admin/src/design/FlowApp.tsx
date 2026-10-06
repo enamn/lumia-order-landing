@@ -10,6 +10,7 @@ import { PageLoader, ContentLoader } from "@/components/lumia-loader";
 import { SettingsLoader, prefetchSettings } from "./SettingsApp";
 import { MenuScope, type Scope } from "./MenuScope";
 import { EmailVerify } from "./EmailVerify";
+import { CountryPick } from "./CountryPick";
 import { AccountMenu, PlanBadge } from "./AccountMenu";
 import { BillingPage } from "./BillingPage";
 import { mountEmbeddedCheckout } from "@/lib/stripe-embed";
@@ -94,7 +95,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const business = props.business;
     this.state = {
       step: props.initialStep, num: "", cc: 0, focused: false, invalid: false, srvErr: "", sending: false, ccOpen: false, e164: "",
-      digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
+      opCountry: "", digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu)) > 0, cat: "All", menu: toCats(props.menu), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
       page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", embedId: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
@@ -470,7 +471,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     if (!name) { this.setState({ nameErr: true, nameFail: "" }); this.focus(this.nameRef); return; }
     this.setState({ busy: true });
     try {
-      const b = await api("/api/v1/businesses", "POST", { name, locationName: "Main branch", businessType: "RESTAURANT", ...(this.state.logo?.startsWith("data:") ? { logoUrl: this.state.logo } : {}) });
+      const b = await api("/api/v1/businesses", "POST", { name, locationName: "Main branch", businessType: "RESTAURANT", countryCode: this.state.opCountry || countryOf(this.state.e164 || this.props.userPhone || "")?.code || COUNTRIES[this.state.cc].code, ...(this.state.logo?.startsWith("data:") ? { logoUrl: this.state.logo } : {}) });
       this.setState({ busy: false, businessId: b.id }); this.go("menu", { menuErr: "" });
     } catch (err) { this.setState({ busy: false, nameErr: true, nameFail: err instanceof Error ? err.message : "Please try again." }); }
   };
@@ -594,6 +595,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       : { pageBg: isDash ? "#fff" : wash, pageAlign: "stretch", pagePad: "0", devW: "100%", devH: "auto", devMinH: "100vh", devRadius: "0", devBd: "0", devShadow: "none", devOv: "visible", devBg: "transparent", cardW: wide ? "540px" : "448px", cardMinH: s.step === "verified" ? "420px" : "auto", cardBd: "1px solid #ECD9E0", cardRadius: "24px", cardShadow: "0 1px 2px rgba(26,8,21,.04), 0 30px 80px -40px rgba(138,32,64,.28)", cardPad: "40px", spacer: "0", headTop: "32px", stAlign: "center", stPad: "64px 24px", previewH: "260px", dashPadX: "28px", dashPad: "28px 32px 48px" };
     Object.assign(L, stickL); L.devTf = "none"; L.drawerW = narrow ? "100%" : "460px"; L.secTop = "0px"; L.split2 = narrow ? "minmax(0,1fr)" : "minmax(0,1.6fr) minmax(0,1fr)"; L.dashH = "100dvh"; // v2: the dashboard fills the screen and only its content area scrolls
     const ring = (err: boolean, foc: boolean, busy: boolean) => err ? { bd: "#B4233B", ring: "0 0 0 4px rgba(180,35,59,.12)", bg: "#fff", op: 1 } : foc && !busy ? { bd: "#FF5577", ring: "0 0 0 4px rgba(255,85,119,.14)", bg: "#fff", op: 1 } : { bd: "#E3CBD4", ring: "none", bg: busy ? "#FBF3F8" : "#fff", op: busy ? 0.7 : 1 };
+    const opCountry = s.opCountry || countryOf(s.e164 || p.userPhone || "")?.code || c.code;
     const masked = maskPhone(s.e164 || p.userPhone || c.dial + " " + fmt("501234567", c.groups));
     const remain = Math.max(0, Math.ceil((s.resendAt - s.now) / 1000)); const expired = s.otpErr === "expired"; const activeIdx = Math.min(s.digits.length, 5);
     const boxes = Array.from({ length: 6 }, (_, i) => { const ch = s.digits[i] || ""; const active = s.otpFocused && !s.verifying && i === activeIdx && !expired; const err = s.otpErr === "incorrect"; return { ch, caret: active && !ch, bd: err ? "#B4233B" : active ? "#FF5577" : ch ? "#D9BFCB" : "#E3CBD4", ring: err ? "0 0 0 3px rgba(180,35,59,.10)" : active ? "0 0 0 4px rgba(255,85,119,.14)" : "none", bg: err ? "#FFF7F8" : expired ? "#FBF3F8" : "#fff" }; });
@@ -669,6 +671,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       resend: () => this.resend("whatsapp"), sms: () => this.resend("sms"), changeNumber: () => { this.clearTimers(); this.setState({ verifying: false }); this.go("phone"); },
       // name
       nameRef: this.nameRef, name: s.name, nameErr: s.nameErr, nameErrText: s.nameFail || "Enter your restaurant name to continue", nf: ring(s.nameErr, s.nameFocused, false), onName: (e: any) => this.setState({ name: e.target.value, nameErr: false, nameFail: "" }),
+      countryNode: <CountryPick value={opCountry} onChange={code => this.setState({ opCountry: code })} ar={ar}/>,
       nameFocus: () => this.setState({ nameFocused: true }), nameBlur: () => this.setState({ nameFocused: false }), submitName: this.submitName,
       planBadge: this.planBadge(s, ar), accountNode: this.accountMenu("sidebar", s, nm, initials, ar), accountNodeMobile: this.accountMenu("header", s, nm, initials, ar),
       logo: s.logo, noLogo: !s.logo, logoImg: s.logo ? ce("img", { key: "lg", src: s.logo, alt: "", style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } }) : null, logoBtn: s.logo ? "Change logo" : "Upload logo", logoTile: { bd: s.logo ? "transparent" : "#E3CBD4" }, onLogo: this.onLogo, initials, nameOrDefault: nm,

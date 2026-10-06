@@ -840,3 +840,28 @@ model AnalyticsEvent {
   @@index([at])
   @@map("analytics_events")
 }
+
+// Which parts of a GCC market are switched on. Static facts (currency, time zone, dial code ...) are in code (modules/market/countries.ts); these flags can be changed without a deployment.
+model Market {
+  id String @id @default(uuid()) @map("_id")
+  code String @unique
+  registrationEnabled Boolean @default(false)
+  paidActivationEnabled Boolean @default(false)
+  otpEnabled Boolean @default(false)
+  whatsappOnboardingEnabled Boolean @default(false)
+  terminalSalesEnabled Boolean @default(false)
+  updatedAt DateTime @updatedAt
+  @@map("markets")
+}
+// Every change to a market's flags: who, when, why, and what changed.
+model MarketChange {
+  id String @id @default(uuid()) @map("_id")
+  code String
+  actorId String
+  reason String
+  before Json
+  after Json
+  at DateTime @default(now())
+  @@index([code, at])
+  @@map("market_changes")
+}

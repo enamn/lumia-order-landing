@@ -239,6 +239,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                       </div>
                       </>
                     )}
+                    {vm.countryNode}
                     <div style={S("display:flex;align-items:center;gap:8px;margin-top:26px")}>
                       <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                         Logo

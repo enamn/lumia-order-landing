@@ -145,6 +145,7 @@ input::placeholder{color:#B89AA8}
     <sc-if value="{{ nameErr }}" hint-placeholder-val="{{ false }}">
       <div role="alert" style="margin-top:10px;font-size:14px;color:#B4233B">{{ nameErrText }}</div>
     </sc-if>
+    {{ countryNode }}
     <div style="display:flex;align-items:center;gap:8px;margin-top:26px">
       <span style="font-size:14px;font-weight:500;color:#3D1C31">Logo</span>
       <span style="font-size:12px;font-weight:500;padding:2px 8px;border-radius:999px;background:#F3EEF1;color:#8A5A6E">Optional</span>
@@ -2051,6 +2052,6 @@ class Component extends DCLogic {
   }
 }
 </script>
-<!-- LUMIA-LOCK --><!-- LUMIA-EMAIL -->
+<!-- LUMIA-LOCK --><!-- LUMIA-EMAIL --><!-- LUMIA-COUNTRY -->
 </body>
 </html>

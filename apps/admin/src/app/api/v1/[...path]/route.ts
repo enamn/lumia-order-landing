@@ -14,8 +14,9 @@ import { getAiSettings, setAiSettings } from "@/modules/messages/ai";
 import { listOrders, setOrderStatus } from "@/modules/orders/service";
 import { AppError } from "@/server/errors";
 import { startEmailVerification, confirmEmailVerification } from "@/modules/business/contact-email";
+import { listMarkets } from "@/modules/market/service";
 import { requireAccess } from "@/modules/billing/service";
-import { createBusiness, getBusiness, listBusinesses, updateBusiness, updateLocation, readiness, completeOnboarding, members, setMember } from "@/modules/business/service";
+import { createBusiness, changeCountry, getBusiness, listBusinesses, updateBusiness, updateLocation, readiness, completeOnboarding, members, setMember } from "@/modules/business/service";
 export const dynamic = "force-dynamic";
 type Context = { params: Promise<{ path: string[] }> };
 async function handle(request: Request, context: Context) {
@@ -24,6 +25,7 @@ async function handle(request: Request, context: Context) {
     const [resource, businessId, section, subId, subId2] = path;
     const method = request.method;
     if (resource === "me" && path.length === 1 && method === "PATCH") return setLanguage(userId, await jsonBody(request));
+    if (resource === "markets" && path.length === 1 && method === "GET") return (await listMarkets()).map(m => ({ code: m.code, nameEn: m.nameEn, nameAr: m.nameAr, flag: m.flag, dial: m.dial, currency: m.currency, timezone: m.timezone, registrationEnabled: m.registrationEnabled, paidActivationEnabled: m.paidActivationEnabled, state: m.state, stateNote: m.stateNote }));
     if (resource !== "businesses") throw new AppError("NOT_FOUND", "Endpoint not found.", 404);
     if (path.length === 1) {
       if (method === "GET") return listBusinesses(userId);
@@ -35,6 +37,7 @@ async function handle(request: Request, context: Context) {
     }
     // Trial over or plan ended: only the plan and billing pages keep working until the restaurant subscribes.
     if (section && section !== "subscription" && section !== "contact-email") await requireAccess(userId, businessId!);
+    if (section === "country" && method === "POST" && path.length === 3) return changeCountry(userId, businessId!, await jsonBody(request), requestId);
     if (section === "contact-email" && method === "POST") {
       if (path.length === 3) return startEmailVerification(userId, businessId!, await jsonBody(request));
       if (subId === "verify" && path.length === 4) return confirmEmailVerification(userId, businessId!, await jsonBody(request));

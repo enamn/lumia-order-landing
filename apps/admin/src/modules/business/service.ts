@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { transaction } from "@/server/transaction";
@@ -6,6 +7,8 @@ import { AppError } from "@/server/errors";
 import { profileInclude, listBusinesses } from "./repository";
 import { createBusinessSchema, profileSchema, locationUpdateSchema, memberSchema } from "./validators";
 import { steps, evaluateReadiness } from "../onboarding/readiness";
+import { MARKETS, isCountryCode, marketFromDial } from "../market/countries";
+import { requireRegistration } from "../market/service";
 
 export async function createBusiness(userId: string, input: unknown, requestId: string) {
   const data = createBusinessSchema.parse(input);
@@ -14,18 +17,48 @@ export async function createBusiness(userId: string, input: unknown, requestId: 
     const owner = await tx.user.findFirst({ where: { id: userId, status: "ACTIVE", phoneNumberVerified: true } });
     if (!owner) throw new AppError("UNAUTHENTICATED", "Verify your phone number to continue.", 401);
     await tx.user.update({ where: { id: userId }, data: { workspaceInitialized: true } });
-    const existing = await tx.business.findFirst({ where: { organization: { members: { some: { userId, status: "ACTIVE" } } } }, orderBy: { createdAt: "asc" } });
-    if (existing) return existing;
+    // The restaurant's country: the one chosen, otherwise the country of the owner's phone number.
+    const chosen = data.countryCode ?? marketFromDial(owner.phoneNumber)?.code ?? "AE";
+    if (!isCountryCode(chosen)) throw new AppError("COUNTRY_NOT_SUPPORTED", "Lumia Order is available in the UAE, Saudi Arabia, Oman, Bahrain, Qatar and Kuwait.", 422);
+    const market = MARKETS[chosen];
+    // One restaurant account per country: a brand in two countries has two accounts. Asking again for a country you already have returns that account.
+    const mine = await tx.business.findMany({ where: { organization: { members: { some: { userId, status: "ACTIVE" } } } }, orderBy: { createdAt: "asc" } });
+    const same = mine.find(b => b.countryCode === chosen) ?? (!data.countryCode ? mine[0] : undefined);
+    if (same) return same;
+    await requireRegistration(chosen);
     const user = await tx.user.findFirst({ where: { id: userId, status: "ACTIVE" } });
     if (!user) throw new AppError("UNAUTHENTICATED", "Please sign in.", 401);
     const org = await tx.organization.create({ data: { name: data.name, slug: `org-${crypto.randomUUID()}`, members: { create: { userId, role: "OWNER" } } } });
     const business = await tx.business.create({ data: { organizationId: org.id, name: data.name, logoUrl: data.logoUrl, phone: owner.phoneNumber, slug: `business-${crypto.randomUUID()}`, businessType: data.businessType,
-      locations: { create: { name: data.locationName, code: "MAIN", hours: { create: Array.from({ length: 7 }, (_, dayOfWeek) => ({ dayOfWeek, isClosed: false, openTime: "09:00", closeTime: "22:00" })) } } },
+      countryCode: market.code, currencyCode: market.currency, timezone: market.timezone,
+      locations: { create: { name: data.locationName, code: "MAIN", countryCode: market.code, timezone: market.timezone, hours: { create: Array.from({ length: 7 }, (_, dayOfWeek) => ({ dayOfWeek, isClosed: false, openTime: "09:00", closeTime: "22:00" })) } } },
       onboarding: { create: { steps: { create: steps.map(stepKey => ({ stepKey, status: stepKey === "BUSINESS" ? "IN_PROGRESS" : "PENDING" })) } } },
     } });
-    await tx.auditLog.create({ data: { organizationId: org.id, businessId: business.id, userId, entityType: "Business", entityId: business.id, action: "business.created", requestId } });
+    await tx.auditLog.create({ data: { organizationId: org.id, businessId: business.id, userId, entityType: "Business", entityId: business.id, action: "business.created", afterData: { countryCode: market.code, currency: market.currency }, requestId } });
     return business;
   });
+}
+
+// A restaurant's country is fixed once it has real records. Until then (a draft account) it can still be corrected; after that the restaurant needs a new account in the right country.
+export async function changeCountry(userId: string, businessId: string, input: unknown, requestId: string) {
+  const { countryCode } = z.object({ countryCode: z.string().length(2).toUpperCase() }).strict().parse(input);
+  const { member } = await authorize(userId, businessId, "business.manage");
+  if (!isCountryCode(countryCode)) throw new AppError("COUNTRY_NOT_SUPPORTED", "This country is not supported.", 422);
+  const b = await db.business.findFirstOrThrow({ where: { id: businessId, organizationId: member.organizationId }, select: { countryCode: true } });
+  if (b.countryCode === countryCode) return { countryCode, changed: false };
+  const [orders, sub, invoices, wa, priced, branches] = await Promise.all([
+    db.order.count({ where: { businessId } }), db.subscription.count({ where: { businessId } }), db.billingInvoice.count({ where: { businessId } }),
+    db.whatsAppAccount.count({ where: { businessId, status: "CONNECTED" } }), db.catalogItem.count({ where: { catalog: { businessId }, basePriceMinor: { gt: 0 } } }), db.location.count({ where: { businessId } }),
+  ]);
+  if (orders || sub || invoices || wa || priced || branches > 1) throw new AppError("COUNTRY_CHANGE_NOT_ALLOWED", "This restaurant already has a menu with prices, branches, orders or billing, so its country can no longer be changed. Create a new restaurant account in the other country.", 409);
+  await requireRegistration(countryCode);
+  const m = MARKETS[countryCode];
+  await db.$transaction([
+    db.business.update({ where: { id: businessId }, data: { countryCode: m.code, currencyCode: m.currency, timezone: m.timezone } }),
+    db.location.updateMany({ where: { businessId }, data: { countryCode: m.code, timezone: m.timezone, emirate: "" } }),
+    db.auditLog.create({ data: { organizationId: member.organizationId, businessId, userId, entityType: "Business", entityId: businessId, action: "business.country_changed", beforeData: { countryCode: b.countryCode }, afterData: { countryCode: m.code }, requestId } }),
+  ]);
+  return { countryCode: m.code, changed: true };
 }
 export async function getBusiness(userId: string, id: string) {
   const { member } = await authorize(userId, id);

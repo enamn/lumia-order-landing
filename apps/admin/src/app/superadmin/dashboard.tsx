@@ -21,6 +21,34 @@ function Bars({ rows }: { rows: { day: string; visitors: number; freeTrial: numb
   );
 }
 
+const FLAGS: [string, string][] = [["registrationEnabled", "Registration"], ["paidActivationEnabled", "Paid plans"], ["otpEnabled", "Sign-in code"], ["whatsappOnboardingEnabled", "WhatsApp set-up"], ["terminalSalesEnabled", "Terminals"]];
+const STATE_BG: Record<string, string> = { live: "#E4F4EC", configured: "#FFF1DC", implemented: "#F3EEF1" };
+function Markets() {
+  const [rows, setRows] = React.useState<any[] | null>(null), [err, setErr] = React.useState(""), [busy, setBusy] = React.useState("");
+  const load = () => fetch("/api/superadmin/markets", { cache: "no-store" }).then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error?.message ?? "Could not load."); setRows(j.data ?? j); }).catch(e => setErr(e.message));
+  React.useEffect(() => { load(); }, []);
+  const toggle = async (code: string, key: string, on: boolean) => {
+    const reason = window.prompt(`Why are you turning "${key}" ${on ? "on" : "off"} for ${code}? (saved in the change log)`); if (!reason || reason.trim().length < 5) return;
+    setBusy(code + key); setErr("");
+    try { const r = await fetch("/api/superadmin/markets", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code, reason, flags: { [key]: on } }) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error?.message ?? "Could not save."); setRows(j.data ?? j); } catch (e) { setErr((e as Error).message); }
+    setBusy("");
+  };
+  return (
+    <section style={{ ...card, marginTop: 12 }}>
+      <h2 style={h2}>Markets</h2>
+      <div style={{ fontSize: 13, color: muted, marginBottom: 10 }}>Switch each GCC country on step by step. Paid plans stay off until prices and tax set-up for that country are approved.</div>
+      {err && <div role="alert" style={{ color: "#B4233B", fontSize: 14, marginBottom: 8 }}>{err}</div>}
+      <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+        <thead><tr style={{ textAlign: "left", color: muted }}>{["Market", "Status", ...FLAGS.map(f => f[1])].map(h => <th key={h} style={{ padding: "6px 10px 8px 0", fontWeight: 500, whiteSpace: "nowrap" }}>{h}</th>)}</tr></thead>
+        <tbody>{(rows ?? []).map((m: any) => <tr key={m.code} style={{ borderTop: `1px solid ${line}` }}>
+          <td style={{ padding: "8px 10px 8px 0", whiteSpace: "nowrap" }}>{m.flag} {m.nameEn} <span style={{ color: muted }}>· {m.currency}</span></td>
+          <td style={{ padding: "8px 10px 8px 0" }}><span title={m.stateNote} style={{ fontSize: 12, fontWeight: 600, borderRadius: 999, padding: "2px 9px", background: STATE_BG[m.state] ?? "#eee" }}>{m.state}</span></td>
+          {FLAGS.map(([k]) => <td key={k} style={{ padding: "8px 10px 8px 0" }}><input type="checkbox" aria-label={`${m.code} ${k}`} checked={!!m[k]} disabled={busy === m.code + k} onChange={e => toggle(m.code, k, e.target.checked)} /></td>)}
+        </tr>)}</tbody></table></div>
+    </section>
+  );
+}
+
 export default function SuperAdminDashboard() {
   const [days, setDays] = React.useState(30), [data, setData] = React.useState<any>(null), [err, setErr] = React.useState(""), [gccOnly, setGccOnly] = React.useState(false);
   React.useEffect(() => {
@@ -69,6 +97,7 @@ export default function SuperAdminDashboard() {
             <div style={{ fontSize: 12, color: muted, marginTop: 10 }}>Devices: {data.devices.map((d: any) => `${d.device} ${num(d.visitors)}`).join(" · ") || "none yet"}</div></div>
         </section>
       </>}
+      <Markets />
     </main>
   );
 }
