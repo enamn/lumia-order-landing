@@ -52,9 +52,9 @@ export function EmailVerify({ businessId, email: initial, verified: initialVerif
 
   if (verified) return null;
   return (
-    <div dir={dir} style={{ flex: "none", border: "1px solid #F5D7B4", background: "#FFF8EE", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ fontSize: 15, fontWeight: 600, color: "#5C3200" }}>{t.title}</div>
-      <div style={{ fontSize: 13, color: "#7A5A2E", lineHeight: 1.5 }}>{t.why}</div>
+    <div dir={dir} style={{ flex: "none", borderRadius: 20, background: "linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%)", padding: "22px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <h2 style={{ fontSize: 19, fontWeight: 600, letterSpacing: "-0.02em", margin: 0, color: "#1A0815" }}>{t.title}</h2>
+      <div style={{ fontSize: 14, color: "#3D1C31", lineHeight: 1.5, maxWidth: 620 }}>{t.why}</div>
       {step === "email" ? (
         <form onSubmit={e => { e.preventDefault(); if (!busy && email.trim()) start(); }} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t.ph} autoComplete="email" style={input} />
