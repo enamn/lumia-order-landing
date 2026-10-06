@@ -71,2967 +71,2965 @@ export function DcTemplate({ vm }: { vm: any }) {
                         </button>
                         <span style={S("width:1px;margin:12px 0;background:#ECD9E0")} />
                         <input id="pd-phone" ref={vm.phoneRef} type="tel" inputMode="numeric" autoComplete="tel-national" placeholder={vm.cc.ex} value={vm.phoneDisplay} onChange={vm.onPhone} onFocus={vm.phoneFocus} onBlur={vm.phoneBlur} disabled={!!vm.sending} style={S("flex:1;min-width:0;padding:0 14px;font-size:17px;letter-spacing:.01em;font-variant-numeric:tabular-nums")} />
-                        {vm.phoneValid && (
-                          <>
-                          <span style={S("display:flex;align-items:center;padding-inline-end:16px")}>
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                              <circle cx="10" cy="10" r="9" fill="#E4F4EC" />
-                              <path d="M6 10.2 8.6 12.8 14 7.4" stroke="#16704A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </span>
-                          </>
-                        )}
                       </div>
-                      {vm.ccOpen && (
-                        <>
-                        <div style={S("position:absolute;top:62px;left:0;right:0;z-index:20;background:#fff;border:1px solid #ECD9E0;border-radius:14px;box-shadow:0 18px 40px -16px rgba(26,8,21,.28);padding:6px;max-height:300px;overflow:auto")}>
-                          {(vm.countries as any[]).map((c: any, __i: number) => (
-                            <Fragment key={__i}>
-                              <button type="button" onClick={c.pick} style={S(`width:100%;display:flex;align-items:center;gap:12px;height:48px;padding:0 12px;border-radius:10px;text-align:start;background:${c.bg}`)} className="dch0">
-                                <span style={S("font-size:20px;line-height:1;width:26px")}>
-                                  {c.flag}
-                                </span>
-                                <span style={S("flex:1;font-size:15px")}>
-                                  {c.name}
-                                </span>
-                                <span style={S("font-size:15px;color:#3D1C31;font-variant-numeric:tabular-nums")}>
-                                  {c.dial}
-                                </span>
-                              </button>
-                            </Fragment>
-                          ))}
-                        </div>
-                        </>
-                      )}
                     </div>
-                    {vm.phoneInvalid && (
-                      <>
-                      <div role="alert" style={S("display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:14px;line-height:1.45;color:#B4233B")}>
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={S("flex:none;margin-top:2px")}>
-                          <circle cx="8" cy="8" r="7" stroke="#B4233B" strokeWidth="1.5" />
-                          <path d="M8 4.5v4.2" stroke="#B4233B" strokeWidth="1.6" strokeLinecap="round" />
-                          <circle cx="8" cy="11.2" r=".9" fill="#B4233B" />
-                        </svg>
-                        <span>
-                          {vm.phoneInvalidMsg}
-                        </span>
-                      </div>
-                      </>
-                    )}
-                    {vm.phoneHint && (
-                      <>
-                      <div style={S("margin-top:10px;font-size:14px;line-height:1.45;color:#8A5A6E")}>
-                        We'll send a verification code on WhatsApp. No password needed.
-                      </div>
-                      </>
-                    )}
-                    <div style={S(`flex:${vm.L.spacer};min-height:28px`)} />
-                    <div style={S("display:flex;flex-direction:column;gap:10px")}>
-                      <button type="submit" disabled={!!vm.sending} style={S("height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
-                        {vm.spinnerSend}
-                        <span>
-                          {vm.sendLabel}
-                        </span>
-                      </button>
-                    </div>
-                    <p style={S("margin-top:20px;font-size:13px;line-height:1.5;color:#8A5A6E;text-align:center;text-wrap:pretty")}>
-                      {"By continuing, you agree to Lumia's "}
-                      <a href={vm.termsUrl} style={S("color:#3D1C31")}>
-                        Terms of Service
-                      </a>
-                      {" and "}
-                      <a href="Lumia Order Privacy.dc.html" style={S("color:#3D1C31")}>
-                        Privacy Policy
-                      </a>
-                      .
-                    </p>
                   </form>
                   </>
                 )}
-                {vm.is.otp && (
-                  <>
-                  <div data-screen-label="02 WhatsApp OTP" style={S("flex:1;display:flex;flex-direction:column")}>
-                    <h1 style={S(`font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:${vm.L.headTop}`)}>
-                      Check your WhatsApp
-                    </h1>
-                    <p style={S("font-size:16px;line-height:1.5;color:#3D1C31;margin-top:10px")}>
-                      We sent a 6-digit verification code to
-                    </p>
-                    <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:4px")}>
-                      <span style={S("font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.01em")}>
-                        {vm.masked}
-                      </span>
-                      <button type="button" onClick={vm.changeNumber} style={S("font-size:14px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px")} className="dch2">
-                        Change phone number
-                      </button>
-                    </div>
-                    <div onClick={vm.focusOtp} style={S(`position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:28px;max-width:360px;opacity:${vm.otpOp}`)}>
-                      {(vm.boxes as any[]).map((b: any, __i: number) => (
-                        <Fragment key={__i}>
-                          <div style={S(`height:60px;border-radius:12px;border:1.5px solid ${b.bd};box-shadow:${b.ring};background:${b.bg};display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;transition:border-color .12s,box-shadow .12s`)}>
-                            {b.ch}
-                            {b.caret && (
-                              <>
-                              <span style={S("width:2px;height:26px;border-radius:1px;background:#FF5577")} />
-                              </>
-                            )}
-                          </div>
-                        </Fragment>
-                      ))}
-                      <input ref={vm.otpRef} aria-label="Verification code" type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={vm.digits} onChange={vm.onOtp} onFocus={vm.otpFocus} onBlur={vm.otpBlur} disabled={!!vm.verifying} style={S("position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;color:transparent;caret-color:transparent")} />
-                    </div>
-                    {vm.otpMsg.show && (
-                      <>
-                      <div role="alert" style={S(`display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:14px;line-height:1.45;color:${vm.otpMsg.fg}`)}>
-                        <span style={S(`width:6px;height:6px;border-radius:50%;background:${vm.otpMsg.fg};flex:none;margin-top:7px`)} />
-                        <span>
-                          {vm.otpMsg.text}
-                        </span>
-                      </div>
-                      </>
-                    )}
-                    <div style={S(`flex:${vm.L.spacer};min-height:32px`)} />
-                    <div style={S("display:flex;flex-direction:column;gap:10px")}>
-                      <button type="button" onClick={vm.verifyNow} disabled={!!vm.verifyDisabled} style={S(`height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;display:flex;align-items:center;justify-content:center;gap:10px;opacity:${vm.verifyOp};box-shadow:0 10px 24px -12px rgba(201,61,255,.55)`)} className="dch1">
-                        {vm.spinnerVerify}
-                        <span>
-                          {vm.verifyLabel}
-                        </span>
-                      </button>
-                      <button type="button" onClick={vm.resend} disabled={!!vm.resendDisabled} style={S(`height:52px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px;color:${vm.resendFg};font-variant-numeric:tabular-nums`)} className="dch3">
-                        {vm.resendLabel}
-                      </button>
-                      <button type="button" onClick={vm.sms} style={S("height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
-                        Send code by SMS
-                      </button>
-                    </div>
-                  </div>
-                  </>
-                )}
-                {vm.is.verified && (
-                  <>
-                  <div data-screen-label="02b Number verified" style={S("flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:64px 0;text-align:center")}>
-                    <span style={S("width:72px;height:72px;border-radius:50%;background:#E4F4EC;display:flex;align-items:center;justify-content:center")}>
-                      <svg width="34" height="34" viewBox="0 0 20 20" fill="none">
-                        <path d="M5 10.4 8.4 13.8 15 7" stroke="#16704A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </span>
-                    <h1 style={S("font-size:26px;font-weight:600;letter-spacing:-0.03em")}>
-                      Number verified
-                    </h1>
-                  </div>
-                  </>
-                )}
-                {vm.is.name && (
-                  <>
-                  <form data-screen-label="03 Restaurant name" onSubmit={vm.submitName} noValidate={true} style={S("flex:1;display:flex;flex-direction:column")}>
-                    <h1 style={S(`font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:${vm.L.headTop};text-wrap:balance`)}>
-                      Tell us about your restaurant
-                    </h1>
-                    <label htmlFor="pd-name" style={S("display:block;font-size:14px;font-weight:500;color:#3D1C31;margin-top:28px")}>
-                      Restaurant name
-                    </label>
-                    <input id="pd-name" ref={vm.nameRef} type="text" autoComplete="organization" placeholder="Burger House" value={vm.name} onChange={vm.onName} onFocus={vm.nameFocus} onBlur={vm.nameBlur} style={S(`margin-top:8px;height:56px;border-radius:14px;border:1.5px solid ${vm.nf.bd};box-shadow:${vm.nf.ring};padding:0 16px;font-size:17px;background:#fff;transition:border-color .15s,box-shadow .15s`)} />
-                    {vm.nameErr && (
-                      <>
-                      <div role="alert" style={S("margin-top:10px;font-size:14px;color:#B4233B")}>
-                        {vm.nameErrText}
-                      </div>
-                      </>
-                    )}
-                    <div style={S("display:flex;align-items:center;gap:8px;margin-top:26px")}>
-                      <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                        Logo
-                      </span>
-                      <span style={S("font-size:12px;font-weight:500;padding:2px 8px;border-radius:999px;background:#F3EEF1;color:#8A5A6E")}>
-                        Optional
-                      </span>
-                    </div>
-                    <div style={S("display:flex;align-items:center;gap:14px;margin-top:10px")}>
-                      <span style={S(`width:64px;height:64px;border-radius:16px;border:1.5px dashed ${vm.logoTile.bd};background:#FBF3F8;flex:none;display:flex;align-items:center;justify-content:center;overflow:hidden`)}>
-                        {vm.logo && (
-                          <>
-                          {vm.logoImg}
-                          </>
-                        )}
-                        {vm.noLogo && (
-                          <>
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                            <rect x="3.5" y="4.5" width="17" height="15" rx="3" stroke="#B89AA8" strokeWidth="1.5" />
-                            <circle cx="9" cy="10" r="1.8" stroke="#B89AA8" strokeWidth="1.5" />
-                            <path d="m5 17.5 4.5-4.5 3.5 3.5 2.5-2.5 3.5 3.5" stroke="#B89AA8" strokeWidth="1.5" strokeLinejoin="round" />
-                          </svg>
-                          </>
-                        )}
-                      </span>
-                      <div style={S("display:flex;flex-direction:column;gap:4px;align-items:flex-start")}>
-                        <label style={S("display:inline-flex;align-items:center;height:40px;padding:0 16px;border-radius:12px;border:1.5px solid #ECD9E0;font-size:15px;font-weight:500;cursor:pointer")} className="dch4">
-                          {vm.logoBtn}
-                          <input type="file" accept="image/png,image/jpeg,image/svg+xml" onChange={vm.onLogo} style={S("display:none")} />
-                        </label>
-                        <span style={S("font-size:13px;color:#8A5A6E")}>
-                          PNG or JPG, square works best
-                        </span>
-                      </div>
-                    </div>
-                    <div style={S(`flex:${vm.L.spacer};min-height:32px`)} />
-                    <button type="submit" style={S("height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
-                      Continue
-                    </button>
-                  </form>
-                  </>
-                )}
-                {vm.is.menu && (
-                  <>
-                  <div data-screen-label="04 Menu upload" style={S("flex:1;display:flex;flex-direction:column")}>
-                    <h1 style={S(`font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:${vm.L.headTop}`)}>
-                      Add your menu
-                    </h1>
-                    <p style={S("font-size:16px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
-                      Upload your existing menu and Lumia AI will create it for you.
-                    </p>
-                    <label onDragOver={vm.dragOver} onDragLeave={vm.dragLeave} onDrop={vm.drop} style={S(`margin-top:24px;border-radius:20px;border:1.5px dashed ${vm.dz.bd};background:${vm.dz.bg};padding:36px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;cursor:pointer;transition:background .15s,border-color .15s`)} className="dch5">
-                      <span style={S("width:56px;height:56px;border-radius:16px;background:#FDEAF2;display:flex;align-items:center;justify-content:center")}>
-                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                          <path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9" stroke="#FF5577" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M4.5 14.5v2a3 3 0 0 0 3 3h9a3 3 0 0 0 3-3v-2" stroke="#C93DFF" strokeWidth="1.8" strokeLinecap="round" />
-                        </svg>
-                      </span>
-                      <span style={S("font-size:19px;font-weight:600;letter-spacing:-0.02em;margin-top:16px")}>
-                        Upload your menu
-                      </span>
-                      <span style={S("font-size:14px;color:#8A5A6E;margin-top:4px")}>
-                        PDF, JPG or PNG
-                      </span>
-                      <span style={S("margin-top:20px;display:inline-flex;align-items:center;height:48px;padding:0 24px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")}>
-                        Choose file
-                      </span>
-                      <input type="file" accept="application/pdf,image/png,image/jpeg" onChange={vm.onMenuFile} style={S("display:none")} />
-                    </label>
-                    {vm.menuErr && (
-                      <>
-                      <div role="alert" style={S("margin-top:12px;font-size:14px;color:#B4233B")}>
-                        {vm.menuErr}
-                      </div>
-                      </>
-                    )}
-                    <div style={S(`flex:${vm.L.spacer};min-height:28px`)} />
-                    <div style={S("display:flex;flex-direction:column;gap:10px")}>
-                      <button type="button" onClick={vm.manual} style={S("height:52px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
-                        Add menu manually
-                      </button>
-                      <button type="button" onClick={vm.noMenu} style={S("height:44px;font-size:15px;font-weight:500;color:#8A5A6E;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
-                        I don't have my menu right now
-                      </button>
-                    </div>
-                  </div>
-                  </>
-                )}
-                {vm.is.processing && (
-                  <>
-                  <div data-screen-label="05 AI menu processing" style={S("flex:1;display:flex;flex-direction:column;align-items:center;text-align:center")}>
-                    <div style={S(`margin-top:${vm.L.aiTop};display:flex;justify-content:center`)}>
-                      {vm.aiLogo}
-                    </div>
-                    <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:28px;text-wrap:balance")}>
-                      Lumia is creating your menu
-                    </h1>
-                    <div style={S("display:inline-flex;align-items:center;gap:8px;margin-top:12px;height:32px;padding:0 12px;border-radius:999px;background:#F3EEF1;font-size:13px;color:#3D1C31;max-width:100%")}>
-                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={S("flex:none")}>
-                        <path d="M4 1.5h5L12.5 5v9.5h-8.5z" stroke="#8A5A6E" strokeWidth="1.3" strokeLinejoin="round" />
-                        <path d="M9 1.5V5h3.5" stroke="#8A5A6E" strokeWidth="1.3" strokeLinejoin="round" />
-                      </svg>
-                      <span style={S("overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>
-                        {vm.fileName}
-                      </span>
-                    </div>
-                    <div style={S("display:flex;flex-direction:column;gap:14px;margin-top:32px;max-width:300px;margin-inline:auto;text-align:start;width:100%")}>
-                      {(vm.phases as any[]).map((p: any, __i: number) => (
-                        <Fragment key={__i}>
-                          <div style={S(`display:flex;align-items:center;gap:12px;font-size:15px;color:${p.fg};font-weight:${p.fw}`)}>
-                            <span style={S("width:20px;height:20px;flex:none;display:flex;align-items:center;justify-content:center")}>
-                              {p.done && (
-                                <>
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                  <circle cx="10" cy="10" r="9" fill="#E4F4EC" />
-                                  <path d="M6 10.2 8.6 12.8 14 7.4" stroke="#16704A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                                </>
-                              )}
-                              {p.active && (
-                                <>
-                                {vm.pulse}
-                                </>
-                              )}
-                              {p.pending && (
-                                <>
-                                <span style={S("width:14px;height:14px;border-radius:50%;border:1.5px solid #E3CBD4")} />
-                                </>
-                              )}
-                            </span>
-                            {p.plain && (
-                              <>
-                              <span>
-                                {p.label}
-                              </span>
-                              </>
-                            )}
-                            {p.active && (
-                              <>
-                              {vm.shimmer}
-                              </>
-                            )}
-                          </div>
-                        </Fragment>
-                      ))}
-                    </div>
-                    <div style={S(`flex:${vm.L.spacer};min-height:32px`)} />
-                    <p style={S("font-size:13px;color:#8A5A6E;line-height:1.5;max-width:320px")}>
-                      You'll check everything Lumia finds before it goes live.
-                    </p>
-                  </div>
-                  </>
-                )}
-                {vm.is.ready && (
-                  <>
-                  <div data-screen-label="05b Menu ready \u00b7 confirm" style={S("flex:1;display:flex;flex-direction:column")}>
-                    <h1 style={S(`font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:${vm.L.headTop}`)}>
-                      Your menu is ready 🎉
-                    </h1>
-                    <p style={S("font-size:16px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
-                      This is what Lumia AI found in your menu. Check the items and prices, then confirm.
-                    </p>
-                    <div style={S("display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:20px")}>
-                      <div style={S("border-radius:16px;background:#FBF3F8;padding:14px 18px;display:flex;flex-direction:column;gap:2px")}>
-                        <span style={S("font-size:30px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums")}>
-                          {vm.totalItems}
-                        </span>
-                        <span style={S("font-size:14px;color:#3D1C31")}>
-                          items found
-                        </span>
-                      </div>
-                      <div style={S("border-radius:16px;background:#FBF3F8;padding:14px 18px;display:flex;flex-direction:column;gap:2px")}>
-                        <span style={S("font-size:30px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums")}>
-                          {vm.totalCats}
-                        </span>
-                        <span style={S("font-size:14px;color:#3D1C31")}>
-                          categories
-                        </span>
-                      </div>
-                    </div>
-                    {vm.hasFlags && (
-                      <>
-                      <div style={S("margin-top:12px;border-radius:14px;background:#FFF4E5;padding:12px 16px;display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45;color:#6B3A00")}>
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={S("flex:none;margin-top:2px")}>
-                          <path d="M8 1.8 15 14H1z" stroke="#C26A00" strokeWidth="1.4" strokeLinejoin="round" />
-                          <path d="M8 6.2v3.4" stroke="#C26A00" strokeWidth="1.5" strokeLinecap="round" />
-                          <circle cx="8" cy="11.6" r=".8" fill="#C26A00" />
-                        </svg>
-                        <span>
-                          {vm.flagMsg}
-                        </span>
-                      </div>
-                      </>
-                    )}
-                    <div style={S("margin-top:14px;border:1px solid #ECD9E0;border-radius:16px;display:flex;flex-direction:column;overflow:hidden")}>
-                      {(vm.review as any[]).map((g: any, __i: number) => (
-                        <Fragment key={__i}>
-                          <div style={S(`border-top:${g.bt}`)}>
-                            <button type="button" onClick={g.toggle} aria-expanded={g.open} style={S("width:100%;display:flex;align-items:center;gap:10px;min-height:52px;padding:0 16px 0 18px;text-align:start")} className="dch0">
-                              <span style={S("flex:1;font-size:15px;font-weight:600")}>
-                                {g.cat}
-                              </span>
-                              {g.flagged && (
-                                <>
-                                <span style={S("font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#FFF4E5;color:#8A4B00")}>
-                                  {g.flagLabel}
-                                </span>
-                                </>
-                              )}
-                              <span style={S("font-size:14px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
-                                {g.label}
-                              </span>
-                              <svg width="14" height="14" viewBox="0 0 12 12" fill="none" style={S(`transform:rotate(${g.rot});transition:transform .15s`)}>
-                                <path d="M3 4.5 6 7.5 9 4.5" stroke="#8A5A6E" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            </button>
-                            {g.open && (
-                              <>
-                              <div style={S("padding:0 12px 10px 18px;display:flex;flex-direction:column")}>
-                                {(g.items as any[]).map((it: any, __i: number) => (
-                                  <Fragment key={__i}>
-                                    <div style={S("display:flex;flex-direction:column;gap:6px;padding:8px 0;border-top:1px solid #F3EEF1")}>
-                                      <div style={S("display:flex;align-items:center;gap:12px")}>
-                                        <span style={S("flex:1;min-width:0;font-size:15px")}>
-                                          {it.n}
-                                        </span>
-                                        <label style={S(`display:flex;align-items:center;gap:4px;height:38px;padding:0 10px;border-radius:10px;border:1.5px solid ${it.bd};background:${it.bg};font-size:14px;color:#8A5A6E;flex:none`)}>
-                                          AED
-                                          <input type="text" inputMode="decimal" value={it.price} onChange={it.onPrice} aria-label={`${it.n} price`} style={S("width:44px;font-size:15px;color:#1A0815;text-align:end;font-variant-numeric:tabular-nums")} />
-                                        </label>
-                                      </div>
-                                      {it.flag && (
-                                        <>
-                                        <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:13px;color:#8A4B00")}>
-                                          <span>
-                                            Lumia wasn't sure about this price. Please check it.
-                                          </span>
-                                          <button type="button" onClick={it.ok} style={S("font-size:13px;font-weight:600;color:#1A0815;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px")}>
-                                            Looks right
-                                          </button>
-                                        </div>
-                                        </>
-                                      )}
-                                    </div>
-                                  </Fragment>
-                                ))}
-                              </div>
-                              </>
-                            )}
-                          </div>
-                        </Fragment>
-                      ))}
-                    </div>
-                    {vm.readyErr && (
-                      <>
-                      <div role="alert" style={S("margin-top:12px;font-size:14px;color:#B4233B")}>
-                        {vm.readyErr}
-                      </div>
-                      </>
-                    )}
-                    <div style={S(`flex:${vm.L.spacer};min-height:24px`)} />
-                    <div style={S(`position:${vm.L.stick};bottom:0;background:#fff;padding-top:12px;display:flex;flex-direction:column;gap:10px;box-shadow:${vm.L.stickSh}`)}>
-                      <button type="button" onClick={vm.confirmMenu} disabled={!!vm.hasFlags} style={S(`height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;opacity:${vm.confirmOp};box-shadow:0 10px 24px -12px rgba(201,61,255,.55)`)} className="dch1">
-                        Confirm menu
-                      </button>
-                      <button type="button" onClick={vm.toMenuUpload} style={S("height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
-                        Upload a different file
-                      </button>
-                    </div>
-                  </div>
-                  </>
-                )}
               </div>
-            </div>
-            </>
-          )}
-          {vm.is.dash && (
-            <>
-            <div data-screen-label="06 Dashboard \u00b7 Menu" dir={vm.dir} style={S(`flex:none;width:100%;display:flex;height:${vm.L.dashH};overflow:hidden;background:#fff`)}>
-              {vm.dashWide && (
-                <>
-                <aside style={S("flex:0 0 232px;border-inline-end:1px solid #F0E4E8;background:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh")}>
-                  <div style={S("height:64px;padding:0 20px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #F0E4E8")}>
-                    <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style={S("display:block;flex:none")}>
-                      <defs>
-                        <linearGradient id="gPD2" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
-                          <stop offset="0" stopColor="#FF5577" />
-                          <stop offset="1" stopColor="#C93DFF" />
-                        </linearGradient>
-                      </defs>
-                      <path d="M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z" stroke="url(#gPD2)" strokeWidth="8" strokeLinejoin="round" />
-                      <path d="M28 30V66H40" stroke="#1A0815" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
-                      <circle cx="64" cy="55" r="11" stroke="url(#gPD2)" strokeWidth="10" />
-                    </svg>
-                    <span style={S("display:flex;flex-direction:column;line-height:.92")}>
-                      <span style={S("font-size:16px;font-weight:700;letter-spacing:-0.035em")}>
-                        Lumia
-                      </span>
-                      <span style={S("font-size:12px;letter-spacing:-0.01em")}>
-                        Order
-                      </span>
-                    </span>
-                  </div>
-                  <nav style={S("flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:2px")}>
-                    {(vm.nav as any[]).map((n: any, __i: number) => (
-                      <Fragment key={__i}>
-                        <a href="#" onClick={n.pick} style={S(`height:40px;padding:0 12px;border-radius:10px;display:flex;align-items:center;gap:12px;font-size:15px;text-decoration:none;font-weight:${n.fw};color:${n.fg};background:${n.bg}`)} className="dch6">
-                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
-                            <path d={n.icon} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          <span style={S("flex:1;min-width:0")}>
-                            {n.label}
-                          </span>
-                          {n.lock && (
-                            <>
-                            <span style={S("font-size:12px;font-weight:600;padding:2px 7px;border-radius:999px;background:#F1E6FF;color:#6A1FA0")}>
-                              Plus
-                            </span>
-                            </>
-                          )}
-                        </a>
-                      </Fragment>
-                    ))}
-                  </nav>
-                  <div style={S("padding:12px;border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:8px")}>
-                    {vm.sub.onTrial && (
-                      <>
-                      <button type="button" onClick={vm.subOpenPlans} style={S("text-align:start;padding:12px;border-radius:12px;background:#FBF3F8;display:flex;flex-direction:column;gap:9px")} className="dch7">
-                        <span style={S("display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px;font-weight:600")}>
-                          {vm.sub.tag}
-                          <span style={S("font-size:13px;font-weight:500;color:#8A2040;font-variant-numeric:tabular-nums")}>
-                            {vm.sub.leftLabel}
-                          </span>
-                        </span>
-                        <span style={S("height:4px;border-radius:2px;background:#EAD9E1;overflow:hidden;display:block")}>
-                          <span style={S(`display:block;height:100%;width:${vm.sub.barW};border-radius:2px;background:linear-gradient(90deg,#FF5577,#C93DFF)`)} />
-                        </span>
-                        <span style={S("font-size:14px;font-weight:600;color:#C0284F")}>
-                          {vm.sub.choose}
-                        </span>
-                      </button>
-                      </>
-                    )}
-                    {vm.sub.isPaid && (
-                      <>
-                      <div style={S(`display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:12px;background:${vm.sub.paidBg};color:${vm.sub.paidFg};font-size:14px;font-weight:600`)}>
-                        <span style={S("display:flex;align-items:center;gap:8px")}>
-                          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                            <path d="m5 10.5 3.2 3L15 7" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          {vm.sub.paidName}{" plan"}
-                        </span>
-                        <span style={S("font-size:13px;font-weight:500")}>
-                          {vm.sub.renewLine}
-                        </span>
-                        {vm.sub.canPortal && (
-                          <>
-                          <button type="button" onClick={vm.subPortal} style={S("align-self:flex-start;font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px")}>
-                            {vm.sub.portalLabel}
-                          </button>
-                          </>
-                        )}
-                      </div>
-                      </>
-                    )}
-                    <div role="radiogroup" aria-label="Dashboard language" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;flex:none")}>
-                      {(vm.langs as any[]).map((lg: any, __i: number) => (
-                        <Fragment key={__i}>
-                          <button type="button" role="radio" aria-checked={lg.on} onClick={lg.pick} style={S(`flex:1;height:30px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:${lg.fw};background:${lg.bg};color:${lg.fg};box-shadow:${lg.sh}`)}>
-                            {lg.label}
-                          </button>
-                        </Fragment>
-                      ))}
-                    </div>
-                    <div style={S("display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px")}>
-                      <span style={S("width:32px;height:32px;border-radius:9px;flex:none;overflow:hidden;background:linear-gradient(135deg,#FF5577,#C93DFF);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center")}>
-                        {vm.logo && (
-                          <>
-                          {vm.logoImg}
-                          </>
-                        )}
-                        {vm.noLogo && (
-                          <>
-                          {vm.initials}
-                          </>
-                        )}
-                      </span>
-                      <span style={S("font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0")}>
-                        {vm.nameOrDefault}
-                      </span>
-                    </div>
-                  </div>
-                </aside>
-                </>
-              )}
-              <div style={S("flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:#fff")}>
-                {vm.dashNarrow && (
-                  <>
-                  <header style={S("position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #F0E4E8")}>
-                    <div style={S("height:56px;padding:0 16px;display:flex;align-items:center;gap:10px")}>
-                      <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style={S("display:block;flex:none")}>
-                        <defs>
-                          <linearGradient id="gPD2" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
-                            <stop offset="0" stopColor="#FF5577" />
-                            <stop offset="1" stopColor="#C93DFF" />
-                          </linearGradient>
-                        </defs>
-                        <path d="M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z" stroke="url(#gPD2)" strokeWidth="8" strokeLinejoin="round" />
-                        <path d="M28 30V66H40" stroke="#1A0815" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
-                        <circle cx="64" cy="55" r="11" stroke="url(#gPD2)" strokeWidth="10" />
-                      </svg>
-                      <span style={S("font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1")}>
-                        {vm.nameOrDefault}
-                      </span>
-                      <div role="radiogroup" aria-label="Dashboard language" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;flex:none")}>
-                        {(vm.langsShort as any[]).map((lg: any, __i: number) => (
-                          <Fragment key={__i}>
-                            <button type="button" role="radio" aria-checked={lg.on} onClick={lg.pick} style={S(`flex:1;height:28px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:${lg.fw};background:${lg.bg};color:${lg.fg};box-shadow:${lg.sh}`)}>
-                              {lg.label}
-                            </button>
-                          </Fragment>
-                        ))}
-                      </div>
-                      <span style={S("width:32px;height:32px;border-radius:9px;flex:none;overflow:hidden;background:linear-gradient(135deg,#FF5577,#C93DFF);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center")}>
-                        {vm.logo && (
-                          <>
-                          {vm.logoImg}
-                          </>
-                        )}
-                        {vm.noLogo && (
-                          <>
-                          {vm.initials}
-                          </>
-                        )}
-                      </span>
-                    </div>
-                    <nav style={S("display:flex;gap:20px;overflow-x:auto;padding:0 16px")}>
-                      {(vm.nav as any[]).map((n: any, __i: number) => (
-                        <Fragment key={__i}>
-                          <button type="button" onClick={n.pick} style={S(`padding:8px 0 10px;white-space:nowrap;font-size:15px;font-weight:${n.fw};color:${n.fg};border-bottom:2px solid ${n.bd}`)}>
-                            {n.label}
-                          </button>
-                        </Fragment>
-                      ))}
-                    </nav>
-                    {vm.sub.onTrial && (
-                      <>
-                      <div style={S("padding:8px 16px;background:#FBF3F8;border-top:1px solid #F0E4E8;display:flex;align-items:center;gap:10px;font-size:14px")}>
-                        <span style={S("font-weight:600")}>
-                          {vm.sub.tag}
-                        </span>
-                        <span style={S("color:#8A2040;font-variant-numeric:tabular-nums;flex:1;min-width:0")}>
-                          {vm.sub.leftLabel}
-                        </span>
-                        <button type="button" onClick={vm.subOpenPlans} style={S("height:32px;padding:0 12px;border-radius:9px;background:#1A0815;color:#fff;font-size:13px;font-weight:600;flex:none")}>
-                          {vm.sub.choose}
-                        </button>
-                      </div>
-                      </>
-                    )}
-                  </header>
-                  </>
-                )}
-                <div style={S("flex:1;display:flex;min-height:0")}>
-                  {vm.pageSettings && (
-                    <>
-                    <div data-screen-label="09 Dashboard \u00b7 Settings" style={S("flex:1;min-width:0;min-height:0;display:flex")}>
-                      <div style={S("flex:1;min-width:0;height:100%")}>
-                        {vm.settingsNode}
-                      </div>
-                    </div>
-                    </>
-                  )}
-                  {vm.notSettings && (
-                    <>
-                    <main style={S(`flex:1;min-width:0;min-height:0;overflow-y:auto;padding:${vm.L.dashPad};display:flex;flex-direction:column;gap:26px`)}>
-                      {vm.pageOverview && (
-                        <>
-                        <div data-screen-label="06 Dashboard \u00b7 Overview" style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
-                          <div style={S("flex:1 1 280px;min-width:0")}>
-                            <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
-                              {vm.ov.title}
-                            </h1>
-                            <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5")}>
-                              {vm.ov.sub}
-                            </p>
-                          </div>
-                          <div role="radiogroup" aria-label="Period" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px")}>
-                            {(vm.periodSeg as any[]).map((o: any, __i: number) => (
-                              <Fragment key={__i}>
-                                <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`height:34px;padding:0 14px;border-radius:8px;font-size:14px;white-space:nowrap;font-weight:${o.fw};background:${o.bg};color:${o.fg};box-shadow:${o.sh}`)}>
-                                  {o.label}
-                                </button>
-                              </Fragment>
-                            ))}
-                          </div>
-                        </div>
-                        {vm.term.show && (
-                          <>
-                          <section data-screen-label="06d Terminal shipment" dir="ltr" style={S("border:1px solid #F0E4E8;border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:20px")}>
-                            <div style={S("display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px 20px")}>
-                              <div style={S("flex:none;width:44px;height:78px;position:relative;overflow:hidden;border-radius:8px;background:#FBF3F8")}>
-                                <div style={S("width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C0284F")}>
-                                  <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
-                                    <path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                </div>
-                              </div>
-                              <div style={S("flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:6px")}>
-                                <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px")}>
-                                  <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                                    Lumia Order Terminal
-                                  </h2>
-                                  <span style={S(`font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px;background:${vm.term.pillBg};color:${vm.term.pillFg}`)}>
-                                    {vm.term.label}
-                                  </span>
-                                </div>
-                                <p style={S("font-size:14px;line-height:1.5;color:#3D1C31;text-wrap:pretty")}>
-                                  {vm.term.msg}
-                                </p>
-                                <p style={S("font-size:13px;color:#8A5A6E")}>
-                                  {"Order "}{vm.term.no}{" \u00b7 "}{vm.term.qtyLabel}{" \u00b7 "}{vm.term.addr}
-                                </p>
-                              </div>
-                              <div style={S("flex:none;display:flex;flex-direction:column;gap:2px")}>
-                                <span style={S("font-size:13px;color:#8A5A6E")}>
-                                  {vm.term.etaLabel}
-                                </span>
-                                <span style={S("font-size:18px;font-weight:600;letter-spacing:-0.02em;font-variant-numeric:tabular-nums")}>
-                                  {vm.term.eta}
-                                </span>
-                              </div>
-                            </div>
-                            <ol style={S("list-style:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0")}>
-                              {(vm.term.steps as any[]).map((st: any, __i: number) => (
-                                <Fragment key={__i}>
-                                  <li style={S("display:flex;flex-direction:column;gap:8px;min-width:0")}>
-                                    <div style={S("display:flex;align-items:center")}>
-                                      <span style={S(`width:20px;height:20px;border-radius:50%;flex:none;background:${st.dot};border:2px solid ${st.ring};display:flex;align-items:center;justify-content:center`)}>
-                                        {st.done && (
-                                          <>
-                                          <svg width="11" height="11" viewBox="0 0 20 20" fill="none">
-                                            <path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-                                          </svg>
-                                          </>
-                                        )}
-                                        {st.now && (
-                                          <>
-                                          <span style={S("width:8px;height:8px;border-radius:50%;background:#FF5577")} />
-                                          </>
-                                        )}
-                                      </span>
-                                      <span style={S(`flex:1;height:3px;margin:0 4px;border-radius:2px;background:${st.line}`)} />
-                                    </div>
-                                    <span style={S(`font-size:13px;line-height:1.3;padding-inline-end:8px;font-weight:${st.fw};color:${st.fg}`)}>
-                                      {st.label}
-                                    </span>
-                                    <span style={S("font-size:12px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
-                                      {st.date}
-                                    </span>
-                                  </li>
-                                </Fragment>
-                              ))}
-                            </ol>
-                            {vm.term.hasCourier && (
-                              <>
-                              <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:12px 14px;border-radius:12px;background:#FBF3F8;font-size:14px")}>
-                                <span style={S("color:#3D1C31")}>
-                                  {"Tracking no. "}
-                                  <span style={S("font-weight:600;color:#1A0815;font-variant-numeric:tabular-nums")}>
-                                    {vm.term.tracking}
-                                  </span>
-                                </span>
-                              </div>
-                              </>
-                            )}
-                          </section>
-                          </>
-                        )}
-                        {vm.setupShow && (
-                          <>
-                          <section style={S("border-radius:20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);padding:22px 24px;display:flex;flex-wrap:wrap;gap:18px 32px;align-items:center")}>
-                            <div style={S("flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:12px")}>
-                              <div style={S("display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px")}>
-                                <h2 style={S("font-size:19px;font-weight:600;letter-spacing:-0.02em")}>
-                                  {vm.t.setupTitle}
-                                </h2>
-                                <span style={S("font-size:14px;font-weight:500;color:#8A2040;font-variant-numeric:tabular-nums")}>
-                                  {vm.setupLabel}
-                                </span>
-                              </div>
-                              <div style={S("display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;max-width:420px")}>
-                                {(vm.setup as any[]).map((s: any, __i: number) => (
-                                  <Fragment key={__i}>
-                                    <span style={S(`height:5px;border-radius:3px;background:${s.bar}`)} />
-                                  </Fragment>
-                                ))}
-                              </div>
-                              <div style={S("display:flex;flex-wrap:wrap;gap:8px 18px")}>
-                                {(vm.setup as any[]).map((s: any, __i: number) => (
-                                  <Fragment key={__i}>
-                                    <button type="button" onClick={s.pick} disabled={!!s.done} style={S(`display:flex;align-items:center;gap:7px;font-size:14px;color:${s.fg};text-decoration:${s.ul};text-decoration-color:#D9BFCB;text-underline-offset:3px`)} className="dch8">
-                                      {s.done && (
-                                        <>
-                                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                          <circle cx="10" cy="10" r="9" fill="#16704A" />
-                                          <path d="M6 10.2 8.6 12.8 14 7.4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                        </>
-                                      )}
-                                      {s.todo && (
-                                        <>
-                                        <span style={S("width:14px;height:14px;border-radius:50%;border:1.5px solid #B79AA6;margin:1px")} />
-                                        </>
-                                      )}
-                                      {s.label}
-                                    </button>
-                                  </Fragment>
-                                ))}
-                              </div>
-                            </div>
-                            <button type="button" onClick={vm.continueSetup} style={S("height:48px;padding:0 22px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;flex:none;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
-                              {vm.t.continueSetup}
-                            </button>
-                          </section>
-                          </>
-                        )}
-                        {vm.ovLoading && (
-                          <>
-                          {vm.loaderNode}
-                          </>
-                        )}
-                        {vm.ovReady && (
-                          <>
-                          <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px")}>
-                            {(vm.stats as any[]).map((m: any, __i: number) => (
-                              <Fragment key={__i}>
-                                <div style={S("border:1px solid #F0E4E8;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:6px")}>
-                                  <span style={S("font-size:14px;color:#8A5A6E")}>
-                                    {m.k}
-                                  </span>
-                                  <span dir="ltr" style={S("font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;text-align:start")}>
-                                    {m.v}
-                                  </span>
-                                  <span style={S(`font-size:13px;font-weight:500;color:${m.dfg};font-variant-numeric:tabular-nums`)}>
-                                    {m.d}
-                                  </span>
-                                </div>
-                              </Fragment>
-                            ))}
-                          </div>
-                          <div style={S(`display:grid;grid-template-columns:${vm.L.split2};gap:20px;align-items:start`)}>
-                            <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:14px;min-width:0")}>
-                              <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                                {vm.ov.orders}
-                              </h2>
-                              <div style={S("height:160px;display:flex;align-items:flex-end;gap:10px")}>
-                                {(vm.bars as any[]).map((b: any, __i: number) => (
-                                  <Fragment key={__i}>
-                                    <div title={b.tip} style={S("flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px")}>
-                                      <span style={S(`width:100%;max-width:36px;border-radius:6px 6px 2px 2px;height:${b.h};background:${b.bg}`)} />
-                                      <span style={S("font-size:12px;color:#8A5A6E;white-space:nowrap")}>
-                                        {b.l}
-                                      </span>
-                                    </div>
-                                  </Fragment>
-                                ))}
-                              </div>
-                            </section>
-                            <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:6px;min-width:0")}>
-                              <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em;margin-bottom:6px")}>
-                                {vm.ov.top}
-                              </h2>
-                              {(vm.topItems as any[]).map((t: any, __i: number) => (
-                                <Fragment key={__i}>
-                                  <div style={S(`display:flex;align-items:center;gap:12px;padding:8px 0;border-top:${t.bt};font-size:15px`)}>
-                                    <span style={S("width:20px;font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
-                                      {t.n}
-                                    </span>
-                                    <span style={S("flex:1;min-width:0;font-weight:500")}>
-                                      {t.name}
-                                    </span>
-                                    <span style={S("color:#3D1C31;font-variant-numeric:tabular-nums")}>
-                                      {t.q}
-                                    </span>
-                                  </div>
-                                </Fragment>
-                              ))}
-                            </section>
-                          </div>
-                          </>
-                        )}
-                        </>
-                      )}
-                      {vm.dashErr && (
-                        <>
-                        <div role="alert" style={S("font-size:14px;color:#B4233B")}>
-                          {vm.dashErr}
-                        </div>
-                        </>
-                      )}
-                      {vm.pageMenu && (
-                        <>
-                        {vm.menuScopeNode}
-                        <div style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
-                          <div>
-                            <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
-                              {vm.t.menu}
-                            </h1>
-                            {vm.menuDone && (
-                              <>
-                              <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:6px;font-size:14px;color:#8A5A6E")}>
-                                <span style={S("font-variant-numeric:tabular-nums")}>
-                                  {vm.menuMeta}
-                                </span>
-                                <span style={S("display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;background:#FDEAF2;color:#8A2040;font-size:13px;font-weight:500")}>
-                                  <span style={S("width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,#FF5577,#C93DFF)")} />
-                                  {vm.t.created}
-                                </span>
-                              </div>
-                              </>
-                            )}
-                          </div>
-                          {vm.menuDone && (
-                            <>
-                            <button type="button" onClick={vm.openAddItem} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
-                              {vm.t.addItem}
-                            </button>
-                            </>
-                          )}
-                        </div>
-                        {vm.menuDone && (
-                          <>
-                          <div style={S("flex:1;min-height:240px;display:flex;flex-direction:column;gap:16px;margin-top:-8px")}>
-                            <label style={S("display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;max-width:520px")}>
-                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={S("flex:none")}>
-                                <circle cx="7" cy="7" r="4.8" stroke="#8A5A6E" strokeWidth="1.5" />
-                                <path d="m10.6 10.6 3.4 3.4" stroke="#8A5A6E" strokeWidth="1.5" strokeLinecap="round" />
-                              </svg>
-                              <input type="search" value={vm.q} onChange={vm.onSearch} placeholder={vm.t.search} aria-label={vm.t.search} style={S("flex:1;min-width:0;font-size:15px")} />
-                              {vm.hasQ && (
-                                <>
-                                <button type="button" onClick={vm.clearSearch} aria-label="Clear" style={S("width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
-                                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                                    <path d="M4 4l8 8M12 4l-8 8" stroke="#8A5A6E" strokeWidth="1.8" strokeLinecap="round" />
-                                  </svg>
-                                </button>
-                                </>
-                              )}
-                            </label>
-                            <div style={S("display:flex;gap:8px;overflow-x:auto;flex:none;padding-bottom:2px;scrollbar-width:none")}>
-                              {(vm.cats as any[]).map((c: any, __i: number) => (
-                                <Fragment key={__i}>
-                                  <button type="button" onClick={c.pick} style={S(`height:40px;padding:0 14px;border-radius:999px;white-space:nowrap;font-size:14px;font-weight:500;background:${c.chipBg};color:${c.chipFg};border:1.5px solid ${c.chipBd};display:flex;align-items:center;gap:8px;flex:none`)}>
-                                    {c.label}
-                                    <span style={S("font-size:13px;opacity:.7;font-variant-numeric:tabular-nums")}>
-                                      {c.count}
-                                    </span>
-                                  </button>
-                                </Fragment>
-                              ))}
-                            </div>
-                            <div style={S("flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:16px;border-radius:16px")}>
-                              {(vm.sections as any[]).map((g: any, __i: number) => (
-                                <Fragment key={__i}>
-                                  <section style={S("border:1px solid #F0E4E8;border-radius:16px;overflow:clip")}>
-                                    <header style={S(`position:sticky;top:${vm.L.secTop};z-index:2;background:#F5F4F4;padding:12px 18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;border-bottom:1px solid #E8E6E7`)}>
-                                      <span style={S("font-size:16px;font-weight:600")}>
-                                        {g.name}
-                                      </span>
-                                      <span style={S("font-size:14px;color:#8A5A6E")}>
-                                        {g.alt}
-                                      </span>
-                                      <span style={S("flex:1")} />
-                                      <span style={S("font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
-                                        {g.meta}
-                                      </span>
-                                    </header>
-                                    {(g.items as any[]).map((it: any, __i: number) => (
-                                      <Fragment key={__i}>
-                                        <div style={S(`display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:16px;min-height:60px;padding:9px 18px;border-top:${it.bt}`)} className="dch9">
-                                          <div style={S("min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px")}>
-                                            <span style={S(`font-size:15px;font-weight:500;color:${it.nameFg}`)}>
-                                              {it.main}
-                                            </span>
-                                            {it.hasAlt && (
-                                              <>
-                                              <span style={S("font-size:13px;color:#8A5A6E")}>
-                                                {it.alt}
-                                              </span>
-                                              </>
-                                            )}
-                                            {it.noAlt && (
-                                              <>
-                                              <button type="button" onClick={it.editAr} style={S("font-size:13px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px")} className="dch2">
-                                                {"+ "}{vm.t.addAr}
-                                              </button>
-                                              </>
-                                            )}
-                                          </div>
-                                          <div style={S("display:flex;flex-direction:column;align-items:flex-end;gap:1px")}>
-                                            <span style={S("font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap")}>
-                                              {it.price}
-                                            </span>
-                                            {it.sold && (
-                                              <>
-                                              <span style={S("font-size:12px;font-weight:600;color:#8A5A6E")}>
-                                                {vm.t.soldOut}
-                                              </span>
-                                              </>
-                                            )}
-                                          </div>
-                                          <button type="button" role="switch" aria-checked={it.on} aria-label={it.main} onClick={it.toggle} style={S(`width:48px;height:28px;border-radius:999px;flex:none;background:${it.tBg};position:relative;transition:background .15s`)}>
-                                            <span style={S(`position:absolute;top:3px;inset-inline-start:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX(${it.knob});transition:transform .18s`)} />
-                                          </button>
-                                        </div>
-                                      </Fragment>
-                                    ))}
-                                  </section>
-                                </Fragment>
-                              ))}
-                              {vm.noResults && (
-                                <>
-                                <div style={S("border-radius:16px;background:#FAF6FA;padding:40px 20px;text-align:center;font-size:15px;color:#3D1C31")}>
-                                  {vm.t.noResults}
-                                </div>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          </>
-                        )}
-                        {vm.menuEmpty && (
-                          <>
-                          <div style={S("margin-top:-6px;border-radius:20px;background:#FAF6FA;padding:56px 24px;display:flex;flex-direction:column;align-items:center;text-align:center")}>
-                            <span style={S("width:56px;height:56px;border-radius:16px;background:#FDEAF2;display:flex;align-items:center;justify-content:center")}>
-                              <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9" stroke="#FF5577" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M4.5 14.5v2a3 3 0 0 0 3 3h9a3 3 0 0 0 3-3v-2" stroke="#C93DFF" strokeWidth="1.8" strokeLinecap="round" />
-                              </svg>
-                            </span>
-                            <h2 style={S("font-size:19px;font-weight:600;letter-spacing:-0.02em;margin-top:16px")}>
-                              Your menu is empty
-                            </h2>
-                            <p style={S("font-size:15px;color:#3D1C31;margin-top:6px;max-width:360px;line-height:1.5")}>
-                              Upload your existing menu and Lumia AI will create it for you.
-                            </p>
-                            <div style={S("display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px")}>
-                              <button type="button" onClick={vm.toMenuUpload} style={S("height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")} className="dch1">
-                                Upload menu
-                              </button>
-                              <button type="button" onClick={vm.openAddItem} style={S("height:46px;padding:0 20px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
-                                Add item manually
-                              </button>
-                            </div>
-                          </div>
-                          </>
-                        )}
-                        </>
-                      )}
-                      {vm.pageBilling && (
-                        <>
-                        {vm.billingNode}
-                        </>
-                      )}
-                      {vm.pageOrders && (
-                        <>
-                        <div data-screen-label="06b Dashboard \u00b7 Orders" style={S("display:flex;flex-direction:column;gap:18px")}>
-                          <div style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
-                            <div style={S("flex:1 1 240px;min-width:0")}>
-                              <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
-                                {vm.ord.t.title}
-                              </h1>
-                              <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5")}>
-                                {vm.ord.t.sub}
-                              </p>
-                            </div>
-                            {vm.ord.hasAny && (
-                              <>
-                              <label style={S("flex:0 1 300px;min-width:200px;height:44px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px")}>
-                                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
-                                  <circle cx="9" cy="9" r="5.5" stroke="#8A5A6E" strokeWidth="1.7" />
-                                  <path d="m13.2 13.2 3.3 3.3" stroke="#8A5A6E" strokeWidth="1.7" strokeLinecap="round" />
-                                </svg>
-                                <input value={vm.ord.q} onChange={vm.ord.onQ} placeholder={vm.ord.t.search} aria-label={vm.ord.t.search} style={S("flex:1;min-width:0;border:0;background:transparent;font-size:15px;height:100%")} />
-                              </label>
-                              </>
-                            )}
-                          </div>
-                          {vm.ord.noOrders && (
-                            <>
-                            <div data-screen-label="06c Orders \u00b7 empty" style={S("border:1px solid #F0E4E8;border-radius:20px;padding:56px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px")}>
-                              <span style={S("width:56px;height:56px;border-radius:16px;background:#FDEAF2;color:#C0284F;display:flex;align-items:center;justify-content:center")}>
-                                <svg width="26" height="26" viewBox="0 0 20 20" fill="none">
-                                  <path d="M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              </span>
-                              <div style={S("display:flex;flex-direction:column;gap:6px;max-width:420px")}>
-                                <h2 style={S("font-size:20px;font-weight:600;letter-spacing:-0.02em")}>
-                                  {vm.ord.e.title}
-                                </h2>
-                                <p style={S("font-size:15px;color:#8A5A6E;line-height:1.5;text-wrap:pretty")}>
-                                  {vm.ord.e.body}
-                                </p>
-                              </div>
-                              <div style={S("display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:4px")}>
-                                <button type="button" onClick={vm.ord.e.go} style={S("height:44px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")} className="dch1">
-                                  {vm.ord.e.cta}
-                                </button>
-                              </div>
-                            </div>
-                            </>
-                          )}
-                          {vm.ord.hasAny && (
-                            <>
-                            {vm.ordErr && (
-                              <>
-                              <div role="alert" style={S("font-size:14px;color:#B4233B")}>
-                                {vm.ordErr}
-                              </div>
-                              </>
-                            )}
-                            <div style={S("display:flex;gap:8px;overflow-x:auto;flex:none;padding-bottom:2px;scrollbar-width:none")}>
-                              {(vm.ord.tabs as any[]).map((tb: any, __i: number) => (
-                                <Fragment key={__i}>
-                                  <button type="button" onClick={tb.pick} style={S(`height:40px;padding:0 14px;border-radius:999px;display:flex;align-items:center;gap:8px;white-space:nowrap;flex:none;font-size:14px;font-weight:500;background:${tb.bg};color:${tb.fg};border:1.5px solid ${tb.bd}`)}>
-                                    {tb.label}
-                                    {tb.hasCount && (
-                                      <>
-                                      <span style={S(`min-width:22px;height:22px;padding:0 6px;border-radius:999px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;background:${tb.cbg};color:${tb.cfg}`)}>
-                                        {tb.count}
-                                      </span>
-                                      </>
-                                    )}
-                                  </button>
-                                </Fragment>
-                              ))}
-                            </div>
-                            <div style={S("display:flex;flex-direction:column;gap:10px;min-width:0")}>
-                              {(vm.ord.rows as any[]).map((r: any, __i: number) => (
-                                <Fragment key={__i}>
-                                  <div style={S(`border-radius:14px;background:#fff;border:1px solid ${r.cbd};box-shadow:${r.csh};overflow:clip`)}>
-                                    <div style={S(`display:flex;align-items:center;gap:10px;padding-inline-end:${r.qPad}`)}>
-                                      <button type="button" onClick={r.pick} aria-expanded={r.open} style={S("flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:start;padding:14px 18px;flex-wrap:wrap")}>
-                                        <div style={S("flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:4px")}>
-                                          <div style={S("display:flex;align-items:center;gap:10px;min-width:0")}>
-                                            {r.isNew && (
-                                              <>
-                                              <span style={S("width:8px;height:8px;border-radius:50%;background:#FF5577;flex:none")} />
-                                              </>
-                                            )}
-                                            <span style={S("font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;flex:none")}>
-                                              {r.id}
-                                            </span>
-                                            <span style={S("font-size:15px;font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>
-                                              {r.name}
-                                            </span>
-                                          </div>
-                                          <span style={S("font-size:14px;color:#8A5A6E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>
-                                            {r.summary}
-                                          </span>
-                                        </div>
-                                        <div style={S("display:flex;align-items:center;gap:12px;flex:none;margin-inline-start:auto")}>
-                                          <span style={S(`display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:${r.sbg};color:${r.sfg}`)}>
-                                            {r.stLabel}
-                                          </span>
-                                          <span style={S("font-size:13px;color:#8A5A6E;white-space:nowrap")}>
-                                            {r.type}
-                                          </span>
-                                          <span style={S(`font-size:13px;font-weight:500;color:${r.whenFg};font-variant-numeric:tabular-nums;white-space:nowrap`)}>
-                                            {r.when}
-                                          </span>
-                                          <span dir="ltr" style={S("font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:72px;text-align:end")}>
-                                            {r.total}
-                                          </span>
-                                          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${r.chev})`)}>
-                                            <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                                          </svg>
-                                        </div>
-                                      </button>
-                                      {r.hasQuick && (
-                                        <>
-                                        <button type="button" onClick={r.quick} style={S(`height:38px;padding:0 14px;border-radius:10px;font-size:14px;font-weight:600;white-space:nowrap;flex:none;background:${r.qBg};color:#fff`)}>
-                                          {r.qLabel}
-                                        </button>
-                                        </>
-                                      )}
-                                    </div>
-                                    {r.open && (
-                                      <>
-                                      <div style={S(`margin:0 18px;padding:16px 0;border-top:1px solid #F3EEF1;display:grid;grid-template-columns:${r.d.stepCols}`)}>
-                                        {(r.d.steps as any[]).map((sp: any, __i: number) => (
-                                          <Fragment key={__i}>
-                                            <div style={S("display:flex;flex-direction:column;gap:6px;min-width:0")}>
-                                              <div style={S("display:flex;align-items:center")}>
-                                                <span style={S(`width:10px;height:10px;border-radius:50%;flex:none;background:${sp.dot};border:2px solid ${sp.ring}`)} />
-                                                <span style={S(`flex:1;height:2px;margin:0 6px;border-radius:2px;background:${sp.line}`)} />
-                                              </div>
-                                              <span style={S(`font-size:13px;line-height:1.3;padding-inline-end:8px;font-weight:${sp.fw};color:${sp.fg}`)}>
-                                                {sp.label}
-                                                <span style={S("display:block;font-weight:400;font-size:12px;color:#8A5A6E;font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:2px")}>
-                                                  {sp.time}
-                                                </span>
-                                              </span>
-                                            </div>
-                                          </Fragment>
-                                        ))}
-                                      </div>
-                                      <div style={S(`margin:0 18px;border-top:1px solid #F3EEF1;display:grid;grid-template-columns:${r.L.dcols};gap:0 32px`)}>
-                                        <div style={S("padding:16px 0;display:flex;flex-direction:column;min-width:0")}>
-                                          <span style={S("font-size:14px;font-weight:600;margin-bottom:6px")}>
-                                            {r.t.items}
-                                          </span>
-                                          {(r.d.items as any[]).map((it: any, __i: number) => (
-                                            <Fragment key={__i}>
-                                              <div style={S("display:flex;gap:10px;padding:6px 0;align-items:flex-start")}>
-                                                <span style={S("width:26px;flex:none;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums")}>
-                                                  {it.q}
-                                                </span>
-                                                <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:2px")}>
-                                                  <span style={S("font-size:15px")}>
-                                                    {it.name}
-                                                  </span>
-                                                  {it.hasNote && (
-                                                    <>
-                                                    <span style={S("font-size:13px;font-weight:500;color:#8A4B00")}>
-                                                      {it.note}
-                                                    </span>
-                                                    </>
-                                                  )}
-                                                </div>
-                                                <span dir="ltr" style={S("font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap")}>
-                                                  {it.price}
-                                                </span>
-                                              </div>
-                                            </Fragment>
-                                          ))}
-                                          <div style={S("border-top:1px dashed #ECD9E0;margin-top:8px;padding-top:10px;display:flex;flex-direction:column;gap:5px")}>
-                                            {(r.d.totals as any[]).map((tt: any, __i: number) => (
-                                              <Fragment key={__i}>
-                                                <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:14px;color:#8A5A6E")}>
-                                                  <span>
-                                                    {tt.k}
-                                                  </span>
-                                                  <span dir="ltr" style={S("font-variant-numeric:tabular-nums")}>
-                                                    {tt.v}
-                                                  </span>
-                                                </div>
-                                              </Fragment>
-                                            ))}
-                                            <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:16px;font-weight:600")}>
-                                              <span>
-                                                {r.t.total}
-                                              </span>
-                                              <span dir="ltr" style={S("font-variant-numeric:tabular-nums")}>
-                                                {r.d.total}
-                                              </span>
-                                            </div>
-                                          </div>
-                                        </div>
-                                        <div style={S(`padding:16px 0;display:flex;flex-direction:column;gap:4px;min-width:0;border-top:${r.L.dsepTop}`)}>
-                                          <span style={S("font-size:14px;font-weight:600;margin-bottom:6px")}>
-                                            {r.t.customer}
-                                          </span>
-                                          <span style={S("font-size:15px;font-weight:500")}>
-                                            {r.d.name}
-                                          </span>
-                                          <span dir="ltr" style={S("font-size:14px;color:#3D1C31;font-variant-numeric:tabular-nums;text-align:start")}>
-                                            {r.d.phone}
-                                          </span>
-                                          {r.d.isDelivery && (
-                                            <>
-                                            <span style={S("font-size:14px;color:#3D1C31;line-height:1.45;margin-top:4px")}>
-                                              {r.d.addr}
-                                            </span>
-                                            </>
-                                          )}
-                                          {r.d.hasNote && (
-                                            <>
-                                            <span style={S("font-size:14px;line-height:1.45;margin-top:8px;color:#8A4B00")}>
-                                              <span style={S("font-weight:600")}>
-                                                {r.t.note}:
-                                              </span>
-                                              {r.d.note}
-                                            </span>
-                                            </>
-                                          )}
-                                          <div style={S("display:flex;flex-wrap:wrap;gap:8px;margin-top:12px")}>
-                                            <button type="button" onClick={r.d.message} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
-                                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                                <path d="M3.5 16.5 4.6 13A7 7 0 1 1 7.3 15.6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                                              </svg>
-                                              {r.t.msg}
-                                            </button>
-                                            <a href={r.d.tel} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
-                                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                                <path d="M4 3.5h3l1.5 3.5-2 1.3a9 9 0 0 0 5.2 5.2l1.3-2 3.5 1.5v3a1.5 1.5 0 0 1-1.6 1.5A14 14 0 0 1 2.5 5.1 1.5 1.5 0 0 1 4 3.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                                              </svg>
-                                              {r.t.call}
-                                            </a>
-                                            <button type="button" onClick={r.d.print} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
-                                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                                <path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                                              </svg>
-                                              {r.t.print}
-                                            </button>
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <div style={S("padding:14px 18px;border-top:1px solid #F3EEF1;display:flex;flex-direction:column;gap:12px")}>
-                                        {r.d.hasFlash && (
-                                          <>
-                                          <span role="status" style={S("display:flex;align-items:center;gap:8px;font-size:14px;color:#16704A;font-weight:500")}>
-                                            <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
-                                              <circle cx="10" cy="10" r="9" fill="#16704A" />
-                                              <path d="M6 10.2 8.6 12.8 14 7.4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
-                                            {r.d.flash}
-                                          </span>
-                                          </>
-                                        )}
-                                        {r.d.isNew && (
-                                          <>
-                                          <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:12px")}>
-                                            <div style={S("display:flex;align-items:center;gap:10px;flex-wrap:wrap")}>
-                                              <span style={S("font-size:14px;color:#3D1C31")}>
-                                                {r.t.prep}
-                                              </span>
-                                              <div role="radiogroup" aria-label={r.t.prep} style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px")}>
-                                                {(r.d.prepSeg as any[]).map((ps: any, __i: number) => (
-                                                  <Fragment key={__i}>
-                                                    <button type="button" role="radio" aria-checked={ps.on} onClick={ps.pick} style={S(`height:32px;padding:0 11px;border-radius:8px;font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:${ps.fw};background:${ps.bg};color:${ps.fg}`)}>
-                                                      {ps.label}
-                                                    </button>
-                                                  </Fragment>
-                                                ))}
-                                              </div>
-                                            </div>
-                                            <div style={S("display:flex;gap:8px;margin-inline-start:auto")}>
-                                              <button type="button" onClick={r.d.startReject} style={S("height:44px;padding:0 16px;border-radius:12px;color:#B42318;font-weight:500;font-size:15px")} className="dch10">
-                                                {r.t.reject}
-                                              </button>
-                                              <button type="button" onClick={r.d.accept} style={S("height:44px;padding:0 24px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")}>
-                                                {r.t.accept}
-                                              </button>
-                                            </div>
-                                          </div>
-                                          </>
-                                        )}
-                                        {r.d.rejecting && (
-                                          <>
-                                          <span style={S("font-size:15px;font-weight:600")}>
-                                            {r.t.rejectQ}
-                                          </span>
-                                          <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
-                                            {(r.d.reasons as any[]).map((rs: any, __i: number) => (
-                                              <Fragment key={__i}>
-                                                <button type="button" onClick={rs.pick} style={S(`height:38px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;background:${rs.bg};color:${rs.fg};border:1px solid ${rs.bd}`)}>
-                                                  {rs.label}
-                                                </button>
-                                              </Fragment>
-                                            ))}
-                                          </div>
-                                          <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px")}>
-                                            <span style={S("font-size:13px;color:#8A5A6E;flex:1 1 200px")}>
-                                              {r.t.told}
-                                            </span>
-                                            <button type="button" onClick={r.d.cancelReject} style={S("height:44px;padding:0 16px;border-radius:12px;font-weight:500;font-size:15px")} className="dch0">
-                                              {r.t.cancel}
-                                            </button>
-                                            <button type="button" onClick={r.d.confirmReject} disabled={!!r.d.noReason} style={S(`height:44px;padding:0 18px;border-radius:12px;background:#B42318;color:#fff;font-weight:600;font-size:15px;opacity:${r.d.rejOp}`)}>
-                                              {r.t.confirmReject}
-                                            </button>
-                                          </div>
-                                          </>
-                                        )}
-                                        {r.d.hasNext && (
-                                          <>
-                                          <div style={S("display:flex;justify-content:flex-end")}>
-                                            <button type="button" onClick={r.d.next} style={S("height:44px;padding:0 24px;border-radius:12px;background:#1A0815;color:#fff;font-weight:600;font-size:15px")} className="dch11">
-                                              {r.d.nextLabel}
-                                            </button>
-                                          </div>
-                                          </>
-                                        )}
-                                        {r.d.closed && (
-                                          <>
-                                          <span style={S(`font-size:15px;font-weight:500;color:${r.d.closedFg}`)}>
-                                            {r.d.closedText}
-                                          </span>
-                                          </>
-                                        )}
-                                      </div>
-                                      </>
-                                    )}
-                                  </div>
-                                </Fragment>
-                              ))}
-                              {vm.ordLoading && (
-                                <>
-                                {vm.loaderNode}
-                                </>
-                              )}
-                              {vm.ord.empty && (
-                                <>
-                                <div style={S("padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;border:1px dashed #ECD9E0;border-radius:14px")}>
-                                  <span style={S("font-size:15px;font-weight:600")}>
-                                    {vm.ord.tabEmpty.title}
-                                  </span>
-                                  <span style={S("font-size:14px;color:#8A5A6E;max-width:360px;line-height:1.45")}>
-                                    {vm.ord.tabEmpty.body}
-                                  </span>
-                                </div>
-                                </>
-                              )}
-                            </div>
-                            </>
-                          )}
-                        </div>
-                        </>
-                      )}
-                      {vm.pageCustomers && (
-                        <>
-                        <div data-screen-label="07 Dashboard \u00b7 Customers" dir="ltr" style={S("display:flex;flex-direction:column;gap:18px")}>
-                          <div style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
-                            <div style={S("flex:1 1 240px;min-width:0")}>
-                              <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
-                                Customers
-                              </h1>
-                              <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5")}>
-                                {vm.cu.sub}
-                              </p>
-                            </div>
-                            <label style={S("flex:0 1 300px;min-width:200px;height:44px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px")}>
-                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
-                                <circle cx="9" cy="9" r="5.5" stroke="#8A5A6E" strokeWidth="1.7" />
-                                <path d="m13.2 13.2 3.3 3.3" stroke="#8A5A6E" strokeWidth="1.7" strokeLinecap="round" />
-                              </svg>
-                              <input value={vm.cu.q} onChange={vm.cu.onQ} placeholder="Search name or number" aria-label="Search customers" style={S("flex:1;min-width:0;border:0;background:transparent;font-size:15px;height:100%")} />
-                            </label>
-                          </div>
-                          <div style={S(`display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 12px 10px 16px;border-radius:14px;background:${vm.cu.barBg};border:1px solid ${vm.cu.barBd}`)}>
-                            <button type="button" onClick={vm.cu.toggleAll} style={S("display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500")}>
-                              <span style={S(`width:20px;height:20px;border-radius:6px;flex:none;border:1.5px solid ${vm.cu.all.ckBd};background:${vm.cu.all.ckBg};display:flex;align-items:center;justify-content:center`)}>
-                                {vm.cu.all.sel && (
-                                  <>
-                                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                                    <path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                  </>
-                                )}
-                              </span>
-                              {vm.cu.selLabel}
-                            </button>
-                            <span style={S("flex:1")} />
-                            {vm.cu.hasSel && (
-                              <>
-                              <button type="button" onClick={vm.cu.clear} style={S("height:36px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:500;color:#3D1C31")} className="dch12">
-                                Clear
-                              </button>
-                              </>
-                            )}
-                            <button type="button" onClick={vm.cu.sendOffer} disabled={!!vm.cu.noSel} style={S(`height:40px;padding:0 16px;border-radius:11px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-size:14px;font-weight:600;opacity:${vm.cu.sendOp};display:flex;align-items:center;gap:8px`)}>
-                              <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                                <path d="M3.5 10.5 10.5 3.5H16.5V9.5L9.5 16.5z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-                                <circle cx="13" cy="7" r="1.2" fill="currentColor" />
-                              </svg>
-                              Send discount code
-                            </button>
-                          </div>
-                          <div style={S("display:flex;flex-direction:column;gap:10px;min-width:0")}>
-                            {(vm.cu.rows as any[]).map((c: any, __i: number) => (
-                              <Fragment key={__i}>
-                                <div style={S(`border-radius:14px;background:#fff;border:1px solid ${c.bd};overflow:clip`)}>
-                                  <div style={S("display:flex;align-items:center")}>
-                                    <button type="button" onClick={c.toggle} aria-label={c.ckLabel} style={S("align-self:stretch;padding:0 6px 0 16px;display:flex;align-items:center")}>
-                                      <span style={S(`width:20px;height:20px;border-radius:6px;flex:none;border:1.5px solid ${c.ckBd};background:${c.ckBg};display:flex;align-items:center;justify-content:center`)}>
-                                        {c.sel && (
-                                          <>
-                                          <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                                            <path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-                                          </svg>
-                                          </>
-                                        )}
-                                      </span>
-                                    </button>
-                                    <button type="button" onClick={c.open} aria-expanded={c.isOpen} style={S("flex:1;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px;text-align:start;padding:14px 18px 14px 10px")}>
-                                      <span style={S("display:flex;align-items:center;gap:12px;flex:1 1 240px;min-width:0")}>
-                                        <span style={S(`width:40px;height:40px;border-radius:50%;flex:none;background:${c.av};color:#1A0815;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center`)}>
-                                          {c.ini}
-                                        </span>
-                                        <span style={S("display:flex;flex-direction:column;gap:2px;min-width:0")}>
-                                          <span style={S("font-size:15px;font-weight:600")}>
-                                            {c.name}
-                                          </span>
-                                          <span style={S("display:flex;align-items:center;gap:6px;font-size:14px;color:#3D1C31;font-variant-numeric:tabular-nums")}>
-                                            <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
-                                              <path d="M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z" stroke="#16704A" strokeWidth="1.7" strokeLinejoin="round" />
-                                            </svg>
-                                            {c.phone}
-                                          </span>
-                                        </span>
-                                      </span>
-                                      <span style={S("display:flex;gap:22px;font-size:14px;font-variant-numeric:tabular-nums;flex:none")}>
-                                        <span style={S("display:flex;flex-direction:column;gap:2px")}>
-                                          <span style={S("color:#8A5A6E;font-size:13px")}>
-                                            Orders
-                                          </span>
-                                          <span style={S("font-weight:600")}>
-                                            {c.orders}
-                                          </span>
-                                        </span>
-                                        <span style={S("display:flex;flex-direction:column;gap:2px")}>
-                                          <span style={S("color:#8A5A6E;font-size:13px")}>
-                                            Spent
-                                          </span>
-                                          <span style={S("font-weight:600")}>
-                                            {c.spent}
-                                          </span>
-                                        </span>
-                                        <span style={S("display:flex;flex-direction:column;gap:2px;min-width:86px")}>
-                                          <span style={S("color:#8A5A6E;font-size:13px")}>
-                                            Last order
-                                          </span>
-                                          <span style={S("font-weight:600")}>
-                                            {c.last}
-                                          </span>
-                                        </span>
-                                      </span>
-                                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={S(`flex:none;transform:rotate(${c.rot});transition:transform .15s`)}>
-                                        <path d="m4 6 4 4 4-4" stroke="#8A5A6E" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                                      </svg>
-                                    </button>
-                                  </div>
-                                  {c.isOpen && (
-                                    <>
-                                    <div style={S("padding:4px 18px 18px;border-top:1px solid #F6EEF2;display:flex;flex-direction:column;gap:12px")}>
-                                      <span style={S("font-size:14px;font-weight:600;margin-top:12px")}>
-                                        Saved addresses
-                                      </span>
-                                      <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px")}>
-                                        {(c.addrs as any[]).map((a: any, __i: number) => (
-                                          <Fragment key={__i}>
-                                            <div style={S("border:1px solid #F0E4E8;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;background:#FFFBFC")}>
-                                              <span style={S("display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600")}>
-                                                {a.label}
-                                                {a.def && (
-                                                  <>
-                                                  <span style={S("font-size:12px;font-weight:600;padding:2px 7px;border-radius:999px;background:#FDEAF2;color:#8A2040")}>
-                                                    Default
-                                                  </span>
-                                                  </>
-                                                )}
-                                              </span>
-                                              <span style={S("font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty")}>
-                                                {a.text}
-                                              </span>
-                                              <span style={S("font-size:13px;color:#8A5A6E")}>
-                                                {a.uses}
-                                              </span>
-                                            </div>
-                                          </Fragment>
-                                        ))}
-                                      </div>
-                                    </div>
-                                    </>
-                                  )}
-                                </div>
-                              </Fragment>
-                            ))}
-                            {vm.cu.empty && (
-                              <>
-                              <p style={S("padding:32px;text-align:center;font-size:15px;color:#8A5A6E")}>
-                                No customers match your search.
-                              </p>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        </>
-                      )}
-                      {vm.pageCampaigns && (
-                        <>
-                        <div data-screen-label="08 Dashboard \u00b7 Campaigns" dir="ltr" style={S("display:flex;flex-direction:column;gap:20px")}>
-                          <div>
-                            <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
-                              Campaigns
-                            </h1>
-                            <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5")}>
-                              Send offers to your customers on WhatsApp.
-                            </p>
-                          </div>
-                          <div role="tablist" style={S("display:flex;padding:3px;border-radius:12px;background:#F6EEF2;gap:2px;align-self:flex-start;max-width:100%")}>
-                            {(vm.cp.modes as any[]).map((m: any, __i: number) => (
-                              <Fragment key={__i}>
-                                <button type="button" role="tab" aria-selected={m.on} onClick={m.pick} style={S(`height:38px;padding:0 16px;border-radius:9px;font-size:14px;white-space:nowrap;font-weight:${m.fw};background:${m.bg};color:${m.fg};box-shadow:${m.sh}`)}>
-                                  {m.label}
-                                </button>
-                              </Fragment>
-                            ))}
-                          </div>
-                          <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px;align-items:start")}>
-                            <form onSubmit={vm.cp.send} noValidate={true} style={S("border:1px solid #F0E4E8;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0")}>
-                              {vm.cp.isAll && (
-                                <>
-                                <div style={S("display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:#FBF3F8")}>
-                                  <span style={S("width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none")}>
-                                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-                                      <path d="M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5" stroke="#8A2040" strokeWidth="1.6" strokeLinecap="round" />
-                                    </svg>
-                                  </span>
-                                  <span style={S("display:flex;flex-direction:column;gap:2px")}>
-                                    <span style={S("font-size:15px;font-weight:600")}>
-                                      All customers
-                                    </span>
-                                    <span style={S("font-size:13px;color:#8A5A6E")}>
-                                      {vm.cp.allNote}
-                                    </span>
-                                  </span>
-                                </div>
-                                </>
-                              )}
-                              {vm.cp.isOffer && (
-                                <>
-                                <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                                  <div style={S("display:flex;align-items:baseline;justify-content:space-between;gap:10px")}>
-                                    <span style={S("font-size:14px;font-weight:600")}>
-                                      Customers
-                                    </span>
-                                    <button type="button" onClick={vm.cu.toggleAll} style={S("font-size:14px;font-weight:500;color:#C0284F")}>
-                                      {vm.cp.allBtn}
-                                    </button>
-                                  </div>
-                                  <div style={S("border:1.5px solid #ECD9E0;border-radius:14px;max-height:232px;overflow-y:auto;display:flex;flex-direction:column")}>
-                                    {(vm.cp.pick as any[]).map((c: any, __i: number) => (
-                                      <Fragment key={__i}>
-                                        <button type="button" onClick={c.toggle} style={S(`display:flex;align-items:center;gap:12px;padding:10px 14px;text-align:start;border-bottom:1px solid #F6EEF2;background:${c.rowBg}`)} className="dch13">
-                                          <span style={S(`width:20px;height:20px;border-radius:6px;flex:none;border:1.5px solid ${c.ckBd};background:${c.ckBg};display:flex;align-items:center;justify-content:center`)}>
-                                            {c.sel && (
-                                              <>
-                                              <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                                                <path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-                                              </svg>
-                                              </>
-                                            )}
-                                          </span>
-                                          <span style={S("flex:1;min-width:0;font-size:14px;font-weight:500")}>
-                                            {c.name}
-                                          </span>
-                                          <span style={S("font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
-                                            {c.phone}
-                                          </span>
-                                        </button>
-                                      </Fragment>
-                                    ))}
-                                  </div>
-                                  <span style={S(`font-size:13px;color:${vm.cp.selFg}`)}>
-                                    {vm.cp.selNote}
-                                  </span>
-                                </div>
-                                </>
-                              )}
-                              {vm.cp.isAll && (
-                                <>
-                                <button type="button" onClick={vm.cp.toggleCode} role="switch" aria-checked={vm.cp.withCode} style={S("display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:start")}>
-                                  <span style={S("display:flex;flex-direction:column;gap:2px")}>
-                                    <span style={S("font-size:14px;font-weight:600")}>
-                                      Include a discount code
-                                    </span>
-                                    <span style={S("font-size:13px;color:#8A5A6E")}>
-                                      Everyone gets the same code
-                                    </span>
-                                  </span>
-                                  <span style={S(`width:40px;height:24px;border-radius:12px;flex:none;background:${vm.cp.swBg};position:relative;transition:background .15s`)}>
-                                    <span style={S(`position:absolute;top:3px;left:${vm.cp.swX};width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(26,8,21,.2);transition:left .15s`)} />
-                                  </span>
-                                </button>
-                                </>
-                              )}
-                              {vm.cp.showCode && (
-                                <>
-                                <div style={S("display:flex;flex-direction:column;gap:14px;padding:14px;border-radius:14px;background:#FFF7FA;border:1px dashed #F3B8CB")}>
-                                  <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                                    <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                                      Discount
-                                    </span>
-                                    <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
-                                      {(vm.cp.pcts as any[]).map((o: any, __i: number) => (
-                                        <Fragment key={__i}>
-                                          <button type="button" onClick={o.pick} style={S(`height:36px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;border:1.5px solid ${o.bd};background:${o.bg};color:${o.fg}`)}>
-                                            {o.label}
-                                          </button>
-                                        </Fragment>
-                                      ))}
-                                    </div>
-                                  </div>
-                                  <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px")}>
-                                    <label style={S("display:flex;flex-direction:column;gap:8px")}>
-                                      <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                                        Code
-                                      </span>
-                                      <input value={vm.cp.code} onChange={vm.cp.onCode} style={S("height:44px;padding:0 12px;border-radius:11px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-weight:600;letter-spacing:.04em")} className="dch14" />
-                                    </label>
-                                    <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                                      <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                                        Valid for
-                                      </span>
-                                      <div style={S("display:flex;gap:6px")}>
-                                        {(vm.cp.days as any[]).map((o: any, __i: number) => (
-                                          <Fragment key={__i}>
-                                            <button type="button" onClick={o.pick} style={S(`flex:1;height:44px;border-radius:11px;font-size:14px;font-weight:500;border:1.5px solid ${o.bd};background:${o.bg};color:${o.fg}`)}>
-                                              {o.label}
-                                            </button>
-                                          </Fragment>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                                </>
-                              )}
-                              <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                                  Offer image
-                                </span>
-                                {vm.cp.noImg && (
-                                  <>
-                                  <label style={S("height:132px;border-radius:14px;border:1.5px dashed #E3CBD4;background:#FFFBFC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;text-align:center;padding:0 16px")} className="dch15">
-                                    <input type="file" accept="image/png,image/jpeg,image/webp" onChange={vm.cp.onImg} style={S("position:absolute;width:1px;height:1px;opacity:0;pointer-events:none")}>
-                                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                        <rect x="3.5" y="4.5" width="17" height="15" rx="3" stroke="#C0284F" strokeWidth="1.6" />
-                                        <circle cx="9" cy="10" r="1.8" stroke="#C0284F" strokeWidth="1.6" />
-                                        <path d="m4 17 5-4.5 4 3.5 2.5-2 4.5 4" stroke="#C0284F" strokeWidth="1.6" strokeLinejoin="round" />
-                                      </svg>
-                                      <span style={S("font-size:14px;font-weight:600")}>
-                                        Upload an image
-                                      </span>
-                                      <span style={S("font-size:13px;color:#8A5A6E")}>
-                                        JPG or PNG, up to 5 MB. Square images work best.
-                                      </span>
-                                    </input>
-                                  </label>
-                                  </>
-                                )}
-                                {vm.cp.hasImg && (
-                                  <>
-                                  <div style={S("display:flex;align-items:center;gap:12px;padding:10px;border-radius:14px;border:1.5px solid #ECD9E0")}>
-                                    <div style={S(`width:64px;height:64px;border-radius:10px;flex:none;background-color:#FBF3F8;background-image:${vm.cp.imgBg};background-size:cover;background-position:center`)} />
-                                    <span style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:2px")}>
-                                      <span style={S("font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>
-                                        {vm.cp.imgName}
-                                      </span>
-                                      <span style={S("font-size:13px;color:#8A5A6E")}>
-                                        Sent above your message
-                                      </span>
-                                    </span>
-                                    <label style={S("height:36px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:500;display:flex;align-items:center;cursor:pointer;flex:none")} className="dch0">
-                                      <input type="file" accept="image/png,image/jpeg,image/webp" onChange={vm.cp.onImg} style={S("position:absolute;width:1px;height:1px;opacity:0;pointer-events:none")}>
-                                        Replace
-                                      </input>
-                                    </label>
-                                    <button type="button" onClick={vm.cp.clearImg} aria-label="Remove image" style={S("width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
-                                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                                        <path d="m4 4 8 8M12 4l-8 8" stroke="#3D1C31" strokeWidth="1.7" strokeLinecap="round" />
-                                      </svg>
-                                    </button>
-                                  </div>
-                                  </>
-                                )}
-                              </div>
-                              <label style={S("display:flex;flex-direction:column;gap:8px")}>
-                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                                  Message
-                                </span>
-                                <textarea value={vm.cp.msg} onChange={vm.cp.onMsg} rows={4} style={S("padding:12px 14px;border-radius:12px;border:1.5px solid #ECD9E0;font-size:15px;line-height:1.5;resize:vertical;font-family:inherit")} className="dch14" />
-                                <span style={S("font-size:13px;color:#8A5A6E")}>
-                                  {vm.cp.tokens}
-                                </span>
-                              </label>
-                              {vm.cp.err && (
-                                <>
-                                <div role="alert" style={S("font-size:14px;color:#B4233B")}>
-                                  {vm.cp.err}
-                                </div>
-                                </>
-                              )}
-                              <button type="submit" disabled={!!vm.cp.cant} style={S(`height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;opacity:${vm.cp.sendOp};display:flex;align-items:center;justify-content:center;gap:10px`)}>
-                                {vm.cp.sending && (
-                                  <>
-                                  <span style={S("width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:lo-spin .8s linear infinite")} />
-                                  </>
-                                )}
-                                {vm.cp.sendLabel}
-                              </button>
-                            </form>
-                            <div style={S("display:flex;flex-direction:column;gap:10px;min-width:0")}>
-                              <span style={S("font-size:14px;font-weight:600")}>
-                                Preview
-                              </span>
-                              <div style={S("border-radius:20px;background:#EFE7DD;padding:18px 16px 22px;display:flex;flex-direction:column;gap:10px")}>
-                                <span style={S("align-self:center;font-size:12px;padding:3px 10px;border-radius:8px;background:rgba(255,255,255,.75);color:#3D1C31")}>
-                                  {"To "}{vm.cp.previewTo}
-                                </span>
-                                <div style={S("align-self:flex-start;max-width:88%;width:300px;background:#fff;border-radius:4px 14px 14px 14px;padding:4px 4px 8px;box-shadow:0 1px 1px rgba(26,8,21,.08);display:flex;flex-direction:column;gap:8px")}>
-                                  {vm.cp.hasImg && (
-                                    <>
-                                    <div role="img" aria-label="Offer image" style={S(`width:100%;aspect-ratio:1/1;border-radius:11px 11px 4px 4px;background-color:#F6EEF2;background-image:${vm.cp.imgBg};background-size:cover;background-position:center`)} />
-                                    </>
-                                  )}
-                                  {vm.cp.noImg && (
-                                    <>
-                                    <span style={S("display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:16/9;border-radius:11px 11px 4px 4px;background:#F6EEF2;font-size:13px;color:#8A5A6E")}>
-                                      Your offer image
-                                    </span>
-                                    </>
-                                  )}
-                                  <div style={S("padding:0 8px;display:flex;flex-direction:column;gap:8px")}>
-                                    <span style={S("font-size:13px;font-weight:600;color:#C0284F")}>
-                                      Burger House
-                                    </span>
-                                    <span style={S("font-size:15px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere")}>
-                                      {vm.cp.preview}
-                                    </span>
-                                    {vm.cp.showCode && (
-                                      <>
-                                      <span style={S("display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:10px;background:#FFF1F4;border:1px dashed #F3B8CB")}>
-                                        <span style={S("font-size:15px;font-weight:600;letter-spacing:.05em")}>
-                                          {vm.cp.code}
-                                        </span>
-                                        <span style={S("font-size:13px;color:#8A2040")}>
-                                          {vm.cp.pctLabel}{" off \u00b7 "}{vm.cp.until}
-                                        </span>
-                                      </span>
-                                      </>
-                                    )}
-                                    <span style={S("align-self:flex-end;font-size:11px;color:#8A5A6E")}>
-                                      12:04
-                                    </span>
-                                  </div>
-                                </div>
-                                <div style={S("align-self:flex-start;max-width:88%;display:flex;flex-direction:column;gap:6px;width:300px")}>
-                                  <span style={S("height:38px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:#027EB5")}>
-                                    Order now
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <section style={S("display:flex;flex-direction:column;gap:10px")}>
-                            <h2 style={S("font-size:18px;font-weight:600;letter-spacing:-0.015em")}>
-                              Sent campaigns
-                            </h2>
-                            {(vm.cp.history as any[]).map((hx: any, __i: number) => (
-                              <Fragment key={__i}>
-                                <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding:14px 18px;border:1px solid #F0E4E8;border-radius:14px")}>
-                                  <span style={S("flex:1 1 240px;min-width:0;display:flex;flex-direction:column;gap:3px")}>
-                                    <span style={S("font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>
-                                      {hx.title}
-                                    </span>
-                                    <span style={S("font-size:13px;color:#8A5A6E")}>
-                                      {hx.meta}
-                                    </span>
-                                  </span>
-                                  <span style={S("display:flex;gap:22px;font-size:14px;font-variant-numeric:tabular-nums")}>
-                                    <span style={S("display:flex;flex-direction:column;gap:2px")}>
-                                      <span style={S("color:#8A5A6E;font-size:13px")}>
-                                        Sent
-                                      </span>
-                                      <span style={S("font-weight:600")}>
-                                        {hx.sent}
-                                      </span>
-                                    </span>
-                                    <span style={S("display:flex;flex-direction:column;gap:2px")}>
-                                      <span style={S("color:#8A5A6E;font-size:13px")}>
-                                        Read
-                                      </span>
-                                      <span style={S("font-weight:600")}>
-                                        {hx.read}
-                                      </span>
-                                    </span>
-                                    <span style={S("display:flex;flex-direction:column;gap:2px")}>
-                                      <span style={S("color:#8A5A6E;font-size:13px")}>
-                                        Code used
-                                      </span>
-                                      <span style={S("font-weight:600")}>
-                                        {hx.used}
-                                      </span>
-                                    </span>
-                                  </span>
-                                </div>
-                              </Fragment>
-                            ))}
-                          </section>
-                          {vm.cp.toast && (
-                            <>
-                            <div role="status" style={S("position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:50;background:#1A0815;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;box-shadow:0 12px 30px -10px rgba(26,8,21,.5)")}>
-                              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                <path d="m5 10.5 3.2 3L15 7" stroke="#7BE0A8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                              {vm.cp.toast}
-                            </div>
-                            </>
-                          )}
-                        </div>
-                        </>
-                      )}
-                      {vm.pagePlans && (
-                        <>
-                        <div dir="ltr" style={S("position:fixed;inset:0;z-index:55;background:#fff;display:flex;flex-direction:column")}>
-                          <header style={S("height:64px;flex:none;padding:0 16px 0 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F0E4E8")}>
-                            <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style={S("display:block;flex:none")}>
-                              <defs>
-                                <linearGradient id="gPD3" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
-                                  <stop offset="0" stopColor="#FF5577" />
-                                  <stop offset="1" stopColor="#C93DFF" />
-                                </linearGradient>
-                              </defs>
-                              <path d="M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z" stroke="url(#gPD3)" strokeWidth="8" strokeLinejoin="round" />
-                              <path d="M28 30V66H40" stroke="#1A0815" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
-                              <circle cx="64" cy="55" r="11" stroke="url(#gPD3)" strokeWidth="10" />
-                            </svg>
-                            <span style={S("font-size:16px;font-weight:600;flex:1;min-width:0")}>
-                              Subscribe to Lumia Order
-                            </span>
-                            <span style={S("font-size:14px;color:#8A5A6E;flex:none")}>
-                              {vm.sub.stepLabel}
-                            </span>
-                            <button type="button" onClick={vm.subClosePlans} aria-label="Close" style={S("width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
-                              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <path d="m4 4 8 8M12 4l-8 8" stroke="#1A0815" strokeWidth="1.7" strokeLinecap="round" />
-                              </svg>
-                            </button>
-                          </header>
-                          <div style={S("flex:1;min-height:0;overflow-y:auto")}>
-                            <div style={S(`max-width:1100px;margin:0 auto;padding:${vm.sub.pad};display:flex;flex-direction:column;gap:22px;align-items:center`)}>
-                              {vm.sub.stepPlans && (
-                                <>
-                                <div data-screen-label="11 Choose a plan" style={S("display:flex;flex-direction:column;gap:22px;width:100%")}>
-                                  <div style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
-                                    <div style={S("flex:1 1 280px;min-width:0")}>
-                                      <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
-                                        Choose your plan
-                                      </h1>
-                                      <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5;text-wrap:pretty")}>
-                                        {vm.sub.trialLine}
-                                      </p>
-                                    </div>
-                                    <div role="radiogroup" aria-label="Billing" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px")}>
-                                      {(vm.sub.bills as any[]).map((b: any, __i: number) => (
-                                        <Fragment key={__i}>
-                                          <button type="button" role="radio" aria-checked={b.on} onClick={b.pick} style={S(`height:34px;padding:0 14px;border-radius:8px;font-size:14px;white-space:nowrap;font-weight:${b.fw};background:${b.bg};color:${b.fg};box-shadow:${b.sh}`)}>
-                                            {b.label}
-                                          </button>
-                                        </Fragment>
-                                      ))}
-                                      <span style={S("align-self:center;font-size:12px;font-weight:600;padding:3px 8px;margin:0 4px;border-radius:999px;background:#E4F4EC;color:#16704A;white-space:nowrap")}>
-                                        Yearly saves 2 months
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px;align-items:stretch")}>
-                                    {(vm.sub.plans as any[]).map((p: any, __i: number) => (
-                                      <Fragment key={__i}>
-                                        <button type="button" onClick={p.choose} aria-label={p.cta} style={S(`text-align:start;border:2px solid ${p.bd};background:${p.bg};border-radius:20px;padding:22px;display:flex;flex-direction:column;transition:border-color .15s,box-shadow .15s,transform .15s`)} className="dch16">
-                                          <span style={S("font-size:19px;font-weight:600")}>
-                                            {p.name}
-                                          </span>
-                                          <span style={S("font-size:14px;line-height:1.45;color:#8A5A6E;margin-top:6px")}>
-                                            {p.desc}
-                                          </span>
-                                          <div style={S("display:flex;flex-direction:column;margin-top:16px;font-variant-numeric:tabular-nums")}>
-                                            <span style={S("font-size:14px;color:#8A5A6E;text-decoration:line-through;min-height:20px")}>
-                                              {p.strike}
-                                            </span>
-                                            <span style={S("display:flex;align-items:baseline;gap:6px")}>
-                                              <span style={S("font-size:30px;font-weight:600;letter-spacing:-0.04em")}>
-                                                {p.price}
-                                              </span>
-                                              <span style={S("font-size:14px;color:#8A5A6E")}>
-                                                {p.per}
-                                              </span>
-                                            </span>
-                                            <span style={S("font-size:13px;color:#3D1C31;margin-top:4px")}>
-                                              {p.eq}
-                                            </span>
-                                            <span style={S("font-size:13px;color:#8A2040;margin-top:8px;padding:6px 10px;border-radius:8px;background:#FDEAF2;align-self:flex-start")}>
-                                              {"+ Terminal "}{p.term}{" one-time"}
-                                            </span>
-                                          </div>
-                                          <span style={S("height:1px;background:#F0E4E8;margin:18px 0 14px;display:block")} />
-                                          {p.hasInc && (
-                                            <>
-                                            <span style={S("font-size:13px;font-weight:600;color:#3D1C31;margin-bottom:10px")}>
-                                              {p.inc}
-                                            </span>
-                                            </>
-                                          )}
-                                          <div style={S("display:flex;flex-direction:column;gap:7px;font-size:14px")}>
-                                            {(p.feats as any[]).map((f: any, __i: number) => (
-                                              <Fragment key={__i}>
-                                                <span style={S("display:flex;gap:8px")}>
-                                                  <span style={S("color:#FF5577;flex:none")}>
-                                                    ✓
-                                                  </span>
-                                                  <span>
-                                                    {f}
-                                                  </span>
-                                                </span>
-                                              </Fragment>
-                                            ))}
-                                          </div>
-                                        </button>
-                                      </Fragment>
-                                    ))}
-                                  </div>
-                                </div>
-                                </>
-                              )}
-                              {vm.sub.stepPay && (
-                                <>
-                                <div data-screen-label="12 Payment" style={S("display:flex;flex-direction:column;gap:20px;max-width:900px;width:100%")}>
-                                  <button type="button" onClick={vm.subBackPlans} style={S("align-self:flex-start;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px 0 8px;border-radius:10px;font-size:14px;font-weight:500;color:#3D1C31")} className="dch6">
-                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                      <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                    Plans
-                                  </button>
-                                  <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
-                                    Payment
-                                  </h1>
-                                  <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:20px;align-items:start")}>
-                                    {vm.sub.embed && (
-                                      <>
-                                      <div style={S("display:flex;flex-direction:column;gap:12px;min-width:0")}>
-                                        <button type="button" onClick={vm.subEmbedBack} style={S("align-self:flex-start;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px 0 8px;border-radius:10px;font-size:14px;font-weight:500;color:#3D1C31")} className="dch6">
-                                          ← Edit details
-                                        </button>
-                                        <div ref={vm.stripeRef} style={S("min-height:420px;border:1.5px solid #ECD9E0;border-radius:16px;padding:12px;background:#fff")} />
-                                      </div>
-                                      </>
-                                    )}
-                                    {vm.sub.notEmbed && (
-                                      <>
-                                      <form onSubmit={vm.subPay} noValidate={true} style={S("display:flex;flex-direction:column;gap:16px")}>
-                                        <section style={S("border:2px solid #FF5577;background:#FFF7FA;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px")}>
-                                          <div style={S("display:flex;gap:14px;align-items:flex-start")}>
-                                            <div style={S("flex:none;width:64px;height:112px;position:relative;overflow:hidden;border-radius:10px;background:#fff")}>
-                                              <div style={S("width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C0284F")}>
-                                                <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
-                                                  <path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
-                                              </div>
-                                            </div>
-                                            <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:4px")}>
-                                              <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px")}>
-                                                <span style={S("font-size:16px;font-weight:600")}>
-                                                  Lumia Order Terminal
-                                                </span>
-                                                <span style={S("font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#1A0815;color:#fff")}>
-                                                  Required
-                                                </span>
-                                              </div>
-                                              <span style={S("font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty")}>
-                                                The Lumia Order terminal for your restaurant. Orders are handled from your dashboard. Every subscription includes at least one terminal.
-                                              </span>
-                                              <span style={S("display:flex;align-items:baseline;gap:8px;margin-top:4px;font-variant-numeric:tabular-nums")}>
-                                                <span style={S("font-size:14px;color:#8A5A6E;text-decoration:line-through")}>
-                                                  AED 699
-                                                </span>
-                                                <span style={S("font-size:18px;font-weight:600")}>
-                                                  {vm.sub.termPrice}
-                                                </span>
-                                                <span style={S("font-size:13px;color:#8A5A6E")}>
-                                                  one-time
-                                                </span>
-                                              </span>
-                                            </div>
-                                          </div>
-                                          <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding-top:12px;border-top:1px solid #F3D6E2")}>
-                                            <span style={S("font-size:14px;color:#3D1C31")}>
-                                              {vm.sub.termQtyNote}
-                                            </span>
-                                            <div style={S("display:flex;align-items:center;border:1.5px solid #ECD9E0;border-radius:10px;background:#fff")}>
-                                              <button type="button" onClick={vm.termDec} disabled={!!vm.sub.termMin} aria-label="Fewer terminals" style={S(`width:36px;height:36px;font-size:18px;opacity:${vm.sub.decOp}`)}>
-                                                −
-                                              </button>
-                                              <span style={S("min-width:28px;text-align:center;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums")}>
-                                                {vm.sub.termQty}
-                                              </span>
-                                              <button type="button" onClick={vm.termInc} aria-label="More terminals" style={S("width:36px;height:36px;font-size:18px")}>
-                                                +
-                                              </button>
-                                            </div>
-                                          </div>
-                                          <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                            <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                                              Delivery address for the terminal
-                                            </span>
-                                            <input autoComplete="street-address" placeholder="Building, street, area, emirate" value={vm.sub.addr} onChange={vm.onAddr} style={S(`height:48px;padding:0 14px;border-radius:12px;border:1.5px solid ${vm.sub.addrBd};background:#fff;font-size:15px`)} className="dch14" />
-                                          </label>
-                                          {vm.sub.addrErr && (
-                                            <>
-                                            <span style={S("font-size:13px;color:#B42318;margin-top:-6px")}>
-                                              Add a delivery address for your terminal to continue.
-                                            </span>
-                                            </>
-                                          )}
-                                          <span style={S("font-size:13px;color:#8A5A6E;margin-top:-4px")}>
-                                            Estimated delivery: 10–15 business days.
-                                          </span>
-                                        </section>
-                                        <button type="submit" disabled={!!vm.sub.invalid} style={S(`height:54px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;opacity:${vm.sub.payOp};display:flex;align-items:center;justify-content:center;gap:10px;font-variant-numeric:tabular-nums`)}>
-                                          {vm.sub.paying && (
-                                            <>
-                                            <span style={S("width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:lo-spin .8s linear infinite")} />
-                                            </>
-                                          )}
-                                          {vm.sub.payLabel}
-                                        </button>
-                                        <p style={S("display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:1.45;color:#8A5A6E")}>
-                                          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style={S("flex:none;margin-top:2px")}>
-                                            <rect x="4.5" y="9" width="11" height="8" rx="2" stroke="currentColor" strokeWidth="1.6" />
-                                            <path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" strokeWidth="1.6" />
-                                          </svg>
-                                          You pay on Stripe’s secure page, so Lumia never sees your card. Cancel anytime from Manage billing.
-                                        </p>
-                                        {vm.sub.err && (
-                                          <>
-                                          <div role="alert" style={S("font-size:14px;color:#B4233B")}>
-                                            {vm.sub.err}
-                                          </div>
-                                          </>
-                                        )}
-                                      </form>
-                                      </>
-                                    )}
-                                    <aside style={S("background:#FBF3F8;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:14px")}>
-                                      <div style={S("display:flex;align-items:flex-start;justify-content:space-between;gap:12px")}>
-                                        <div style={S("display:flex;flex-direction:column;gap:3px")}>
-                                          <span style={S("font-size:19px;font-weight:600;letter-spacing:-0.02em")}>
-                                            {vm.sub.selName}
-                                          </span>
-                                          <span style={S("font-size:14px;color:#3D1C31")}>
-                                            {vm.sub.selBilling}
-                                          </span>
-                                        </div>
-                                        <button type="button" onClick={vm.subBackPlans} style={S("font-size:14px;font-weight:500;color:#1A0815;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px")} className="dch2">
-                                          Change
-                                        </button>
-                                      </div>
-                                      <div style={S("display:flex;flex-direction:column;gap:10px;font-size:15px;font-variant-numeric:tabular-nums;padding-top:14px;border-top:1px solid #ECD9E0")}>
-                                        <div style={S("display:flex;justify-content:space-between;gap:12px;color:#3D1C31")}>
-                                          <span>
-                                            {vm.sub.selName}
-                                          </span>
-                                          <span>
-                                            {vm.sub.planAmt}
-                                          </span>
-                                        </div>
-                                        <div style={S("display:flex;justify-content:space-between;gap:12px;color:#3D1C31")}>
-                                          <span>
-                                            {vm.sub.termLine}
-                                          </span>
-                                          <span>
-                                            {vm.sub.termAmt}
-                                          </span>
-                                        </div>
-                                        <div style={S("display:flex;justify-content:space-between;gap:12px;color:#3D1C31")}>
-                                          <span>
-                                            VAT (5%)
-                                          </span>
-                                          <span>
-                                            {vm.sub.vat}
-                                          </span>
-                                        </div>
-                                        <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:18px;font-weight:600;padding-top:10px;border-top:1px solid #ECD9E0")}>
-                                          <span>
-                                            Total today
-                                          </span>
-                                          <span>
-                                            {vm.sub.total}
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <p style={S("font-size:13px;color:#8A5A6E")}>
-                                        {"Renews on "}{vm.sub.renew}.
-                                      </p>
-                                    </aside>
-                                  </div>
-                                </div>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        </>
-                      )}
-                      {vm.pageWA && (
-                        <>
-                        <div data-screen-label="07 WhatsApp" dir="ltr" style={S("display:flex;flex-direction:column;gap:18px")}>
-                          <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
-                            WhatsApp
-                          </h1>
-                          <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start")}>
-                            <div style={S("background:#FAF6FA;border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:16px")}>
-                              <span style={S("font-size:14px;font-weight:600;color:#8A5A6E")}>
-                                Connection
-                              </span>
-                              <div style={S("display:flex;align-items:center;gap:14px")}>
-                                <span style={S("width:48px;height:48px;border-radius:14px;background:#fff;border:1px solid #ECD9E0;display:flex;align-items:center;justify-content:center;flex:none")}>
-                                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style={S("display:block")}>
-                                    <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
-                                    <path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff" />
-                                  </svg>
-                                </span>
-                                <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:2px")}>
-                                  <span style={S("font-size:16px;font-weight:600")}>
-                                    WhatsApp Business
-                                  </span>
-                                  <span style={S("font-size:15px;color:#3D1C31;font-variant-numeric:tabular-nums")}>
-                                    {vm.waPagePhone}
-                                  </span>
-                                </div>
-                              </div>
-                              <div style={S("display:flex;flex-direction:column;border-top:1px solid #EFE3E9")}>
-                                <div style={S("display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #EFE3E9")}>
-                                  <span style={S("font-size:14px;color:#8A5A6E")}>
-                                    Status
-                                  </span>
-                                  <span style={S(`display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:${vm.waStat.fg}`)}>
-                                    <span style={S(`width:9px;height:9px;border-radius:50%;background:${vm.waStat.dot};border:1.5px solid ${vm.waStat.ring}`)} />
-                                    {vm.waStat.label}
-                                  </span>
-                                </div>
-                                {vm.waIsConnected && (
-                                  <>
-                                  <div style={S("display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EFE3E9;font-size:14px")}>
-                                    <span style={S("color:#8A5A6E")}>
-                                      Display name
-                                    </span>
-                                    <span style={S("text-align:end")}>
-                                      {vm.waName}
-                                    </span>
-                                  </div>
-                                  <div style={S("display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EFE3E9;font-size:14px")}>
-                                    <span style={S("color:#8A5A6E")}>
-                                      Business account
-                                    </span>
-                                    <span>
-                                      Active
-                                    </span>
-                                  </div>
-                                  </>
-                                )}
-                                <div style={S("display:flex;justify-content:space-between;gap:12px;padding:12px 0;font-size:14px")}>
-                                  <span style={S("color:#8A5A6E")}>
-                                    Your Lumia login
-                                  </span>
-                                  <span style={S("font-variant-numeric:tabular-nums")}>
-                                    {vm.masked}
-                                  </span>
-                                </div>
-                              </div>
-                              {vm.waIsConnected && (
-                                <>
-                                <button type="button" onClick={vm.askDisconnect} style={S("align-self:flex-start;height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch4">
-                                  Disconnect
-                                </button>
-                                </>
-                              )}
-                              {vm.waIsDisconnected && (
-                                <>
-                                <p style={S("font-size:14px;line-height:1.5;color:#3D1C31;text-wrap:pretty")}>
-                                  Your menu, orders and customer data are still in Lumia.
-                                </p>
-                                <button type="button" onClick={vm.reconnect} style={S("align-self:flex-start;height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
-                                  Reconnect WhatsApp
-                                </button>
-                                </>
-                              )}
-                              {vm.waIsNone && (
-                                <>
-                                <button type="button" onClick={vm.openWA} style={S("align-self:flex-start;height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
-                                  Connect WhatsApp
-                                </button>
-                                </>
-                              )}
-                            </div>
-                            {vm.waShowToday && (
-                              <>
-                              <div style={S("background:#FAF6FA;border-radius:20px;padding:20px 22px 8px;display:flex;flex-direction:column")}>
-                                <span style={S("font-size:14px;font-weight:600;color:#8A5A6E;padding-bottom:6px")}>
-                                  Today
-                                </span>
-                                {(vm.waToday as any[]).map((t: any, __i: number) => (
-                                  <Fragment key={__i}>
-                                    <div style={S(`display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 0;border-top:${t.bt}`)}>
-                                      <span style={S("font-size:15px;color:#3D1C31")}>
-                                        {t.label}
-                                      </span>
-                                      <span style={S("font-size:26px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums")}>
-                                        {t.v}
-                                      </span>
-                                    </div>
-                                  </Fragment>
-                                ))}
-                              </div>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        </>
-                      )}
-                      {vm.confirmDisc && (
-                        <>
-                        <div dir="ltr" style={S("position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px")}>
-                          <div onClick={vm.cancelDisconnect} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
-                          <div role="alertdialog" aria-modal="true" data-screen-label="07b Disconnect WhatsApp" style={S("position:relative;width:100%;max-width:420px;background:#fff;border-radius:20px;padding:26px 24px 22px;box-shadow:0 30px 80px -30px rgba(26,8,21,.45);display:flex;flex-direction:column")}>
-                            <h2 style={S("font-size:22px;font-weight:600;letter-spacing:-0.03em")}>
-                              Disconnect WhatsApp?
-                            </h2>
-                            <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
-                              Lumia will stop receiving and replying to customer messages from this number. Your menu, orders and customer data will remain in Lumia.
-                            </p>
-                            <div style={S("display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:24px")}>
-                              <button type="button" onClick={vm.cancelDisconnect} style={S("flex:1 1 140px;height:48px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
-                                Cancel
-                              </button>
-                              <button type="button" onClick={vm.doDisconnect} style={S("flex:1 1 180px;height:48px;padding:0 18px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px")} className="dch17">
-                                Disconnect WhatsApp
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                        </>
-                      )}
-                      {vm.dlg.open && (
-                        <>
-                        <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
-                          <div onClick={vm.dlg.cancel} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
-                          <form role="dialog" aria-modal="true" aria-label={vm.dlg.title} data-screen-label="09 Edit dialog" onSubmit={vm.dlg.submit} noValidate={true} style={S("position:relative;width:100%;max-width:420px;background:#fff;border-radius:20px;padding:26px 24px 22px;box-shadow:0 30px 80px -30px rgba(26,8,21,.45);display:flex;flex-direction:column")}>
-                            <h2 style={S("font-size:22px;font-weight:600;letter-spacing:-0.03em")}>
-                              {vm.dlg.title}
-                            </h2>
-                            <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;text-wrap:pretty")}>
-                              {vm.dlg.hint}
-                            </p>
-                            {(vm.dlg.fields as any[]).map((f: any, __i: number) => (
-                              <Fragment key={__i}>
-                                <label style={S("display:block;font-size:14px;font-weight:500;color:#3D1C31;margin-top:16px")}>
-                                  {f.label}
-                                  <input type="text" value={f.value} onChange={f.onChange} placeholder={f.placeholder} dir={f.dir} inputMode={f.mode} autoFocus={f.focus} style={S("display:block;margin-top:8px;height:48px;width:100%;border-radius:12px;border:1.5px solid #E3CBD4;padding:0 14px;font-size:16px;background:#fff")} />
-                                </label>
-                              </Fragment>
-                            ))}
-                            {vm.dlg.error && (
-                              <>
-                              <div role="alert" style={S("margin-top:12px;font-size:14px;color:#B4233B")}>
-                                {vm.dlg.error}
-                              </div>
-                              </>
-                            )}
-                            <div style={S("display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:24px")}>
-                              <button type="button" onClick={vm.dlg.cancel} style={S("flex:1 1 120px;height:48px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
-                                Cancel
-                              </button>
-                              <button type="submit" disabled={!!vm.dlg.busy} style={S(`flex:1 1 160px;height:48px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;opacity:${vm.dlg.op}`)}>
-                                {vm.dlg.saveLabel}
-                              </button>
-                            </div>
-                          </form>
-                        </div>
-                        </>
-                      )}
-                      {vm.waOpen && (
-                        <>
-                        <div dir="ltr" style={S("position:fixed;inset:0;z-index:40;display:flex;justify-content:flex-end")}>
-                          <div onClick={vm.waClose} style={S("position:absolute;inset:0;background:rgba(26,8,21,.32)")} />
-                          <aside role="dialog" aria-modal="true" aria-label="Connect WhatsApp" data-screen-label={vm.waLabel} style={S(`position:relative;width:${vm.L.drawerW};max-width:100%;height:100%;background:#fff;display:flex;flex-direction:column;box-shadow:-24px 0 60px -30px rgba(26,8,21,.35)`)}>
-                            <div style={S("height:64px;flex:none;padding:0 12px 0 24px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F0E4E8")}>
-                              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={S("display:block;flex:none")}>
-                                <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
-                                <path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff" />
-                              </svg>
-                              <span style={S("flex:1;font-size:15px;font-weight:600")}>
-                                WhatsApp
-                              </span>
-                              <span style={S("font-size:13px;font-weight:500;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
-                                {vm.waSetupLabel}
-                              </span>
-                              <button type="button" onClick={vm.waClose} aria-label="Close" style={S("width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                  <path d="M4 4l8 8M12 4l-8 8" stroke="#1A0815" strokeWidth="1.7" strokeLinecap="round" />
-                                </svg>
-                              </button>
-                            </div>
-                            {vm.wa.intro && (
-                              <>
-                              <div style={S("flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)")}>
-                                <span style={S("width:56px;height:56px;border-radius:16px;background:#EAF8EF;display:flex;align-items:center;justify-content:center")}>
-                                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" style={S("display:block")}>
-                                    <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
-                                    <path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff" />
-                                  </svg>
-                                </span>
-                                <h2 style={S("font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px;text-wrap:balance")}>
-                                  Connect your WhatsApp Business
-                                </h2>
-                                <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
-                                  Connect the WhatsApp number your customers use to place orders. Lumia will receive messages and help turn them into orders automatically.
-                                </p>
-                                <button type="button" onClick={vm.startConnect} style={S("margin-top:24px;height:54px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
-                                  Connect WhatsApp
-                                </button>
-                                <span style={S("font-size:14px;font-weight:600;color:#8A5A6E;margin-top:26px")}>
-                                  What happens next
-                                </span>
-                                <ol style={S("list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:12px")}>
-                                  {(vm.waSteps as any[]).map((st: any, __i: number) => (
-                                    <Fragment key={__i}>
-                                      <li style={S("display:flex;align-items:center;gap:12px;font-size:15px")}>
-                                        <span style={S("width:24px;height:24px;border-radius:50%;border:1.5px solid #ECD9E0;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#8A2040;font-variant-numeric:tabular-nums")}>
-                                          {st.n}
-                                        </span>
-                                        {st.label}
-                                      </li>
-                                    </Fragment>
-                                  ))}
-                                </ol>
-                                <div style={S("margin-top:26px;border-radius:16px;background:#FAF6FA;padding:16px 18px;display:flex;flex-direction:column;gap:12px")}>
-                                  <div style={S("display:flex;gap:10px;align-items:flex-start;font-size:14px;font-weight:600;line-height:1.4")}>
-                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={S("flex:none;margin-top:2px")}>
-                                      <circle cx="8" cy="8" r="7" stroke="#8A5A6E" strokeWidth="1.4" />
-                                      <path d="M8 7.2v4" stroke="#8A5A6E" strokeWidth="1.5" strokeLinecap="round" />
-                                      <circle cx="8" cy="4.9" r=".85" fill="#8A5A6E" />
-                                    </svg>
-                                    <span>
-                                      Your login number and business WhatsApp can be different.
-                                    </span>
-                                  </div>
-                                  <div style={S("display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px")}>
-                                    <div style={S("background:#fff;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px")}>
-                                      <span style={S("font-size:12px;color:#8A5A6E")}>
-                                        Your Lumia login
-                                      </span>
-                                      <span style={S("font-size:14px;font-weight:500;font-variant-numeric:tabular-nums")}>
-                                        {vm.masked}
-                                      </span>
-                                    </div>
-                                    <div style={S("background:#fff;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px")}>
-                                      <span style={S("font-size:12px;color:#8A5A6E")}>
-                                        Restaurant WhatsApp
-                                      </span>
-                                      <span style={S("font-size:14px;color:#3D1C31")}>
-                                        Not connected yet
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <button type="button" onClick={vm.waClose} style={S("margin-top:20px;height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
-                                  Do this later
-                                </button>
-                              </div>
-                              </>
-                            )}
-                            {vm.wa.connecting && (
-                              <>
-                              <div style={S("flex:1;overflow:auto;padding:28px 24px;display:grid;align-content:safe center;justify-items:center;text-align:center")}>
-                                <div style={S("position:relative;width:104px;height:104px;display:flex;align-items:center;justify-content:center")}>
-                                  {vm.waRing}
-                                  <span style={S("width:64px;height:64px;border-radius:20px;background:#fff;box-shadow:0 14px 30px -16px rgba(138,32,64,.45);display:flex;align-items:center;justify-content:center")}>
-                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style={S("display:block")}>
-                                      <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
-                                      <path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff" />
-                                    </svg>
-                                  </span>
-                                </div>
-                                <h2 style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;margin-top:26px")}>
-                                  Connecting to WhatsApp...
-                                </h2>
-                                <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;max-width:300px;text-wrap:pretty")}>
-                                  Keep this window open while we finish the setup.
-                                </p>
-                                <button type="button" onClick={vm.cancelConnect} style={S("margin-top:28px;height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
-                                  Cancel
-                                </button>
-                              </div>
-                              </>
-                            )}
-                            {vm.wa.success && (
-                              <>
-                              <div style={S("flex:1;min-height:0;display:flex;flex-direction:column")}>
-                                <div style={S("flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)")}>
-                                  <span style={S("width:56px;height:56px;border-radius:50%;background:#E4F4EC;display:flex;align-items:center;justify-content:center")}>
-                                    <svg width="28" height="28" viewBox="0 0 20 20" fill="none">
-                                      <path d="M5 10.4 8.4 13.8 15 7" stroke="#16704A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                  </span>
-                                  {vm.waCatalog && (
-                                    <>
-                                    <h2 style={S("font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px")}>
-                                      WhatsApp connected 🎉
-                                    </h2>
-                                    </>
-                                  )}
-                                  {vm.waNoCatalog && (
-                                    <>
-                                    <h2 style={S("font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px")}>
-                                      WhatsApp connected successfully
-                                    </h2>
-                                    </>
-                                  )}
-                                  <div style={S("margin-top:22px;border:1px solid #ECD9E0;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px")}>
-                                    <div style={S("display:flex;align-items:center;gap:14px")}>
-                                      <span style={S("position:relative;width:52px;height:52px;border-radius:50%;background:#1A0815;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none")}>
-                                        {vm.waInitials}
-                                        <span style={S("position:absolute;right:-2px;bottom:-2px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center")}>
-                                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={S("display:block")}>
-                                            <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
-                                            <path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff" />
-                                          </svg>
-                                        </span>
-                                      </span>
-                                      <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:2px")}>
-                                        <span style={S("font-size:12px;color:#8A5A6E")}>
-                                          WhatsApp Business
-                                        </span>
-                                        <span style={S("font-size:17px;font-weight:600;letter-spacing:-0.01em")}>
-                                          {vm.waName}
-                                        </span>
-                                        <span style={S("font-size:14px;color:#3D1C31;font-variant-numeric:tabular-nums")}>
-                                          {vm.waPhone}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <div style={S("display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border-top:1px solid #F3EEF1;padding-top:14px")}>
-                                      <div style={S("display:flex;flex-direction:column;gap:4px")}>
-                                        <span style={S("font-size:12px;color:#8A5A6E")}>
-                                          Status
-                                        </span>
-                                        <span style={S("display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:#16704A")}>
-                                          <span style={S("width:8px;height:8px;border-radius:50%;background:#25D366")} />
-                                          Connected
-                                        </span>
-                                      </div>
-                                      <div style={S("display:flex;flex-direction:column;gap:4px")}>
-                                        <span style={S("font-size:12px;color:#8A5A6E")}>
-                                          Business account
-                                        </span>
-                                        <span style={S("font-size:14px;font-weight:500")}>
-                                          Active
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  {vm.waNoCatalog && (
-                                    <>
-                                    <p style={S("margin-top:14px;border-radius:14px;background:#FAF6FA;padding:12px 16px;font-size:14px;line-height:1.5;color:#3D1C31")}>
-                                      No WhatsApp catalog was found. Your current Lumia menu will continue to be used.
-                                    </p>
-                                    </>
-                                  )}
-                                </div>
-                                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
-                                  <button type="button" onClick={vm.successContinue} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
-                                    Continue
-                                  </button>
-                                  <button type="button" onClick={vm.manageConnection} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
-                                    Manage connection
-                                  </button>
-                                </div>
-                              </div>
-                              </>
-                            )}
-                            {vm.wa.import && (
-                              <>
-                              <div style={S("flex:1;min-height:0;display:flex;flex-direction:column")}>
-                                <div style={S("flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)")}>
-                                  <h2 style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;line-height:1.15;text-wrap:balance")}>
-                                    We found information from your WhatsApp Business account
-                                  </h2>
-                                  <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
-                                    Nothing in Lumia changes until you choose to use it.
-                                  </p>
-                                  <div style={S("margin-top:20px;border:1px solid #ECD9E0;border-radius:16px;display:flex;flex-direction:column;padding:0 18px")}>
-                                    {(vm.waImport as any[]).map((r: any, __i: number) => (
-                                      <Fragment key={__i}>
-                                        <div style={S(`display:flex;align-items:center;gap:12px;min-height:58px;padding:10px 0;border-top:${r.bt}`)}>
-                                          <span style={S("flex:0 0 96px;font-size:13px;color:#8A5A6E")}>
-                                            {r.label}
-                                          </span>
-                                          <div style={S("flex:1;min-width:0;display:flex;align-items:center;gap:10px")}>
-                                            {r.isLogo && (
-                                              <>
-                                              <span style={S("width:38px;height:38px;border-radius:50%;background:#1A0815;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none")}>
-                                                {vm.waInitials}
-                                              </span>
-                                              </>
-                                            )}
-                                            <span style={S("font-size:15px;font-weight:500;font-variant-numeric:tabular-nums")}>
-                                              {r.value}
-                                            </span>
-                                          </div>
-                                          {r.tag && (
-                                            <>
-                                            <span style={S(`font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:${r.tagBg};color:${r.tagFg};flex:none`)}>
-                                              {r.tag}
-                                            </span>
-                                            </>
-                                          )}
-                                        </div>
-                                      </Fragment>
-                                    ))}
-                                  </div>
-                                </div>
-                                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
-                                  <button type="button" onClick={vm.useAll} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
-                                    Use this information
-                                  </button>
-                                  <button type="button" onClick={vm.toReview} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
-                                    Review first
-                                  </button>
-                                </div>
-                              </div>
-                              </>
-                            )}
-                            {vm.wa.review && (
-                              <>
-                              <div style={S("flex:1;min-height:0;display:flex;flex-direction:column")}>
-                                <div style={S("flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)")}>
-                                  <h2 style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;line-height:1.15")}>
-                                    Review differences
-                                  </h2>
-                                  <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
-                                    Choose which version Lumia should use for each item.
-                                  </p>
-                                  <div style={S("display:flex;flex-direction:column;gap:22px;margin-top:22px")}>
-                                    {(vm.waDiffs as any[]).map((d: any, __i: number) => (
-                                      <Fragment key={__i}>
-                                        <div style={S("display:flex;flex-direction:column;gap:10px")}>
-                                          <span style={S("font-size:14px;font-weight:600")}>
-                                            {d.label}
-                                          </span>
-                                          <div style={S("display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px")}>
-                                            {(d.opts as any[]).map((o: any, __i: number) => (
-                                              <Fragment key={__i}>
-                                                <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`text-align:start;border-radius:14px;border:1.5px solid ${o.bd};background:${o.bg};padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-height:88px`)} className="dch18">
-                                                  <span style={S("display:flex;align-items:center;gap:8px;font-size:12px;color:#8A5A6E")}>
-                                                    <span style={S(`width:16px;height:16px;border-radius:50%;border:${o.dotBd};background:#fff;flex:none`)} />
-                                                    {o.src}
-                                                  </span>
-                                                  <span style={S(`font-size:15px;font-weight:500;color:${o.fg};overflow-wrap:anywhere`)}>
-                                                    {o.value}
-                                                  </span>
-                                                </button>
-                                              </Fragment>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      </Fragment>
-                                    ))}
-                                  </div>
-                                </div>
-                                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:6px")}>
-                                  <button type="button" onClick={vm.saveChoices} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
-                                    Save choices
-                                  </button>
-                                  <button type="button" onClick={vm.toImport} style={S("height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
-                                    Back
-                                  </button>
-                                </div>
-                              </div>
-                              </>
-                            )}
-                            {vm.wa.catalog && (
-                              <>
-                              <div style={S("flex:1;min-height:0;display:flex;flex-direction:column;position:relative")}>
-                                <div style={S("flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)")}>
-                                  <h2 style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;line-height:1.15")}>
-                                    We found a WhatsApp catalog
-                                  </h2>
-                                  {vm.menuDone && (
-                                    <>
-                                    <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
-                                      Your current Lumia menu stays as it is unless you choose to replace it.
-                                    </p>
-                                    </>
-                                  )}
-                                  <div style={S("display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:20px")}>
-                                    <div style={S("border-radius:16px;border:1px solid #ECD9E0;padding:14px 16px;display:flex;flex-direction:column;gap:4px")}>
-                                      <span style={S("display:flex;align-items:center;gap:7px;font-size:13px;color:#8A5A6E")}>
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={S("display:block;flex:none")}>
-                                          <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
-                                        </svg>
-                                        WhatsApp catalog
-                                      </span>
-                                      <span style={S("font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums")}>
-                                        {vm.waCatTotal}
-                                      </span>
-                                      <span style={S("font-size:14px;color:#3D1C31")}>
-                                        {"products \u00b7 "}{vm.waCatCount}{" categories"}
-                                      </span>
-                                    </div>
-                                    {vm.menuDone && (
-                                      <>
-                                      <div style={S("border-radius:16px;background:#FAF6FA;padding:14px 16px;display:flex;flex-direction:column;gap:4px")}>
-                                        <span style={S("display:flex;align-items:center;gap:7px;font-size:13px;color:#8A5A6E")}>
-                                          <span style={S("width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,#FF5577,#C93DFF)")} />
-                                          Lumia menu · in use
-                                        </span>
-                                        <span style={S("font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums")}>
-                                          {vm.lumiaItems}
-                                        </span>
-                                        <span style={S("font-size:14px;color:#3D1C31")}>
-                                          {"items \u00b7 "}{vm.lumiaCats}{" categories"}
-                                        </span>
-                                      </div>
-                                      </>
-                                    )}
-                                  </div>
-                                  {vm.catOpen && (
-                                    <>
-                                    <div style={S("margin-top:14px;border:1px solid #ECD9E0;border-radius:16px;padding:4px 18px")}>
-                                      {(vm.waCatList as any[]).map((g: any, __i: number) => (
-                                        <Fragment key={__i}>
-                                          <div style={S(`padding:12px 0;border-top:${g.bt};display:flex;flex-direction:column;gap:3px`)}>
-                                            <div style={S("display:flex;justify-content:space-between;gap:10px")}>
-                                              <span style={S("font-size:15px;font-weight:600")}>
-                                                {g.cat}
-                                              </span>
-                                              <span style={S("font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
-                                                {g.label}
-                                              </span>
-                                            </div>
-                                            <span style={S("font-size:13px;line-height:1.45;color:#3D1C31")}>
-                                              {g.sample}
-                                            </span>
-                                          </div>
-                                        </Fragment>
-                                      ))}
-                                    </div>
-                                    </>
-                                  )}
-                                </div>
-                                {vm.menuDone && (
-                                  <>
-                                  <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
-                                    <button type="button" onClick={vm.waFinish} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
-                                      Keep current Lumia menu
-                                    </button>
-                                    <button type="button" onClick={vm.toggleCat} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
-                                      {vm.catBtn}
-                                    </button>
-                                    <button type="button" onClick={vm.askReplace} style={S("height:40px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch19">
-                                      Replace current menu
-                                    </button>
-                                  </div>
-                                  </>
-                                )}
-                                {vm.menuEmpty && (
-                                  <>
-                                  <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
-                                    <button type="button" onClick={vm.useCatalog} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
-                                      Use WhatsApp catalog as menu
-                                    </button>
-                                    <button type="button" onClick={vm.toggleCat} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
-                                      {vm.catBtn}
-                                    </button>
-                                    <button type="button" onClick={vm.waFinish} style={S("height:40px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
-                                      Not now
-                                    </button>
-                                  </div>
-                                  </>
-                                )}
-                                {vm.confirmReplace && (
-                                  <>
-                                  <div style={S("position:absolute;inset:0;background:rgba(26,8,21,.32);display:flex;align-items:flex-end;padding:16px")}>
-                                    <div role="alertdialog" aria-modal="true" data-screen-label="08f Replace menu confirm" style={S("width:100%;background:#fff;border-radius:20px;padding:22px 20px 18px;box-shadow:0 20px 50px -20px rgba(26,8,21,.45);display:flex;flex-direction:column")}>
-                                      <h3 style={S("font-size:20px;font-weight:600;letter-spacing:-0.025em")}>
-                                        Replace current menu?
-                                      </h3>
-                                      <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;text-wrap:pretty")}>
-                                        {"Your "}{vm.lumiaItems}{" Lumia menu items will be replaced by "}{vm.waCatTotal}{" products from your WhatsApp catalog. Prices and availability you set in Lumia won't be kept."}
-                                      </p>
-                                      <div style={S("display:flex;flex-wrap:wrap;gap:10px;margin-top:20px")}>
-                                        <button type="button" onClick={vm.cancelReplace} style={S("flex:1 1 120px;height:48px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
-                                          Cancel
-                                        </button>
-                                        <button type="button" onClick={vm.useCatalog} style={S("flex:1 1 140px;height:48px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px")} className="dch17">
-                                          Replace menu
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  </>
-                                )}
-                              </div>
-                              </>
-                            )}
-                            {vm.wa.error && (
-                              <>
-                              <div style={S("flex:1;min-height:0;display:flex;flex-direction:column")}>
-                                <div style={S("flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)")}>
-                                  <span style={S("width:56px;height:56px;border-radius:50%;background:#FDECEE;display:flex;align-items:center;justify-content:center")}>
-                                    <svg width="26" height="26" viewBox="0 0 16 16" fill="none">
-                                      <path d="M8 4.2v4.6" stroke="#B4233B" strokeWidth="1.7" strokeLinecap="round" />
-                                      <circle cx="8" cy="11.4" r=".95" fill="#B4233B" />
-                                    </svg>
-                                  </span>
-                                  <h2 style={S("font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px")}>
-                                    We couldn't connect WhatsApp
-                                  </h2>
-                                  <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
-                                    Your Lumia account is safe. Try connecting again or continue setup and return later.
-                                  </p>
-                                  <div style={S("margin-top:20px;border-radius:14px;background:#FAF6FA;padding:12px 16px;display:flex;flex-direction:column;gap:3px")}>
-                                    <span style={S("font-size:12px;color:#8A5A6E")}>
-                                      What happened
-                                    </span>
-                                    <span style={S("font-size:15px;line-height:1.45")}>
-                                      {vm.waErrText}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
-                                  <button type="button" onClick={vm.startConnect} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
-                                    Try again
-                                  </button>
-                                  <button type="button" onClick={vm.waClose} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
-                                    Do this later
-                                  </button>
-                                </div>
-                              </div>
-                              </>
-                            )}
-                            {vm.wa.inUse && (
-                              <>
-                              <div style={S("flex:1;min-height:0;display:flex;flex-direction:column")}>
-                                <div style={S("flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)")}>
-                                  <span style={S("width:56px;height:56px;border-radius:50%;background:#FFF4E5;display:flex;align-items:center;justify-content:center")}>
-                                    <svg width="24" height="24" viewBox="0 0 16 16" fill="none">
-                                      <path d="M8 1.8 15 14H1z" stroke="#C26A00" strokeWidth="1.4" strokeLinejoin="round" />
-                                      <path d="M8 6.2v3.4" stroke="#C26A00" strokeWidth="1.5" strokeLinecap="round" />
-                                      <circle cx="8" cy="11.6" r=".8" fill="#C26A00" />
-                                    </svg>
-                                  </span>
-                                  <h2 style={S("font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px;text-wrap:balance")}>
-                                    This WhatsApp number is already connected
-                                  </h2>
-                                  <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
-                                    Choose another number or manage the existing connection before continuing.
-                                  </p>
-                                  <div style={S("margin-top:20px;display:inline-flex;justify-self:start;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;background:#FAF6FA;font-size:14px;font-weight:500;font-variant-numeric:tabular-nums")}>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={S("display:block;flex:none")}>
-                                      <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
-                                    </svg>
-                                    {vm.waPhone}
-                                  </div>
-                                </div>
-                                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
-                                  <button type="button" onClick={vm.startConnect} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
-                                    Choose another number
-                                  </button>
-                                  <a href="#help" style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#1A0815")} className="dch3">
-                                    View help
-                                  </a>
-                                </div>
-                              </div>
-                              </>
-                            )}
-                          </aside>
-                        </div>
-                        </>
-                      )}
-                    </main>
-                    </>
-                  )}
-                </div>
-              </div>
-              {vm.sub.panel && (
-                <>
-                <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
-                  <div onClick={vm.subLater} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
-                  <div role="dialog" aria-modal="true" aria-labelledby="tr-h" data-screen-label="10 Free trial" style={S("position:relative;width:100%;max-width:440px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)")}>
-                    <div style={S("padding:26px 26px 22px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);display:flex;flex-direction:column;gap:14px")}>
-                      <span style={S("align-self:flex-start;height:28px;padding:0 11px;border-radius:999px;background:#fff;font-size:13px;font-weight:600;color:#8A2040;display:flex;align-items:center")}>
-                        Free trial
-                      </span>
-                      <h2 id="tr-h" style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;line-height:1.15;text-wrap:balance")}>
-                        {vm.sub.title}
-                      </h2>
-                      <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                        <span style={S("height:6px;border-radius:3px;background:rgba(26,8,21,.1);overflow:hidden;display:block")}>
-                          <span style={S(`display:block;height:100%;width:${vm.sub.barW};border-radius:3px;background:linear-gradient(90deg,#FF5577,#C93DFF)`)} />
-                        </span>
-                        <span style={S("font-size:14px;font-weight:500;color:#8A2040;font-variant-numeric:tabular-nums")}>
-                          {vm.sub.leftLabel}
-                        </span>
-                      </div>
-                    </div>
-                    <div style={S("padding:22px 26px 24px;display:flex;flex-direction:column;gap:20px")}>
-                      <p style={S("font-size:15px;line-height:1.55;color:#3D1C31;text-wrap:pretty")}>
-                        {vm.sub.body}
-                      </p>
-                      <div style={S("display:flex;flex-direction:column;gap:6px")}>
-                        <button type="button" onClick={vm.subOpenPlans} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px")} className="dch1">
-                          Choose a plan
-                        </button>
-                        <button type="button" onClick={vm.subLater} style={S("height:44px;font-size:15px;font-weight:500;color:#3D1C31")} className="dch8">
-                          {vm.sub.later}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                </>
-              )}
-              {vm.lockOpen && (
-                <>
-                <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
-                  <div onClick={vm.lockClose} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
-                  <div role="dialog" aria-modal="true" aria-labelledby="lk-h" data-screen-label="14 Premium feature" style={S("position:relative;width:100%;max-width:420px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)")}>
-                    <div style={S("padding:24px 24px 20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);display:flex;flex-direction:column;gap:14px")}>
-                      <span style={S("align-self:flex-start;height:28px;padding:0 11px;border-radius:999px;background:#fff;font-size:13px;font-weight:600;color:#8A2040;display:flex;align-items:center;gap:6px")}>
-                        <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-                          <rect x="4.5" y="9" width="11" height="8" rx="2" stroke="currentColor" strokeWidth="1.8" />
-                          <path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" strokeWidth="1.8" />
-                        </svg>
-                        {vm.lock.tag}
-                      </span>
-                      <h2 id="lk-h" style={S("font-size:23px;font-weight:600;letter-spacing:-0.03em;line-height:1.15;text-wrap:balance")}>
-                        {vm.lock.title}
-                      </h2>
-                    </div>
-                    <div style={S("padding:20px 24px 22px;display:flex;flex-direction:column;gap:18px")}>
-                      <p style={S("font-size:15px;line-height:1.55;color:#3D1C31;text-wrap:pretty")}>
-                        {vm.lock.body}
-                      </p>
-                      <div style={S("display:flex;flex-direction:column;gap:8px;font-size:15px")}>
-                        {(vm.lock.feats as any[]).map((f: any, __i: number) => (
-                          <Fragment key={__i}>
-                            <div style={S("display:flex;gap:10px")}>
-                              <span style={S("color:#FF5577;flex:none")}>
-                                ✓
-                              </span>
-                              <span>
-                                {f}
-                              </span>
-                            </div>
-                          </Fragment>
-                        ))}
-                      </div>
-                      <div style={S("display:flex;flex-direction:column;gap:6px")}>
-                        <button type="button" onClick={vm.lockUpgrade} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px")} className="dch1">
-                          {vm.lock.cta}
-                        </button>
-                        <button type="button" onClick={vm.lockClose} style={S("height:44px;font-size:15px;font-weight:500;color:#3D1C31")} className="dch8">
-                          Not now
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                </>
-              )}
-              {vm.sub.done && (
-                <>
-                <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
-                  <div onClick={vm.subLater} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
-                  <div role="dialog" aria-modal="true" data-screen-label="13 Subscribed" style={S("position:relative;width:100%;max-width:420px;background:#fff;border-radius:24px;padding:32px 26px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)")}>
-                    <span style={S("width:64px;height:64px;border-radius:50%;background:#E4F4EC;display:flex;align-items:center;justify-content:center")}>
-                      <svg width="30" height="30" viewBox="0 0 20 20" fill="none">
-                        <path d="m5 10.5 3.2 3L15 7" stroke="#16704A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </span>
-                    <h2 style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;margin-top:18px")}>
-                      {"You\u2019re on the "}{vm.sub.paidName}{" plan"}
-                    </h2>
-                    <p style={S("font-size:15px;line-height:1.55;color:#3D1C31;margin-top:8px;text-wrap:pretty")}>
-                      Lumia will keep receiving WhatsApp orders without interruption. Your terminal arrives in 10–15 business days, and you can track it from Overview.
-                    </p>
-                    <button type="button" onClick={vm.subLater} style={S("margin-top:24px;width:100%;height:52px;border-radius:14px;background:#1A0815;color:#fff;font-weight:600;font-size:16px")} className="dch11">
-                      Back to dashboard
-                    </button>
-                  </div>
-                </div>
-                </>
-              )}
             </div>
             </>
           )}
         </div>
       </div>
+      {vm.phoneValid && (
+        <>
+        <span style={S("display:flex;align-items:center;padding-inline-end:16px")}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="9" fill="#E4F4EC" />
+            <path d="M6 10.2 8.6 12.8 14 7.4" stroke="#16704A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+        </>
+      )}
+      {vm.ccOpen && (
+        <>
+        <div style={S("position:absolute;top:62px;left:0;right:0;z-index:20;background:#fff;border:1px solid #ECD9E0;border-radius:14px;box-shadow:0 18px 40px -16px rgba(26,8,21,.28);padding:6px;max-height:300px;overflow:auto")}>
+          {(vm.countries as any[]).map((c: any, __i: number) => (
+            <Fragment key={__i}>
+              <button type="button" onClick={c.pick} style={S(`width:100%;display:flex;align-items:center;gap:12px;height:48px;padding:0 12px;border-radius:10px;text-align:start;background:${c.bg}`)} className="dch0">
+                <span style={S("font-size:20px;line-height:1;width:26px")}>
+                  {c.flag}
+                </span>
+                <span style={S("flex:1;font-size:15px")}>
+                  {c.name}
+                </span>
+                <span style={S("font-size:15px;color:#3D1C31;font-variant-numeric:tabular-nums")}>
+                  {c.dial}
+                </span>
+              </button>
+            </Fragment>
+          ))}
+        </div>
+        </>
+      )}
+      {vm.phoneInvalid && (
+        <>
+        <div role="alert" style={S("display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:14px;line-height:1.45;color:#B4233B")}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={S("flex:none;margin-top:2px")}>
+            <circle cx="8" cy="8" r="7" stroke="#B4233B" strokeWidth="1.5" />
+            <path d="M8 4.5v4.2" stroke="#B4233B" strokeWidth="1.6" strokeLinecap="round" />
+            <circle cx="8" cy="11.2" r=".9" fill="#B4233B" />
+          </svg>
+          <span>
+            {vm.phoneInvalidMsg}
+          </span>
+        </div>
+        </>
+      )}
+      {vm.phoneHint && (
+        <>
+        <div style={S("margin-top:10px;font-size:14px;line-height:1.45;color:#8A5A6E")}>
+          We'll send a verification code on WhatsApp. No password needed.
+        </div>
+        </>
+      )}
+      <div style={S(`flex:${vm.L.spacer};min-height:28px`)} />
+      <div style={S("display:flex;flex-direction:column;gap:10px")}>
+        <button type="submit" disabled={!!vm.sending} style={S("height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
+          {vm.spinnerSend}
+          <span>
+            {vm.sendLabel}
+          </span>
+        </button>
+      </div>
+      <p style={S("margin-top:20px;font-size:13px;line-height:1.5;color:#8A5A6E;text-align:center;text-wrap:pretty")}>
+        {"By continuing, you agree to Lumia's "}
+        <a href={vm.termsUrl} style={S("color:#3D1C31")}>
+          Terms of Service
+        </a>
+        {" and "}
+        <a href="Lumia Order Privacy.dc.html" style={S("color:#3D1C31")}>
+          Privacy Policy
+        </a>
+        .
+      </p>
+      {vm.is.otp && (
+        <>
+        <div data-screen-label="02 WhatsApp OTP" style={S("flex:1;display:flex;flex-direction:column")}>
+          <h1 style={S(`font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:${vm.L.headTop}`)}>
+            Check your WhatsApp
+          </h1>
+          <p style={S("font-size:16px;line-height:1.5;color:#3D1C31;margin-top:10px")}>
+            We sent a 6-digit verification code to
+          </p>
+          <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:4px")}>
+            <span style={S("font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.01em")}>
+              {vm.masked}
+            </span>
+            <button type="button" onClick={vm.changeNumber} style={S("font-size:14px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px")} className="dch2">
+              Change phone number
+            </button>
+          </div>
+          <div onClick={vm.focusOtp} style={S(`position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:28px;max-width:360px;opacity:${vm.otpOp}`)}>
+            {(vm.boxes as any[]).map((b: any, __i: number) => (
+              <Fragment key={__i}>
+                <div style={S(`height:60px;border-radius:12px;border:1.5px solid ${b.bd};box-shadow:${b.ring};background:${b.bg};display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;transition:border-color .12s,box-shadow .12s`)}>
+                  {b.ch}
+                  {b.caret && (
+                    <>
+                    <span style={S("width:2px;height:26px;border-radius:1px;background:#FF5577")} />
+                    </>
+                  )}
+                </div>
+              </Fragment>
+            ))}
+            <input ref={vm.otpRef} aria-label="Verification code" type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={vm.digits} onChange={vm.onOtp} onFocus={vm.otpFocus} onBlur={vm.otpBlur} disabled={!!vm.verifying} style={S("position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;color:transparent;caret-color:transparent")} />
+          </div>
+        </div>
+        </>
+      )}
+      {vm.otpMsg.show && (
+        <>
+        <div role="alert" style={S(`display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:14px;line-height:1.45;color:${vm.otpMsg.fg}`)}>
+          <span style={S(`width:6px;height:6px;border-radius:50%;background:${vm.otpMsg.fg};flex:none;margin-top:7px`)} />
+          <span>
+            {vm.otpMsg.text}
+          </span>
+        </div>
+        </>
+      )}
+      <div style={S(`flex:${vm.L.spacer};min-height:32px`)} />
+      <div style={S("display:flex;flex-direction:column;gap:10px")}>
+        <button type="button" onClick={vm.verifyNow} disabled={!!vm.verifyDisabled} style={S(`height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;display:flex;align-items:center;justify-content:center;gap:10px;opacity:${vm.verifyOp};box-shadow:0 10px 24px -12px rgba(201,61,255,.55)`)} className="dch1">
+          {vm.spinnerVerify}
+          <span>
+            {vm.verifyLabel}
+          </span>
+        </button>
+        <button type="button" onClick={vm.resend} disabled={!!vm.resendDisabled} style={S(`height:52px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px;color:${vm.resendFg};font-variant-numeric:tabular-nums`)} className="dch3">
+          {vm.resendLabel}
+        </button>
+        <button type="button" onClick={vm.sms} style={S("height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
+          Send code by SMS
+        </button>
+      </div>
+      {vm.is.verified && (
+        <>
+        <div data-screen-label="02b Number verified" style={S("flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:64px 0;text-align:center")}>
+          <span style={S("width:72px;height:72px;border-radius:50%;background:#E4F4EC;display:flex;align-items:center;justify-content:center")}>
+            <svg width="34" height="34" viewBox="0 0 20 20" fill="none">
+              <path d="M5 10.4 8.4 13.8 15 7" stroke="#16704A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+          <h1 style={S("font-size:26px;font-weight:600;letter-spacing:-0.03em")}>
+            Number verified
+          </h1>
+        </div>
+        </>
+      )}
+      {vm.is.name && (
+        <>
+        <form data-screen-label="03 Restaurant name" onSubmit={vm.submitName} noValidate={true} style={S("flex:1;display:flex;flex-direction:column")}>
+          <h1 style={S(`font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:${vm.L.headTop};text-wrap:balance`)}>
+            Tell us about your restaurant
+          </h1>
+          <label htmlFor="pd-name" style={S("display:block;font-size:14px;font-weight:500;color:#3D1C31;margin-top:28px")}>
+            Restaurant name
+          </label>
+          <input id="pd-name" ref={vm.nameRef} type="text" autoComplete="organization" placeholder="Burger House" value={vm.name} onChange={vm.onName} onFocus={vm.nameFocus} onBlur={vm.nameBlur} style={S(`margin-top:8px;height:56px;border-radius:14px;border:1.5px solid ${vm.nf.bd};box-shadow:${vm.nf.ring};padding:0 16px;font-size:17px;background:#fff;transition:border-color .15s,box-shadow .15s`)} />
+        </form>
+        </>
+      )}
+      {vm.nameErr && (
+        <>
+        <div role="alert" style={S("margin-top:10px;font-size:14px;color:#B4233B")}>
+          {vm.nameErrText}
+        </div>
+        </>
+      )}
+      <div style={S("display:flex;align-items:center;gap:8px;margin-top:26px")}>
+        <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+          Logo
+        </span>
+        <span style={S("font-size:12px;font-weight:500;padding:2px 8px;border-radius:999px;background:#F3EEF1;color:#8A5A6E")}>
+          Optional
+        </span>
+      </div>
+      <div style={S("display:flex;align-items:center;gap:14px;margin-top:10px")}>
+        <span style={S(`width:64px;height:64px;border-radius:16px;border:1.5px dashed ${vm.logoTile.bd};background:#FBF3F8;flex:none;display:flex;align-items:center;justify-content:center;overflow:hidden`)}>
+          {vm.logo && (
+            <>
+            {vm.logoImg}
+            </>
+          )}
+          {vm.noLogo && (
+            <>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <rect x="3.5" y="4.5" width="17" height="15" rx="3" stroke="#B89AA8" strokeWidth="1.5" />
+              <circle cx="9" cy="10" r="1.8" stroke="#B89AA8" strokeWidth="1.5" />
+              <path d="m5 17.5 4.5-4.5 3.5 3.5 2.5-2.5 3.5 3.5" stroke="#B89AA8" strokeWidth="1.5" strokeLinejoin="round" />
+            </svg>
+            </>
+          )}
+        </span>
+        <div style={S("display:flex;flex-direction:column;gap:4px;align-items:flex-start")}>
+          <label style={S("display:inline-flex;align-items:center;height:40px;padding:0 16px;border-radius:12px;border:1.5px solid #ECD9E0;font-size:15px;font-weight:500;cursor:pointer")} className="dch4">
+            {vm.logoBtn}
+            <input type="file" accept="image/png,image/jpeg,image/svg+xml" onChange={vm.onLogo} style={S("display:none")} />
+          </label>
+        </div>
+      </div>
+      <span style={S("font-size:13px;color:#8A5A6E")}>
+        PNG or JPG, square works best
+      </span>
+      <div style={S(`flex:${vm.L.spacer};min-height:32px`)} />
+      <button type="submit" style={S("height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
+        Continue
+      </button>
+      {vm.is.menu && (
+        <>
+        <div data-screen-label="04 Menu upload" style={S("flex:1;display:flex;flex-direction:column")}>
+          <h1 style={S(`font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:${vm.L.headTop}`)}>
+            Add your menu
+          </h1>
+          <p style={S("font-size:16px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
+            Upload your existing menu and Lumia AI will create it for you.
+          </p>
+          <label onDragOver={vm.dragOver} onDragLeave={vm.dragLeave} onDrop={vm.drop} style={S(`margin-top:24px;border-radius:20px;border:1.5px dashed ${vm.dz.bd};background:${vm.dz.bg};padding:36px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;cursor:pointer;transition:background .15s,border-color .15s`)} className="dch5">
+            <span style={S("width:56px;height:56px;border-radius:16px;background:#FDEAF2;display:flex;align-items:center;justify-content:center")}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+                <path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9" stroke="#FF5577" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M4.5 14.5v2a3 3 0 0 0 3 3h9a3 3 0 0 0 3-3v-2" stroke="#C93DFF" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </span>
+            <span style={S("font-size:19px;font-weight:600;letter-spacing:-0.02em;margin-top:16px")}>
+              Upload your menu
+            </span>
+            <span style={S("font-size:14px;color:#8A5A6E;margin-top:4px")}>
+              PDF, JPG or PNG
+            </span>
+            <span style={S("margin-top:20px;display:inline-flex;align-items:center;height:48px;padding:0 24px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")}>
+              Choose file
+            </span>
+            <input type="file" accept="application/pdf,image/png,image/jpeg" onChange={vm.onMenuFile} style={S("display:none")} />
+          </label>
+        </div>
+        </>
+      )}
+      {vm.menuErr && (
+        <>
+        <div role="alert" style={S("margin-top:12px;font-size:14px;color:#B4233B")}>
+          {vm.menuErr}
+        </div>
+        </>
+      )}
+      <div style={S(`flex:${vm.L.spacer};min-height:28px`)} />
+      <div style={S("display:flex;flex-direction:column;gap:10px")}>
+        <button type="button" onClick={vm.manual} style={S("height:52px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
+          Add menu manually
+        </button>
+        <button type="button" onClick={vm.noMenu} style={S("height:44px;font-size:15px;font-weight:500;color:#8A5A6E;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
+          I don't have my menu right now
+        </button>
+      </div>
+      {vm.is.processing && (
+        <>
+        <div data-screen-label="05 AI menu processing" style={S("flex:1;display:flex;flex-direction:column;align-items:center;text-align:center")}>
+          <div style={S(`margin-top:${vm.L.aiTop};display:flex;justify-content:center`)}>
+            {vm.aiLogo}
+          </div>
+          <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:28px;text-wrap:balance")}>
+            Lumia is creating your menu
+          </h1>
+          <div style={S("display:inline-flex;align-items:center;gap:8px;margin-top:12px;height:32px;padding:0 12px;border-radius:999px;background:#F3EEF1;font-size:13px;color:#3D1C31;max-width:100%")}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={S("flex:none")}>
+              <path d="M4 1.5h5L12.5 5v9.5h-8.5z" stroke="#8A5A6E" strokeWidth="1.3" strokeLinejoin="round" />
+              <path d="M9 1.5V5h3.5" stroke="#8A5A6E" strokeWidth="1.3" strokeLinejoin="round" />
+            </svg>
+            <span style={S("overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>
+              {vm.fileName}
+            </span>
+          </div>
+          <div style={S("display:flex;flex-direction:column;gap:14px;margin-top:32px;max-width:300px;margin-inline:auto;text-align:start;width:100%")}>
+            {(vm.phases as any[]).map((p: any, __i: number) => (
+              <Fragment key={__i}>
+                <div style={S(`display:flex;align-items:center;gap:12px;font-size:15px;color:${p.fg};font-weight:${p.fw}`)}>
+                  <span style={S("width:20px;height:20px;flex:none;display:flex;align-items:center;justify-content:center")}>
+                    {p.done && (
+                      <>
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <circle cx="10" cy="10" r="9" fill="#E4F4EC" />
+                        <path d="M6 10.2 8.6 12.8 14 7.4" stroke="#16704A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      </>
+                    )}
+                    {p.active && (
+                      <>
+                      {vm.pulse}
+                      </>
+                    )}
+                    {p.pending && (
+                      <>
+                      <span style={S("width:14px;height:14px;border-radius:50%;border:1.5px solid #E3CBD4")} />
+                      </>
+                    )}
+                  </span>
+                  {p.plain && (
+                    <>
+                    <span>
+                      {p.label}
+                    </span>
+                    </>
+                  )}
+                  {p.active && (
+                    <>
+                    {vm.shimmer}
+                    </>
+                  )}
+                </div>
+              </Fragment>
+            ))}
+          </div>
+          <div style={S(`flex:${vm.L.spacer};min-height:32px`)} />
+          <p style={S("font-size:13px;color:#8A5A6E;line-height:1.5;max-width:320px")}>
+            You'll check everything Lumia finds before it goes live.
+          </p>
+        </div>
+        </>
+      )}
+      {vm.is.ready && (
+        <>
+        <div data-screen-label="05b Menu ready \u00b7 confirm" style={S("flex:1;display:flex;flex-direction:column")}>
+          <h1 style={S(`font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:${vm.L.headTop}`)}>
+            Your menu is ready 🎉
+          </h1>
+          <p style={S("font-size:16px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
+            This is what Lumia AI found in your menu. Check the items and prices, then confirm.
+          </p>
+          <div style={S("display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:20px")}>
+            <div style={S("border-radius:16px;background:#FBF3F8;padding:14px 18px;display:flex;flex-direction:column;gap:2px")}>
+              <span style={S("font-size:30px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums")}>
+                {vm.totalItems}
+              </span>
+              <span style={S("font-size:14px;color:#3D1C31")}>
+                items found
+              </span>
+            </div>
+            <div style={S("border-radius:16px;background:#FBF3F8;padding:14px 18px;display:flex;flex-direction:column;gap:2px")}>
+              <span style={S("font-size:30px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums")}>
+                {vm.totalCats}
+              </span>
+              <span style={S("font-size:14px;color:#3D1C31")}>
+                categories
+              </span>
+            </div>
+          </div>
+          {vm.hasFlags && (
+            <>
+            <div style={S("margin-top:12px;border-radius:14px;background:#FFF4E5;padding:12px 16px;display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45;color:#6B3A00")}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={S("flex:none;margin-top:2px")}>
+                <path d="M8 1.8 15 14H1z" stroke="#C26A00" strokeWidth="1.4" strokeLinejoin="round" />
+                <path d="M8 6.2v3.4" stroke="#C26A00" strokeWidth="1.5" strokeLinecap="round" />
+                <circle cx="8" cy="11.6" r=".8" fill="#C26A00" />
+              </svg>
+              <span>
+                {vm.flagMsg}
+              </span>
+            </div>
+            </>
+          )}
+          <div style={S("margin-top:14px;border:1px solid #ECD9E0;border-radius:16px;display:flex;flex-direction:column;overflow:hidden")}>
+            {(vm.review as any[]).map((g: any, __i: number) => (
+              <Fragment key={__i}>
+                <div style={S(`border-top:${g.bt}`)}>
+                  <button type="button" onClick={g.toggle} aria-expanded={g.open} style={S("width:100%;display:flex;align-items:center;gap:10px;min-height:52px;padding:0 16px 0 18px;text-align:start")} className="dch0">
+                    <span style={S("flex:1;font-size:15px;font-weight:600")}>
+                      {g.cat}
+                    </span>
+                    {g.flagged && (
+                      <>
+                      <span style={S("font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#FFF4E5;color:#8A4B00")}>
+                        {g.flagLabel}
+                      </span>
+                      </>
+                    )}
+                    <span style={S("font-size:14px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                      {g.label}
+                    </span>
+                    <svg width="14" height="14" viewBox="0 0 12 12" fill="none" style={S(`transform:rotate(${g.rot});transition:transform .15s`)}>
+                      <path d="M3 4.5 6 7.5 9 4.5" stroke="#8A5A6E" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  {g.open && (
+                    <>
+                    <div style={S("padding:0 12px 10px 18px;display:flex;flex-direction:column")}>
+                      {(g.items as any[]).map((it: any, __i: number) => (
+                        <Fragment key={__i}>
+                          <div style={S("display:flex;flex-direction:column;gap:6px;padding:8px 0;border-top:1px solid #F3EEF1")}>
+                            <div style={S("display:flex;align-items:center;gap:12px")}>
+                              <span style={S("flex:1;min-width:0;font-size:15px")}>
+                                {it.n}
+                              </span>
+                              <label style={S(`display:flex;align-items:center;gap:4px;height:38px;padding:0 10px;border-radius:10px;border:1.5px solid ${it.bd};background:${it.bg};font-size:14px;color:#8A5A6E;flex:none`)}>
+                                AED
+                                <input type="text" inputMode="decimal" value={it.price} onChange={it.onPrice} aria-label={`${it.n} price`} style={S("width:44px;font-size:15px;color:#1A0815;text-align:end;font-variant-numeric:tabular-nums")} />
+                              </label>
+                            </div>
+                          </div>
+                        </Fragment>
+                      ))}
+                    </div>
+                    </>
+                  )}
+                </div>
+              </Fragment>
+            ))}
+          </div>
+        </div>
+        </>
+      )}
+      {vm.it.flag && (
+        <>
+        <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:13px;color:#8A4B00")}>
+          <span>
+            Lumia wasn't sure about this price. Please check it.
+          </span>
+          <button type="button" onClick={vm.it.ok} style={S("font-size:13px;font-weight:600;color:#1A0815;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px")}>
+            Looks right
+          </button>
+        </div>
+        </>
+      )}
+      {vm.readyErr && (
+        <>
+        <div role="alert" style={S("margin-top:12px;font-size:14px;color:#B4233B")}>
+          {vm.readyErr}
+        </div>
+        </>
+      )}
+      <div style={S(`flex:${vm.L.spacer};min-height:24px`)} />
+      <div style={S(`position:${vm.L.stick};bottom:0;background:#fff;padding-top:12px;display:flex;flex-direction:column;gap:10px;box-shadow:${vm.L.stickSh}`)}>
+        <button type="button" onClick={vm.confirmMenu} disabled={!!vm.hasFlags} style={S(`height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;opacity:${vm.confirmOp};box-shadow:0 10px 24px -12px rgba(201,61,255,.55)`)} className="dch1">
+          Confirm menu
+        </button>
+        <button type="button" onClick={vm.toMenuUpload} style={S("height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
+          Upload a different file
+        </button>
+      </div>
+      {vm.is.dash && (
+        <>
+        <div data-screen-label="06 Dashboard \u00b7 Menu" dir={vm.dir} style={S(`flex:none;width:100%;display:flex;height:${vm.L.dashH};overflow:hidden;background:#fff`)}>
+          {vm.dashWide && (
+            <>
+            <aside style={S("flex:0 0 232px;border-inline-end:1px solid #F0E4E8;background:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh")}>
+              <div style={S("height:64px;padding:0 20px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #F0E4E8")}>
+                <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style={S("display:block;flex:none")}>
+                  <defs>
+                    <linearGradient id="gPD2" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+                      <stop offset="0" stopColor="#FF5577" />
+                      <stop offset="1" stopColor="#C93DFF" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z" stroke="url(#gPD2)" strokeWidth="8" strokeLinejoin="round" />
+                  <path d="M28 30V66H40" stroke="#1A0815" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="64" cy="55" r="11" stroke="url(#gPD2)" strokeWidth="10" />
+                </svg>
+                <span style={S("display:flex;flex-direction:column;line-height:.92")}>
+                  <span style={S("font-size:16px;font-weight:700;letter-spacing:-0.035em")}>
+                    Lumia
+                  </span>
+                  <span style={S("font-size:12px;letter-spacing:-0.01em")}>
+                    Order
+                  </span>
+                </span>
+              </div>
+              <nav style={S("flex:1;padding:14px 12px;display:flex;flex-direction:column;gap:2px")}>
+                {(vm.nav as any[]).map((n: any, __i: number) => (
+                  <Fragment key={__i}>
+                    <a href="#" onClick={n.pick} style={S(`height:40px;padding:0 12px;border-radius:10px;display:flex;align-items:center;gap:12px;font-size:15px;text-decoration:none;font-weight:${n.fw};color:${n.fg};background:${n.bg}`)} className="dch6">
+                      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
+                        <path d={n.icon} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span style={S("flex:1;min-width:0")}>
+                        {n.label}
+                      </span>
+                      {n.lock && (
+                        <>
+                        <span style={S("font-size:12px;font-weight:600;padding:2px 7px;border-radius:999px;background:#F1E6FF;color:#6A1FA0")}>
+                          Plus
+                        </span>
+                        </>
+                      )}
+                    </a>
+                  </Fragment>
+                ))}
+              </nav>
+              <div style={S("padding:12px;border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:8px")}>
+                {vm.sub.onTrial && (
+                  <>
+                  <button type="button" onClick={vm.subOpenPlans} style={S("text-align:start;padding:12px;border-radius:12px;background:#FBF3F8;display:flex;flex-direction:column;gap:9px")} className="dch7">
+                    <span style={S("display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px;font-weight:600")}>
+                      {vm.sub.tag}
+                      <span style={S("font-size:13px;font-weight:500;color:#8A2040;font-variant-numeric:tabular-nums")}>
+                        {vm.sub.leftLabel}
+                      </span>
+                    </span>
+                    <span style={S("height:4px;border-radius:2px;background:#EAD9E1;overflow:hidden;display:block")}>
+                      <span style={S(`display:block;height:100%;width:${vm.sub.barW};border-radius:2px;background:linear-gradient(90deg,#FF5577,#C93DFF)`)} />
+                    </span>
+                    <span style={S("font-size:14px;font-weight:600;color:#C0284F")}>
+                      {vm.sub.choose}
+                    </span>
+                  </button>
+                  </>
+                )}
+                {vm.sub.isPaid && (
+                  <>
+                  <div style={S(`display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:12px;background:${vm.sub.paidBg};color:${vm.sub.paidFg};font-size:14px;font-weight:600`)}>
+                    <span style={S("display:flex;align-items:center;gap:8px")}>
+                      <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                        <path d="m5 10.5 3.2 3L15 7" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      {vm.sub.paidName}{" plan"}
+                    </span>
+                    <span style={S("font-size:13px;font-weight:500")}>
+                      {vm.sub.renewLine}
+                    </span>
+                    {vm.sub.canPortal && (
+                      <>
+                      <button type="button" onClick={vm.subPortal} style={S("align-self:flex-start;font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:3px")}>
+                        {vm.sub.portalLabel}
+                      </button>
+                      </>
+                    )}
+                  </div>
+                  </>
+                )}
+                <div role="radiogroup" aria-label="Dashboard language" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;flex:none")}>
+                  {(vm.langs as any[]).map((lg: any, __i: number) => (
+                    <Fragment key={__i}>
+                      <button type="button" role="radio" aria-checked={lg.on} onClick={lg.pick} style={S(`flex:1;height:30px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:${lg.fw};background:${lg.bg};color:${lg.fg};box-shadow:${lg.sh}`)}>
+                        {lg.label}
+                      </button>
+                    </Fragment>
+                  ))}
+                </div>
+                <div style={S("display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px")}>
+                  <span style={S("width:32px;height:32px;border-radius:9px;flex:none;overflow:hidden;background:linear-gradient(135deg,#FF5577,#C93DFF);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center")}>
+                    {vm.logo && (
+                      <>
+                      {vm.logoImg}
+                      </>
+                    )}
+                    {vm.noLogo && (
+                      <>
+                      {vm.initials}
+                      </>
+                    )}
+                  </span>
+                  <span style={S("font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0")}>
+                    {vm.nameOrDefault}
+                  </span>
+                </div>
+              </div>
+            </aside>
+            </>
+          )}
+          <div style={S("flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:#fff")}>
+            {vm.dashNarrow && (
+              <>
+              <header style={S("position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #F0E4E8")}>
+                <div style={S("height:56px;padding:0 16px;display:flex;align-items:center;gap:10px")}>
+                  <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style={S("display:block;flex:none")}>
+                    <defs>
+                      <linearGradient id="gPD2" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+                        <stop offset="0" stopColor="#FF5577" />
+                        <stop offset="1" stopColor="#C93DFF" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z" stroke="url(#gPD2)" strokeWidth="8" strokeLinejoin="round" />
+                    <path d="M28 30V66H40" stroke="#1A0815" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx="64" cy="55" r="11" stroke="url(#gPD2)" strokeWidth="10" />
+                  </svg>
+                  <span style={S("font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1")}>
+                    {vm.nameOrDefault}
+                  </span>
+                  <div role="radiogroup" aria-label="Dashboard language" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;flex:none")}>
+                    {(vm.langsShort as any[]).map((lg: any, __i: number) => (
+                      <Fragment key={__i}>
+                        <button type="button" role="radio" aria-checked={lg.on} onClick={lg.pick} style={S(`flex:1;height:28px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:${lg.fw};background:${lg.bg};color:${lg.fg};box-shadow:${lg.sh}`)}>
+                          {lg.label}
+                        </button>
+                      </Fragment>
+                    ))}
+                  </div>
+                  <span style={S("width:32px;height:32px;border-radius:9px;flex:none;overflow:hidden;background:linear-gradient(135deg,#FF5577,#C93DFF);color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center")}>
+                    {vm.logo && (
+                      <>
+                      {vm.logoImg}
+                      </>
+                    )}
+                    {vm.noLogo && (
+                      <>
+                      {vm.initials}
+                      </>
+                    )}
+                  </span>
+                </div>
+                <nav style={S("display:flex;gap:20px;overflow-x:auto;padding:0 16px")}>
+                  {(vm.nav as any[]).map((n: any, __i: number) => (
+                    <Fragment key={__i}>
+                      <button type="button" onClick={n.pick} style={S(`padding:8px 0 10px;white-space:nowrap;font-size:15px;font-weight:${n.fw};color:${n.fg};border-bottom:2px solid ${n.bd}`)}>
+                        {n.label}
+                      </button>
+                    </Fragment>
+                  ))}
+                </nav>
+                {vm.sub.onTrial && (
+                  <>
+                  <div style={S("padding:8px 16px;background:#FBF3F8;border-top:1px solid #F0E4E8;display:flex;align-items:center;gap:10px;font-size:14px")}>
+                    <span style={S("font-weight:600")}>
+                      {vm.sub.tag}
+                    </span>
+                    <span style={S("color:#8A2040;font-variant-numeric:tabular-nums;flex:1;min-width:0")}>
+                      {vm.sub.leftLabel}
+                    </span>
+                    <button type="button" onClick={vm.subOpenPlans} style={S("height:32px;padding:0 12px;border-radius:9px;background:#1A0815;color:#fff;font-size:13px;font-weight:600;flex:none")}>
+                      {vm.sub.choose}
+                    </button>
+                  </div>
+                  </>
+                )}
+              </header>
+              </>
+            )}
+            <div style={S("flex:1;display:flex;min-height:0")}>
+              {vm.pageSettings && (
+                <>
+                <div data-screen-label="09 Dashboard \u00b7 Settings" style={S("flex:1;min-width:0;min-height:0;display:flex")}>
+                  <div style={S("flex:1;min-width:0;height:100%")}>
+                    {vm.settingsNode}
+                  </div>
+                </div>
+                </>
+              )}
+              {vm.notSettings && (
+                <>
+                <main style={S(`flex:1;min-width:0;min-height:0;overflow-y:auto;padding:${vm.L.dashPad};display:flex;flex-direction:column;gap:26px`)}>
+                  {vm.pageOverview && (
+                    <>
+                    <div data-screen-label="06 Dashboard \u00b7 Overview" style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
+                      <div style={S("flex:1 1 280px;min-width:0")}>
+                        <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                          {vm.ov.title}
+                        </h1>
+                        <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5")}>
+                          {vm.ov.sub}
+                        </p>
+                      </div>
+                      <div role="radiogroup" aria-label="Period" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px")}>
+                        {(vm.periodSeg as any[]).map((o: any, __i: number) => (
+                          <Fragment key={__i}>
+                            <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`height:34px;padding:0 14px;border-radius:8px;font-size:14px;white-space:nowrap;font-weight:${o.fw};background:${o.bg};color:${o.fg};box-shadow:${o.sh}`)}>
+                              {o.label}
+                            </button>
+                          </Fragment>
+                        ))}
+                      </div>
+                    </div>
+                    {vm.term.show && (
+                      <>
+                      <section data-screen-label="06d Terminal shipment" dir="ltr" style={S("border:1px solid #F0E4E8;border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:20px")}>
+                        <div style={S("display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px 20px")}>
+                          <div style={S("flex:none;width:44px;height:78px;position:relative;overflow:hidden;border-radius:8px;background:#FBF3F8")}>
+                            <div style={S("width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C0284F")}>
+                              <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
+                                <path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </div>
+                          </div>
+                          <div style={S("flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:6px")}>
+                            <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px")}>
+                              <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                                Lumia Order Terminal
+                              </h2>
+                              <span style={S(`font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px;background:${vm.term.pillBg};color:${vm.term.pillFg}`)}>
+                                {vm.term.label}
+                              </span>
+                            </div>
+                            <p style={S("font-size:14px;line-height:1.5;color:#3D1C31;text-wrap:pretty")}>
+                              {vm.term.msg}
+                            </p>
+                            <p style={S("font-size:13px;color:#8A5A6E")}>
+                              {"Order "}{vm.term.no}{" \u00b7 "}{vm.term.qtyLabel}{" \u00b7 "}{vm.term.addr}
+                            </p>
+                          </div>
+                          <div style={S("flex:none;display:flex;flex-direction:column;gap:2px")}>
+                            <span style={S("font-size:13px;color:#8A5A6E")}>
+                              {vm.term.etaLabel}
+                            </span>
+                            <span style={S("font-size:18px;font-weight:600;letter-spacing:-0.02em;font-variant-numeric:tabular-nums")}>
+                              {vm.term.eta}
+                            </span>
+                          </div>
+                        </div>
+                        <ol style={S("list-style:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0")}>
+                          {(vm.term.steps as any[]).map((st: any, __i: number) => (
+                            <Fragment key={__i}>
+                              <li style={S("display:flex;flex-direction:column;gap:8px;min-width:0")}>
+                                <div style={S("display:flex;align-items:center")}>
+                                  <span style={S(`width:20px;height:20px;border-radius:50%;flex:none;background:${st.dot};border:2px solid ${st.ring};display:flex;align-items:center;justify-content:center`)}>
+                                    {st.done && (
+                                      <>
+                                      <svg width="11" height="11" viewBox="0 0 20 20" fill="none">
+                                        <path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                                      </svg>
+                                      </>
+                                    )}
+                                    {st.now && (
+                                      <>
+                                      <span style={S("width:8px;height:8px;border-radius:50%;background:#FF5577")} />
+                                      </>
+                                    )}
+                                  </span>
+                                  <span style={S(`flex:1;height:3px;margin:0 4px;border-radius:2px;background:${st.line}`)} />
+                                </div>
+                                <span style={S(`font-size:13px;line-height:1.3;padding-inline-end:8px;font-weight:${st.fw};color:${st.fg}`)}>
+                                  {st.label}
+                                </span>
+                                <span style={S("font-size:12px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                                  {st.date}
+                                </span>
+                              </li>
+                            </Fragment>
+                          ))}
+                        </ol>
+                        {vm.term.hasCourier && (
+                          <>
+                          <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:12px 14px;border-radius:12px;background:#FBF3F8;font-size:14px")}>
+                            <span style={S("color:#3D1C31")}>
+                              {"Tracking no. "}
+                              <span style={S("font-weight:600;color:#1A0815;font-variant-numeric:tabular-nums")}>
+                                {vm.term.tracking}
+                              </span>
+                            </span>
+                          </div>
+                          </>
+                        )}
+                      </section>
+                      </>
+                    )}
+                    {vm.setupShow && (
+                      <>
+                      <section style={S("border-radius:20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);padding:22px 24px;display:flex;flex-wrap:wrap;gap:18px 32px;align-items:center")}>
+                        <div style={S("flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:12px")}>
+                          <div style={S("display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px")}>
+                            <h2 style={S("font-size:19px;font-weight:600;letter-spacing:-0.02em")}>
+                              {vm.t.setupTitle}
+                            </h2>
+                            <span style={S("font-size:14px;font-weight:500;color:#8A2040;font-variant-numeric:tabular-nums")}>
+                              {vm.setupLabel}
+                            </span>
+                          </div>
+                          <div style={S("display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;max-width:420px")}>
+                            {(vm.setup as any[]).map((s: any, __i: number) => (
+                              <Fragment key={__i}>
+                                <span style={S(`height:5px;border-radius:3px;background:${s.bar}`)} />
+                              </Fragment>
+                            ))}
+                          </div>
+                          <div style={S("display:flex;flex-wrap:wrap;gap:8px 18px")}>
+                            {(vm.setup as any[]).map((s: any, __i: number) => (
+                              <Fragment key={__i}>
+                                <button type="button" onClick={s.pick} disabled={!!s.done} style={S(`display:flex;align-items:center;gap:7px;font-size:14px;color:${s.fg};text-decoration:${s.ul};text-decoration-color:#D9BFCB;text-underline-offset:3px`)} className="dch8">
+                                  {s.done && (
+                                    <>
+                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                                      <circle cx="10" cy="10" r="9" fill="#16704A" />
+                                      <path d="M6 10.2 8.6 12.8 14 7.4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                    </>
+                                  )}
+                                  {s.todo && (
+                                    <>
+                                    <span style={S("width:14px;height:14px;border-radius:50%;border:1.5px solid #B79AA6;margin:1px")} />
+                                    </>
+                                  )}
+                                  {s.label}
+                                </button>
+                              </Fragment>
+                            ))}
+                          </div>
+                        </div>
+                        <button type="button" onClick={vm.continueSetup} style={S("height:48px;padding:0 22px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;flex:none;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
+                          {vm.t.continueSetup}
+                        </button>
+                      </section>
+                      </>
+                    )}
+                    {vm.ovLoading && (
+                      <>
+                      {vm.loaderNode}
+                      </>
+                    )}
+                    {vm.ovReady && (
+                      <>
+                      <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px")}>
+                        {(vm.stats as any[]).map((m: any, __i: number) => (
+                          <Fragment key={__i}>
+                            <div style={S("border:1px solid #F0E4E8;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:6px")}>
+                              <span style={S("font-size:14px;color:#8A5A6E")}>
+                                {m.k}
+                              </span>
+                              <span dir="ltr" style={S("font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;text-align:start")}>
+                                {m.v}
+                              </span>
+                              <span style={S(`font-size:13px;font-weight:500;color:${m.dfg};font-variant-numeric:tabular-nums`)}>
+                                {m.d}
+                              </span>
+                            </div>
+                          </Fragment>
+                        ))}
+                      </div>
+                      <div style={S(`display:grid;grid-template-columns:${vm.L.split2};gap:20px;align-items:start`)}>
+                        <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:14px;min-width:0")}>
+                          <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                            {vm.ov.orders}
+                          </h2>
+                          <div style={S("height:160px;display:flex;align-items:flex-end;gap:10px")}>
+                            {(vm.bars as any[]).map((b: any, __i: number) => (
+                              <Fragment key={__i}>
+                                <div title={b.tip} style={S("flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px")}>
+                                  <span style={S(`width:100%;max-width:36px;border-radius:6px 6px 2px 2px;height:${b.h};background:${b.bg}`)} />
+                                  <span style={S("font-size:12px;color:#8A5A6E;white-space:nowrap")}>
+                                    {b.l}
+                                  </span>
+                                </div>
+                              </Fragment>
+                            ))}
+                          </div>
+                        </section>
+                        <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:6px;min-width:0")}>
+                          <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em;margin-bottom:6px")}>
+                            {vm.ov.top}
+                          </h2>
+                          {(vm.topItems as any[]).map((t: any, __i: number) => (
+                            <Fragment key={__i}>
+                              <div style={S(`display:flex;align-items:center;gap:12px;padding:8px 0;border-top:${t.bt};font-size:15px`)}>
+                                <span style={S("width:20px;font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                                  {t.n}
+                                </span>
+                                <span style={S("flex:1;min-width:0;font-weight:500")}>
+                                  {t.name}
+                                </span>
+                                <span style={S("color:#3D1C31;font-variant-numeric:tabular-nums")}>
+                                  {t.q}
+                                </span>
+                              </div>
+                            </Fragment>
+                          ))}
+                        </section>
+                      </div>
+                      </>
+                    )}
+                    </>
+                  )}
+                  {vm.dashErr && (
+                    <>
+                    <div role="alert" style={S("font-size:14px;color:#B4233B")}>
+                      {vm.dashErr}
+                    </div>
+                    </>
+                  )}
+                  {vm.pageMenu && (
+                    <>
+                    {vm.menuScopeNode}
+                    <div style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
+                      <div>
+                        <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                          {vm.t.menu}
+                        </h1>
+                        {vm.menuDone && (
+                          <>
+                          <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:6px;font-size:14px;color:#8A5A6E")}>
+                            <span style={S("font-variant-numeric:tabular-nums")}>
+                              {vm.menuMeta}
+                            </span>
+                            <span style={S("display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;background:#FDEAF2;color:#8A2040;font-size:13px;font-weight:500")}>
+                              <span style={S("width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,#FF5577,#C93DFF)")} />
+                              {vm.t.created}
+                            </span>
+                          </div>
+                          </>
+                        )}
+                      </div>
+                      {vm.menuDone && (
+                        <>
+                        <button type="button" onClick={vm.openAddItem} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
+                          {vm.t.addItem}
+                        </button>
+                        </>
+                      )}
+                    </div>
+                    {vm.menuDone && (
+                      <>
+                      <div style={S("flex:1;min-height:240px;display:flex;flex-direction:column;gap:16px;margin-top:-8px")}>
+                        <label style={S("display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;max-width:520px")}>
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={S("flex:none")}>
+                            <circle cx="7" cy="7" r="4.8" stroke="#8A5A6E" strokeWidth="1.5" />
+                            <path d="m10.6 10.6 3.4 3.4" stroke="#8A5A6E" strokeWidth="1.5" strokeLinecap="round" />
+                          </svg>
+                          <input type="search" value={vm.q} onChange={vm.onSearch} placeholder={vm.t.search} aria-label={vm.t.search} style={S("flex:1;min-width:0;font-size:15px")} />
+                        </label>
+                      </div>
+                      </>
+                    )}
+                    </>
+                  )}
+                </main>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+        </>
+      )}
+      {vm.hasQ && (
+        <>
+        <button type="button" onClick={vm.clearSearch} aria-label="Clear" style={S("width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+            <path d="M4 4l8 8M12 4l-8 8" stroke="#8A5A6E" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </button>
+        </>
+      )}
+      <div style={S("display:flex;gap:8px;overflow-x:auto;flex:none;padding-bottom:2px;scrollbar-width:none")}>
+        {(vm.cats as any[]).map((c: any, __i: number) => (
+          <Fragment key={__i}>
+            <button type="button" onClick={c.pick} style={S(`height:40px;padding:0 14px;border-radius:999px;white-space:nowrap;font-size:14px;font-weight:500;background:${c.chipBg};color:${c.chipFg};border:1.5px solid ${c.chipBd};display:flex;align-items:center;gap:8px;flex:none`)}>
+              {c.label}
+              <span style={S("font-size:13px;opacity:.7;font-variant-numeric:tabular-nums")}>
+                {c.count}
+              </span>
+            </button>
+          </Fragment>
+        ))}
+      </div>
+      <div style={S("flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:16px;border-radius:16px")}>
+        {(vm.sections as any[]).map((g: any, __i: number) => (
+          <Fragment key={__i}>
+            <section style={S("border:1px solid #F0E4E8;border-radius:16px;overflow:clip")}>
+              <header style={S(`position:sticky;top:${vm.L.secTop};z-index:2;background:#F5F4F4;padding:12px 18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;border-bottom:1px solid #E8E6E7`)}>
+                <span style={S("font-size:16px;font-weight:600")}>
+                  {g.name}
+                </span>
+                <span style={S("font-size:14px;color:#8A5A6E")}>
+                  {g.alt}
+                </span>
+                <span style={S("flex:1")} />
+                <span style={S("font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                  {g.meta}
+                </span>
+              </header>
+              {(g.items as any[]).map((it: any, __i: number) => (
+                <Fragment key={__i}>
+                  <div style={S(`display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:16px;min-height:60px;padding:9px 18px;border-top:${it.bt}`)} className="dch9">
+                    <div style={S("min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px")}>
+                      <span style={S(`font-size:15px;font-weight:500;color:${it.nameFg}`)}>
+                        {it.main}
+                      </span>
+                      {it.hasAlt && (
+                        <>
+                        <span style={S("font-size:13px;color:#8A5A6E")}>
+                          {it.alt}
+                        </span>
+                        </>
+                      )}
+                      {it.noAlt && (
+                        <>
+                        <button type="button" onClick={it.editAr} style={S("font-size:13px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px")} className="dch2">
+                          {"+ "}{vm.t.addAr}
+                        </button>
+                        </>
+                      )}
+                    </div>
+                    <div style={S("display:flex;flex-direction:column;align-items:flex-end;gap:1px")}>
+                      <span style={S("font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap")}>
+                        {it.price}
+                      </span>
+                      {it.sold && (
+                        <>
+                        <span style={S("font-size:12px;font-weight:600;color:#8A5A6E")}>
+                          {vm.t.soldOut}
+                        </span>
+                        </>
+                      )}
+                    </div>
+                    <button type="button" role="switch" aria-checked={it.on} aria-label={it.main} onClick={it.toggle} style={S(`width:48px;height:28px;border-radius:999px;flex:none;background:${it.tBg};position:relative;transition:background .15s`)}>
+                      <span style={S(`position:absolute;top:3px;inset-inline-start:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX(${it.knob});transition:transform .18s`)} />
+                    </button>
+                  </div>
+                </Fragment>
+              ))}
+            </section>
+          </Fragment>
+        ))}
+        {vm.noResults && (
+          <>
+          <div style={S("border-radius:16px;background:#FAF6FA;padding:40px 20px;text-align:center;font-size:15px;color:#3D1C31")}>
+            {vm.t.noResults}
+          </div>
+          </>
+        )}
+      </div>
+      {vm.menuEmpty && (
+        <>
+        <div style={S("margin-top:-6px;border-radius:20px;background:#FAF6FA;padding:56px 24px;display:flex;flex-direction:column;align-items:center;text-align:center")}>
+          <span style={S("width:56px;height:56px;border-radius:16px;background:#FDEAF2;display:flex;align-items:center;justify-content:center")}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+              <path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9" stroke="#FF5577" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M4.5 14.5v2a3 3 0 0 0 3 3h9a3 3 0 0 0 3-3v-2" stroke="#C93DFF" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </span>
+          <h2 style={S("font-size:19px;font-weight:600;letter-spacing:-0.02em;margin-top:16px")}>
+            Your menu is empty
+          </h2>
+          <p style={S("font-size:15px;color:#3D1C31;margin-top:6px;max-width:360px;line-height:1.5")}>
+            Upload your existing menu and Lumia AI will create it for you.
+          </p>
+          <div style={S("display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px")}>
+            <button type="button" onClick={vm.toMenuUpload} style={S("height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")} className="dch1">
+              Upload menu
+            </button>
+            <button type="button" onClick={vm.openAddItem} style={S("height:46px;padding:0 20px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
+              Add item manually
+            </button>
+          </div>
+        </div>
+        </>
+      )}
+      {vm.pageBilling && (
+        <>
+        {vm.billingNode}
+        </>
+      )}
+      {vm.pageOrders && (
+        <>
+        <div data-screen-label="06b Dashboard \u00b7 Orders" style={S("display:flex;flex-direction:column;gap:18px")}>
+          <div style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
+            <div style={S("flex:1 1 240px;min-width:0")}>
+              <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                {vm.ord.t.title}
+              </h1>
+              <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5")}>
+                {vm.ord.t.sub}
+              </p>
+            </div>
+            {vm.ord.hasAny && (
+              <>
+              <label style={S("flex:0 1 300px;min-width:200px;height:44px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px")}>
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
+                  <circle cx="9" cy="9" r="5.5" stroke="#8A5A6E" strokeWidth="1.7" />
+                  <path d="m13.2 13.2 3.3 3.3" stroke="#8A5A6E" strokeWidth="1.7" strokeLinecap="round" />
+                </svg>
+                <input value={vm.ord.q} onChange={vm.ord.onQ} placeholder={vm.ord.t.search} aria-label={vm.ord.t.search} style={S("flex:1;min-width:0;border:0;background:transparent;font-size:15px;height:100%")} />
+              </label>
+              </>
+            )}
+          </div>
+        </div>
+        </>
+      )}
+      {vm.ord.noOrders && (
+        <>
+        <div data-screen-label="06c Orders \u00b7 empty" style={S("border:1px solid #F0E4E8;border-radius:20px;padding:56px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px")}>
+          <span style={S("width:56px;height:56px;border-radius:16px;background:#FDEAF2;color:#C0284F;display:flex;align-items:center;justify-content:center")}>
+            <svg width="26" height="26" viewBox="0 0 20 20" fill="none">
+              <path d="M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+          <div style={S("display:flex;flex-direction:column;gap:6px;max-width:420px")}>
+            <h2 style={S("font-size:20px;font-weight:600;letter-spacing:-0.02em")}>
+              {vm.ord.e.title}
+            </h2>
+            <p style={S("font-size:15px;color:#8A5A6E;line-height:1.5;text-wrap:pretty")}>
+              {vm.ord.e.body}
+            </p>
+          </div>
+          <div style={S("display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:4px")}>
+            <button type="button" onClick={vm.ord.e.go} style={S("height:44px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")} className="dch1">
+              {vm.ord.e.cta}
+            </button>
+          </div>
+        </div>
+        </>
+      )}
+      {vm.ord.hasAny && (
+        <>
+        {vm.ordErr && (
+          <>
+          <div role="alert" style={S("font-size:14px;color:#B4233B")}>
+            {vm.ordErr}
+          </div>
+          </>
+        )}
+        <div style={S("display:flex;gap:8px;overflow-x:auto;flex:none;padding-bottom:2px;scrollbar-width:none")}>
+          {(vm.ord.tabs as any[]).map((tb: any, __i: number) => (
+            <Fragment key={__i}>
+              <button type="button" onClick={tb.pick} style={S(`height:40px;padding:0 14px;border-radius:999px;display:flex;align-items:center;gap:8px;white-space:nowrap;flex:none;font-size:14px;font-weight:500;background:${tb.bg};color:${tb.fg};border:1.5px solid ${tb.bd}`)}>
+                {tb.label}
+                {tb.hasCount && (
+                  <>
+                  <span style={S(`min-width:22px;height:22px;padding:0 6px;border-radius:999px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;background:${tb.cbg};color:${tb.cfg}`)}>
+                    {tb.count}
+                  </span>
+                  </>
+                )}
+              </button>
+            </Fragment>
+          ))}
+        </div>
+        <div style={S("display:flex;flex-direction:column;gap:10px;min-width:0")}>
+          {(vm.ord.rows as any[]).map((r: any, __i: number) => (
+            <Fragment key={__i}>
+              <div style={S(`border-radius:14px;background:#fff;border:1px solid ${r.cbd};box-shadow:${r.csh};overflow:clip`)}>
+                <div style={S(`display:flex;align-items:center;gap:10px;padding-inline-end:${r.qPad}`)}>
+                  <button type="button" onClick={r.pick} aria-expanded={r.open} style={S("flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:start;padding:14px 18px;flex-wrap:wrap")}>
+                    <div style={S("flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:4px")}>
+                      <div style={S("display:flex;align-items:center;gap:10px;min-width:0")}>
+                        {r.isNew && (
+                          <>
+                          <span style={S("width:8px;height:8px;border-radius:50%;background:#FF5577;flex:none")} />
+                          </>
+                        )}
+                        <span style={S("font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;flex:none")}>
+                          {r.id}
+                        </span>
+                        <span style={S("font-size:15px;font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>
+                          {r.name}
+                        </span>
+                      </div>
+                      <span style={S("font-size:14px;color:#8A5A6E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>
+                        {r.summary}
+                      </span>
+                    </div>
+                    <div style={S("display:flex;align-items:center;gap:12px;flex:none;margin-inline-start:auto")}>
+                      <span style={S(`display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:${r.sbg};color:${r.sfg}`)}>
+                        {r.stLabel}
+                      </span>
+                      <span style={S("font-size:13px;color:#8A5A6E;white-space:nowrap")}>
+                        {r.type}
+                      </span>
+                      <span style={S(`font-size:13px;font-weight:500;color:${r.whenFg};font-variant-numeric:tabular-nums;white-space:nowrap`)}>
+                        {r.when}
+                      </span>
+                      <span dir="ltr" style={S("font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:72px;text-align:end")}>
+                        {r.total}
+                      </span>
+                      <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${r.chev})`)}>
+                        <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </button>
+                  {r.hasQuick && (
+                    <>
+                    <button type="button" onClick={r.quick} style={S(`height:38px;padding:0 14px;border-radius:10px;font-size:14px;font-weight:600;white-space:nowrap;flex:none;background:${r.qBg};color:#fff`)}>
+                      {r.qLabel}
+                    </button>
+                    </>
+                  )}
+                </div>
+                {r.open && (
+                  <>
+                  <div style={S(`margin:0 18px;padding:16px 0;border-top:1px solid #F3EEF1;display:grid;grid-template-columns:${r.d.stepCols}`)}>
+                    {(r.d.steps as any[]).map((sp: any, __i: number) => (
+                      <Fragment key={__i}>
+                        <div style={S("display:flex;flex-direction:column;gap:6px;min-width:0")}>
+                          <div style={S("display:flex;align-items:center")}>
+                            <span style={S(`width:10px;height:10px;border-radius:50%;flex:none;background:${sp.dot};border:2px solid ${sp.ring}`)} />
+                            <span style={S(`flex:1;height:2px;margin:0 6px;border-radius:2px;background:${sp.line}`)} />
+                          </div>
+                          <span style={S(`font-size:13px;line-height:1.3;padding-inline-end:8px;font-weight:${sp.fw};color:${sp.fg}`)}>
+                            {sp.label}
+                            <span style={S("display:block;font-weight:400;font-size:12px;color:#8A5A6E;font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:2px")}>
+                              {sp.time}
+                            </span>
+                          </span>
+                        </div>
+                      </Fragment>
+                    ))}
+                  </div>
+                  <div style={S(`margin:0 18px;border-top:1px solid #F3EEF1;display:grid;grid-template-columns:${r.L.dcols};gap:0 32px`)}>
+                    <div style={S("padding:16px 0;display:flex;flex-direction:column;min-width:0")}>
+                      <span style={S("font-size:14px;font-weight:600;margin-bottom:6px")}>
+                        {r.t.items}
+                      </span>
+                      {(r.d.items as any[]).map((it: any, __i: number) => (
+                        <Fragment key={__i}>
+                          <div style={S("display:flex;gap:10px;padding:6px 0;align-items:flex-start")}>
+                            <span style={S("width:26px;flex:none;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums")}>
+                              {it.q}
+                            </span>
+                            <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:2px")}>
+                              <span style={S("font-size:15px")}>
+                                {it.name}
+                              </span>
+                              {it.hasNote && (
+                                <>
+                                <span style={S("font-size:13px;font-weight:500;color:#8A4B00")}>
+                                  {it.note}
+                                </span>
+                                </>
+                              )}
+                            </div>
+                            <span dir="ltr" style={S("font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap")}>
+                              {it.price}
+                            </span>
+                          </div>
+                        </Fragment>
+                      ))}
+                      <div style={S("border-top:1px dashed #ECD9E0;margin-top:8px;padding-top:10px;display:flex;flex-direction:column;gap:5px")}>
+                        {(r.d.totals as any[]).map((tt: any, __i: number) => (
+                          <Fragment key={__i}>
+                            <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:14px;color:#8A5A6E")}>
+                              <span>
+                                {tt.k}
+                              </span>
+                              <span dir="ltr" style={S("font-variant-numeric:tabular-nums")}>
+                                {tt.v}
+                              </span>
+                            </div>
+                          </Fragment>
+                        ))}
+                        <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:16px;font-weight:600")}>
+                          <span>
+                            {r.t.total}
+                          </span>
+                          <span dir="ltr" style={S("font-variant-numeric:tabular-nums")}>
+                            {r.d.total}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div style={S(`padding:16px 0;display:flex;flex-direction:column;gap:4px;min-width:0;border-top:${r.L.dsepTop}`)}>
+                      <span style={S("font-size:14px;font-weight:600;margin-bottom:6px")}>
+                        {r.t.customer}
+                      </span>
+                      <span style={S("font-size:15px;font-weight:500")}>
+                        {r.d.name}
+                      </span>
+                      <span dir="ltr" style={S("font-size:14px;color:#3D1C31;font-variant-numeric:tabular-nums;text-align:start")}>
+                        {r.d.phone}
+                      </span>
+                      {r.d.isDelivery && (
+                        <>
+                        <span style={S("font-size:14px;color:#3D1C31;line-height:1.45;margin-top:4px")}>
+                          {r.d.addr}
+                        </span>
+                        </>
+                      )}
+                      {r.d.hasNote && (
+                        <>
+                        <span style={S("font-size:14px;line-height:1.45;margin-top:8px;color:#8A4B00")}>
+                          <span style={S("font-weight:600")}>
+                            {r.t.note}:
+                          </span>
+                          {r.d.note}
+                        </span>
+                        </>
+                      )}
+                      <div style={S("display:flex;flex-wrap:wrap;gap:8px;margin-top:12px")}>
+                        <button type="button" onClick={r.d.message} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
+                          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                            <path d="M3.5 16.5 4.6 13A7 7 0 1 1 7.3 15.6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                          </svg>
+                          {r.t.msg}
+                        </button>
+                        <a href={r.d.tel} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
+                          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                            <path d="M4 3.5h3l1.5 3.5-2 1.3a9 9 0 0 0 5.2 5.2l1.3-2 3.5 1.5v3a1.5 1.5 0 0 1-1.6 1.5A14 14 0 0 1 2.5 5.1 1.5 1.5 0 0 1 4 3.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                          </svg>
+                          {r.t.call}
+                        </a>
+                        <button type="button" onClick={r.d.print} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
+                          <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                            <path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                          </svg>
+                          {r.t.print}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={S("padding:14px 18px;border-top:1px solid #F3EEF1;display:flex;flex-direction:column;gap:12px")}>
+                    {r.d.hasFlash && (
+                      <>
+                      <span role="status" style={S("display:flex;align-items:center;gap:8px;font-size:14px;color:#16704A;font-weight:500")}>
+                        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
+                          <circle cx="10" cy="10" r="9" fill="#16704A" />
+                          <path d="M6 10.2 8.6 12.8 14 7.4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        {r.d.flash}
+                      </span>
+                      </>
+                    )}
+                    {r.d.isNew && (
+                      <>
+                      <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:12px")}>
+                        <div style={S("display:flex;align-items:center;gap:10px;flex-wrap:wrap")}>
+                          <span style={S("font-size:14px;color:#3D1C31")}>
+                            {r.t.prep}
+                          </span>
+                          <div role="radiogroup" aria-label={r.t.prep} style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px")}>
+                            {(r.d.prepSeg as any[]).map((ps: any, __i: number) => (
+                              <Fragment key={__i}>
+                                <button type="button" role="radio" aria-checked={ps.on} onClick={ps.pick} style={S(`height:32px;padding:0 11px;border-radius:8px;font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:${ps.fw};background:${ps.bg};color:${ps.fg}`)}>
+                                  {ps.label}
+                                </button>
+                              </Fragment>
+                            ))}
+                          </div>
+                        </div>
+                        <div style={S("display:flex;gap:8px;margin-inline-start:auto")}>
+                          <button type="button" onClick={r.d.startReject} style={S("height:44px;padding:0 16px;border-radius:12px;color:#B42318;font-weight:500;font-size:15px")} className="dch10">
+                            {r.t.reject}
+                          </button>
+                          <button type="button" onClick={r.d.accept} style={S("height:44px;padding:0 24px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")}>
+                            {r.t.accept}
+                          </button>
+                        </div>
+                      </div>
+                      </>
+                    )}
+                    {r.d.rejecting && (
+                      <>
+                      <span style={S("font-size:15px;font-weight:600")}>
+                        {r.t.rejectQ}
+                      </span>
+                      <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
+                        {(r.d.reasons as any[]).map((rs: any, __i: number) => (
+                          <Fragment key={__i}>
+                            <button type="button" onClick={rs.pick} style={S(`height:38px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;background:${rs.bg};color:${rs.fg};border:1px solid ${rs.bd}`)}>
+                              {rs.label}
+                            </button>
+                          </Fragment>
+                        ))}
+                      </div>
+                      <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px")}>
+                        <span style={S("font-size:13px;color:#8A5A6E;flex:1 1 200px")}>
+                          {r.t.told}
+                        </span>
+                        <button type="button" onClick={r.d.cancelReject} style={S("height:44px;padding:0 16px;border-radius:12px;font-weight:500;font-size:15px")} className="dch0">
+                          {r.t.cancel}
+                        </button>
+                        <button type="button" onClick={r.d.confirmReject} disabled={!!r.d.noReason} style={S(`height:44px;padding:0 18px;border-radius:12px;background:#B42318;color:#fff;font-weight:600;font-size:15px;opacity:${r.d.rejOp}`)}>
+                          {r.t.confirmReject}
+                        </button>
+                      </div>
+                      </>
+                    )}
+                    {r.d.hasNext && (
+                      <>
+                      <div style={S("display:flex;justify-content:flex-end")}>
+                        <button type="button" onClick={r.d.next} style={S("height:44px;padding:0 24px;border-radius:12px;background:#1A0815;color:#fff;font-weight:600;font-size:15px")} className="dch11">
+                          {r.d.nextLabel}
+                        </button>
+                      </div>
+                      </>
+                    )}
+                    {r.d.closed && (
+                      <>
+                      <span style={S(`font-size:15px;font-weight:500;color:${r.d.closedFg}`)}>
+                        {r.d.closedText}
+                      </span>
+                      </>
+                    )}
+                  </div>
+                  </>
+                )}
+              </div>
+            </Fragment>
+          ))}
+          {vm.ordLoading && (
+            <>
+            {vm.loaderNode}
+            </>
+          )}
+          {vm.ord.empty && (
+            <>
+            <div style={S("padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;border:1px dashed #ECD9E0;border-radius:14px")}>
+              <span style={S("font-size:15px;font-weight:600")}>
+                {vm.ord.tabEmpty.title}
+              </span>
+              <span style={S("font-size:14px;color:#8A5A6E;max-width:360px;line-height:1.45")}>
+                {vm.ord.tabEmpty.body}
+              </span>
+            </div>
+            </>
+          )}
+        </div>
+        </>
+      )}
+      {vm.pageCustomers && (
+        <>
+        <div data-screen-label="07 Dashboard \u00b7 Customers" dir="ltr" style={S("display:flex;flex-direction:column;gap:18px")}>
+          <div style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
+            <div style={S("flex:1 1 240px;min-width:0")}>
+              <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                Customers
+              </h1>
+              <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5")}>
+                {vm.cu.sub}
+              </p>
+            </div>
+            <label style={S("flex:0 1 300px;min-width:200px;height:44px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px")}>
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
+                <circle cx="9" cy="9" r="5.5" stroke="#8A5A6E" strokeWidth="1.7" />
+                <path d="m13.2 13.2 3.3 3.3" stroke="#8A5A6E" strokeWidth="1.7" strokeLinecap="round" />
+              </svg>
+              <input value={vm.cu.q} onChange={vm.cu.onQ} placeholder="Search name or number" aria-label="Search customers" style={S("flex:1;min-width:0;border:0;background:transparent;font-size:15px;height:100%")} />
+            </label>
+          </div>
+          <div style={S(`display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px 12px 10px 16px;border-radius:14px;background:${vm.cu.barBg};border:1px solid ${vm.cu.barBd}`)}>
+            <button type="button" onClick={vm.cu.toggleAll} style={S("display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500")}>
+              <span style={S(`width:20px;height:20px;border-radius:6px;flex:none;border:1.5px solid ${vm.cu.all.ckBd};background:${vm.cu.all.ckBg};display:flex;align-items:center;justify-content:center`)}>
+                {vm.cu.all.sel && (
+                  <>
+                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
+                    <path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  </>
+                )}
+              </span>
+              {vm.cu.selLabel}
+            </button>
+            <span style={S("flex:1")} />
+            {vm.cu.hasSel && (
+              <>
+              <button type="button" onClick={vm.cu.clear} style={S("height:36px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:500;color:#3D1C31")} className="dch12">
+                Clear
+              </button>
+              </>
+            )}
+            <button type="button" onClick={vm.cu.sendOffer} disabled={!!vm.cu.noSel} style={S(`height:40px;padding:0 16px;border-radius:11px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-size:14px;font-weight:600;opacity:${vm.cu.sendOp};display:flex;align-items:center;gap:8px`)}>
+              <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
+                <path d="M3.5 10.5 10.5 3.5H16.5V9.5L9.5 16.5z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+                <circle cx="13" cy="7" r="1.2" fill="currentColor" />
+              </svg>
+              Send discount code
+            </button>
+          </div>
+          <div style={S("display:flex;flex-direction:column;gap:10px;min-width:0")}>
+            {(vm.cu.rows as any[]).map((c: any, __i: number) => (
+              <Fragment key={__i}>
+                <div style={S(`border-radius:14px;background:#fff;border:1px solid ${c.bd};overflow:clip`)}>
+                  <div style={S("display:flex;align-items:center")}>
+                    <button type="button" onClick={c.toggle} aria-label={c.ckLabel} style={S("align-self:stretch;padding:0 6px 0 16px;display:flex;align-items:center")}>
+                      <span style={S(`width:20px;height:20px;border-radius:6px;flex:none;border:1.5px solid ${c.ckBd};background:${c.ckBg};display:flex;align-items:center;justify-content:center`)}>
+                        {c.sel && (
+                          <>
+                          <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
+                            <path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          </>
+                        )}
+                      </span>
+                    </button>
+                    <button type="button" onClick={c.open} aria-expanded={c.isOpen} style={S("flex:1;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px;text-align:start;padding:14px 18px 14px 10px")}>
+                      <span style={S("display:flex;align-items:center;gap:12px;flex:1 1 240px;min-width:0")}>
+                        <span style={S(`width:40px;height:40px;border-radius:50%;flex:none;background:${c.av};color:#1A0815;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center`)}>
+                          {c.ini}
+                        </span>
+                        <span style={S("display:flex;flex-direction:column;gap:2px;min-width:0")}>
+                          <span style={S("font-size:15px;font-weight:600")}>
+                            {c.name}
+                          </span>
+                          <span style={S("display:flex;align-items:center;gap:6px;font-size:14px;color:#3D1C31;font-variant-numeric:tabular-nums")}>
+                            <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
+                              <path d="M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z" stroke="#16704A" strokeWidth="1.7" strokeLinejoin="round" />
+                            </svg>
+                            {c.phone}
+                          </span>
+                        </span>
+                      </span>
+                      <span style={S("display:flex;gap:22px;font-size:14px;font-variant-numeric:tabular-nums;flex:none")}>
+                        <span style={S("display:flex;flex-direction:column;gap:2px")}>
+                          <span style={S("color:#8A5A6E;font-size:13px")}>
+                            Orders
+                          </span>
+                          <span style={S("font-weight:600")}>
+                            {c.orders}
+                          </span>
+                        </span>
+                        <span style={S("display:flex;flex-direction:column;gap:2px")}>
+                          <span style={S("color:#8A5A6E;font-size:13px")}>
+                            Spent
+                          </span>
+                          <span style={S("font-weight:600")}>
+                            {c.spent}
+                          </span>
+                        </span>
+                        <span style={S("display:flex;flex-direction:column;gap:2px;min-width:86px")}>
+                          <span style={S("color:#8A5A6E;font-size:13px")}>
+                            Last order
+                          </span>
+                          <span style={S("font-weight:600")}>
+                            {c.last}
+                          </span>
+                        </span>
+                      </span>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={S(`flex:none;transform:rotate(${c.rot});transition:transform .15s`)}>
+                        <path d="m4 6 4 4 4-4" stroke="#8A5A6E" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  </div>
+                  {c.isOpen && (
+                    <>
+                    <div style={S("padding:4px 18px 18px;border-top:1px solid #F6EEF2;display:flex;flex-direction:column;gap:12px")}>
+                      <span style={S("font-size:14px;font-weight:600;margin-top:12px")}>
+                        Saved addresses
+                      </span>
+                      <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px")}>
+                        {(c.addrs as any[]).map((a: any, __i: number) => (
+                          <Fragment key={__i}>
+                            <div style={S("border:1px solid #F0E4E8;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;background:#FFFBFC")}>
+                              <span style={S("display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600")}>
+                                {a.label}
+                                {a.def && (
+                                  <>
+                                  <span style={S("font-size:12px;font-weight:600;padding:2px 7px;border-radius:999px;background:#FDEAF2;color:#8A2040")}>
+                                    Default
+                                  </span>
+                                  </>
+                                )}
+                              </span>
+                              <span style={S("font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty")}>
+                                {a.text}
+                              </span>
+                              <span style={S("font-size:13px;color:#8A5A6E")}>
+                                {a.uses}
+                              </span>
+                            </div>
+                          </Fragment>
+                        ))}
+                      </div>
+                    </div>
+                    </>
+                  )}
+                </div>
+              </Fragment>
+            ))}
+            {vm.cu.empty && (
+              <>
+              <p style={S("padding:32px;text-align:center;font-size:15px;color:#8A5A6E")}>
+                No customers match your search.
+              </p>
+              </>
+            )}
+          </div>
+        </div>
+        </>
+      )}
+      {vm.pageCampaigns && (
+        <>
+        <div data-screen-label="08 Dashboard \u00b7 Campaigns" dir="ltr" style={S("display:flex;flex-direction:column;gap:20px")}>
+          <div>
+            <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+              Campaigns
+            </h1>
+            <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5")}>
+              Send offers to your customers on WhatsApp.
+            </p>
+          </div>
+          <div role="tablist" style={S("display:flex;padding:3px;border-radius:12px;background:#F6EEF2;gap:2px;align-self:flex-start;max-width:100%")}>
+            {(vm.cp.modes as any[]).map((m: any, __i: number) => (
+              <Fragment key={__i}>
+                <button type="button" role="tab" aria-selected={m.on} onClick={m.pick} style={S(`height:38px;padding:0 16px;border-radius:9px;font-size:14px;white-space:nowrap;font-weight:${m.fw};background:${m.bg};color:${m.fg};box-shadow:${m.sh}`)}>
+                  {m.label}
+                </button>
+              </Fragment>
+            ))}
+          </div>
+          <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px;align-items:start")}>
+            <form onSubmit={vm.cp.send} noValidate={true} style={S("border:1px solid #F0E4E8;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0")}>
+              {vm.cp.isAll && (
+                <>
+                <div style={S("display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:#FBF3F8")}>
+                  <span style={S("width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none")}>
+                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                      <path d="M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5" stroke="#8A2040" strokeWidth="1.6" strokeLinecap="round" />
+                    </svg>
+                  </span>
+                  <span style={S("display:flex;flex-direction:column;gap:2px")}>
+                    <span style={S("font-size:15px;font-weight:600")}>
+                      All customers
+                    </span>
+                    <span style={S("font-size:13px;color:#8A5A6E")}>
+                      {vm.cp.allNote}
+                    </span>
+                  </span>
+                </div>
+                </>
+              )}
+              {vm.cp.isOffer && (
+                <>
+                <div style={S("display:flex;flex-direction:column;gap:8px")}>
+                  <div style={S("display:flex;align-items:baseline;justify-content:space-between;gap:10px")}>
+                    <span style={S("font-size:14px;font-weight:600")}>
+                      Customers
+                    </span>
+                    <button type="button" onClick={vm.cu.toggleAll} style={S("font-size:14px;font-weight:500;color:#C0284F")}>
+                      {vm.cp.allBtn}
+                    </button>
+                  </div>
+                  <div style={S("border:1.5px solid #ECD9E0;border-radius:14px;max-height:232px;overflow-y:auto;display:flex;flex-direction:column")}>
+                    {(vm.cp.pick as any[]).map((c: any, __i: number) => (
+                      <Fragment key={__i}>
+                        <button type="button" onClick={c.toggle} style={S(`display:flex;align-items:center;gap:12px;padding:10px 14px;text-align:start;border-bottom:1px solid #F6EEF2;background:${c.rowBg}`)} className="dch13">
+                          <span style={S(`width:20px;height:20px;border-radius:6px;flex:none;border:1.5px solid ${c.ckBd};background:${c.ckBg};display:flex;align-items:center;justify-content:center`)}>
+                            {c.sel && (
+                              <>
+                              <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
+                                <path d="m4.5 10.5 3.5 3.5 7.5-8" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                              </>
+                            )}
+                          </span>
+                          <span style={S("flex:1;min-width:0;font-size:14px;font-weight:500")}>
+                            {c.name}
+                          </span>
+                          <span style={S("font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                            {c.phone}
+                          </span>
+                        </button>
+                      </Fragment>
+                    ))}
+                  </div>
+                  <span style={S(`font-size:13px;color:${vm.cp.selFg}`)}>
+                    {vm.cp.selNote}
+                  </span>
+                </div>
+                </>
+              )}
+              {vm.cp.isAll && (
+                <>
+                <button type="button" onClick={vm.cp.toggleCode} role="switch" aria-checked={vm.cp.withCode} style={S("display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:start")}>
+                  <span style={S("display:flex;flex-direction:column;gap:2px")}>
+                    <span style={S("font-size:14px;font-weight:600")}>
+                      Include a discount code
+                    </span>
+                    <span style={S("font-size:13px;color:#8A5A6E")}>
+                      Everyone gets the same code
+                    </span>
+                  </span>
+                  <span style={S(`width:40px;height:24px;border-radius:12px;flex:none;background:${vm.cp.swBg};position:relative;transition:background .15s`)}>
+                    <span style={S(`position:absolute;top:3px;left:${vm.cp.swX};width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(26,8,21,.2);transition:left .15s`)} />
+                  </span>
+                </button>
+                </>
+              )}
+              {vm.cp.showCode && (
+                <>
+                <div style={S("display:flex;flex-direction:column;gap:14px;padding:14px;border-radius:14px;background:#FFF7FA;border:1px dashed #F3B8CB")}>
+                  <div style={S("display:flex;flex-direction:column;gap:8px")}>
+                    <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                      Discount
+                    </span>
+                    <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
+                      {(vm.cp.pcts as any[]).map((o: any, __i: number) => (
+                        <Fragment key={__i}>
+                          <button type="button" onClick={o.pick} style={S(`height:36px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;border:1.5px solid ${o.bd};background:${o.bg};color:${o.fg}`)}>
+                            {o.label}
+                          </button>
+                        </Fragment>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px")}>
+                    <label style={S("display:flex;flex-direction:column;gap:8px")}>
+                      <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                        Code
+                      </span>
+                      <input value={vm.cp.code} onChange={vm.cp.onCode} style={S("height:44px;padding:0 12px;border-radius:11px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-weight:600;letter-spacing:.04em")} className="dch14" />
+                    </label>
+                    <div style={S("display:flex;flex-direction:column;gap:8px")}>
+                      <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                        Valid for
+                      </span>
+                      <div style={S("display:flex;gap:6px")}>
+                        {(vm.cp.days as any[]).map((o: any, __i: number) => (
+                          <Fragment key={__i}>
+                            <button type="button" onClick={o.pick} style={S(`flex:1;height:44px;border-radius:11px;font-size:14px;font-weight:500;border:1.5px solid ${o.bd};background:${o.bg};color:${o.fg}`)}>
+                              {o.label}
+                            </button>
+                          </Fragment>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                </>
+              )}
+              <div style={S("display:flex;flex-direction:column;gap:8px")}>
+                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                  Offer image
+                </span>
+                {vm.cp.noImg && (
+                  <>
+                  <label style={S("height:132px;border-radius:14px;border:1.5px dashed #E3CBD4;background:#FFFBFC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;text-align:center;padding:0 16px")} className="dch15">
+                    <input type="file" accept="image/png,image/jpeg,image/webp" onChange={vm.cp.onImg} style={S("position:absolute;width:1px;height:1px;opacity:0;pointer-events:none")} />
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <rect x="3.5" y="4.5" width="17" height="15" rx="3" stroke="#C0284F" strokeWidth="1.6" />
+                      <circle cx="9" cy="10" r="1.8" stroke="#C0284F" strokeWidth="1.6" />
+                      <path d="m4 17 5-4.5 4 3.5 2.5-2 4.5 4" stroke="#C0284F" strokeWidth="1.6" strokeLinejoin="round" />
+                    </svg>
+                    <span style={S("font-size:14px;font-weight:600")}>
+                      Upload an image
+                    </span>
+                    <span style={S("font-size:13px;color:#8A5A6E")}>
+                      JPG or PNG, up to 5 MB. Square images work best.
+                    </span>
+                  </label>
+                  </>
+                )}
+                {vm.cp.hasImg && (
+                  <>
+                  <div style={S("display:flex;align-items:center;gap:12px;padding:10px;border-radius:14px;border:1.5px solid #ECD9E0")}>
+                    <div style={S(`width:64px;height:64px;border-radius:10px;flex:none;background-color:#FBF3F8;background-image:${vm.cp.imgBg};background-size:cover;background-position:center`)} />
+                    <span style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:2px")}>
+                      <span style={S("font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>
+                        {vm.cp.imgName}
+                      </span>
+                      <span style={S("font-size:13px;color:#8A5A6E")}>
+                        Sent above your message
+                      </span>
+                    </span>
+                    <label style={S("height:36px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:500;display:flex;align-items:center;cursor:pointer;flex:none")} className="dch0">
+                      <input type="file" accept="image/png,image/jpeg,image/webp" onChange={vm.cp.onImg} style={S("position:absolute;width:1px;height:1px;opacity:0;pointer-events:none")} />
+                      Replace
+                    </label>
+                    <button type="button" onClick={vm.cp.clearImg} aria-label="Remove image" style={S("width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                        <path d="m4 4 8 8M12 4l-8 8" stroke="#3D1C31" strokeWidth="1.7" strokeLinecap="round" />
+                      </svg>
+                    </button>
+                  </div>
+                  </>
+                )}
+              </div>
+              <label style={S("display:flex;flex-direction:column;gap:8px")}>
+                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                  Message
+                </span>
+                <textarea value={vm.cp.msg} onChange={vm.cp.onMsg} rows={4} style={S("padding:12px 14px;border-radius:12px;border:1.5px solid #ECD9E0;font-size:15px;line-height:1.5;resize:vertical;font-family:inherit")} className="dch14" />
+                <span style={S("font-size:13px;color:#8A5A6E")}>
+                  {vm.cp.tokens}
+                </span>
+              </label>
+              {vm.cp.err && (
+                <>
+                <div role="alert" style={S("font-size:14px;color:#B4233B")}>
+                  {vm.cp.err}
+                </div>
+                </>
+              )}
+              <button type="submit" disabled={!!vm.cp.cant} style={S(`height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;opacity:${vm.cp.sendOp};display:flex;align-items:center;justify-content:center;gap:10px`)}>
+                {vm.cp.sending && (
+                  <>
+                  <span style={S("width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:lo-spin .8s linear infinite")} />
+                  </>
+                )}
+                {vm.cp.sendLabel}
+              </button>
+            </form>
+            <div style={S("display:flex;flex-direction:column;gap:10px;min-width:0")}>
+              <span style={S("font-size:14px;font-weight:600")}>
+                Preview
+              </span>
+              <div style={S("border-radius:20px;background:#EFE7DD;padding:18px 16px 22px;display:flex;flex-direction:column;gap:10px")}>
+                <span style={S("align-self:center;font-size:12px;padding:3px 10px;border-radius:8px;background:rgba(255,255,255,.75);color:#3D1C31")}>
+                  {"To "}{vm.cp.previewTo}
+                </span>
+                <div style={S("align-self:flex-start;max-width:88%;width:300px;background:#fff;border-radius:4px 14px 14px 14px;padding:4px 4px 8px;box-shadow:0 1px 1px rgba(26,8,21,.08);display:flex;flex-direction:column;gap:8px")}>
+                  {vm.cp.hasImg && (
+                    <>
+                    <div role="img" aria-label="Offer image" style={S(`width:100%;aspect-ratio:1/1;border-radius:11px 11px 4px 4px;background-color:#F6EEF2;background-image:${vm.cp.imgBg};background-size:cover;background-position:center`)} />
+                    </>
+                  )}
+                  {vm.cp.noImg && (
+                    <>
+                    <span style={S("display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:16/9;border-radius:11px 11px 4px 4px;background:#F6EEF2;font-size:13px;color:#8A5A6E")}>
+                      Your offer image
+                    </span>
+                    </>
+                  )}
+                  <div style={S("padding:0 8px;display:flex;flex-direction:column;gap:8px")}>
+                    <span style={S("font-size:13px;font-weight:600;color:#C0284F")}>
+                      Burger House
+                    </span>
+                    <span style={S("font-size:15px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere")}>
+                      {vm.cp.preview}
+                    </span>
+                    {vm.cp.showCode && (
+                      <>
+                      <span style={S("display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:10px;background:#FFF1F4;border:1px dashed #F3B8CB")}>
+                        <span style={S("font-size:15px;font-weight:600;letter-spacing:.05em")}>
+                          {vm.cp.code}
+                        </span>
+                        <span style={S("font-size:13px;color:#8A2040")}>
+                          {vm.cp.pctLabel}{" off \u00b7 "}{vm.cp.until}
+                        </span>
+                      </span>
+                      </>
+                    )}
+                    <span style={S("align-self:flex-end;font-size:11px;color:#8A5A6E")}>
+                      12:04
+                    </span>
+                  </div>
+                </div>
+                <div style={S("align-self:flex-start;max-width:88%;display:flex;flex-direction:column;gap:6px;width:300px")}>
+                  <span style={S("height:38px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:#027EB5")}>
+                    Order now
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <section style={S("display:flex;flex-direction:column;gap:10px")}>
+            <h2 style={S("font-size:18px;font-weight:600;letter-spacing:-0.015em")}>
+              Sent campaigns
+            </h2>
+            {(vm.cp.history as any[]).map((hx: any, __i: number) => (
+              <Fragment key={__i}>
+                <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding:14px 18px;border:1px solid #F0E4E8;border-radius:14px")}>
+                  <span style={S("flex:1 1 240px;min-width:0;display:flex;flex-direction:column;gap:3px")}>
+                    <span style={S("font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>
+                      {hx.title}
+                    </span>
+                    <span style={S("font-size:13px;color:#8A5A6E")}>
+                      {hx.meta}
+                    </span>
+                  </span>
+                  <span style={S("display:flex;gap:22px;font-size:14px;font-variant-numeric:tabular-nums")}>
+                    <span style={S("display:flex;flex-direction:column;gap:2px")}>
+                      <span style={S("color:#8A5A6E;font-size:13px")}>
+                        Sent
+                      </span>
+                      <span style={S("font-weight:600")}>
+                        {hx.sent}
+                      </span>
+                    </span>
+                    <span style={S("display:flex;flex-direction:column;gap:2px")}>
+                      <span style={S("color:#8A5A6E;font-size:13px")}>
+                        Read
+                      </span>
+                      <span style={S("font-weight:600")}>
+                        {hx.read}
+                      </span>
+                    </span>
+                    <span style={S("display:flex;flex-direction:column;gap:2px")}>
+                      <span style={S("color:#8A5A6E;font-size:13px")}>
+                        Code used
+                      </span>
+                      <span style={S("font-weight:600")}>
+                        {hx.used}
+                      </span>
+                    </span>
+                  </span>
+                </div>
+              </Fragment>
+            ))}
+          </section>
+          {vm.cp.toast && (
+            <>
+            <div role="status" style={S("position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:50;background:#1A0815;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;box-shadow:0 12px 30px -10px rgba(26,8,21,.5)")}>
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                <path d="m5 10.5 3.2 3L15 7" stroke="#7BE0A8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {vm.cp.toast}
+            </div>
+            </>
+          )}
+        </div>
+        </>
+      )}
+      {vm.pagePlans && (
+        <>
+        <div dir="ltr" style={S("position:fixed;inset:0;z-index:55;background:#fff;display:flex;flex-direction:column")}>
+          <header style={S("height:64px;flex:none;padding:0 16px 0 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F0E4E8")}>
+            <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style={S("display:block;flex:none")}>
+              <defs>
+                <linearGradient id="gPD3" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stopColor="#FF5577" />
+                  <stop offset="1" stopColor="#C93DFF" />
+                </linearGradient>
+              </defs>
+              <path d="M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z" stroke="url(#gPD3)" strokeWidth="8" strokeLinejoin="round" />
+              <path d="M28 30V66H40" stroke="#1A0815" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="64" cy="55" r="11" stroke="url(#gPD3)" strokeWidth="10" />
+            </svg>
+            <span style={S("font-size:16px;font-weight:600;flex:1;min-width:0")}>
+              Subscribe to Lumia Order
+            </span>
+            <span style={S("font-size:14px;color:#8A5A6E;flex:none")}>
+              {vm.sub.stepLabel}
+            </span>
+            <button type="button" onClick={vm.subClosePlans} aria-label="Close" style={S("width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="m4 4 8 8M12 4l-8 8" stroke="#1A0815" strokeWidth="1.7" strokeLinecap="round" />
+              </svg>
+            </button>
+          </header>
+          <div style={S("flex:1;min-height:0;overflow-y:auto")}>
+            <div style={S(`max-width:1100px;margin:0 auto;padding:${vm.sub.pad};display:flex;flex-direction:column;gap:22px;align-items:center`)}>
+              {vm.sub.stepPlans && (
+                <>
+                <div data-screen-label="11 Choose a plan" style={S("display:flex;flex-direction:column;gap:22px;width:100%")}>
+                  <div style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
+                    <div style={S("flex:1 1 280px;min-width:0")}>
+                      <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                        Choose your plan
+                      </h1>
+                      <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5;text-wrap:pretty")}>
+                        {vm.sub.trialLine}
+                      </p>
+                    </div>
+                    <div role="radiogroup" aria-label="Billing" style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px")}>
+                      {(vm.sub.bills as any[]).map((b: any, __i: number) => (
+                        <Fragment key={__i}>
+                          <button type="button" role="radio" aria-checked={b.on} onClick={b.pick} style={S(`height:34px;padding:0 14px;border-radius:8px;font-size:14px;white-space:nowrap;font-weight:${b.fw};background:${b.bg};color:${b.fg};box-shadow:${b.sh}`)}>
+                            {b.label}
+                          </button>
+                        </Fragment>
+                      ))}
+                      <span style={S("align-self:center;font-size:12px;font-weight:600;padding:3px 8px;margin:0 4px;border-radius:999px;background:#E4F4EC;color:#16704A;white-space:nowrap")}>
+                        Yearly saves 2 months
+                      </span>
+                    </div>
+                  </div>
+                  <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px;align-items:stretch")}>
+                    {(vm.sub.plans as any[]).map((p: any, __i: number) => (
+                      <Fragment key={__i}>
+                        <button type="button" onClick={p.choose} aria-label={p.cta} style={S(`text-align:start;border:2px solid ${p.bd};background:${p.bg};border-radius:20px;padding:22px;display:flex;flex-direction:column;transition:border-color .15s,box-shadow .15s,transform .15s`)} className="dch16">
+                          <span style={S("font-size:19px;font-weight:600")}>
+                            {p.name}
+                          </span>
+                          <span style={S("font-size:14px;line-height:1.45;color:#8A5A6E;margin-top:6px")}>
+                            {p.desc}
+                          </span>
+                          <div style={S("display:flex;flex-direction:column;margin-top:16px;font-variant-numeric:tabular-nums")}>
+                            <span style={S("font-size:14px;color:#8A5A6E;text-decoration:line-through;min-height:20px")}>
+                              {p.strike}
+                            </span>
+                            <span style={S("display:flex;align-items:baseline;gap:6px")}>
+                              <span style={S("font-size:30px;font-weight:600;letter-spacing:-0.04em")}>
+                                {p.price}
+                              </span>
+                              <span style={S("font-size:14px;color:#8A5A6E")}>
+                                {p.per}
+                              </span>
+                            </span>
+                            <span style={S("font-size:13px;color:#3D1C31;margin-top:4px")}>
+                              {p.eq}
+                            </span>
+                            <span style={S("font-size:13px;color:#8A2040;margin-top:8px;padding:6px 10px;border-radius:8px;background:#FDEAF2;align-self:flex-start")}>
+                              {"+ Terminal "}{p.term}{" one-time"}
+                            </span>
+                          </div>
+                          <span style={S("height:1px;background:#F0E4E8;margin:18px 0 14px;display:block")} />
+                          {p.hasInc && (
+                            <>
+                            <span style={S("font-size:13px;font-weight:600;color:#3D1C31;margin-bottom:10px")}>
+                              {p.inc}
+                            </span>
+                            </>
+                          )}
+                          <div style={S("display:flex;flex-direction:column;gap:7px;font-size:14px")}>
+                            {(p.feats as any[]).map((f: any, __i: number) => (
+                              <Fragment key={__i}>
+                                <span style={S("display:flex;gap:8px")}>
+                                  <span style={S("color:#FF5577;flex:none")}>
+                                    ✓
+                                  </span>
+                                  <span>
+                                    {f}
+                                  </span>
+                                </span>
+                              </Fragment>
+                            ))}
+                          </div>
+                        </button>
+                      </Fragment>
+                    ))}
+                  </div>
+                </div>
+                </>
+              )}
+              {vm.sub.stepPay && (
+                <>
+                <div data-screen-label="12 Payment" style={S("display:flex;flex-direction:column;gap:20px;max-width:900px;width:100%")}>
+                  <button type="button" onClick={vm.subBackPlans} style={S("align-self:flex-start;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px 0 8px;border-radius:10px;font-size:14px;font-weight:500;color:#3D1C31")} className="dch6">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    Plans
+                  </button>
+                  <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+                    Payment
+                  </h1>
+                  <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:20px;align-items:start")}>
+                    {vm.sub.embed && (
+                      <>
+                      <div style={S("display:flex;flex-direction:column;gap:12px;min-width:0")}>
+                        <button type="button" onClick={vm.subEmbedBack} style={S("align-self:flex-start;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px 0 8px;border-radius:10px;font-size:14px;font-weight:500;color:#3D1C31")} className="dch6">
+                          ← Edit details
+                        </button>
+                        <div ref={vm.stripeRef} style={S("min-height:420px;border:1.5px solid #ECD9E0;border-radius:16px;padding:12px;background:#fff")} />
+                      </div>
+                      </>
+                    )}
+                    {vm.sub.notEmbed && (
+                      <>
+                      <form onSubmit={vm.subPay} noValidate={true} style={S("display:flex;flex-direction:column;gap:16px")}>
+                        <section style={S("border:2px solid #FF5577;background:#FFF7FA;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px")}>
+                          <div style={S("display:flex;gap:14px;align-items:flex-start")}>
+                            <div style={S("flex:none;width:64px;height:112px;position:relative;overflow:hidden;border-radius:10px;background:#fff")}>
+                              <div style={S("width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C0284F")}>
+                                <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
+                                  <path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </div>
+                            </div>
+                            <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:4px")}>
+                              <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px")}>
+                                <span style={S("font-size:16px;font-weight:600")}>
+                                  Lumia Order Terminal
+                                </span>
+                                <span style={S("font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#1A0815;color:#fff")}>
+                                  Required
+                                </span>
+                              </div>
+                              <span style={S("font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty")}>
+                                The Lumia Order terminal for your restaurant. Orders are handled from your dashboard. Every subscription includes at least one terminal.
+                              </span>
+                              <span style={S("display:flex;align-items:baseline;gap:8px;margin-top:4px;font-variant-numeric:tabular-nums")}>
+                                <span style={S("font-size:14px;color:#8A5A6E;text-decoration:line-through")}>
+                                  AED 699
+                                </span>
+                                <span style={S("font-size:18px;font-weight:600")}>
+                                  {vm.sub.termPrice}
+                                </span>
+                                <span style={S("font-size:13px;color:#8A5A6E")}>
+                                  one-time
+                                </span>
+                              </span>
+                            </div>
+                          </div>
+                          <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding-top:12px;border-top:1px solid #F3D6E2")}>
+                            <span style={S("font-size:14px;color:#3D1C31")}>
+                              {vm.sub.termQtyNote}
+                            </span>
+                            <div style={S("display:flex;align-items:center;border:1.5px solid #ECD9E0;border-radius:10px;background:#fff")}>
+                              <button type="button" onClick={vm.termDec} disabled={!!vm.sub.termMin} aria-label="Fewer terminals" style={S(`width:36px;height:36px;font-size:18px;opacity:${vm.sub.decOp}`)}>
+                                −
+                              </button>
+                              <span style={S("min-width:28px;text-align:center;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums")}>
+                                {vm.sub.termQty}
+                              </span>
+                              <button type="button" onClick={vm.termInc} aria-label="More terminals" style={S("width:36px;height:36px;font-size:18px")}>
+                                +
+                              </button>
+                            </div>
+                          </div>
+                          <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                            <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                              Delivery address for the terminal
+                            </span>
+                            <input autoComplete="street-address" placeholder="Building, street, area, emirate" value={vm.sub.addr} onChange={vm.onAddr} style={S(`height:48px;padding:0 14px;border-radius:12px;border:1.5px solid ${vm.sub.addrBd};background:#fff;font-size:15px`)} className="dch14" />
+                          </label>
+                          {vm.sub.addrErr && (
+                            <>
+                            <span style={S("font-size:13px;color:#B42318;margin-top:-6px")}>
+                              Add a delivery address for your terminal to continue.
+                            </span>
+                            </>
+                          )}
+                          <span style={S("font-size:13px;color:#8A5A6E;margin-top:-4px")}>
+                            Estimated delivery: 10–15 business days.
+                          </span>
+                        </section>
+                        <button type="submit" disabled={!!vm.sub.invalid} style={S(`height:54px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;opacity:${vm.sub.payOp};display:flex;align-items:center;justify-content:center;gap:10px;font-variant-numeric:tabular-nums`)}>
+                          {vm.sub.paying && (
+                            <>
+                            <span style={S("width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:lo-spin .8s linear infinite")} />
+                            </>
+                          )}
+                          {vm.sub.payLabel}
+                        </button>
+                        <p style={S("display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:1.45;color:#8A5A6E")}>
+                          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style={S("flex:none;margin-top:2px")}>
+                            <rect x="4.5" y="9" width="11" height="8" rx="2" stroke="currentColor" strokeWidth="1.6" />
+                            <path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" strokeWidth="1.6" />
+                          </svg>
+                          You pay on Stripe’s secure page, so Lumia never sees your card. Cancel anytime from Manage billing.
+                        </p>
+                        {vm.sub.err && (
+                          <>
+                          <div role="alert" style={S("font-size:14px;color:#B4233B")}>
+                            {vm.sub.err}
+                          </div>
+                          </>
+                        )}
+                      </form>
+                      </>
+                    )}
+                    <aside style={S("background:#FBF3F8;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:14px")}>
+                      <div style={S("display:flex;align-items:flex-start;justify-content:space-between;gap:12px")}>
+                        <div style={S("display:flex;flex-direction:column;gap:3px")}>
+                          <span style={S("font-size:19px;font-weight:600;letter-spacing:-0.02em")}>
+                            {vm.sub.selName}
+                          </span>
+                          <span style={S("font-size:14px;color:#3D1C31")}>
+                            {vm.sub.selBilling}
+                          </span>
+                        </div>
+                        <button type="button" onClick={vm.subBackPlans} style={S("font-size:14px;font-weight:500;color:#1A0815;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px")} className="dch2">
+                          Change
+                        </button>
+                      </div>
+                      <div style={S("display:flex;flex-direction:column;gap:10px;font-size:15px;font-variant-numeric:tabular-nums;padding-top:14px;border-top:1px solid #ECD9E0")}>
+                        <div style={S("display:flex;justify-content:space-between;gap:12px;color:#3D1C31")}>
+                          <span>
+                            {vm.sub.selName}
+                          </span>
+                          <span>
+                            {vm.sub.planAmt}
+                          </span>
+                        </div>
+                        <div style={S("display:flex;justify-content:space-between;gap:12px;color:#3D1C31")}>
+                          <span>
+                            {vm.sub.termLine}
+                          </span>
+                          <span>
+                            {vm.sub.termAmt}
+                          </span>
+                        </div>
+                        <div style={S("display:flex;justify-content:space-between;gap:12px;color:#3D1C31")}>
+                          <span>
+                            VAT (5%)
+                          </span>
+                          <span>
+                            {vm.sub.vat}
+                          </span>
+                        </div>
+                        <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:18px;font-weight:600;padding-top:10px;border-top:1px solid #ECD9E0")}>
+                          <span>
+                            Total today
+                          </span>
+                          <span>
+                            {vm.sub.total}
+                          </span>
+                        </div>
+                      </div>
+                      <p style={S("font-size:13px;color:#8A5A6E")}>
+                        {"Renews on "}{vm.sub.renew}.
+                      </p>
+                    </aside>
+                  </div>
+                </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+        </>
+      )}
+      {vm.pageWA && (
+        <>
+        <div data-screen-label="07 WhatsApp" dir="ltr" style={S("display:flex;flex-direction:column;gap:18px")}>
+          <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
+            WhatsApp
+          </h1>
+          <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start")}>
+            <div style={S("background:#FAF6FA;border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:16px")}>
+              <span style={S("font-size:14px;font-weight:600;color:#8A5A6E")}>
+                Connection
+              </span>
+              <div style={S("display:flex;align-items:center;gap:14px")}>
+                <span style={S("width:48px;height:48px;border-radius:14px;background:#fff;border:1px solid #ECD9E0;display:flex;align-items:center;justify-content:center;flex:none")}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style={S("display:block")}>
+                    <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
+                    <path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff" />
+                  </svg>
+                </span>
+                <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:2px")}>
+                  <span style={S("font-size:16px;font-weight:600")}>
+                    WhatsApp Business
+                  </span>
+                  <span style={S("font-size:15px;color:#3D1C31;font-variant-numeric:tabular-nums")}>
+                    {vm.waPagePhone}
+                  </span>
+                </div>
+              </div>
+              <div style={S("display:flex;flex-direction:column;border-top:1px solid #EFE3E9")}>
+                <div style={S("display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #EFE3E9")}>
+                  <span style={S("font-size:14px;color:#8A5A6E")}>
+                    Status
+                  </span>
+                  <span style={S(`display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:${vm.waStat.fg}`)}>
+                    <span style={S(`width:9px;height:9px;border-radius:50%;background:${vm.waStat.dot};border:1.5px solid ${vm.waStat.ring}`)} />
+                    {vm.waStat.label}
+                  </span>
+                </div>
+                {vm.waIsConnected && (
+                  <>
+                  <div style={S("display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EFE3E9;font-size:14px")}>
+                    <span style={S("color:#8A5A6E")}>
+                      Display name
+                    </span>
+                    <span style={S("text-align:end")}>
+                      {vm.waName}
+                    </span>
+                  </div>
+                  <div style={S("display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EFE3E9;font-size:14px")}>
+                    <span style={S("color:#8A5A6E")}>
+                      Business account
+                    </span>
+                    <span>
+                      Active
+                    </span>
+                  </div>
+                  </>
+                )}
+                <div style={S("display:flex;justify-content:space-between;gap:12px;padding:12px 0;font-size:14px")}>
+                  <span style={S("color:#8A5A6E")}>
+                    Your Lumia login
+                  </span>
+                  <span style={S("font-variant-numeric:tabular-nums")}>
+                    {vm.masked}
+                  </span>
+                </div>
+              </div>
+              {vm.waIsConnected && (
+                <>
+                <button type="button" onClick={vm.askDisconnect} style={S("align-self:flex-start;height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch4">
+                  Disconnect
+                </button>
+                </>
+              )}
+              {vm.waIsDisconnected && (
+                <>
+                <p style={S("font-size:14px;line-height:1.5;color:#3D1C31;text-wrap:pretty")}>
+                  Your menu, orders and customer data are still in Lumia.
+                </p>
+                <button type="button" onClick={vm.reconnect} style={S("align-self:flex-start;height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
+                  Reconnect WhatsApp
+                </button>
+                </>
+              )}
+              {vm.waIsNone && (
+                <>
+                <button type="button" onClick={vm.openWA} style={S("align-self:flex-start;height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
+                  Connect WhatsApp
+                </button>
+                </>
+              )}
+            </div>
+            {vm.waShowToday && (
+              <>
+              <div style={S("background:#FAF6FA;border-radius:20px;padding:20px 22px 8px;display:flex;flex-direction:column")}>
+                <span style={S("font-size:14px;font-weight:600;color:#8A5A6E;padding-bottom:6px")}>
+                  Today
+                </span>
+                {(vm.waToday as any[]).map((t: any, __i: number) => (
+                  <Fragment key={__i}>
+                    <div style={S(`display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 0;border-top:${t.bt}`)}>
+                      <span style={S("font-size:15px;color:#3D1C31")}>
+                        {t.label}
+                      </span>
+                      <span style={S("font-size:26px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums")}>
+                        {t.v}
+                      </span>
+                    </div>
+                  </Fragment>
+                ))}
+              </div>
+              </>
+            )}
+          </div>
+        </div>
+        </>
+      )}
+      {vm.confirmDisc && (
+        <>
+        <div dir="ltr" style={S("position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px")}>
+          <div onClick={vm.cancelDisconnect} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
+          <div role="alertdialog" aria-modal="true" data-screen-label="07b Disconnect WhatsApp" style={S("position:relative;width:100%;max-width:420px;background:#fff;border-radius:20px;padding:26px 24px 22px;box-shadow:0 30px 80px -30px rgba(26,8,21,.45);display:flex;flex-direction:column")}>
+            <h2 style={S("font-size:22px;font-weight:600;letter-spacing:-0.03em")}>
+              Disconnect WhatsApp?
+            </h2>
+            <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
+              Lumia will stop receiving and replying to customer messages from this number. Your menu, orders and customer data will remain in Lumia.
+            </p>
+            <div style={S("display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:24px")}>
+              <button type="button" onClick={vm.cancelDisconnect} style={S("flex:1 1 140px;height:48px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
+                Cancel
+              </button>
+              <button type="button" onClick={vm.doDisconnect} style={S("flex:1 1 180px;height:48px;padding:0 18px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px")} className="dch17">
+                Disconnect WhatsApp
+              </button>
+            </div>
+          </div>
+        </div>
+        </>
+      )}
+      {vm.dlg.open && (
+        <>
+        <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
+          <div onClick={vm.dlg.cancel} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
+          <form role="dialog" aria-modal="true" aria-label={vm.dlg.title} data-screen-label="09 Edit dialog" onSubmit={vm.dlg.submit} noValidate={true} style={S("position:relative;width:100%;max-width:420px;background:#fff;border-radius:20px;padding:26px 24px 22px;box-shadow:0 30px 80px -30px rgba(26,8,21,.45);display:flex;flex-direction:column")}>
+            <h2 style={S("font-size:22px;font-weight:600;letter-spacing:-0.03em")}>
+              {vm.dlg.title}
+            </h2>
+            <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;text-wrap:pretty")}>
+              {vm.dlg.hint}
+            </p>
+            {(vm.dlg.fields as any[]).map((f: any, __i: number) => (
+              <Fragment key={__i}>
+                <label style={S("display:block;font-size:14px;font-weight:500;color:#3D1C31;margin-top:16px")}>
+                  {f.label}
+                  <input type="text" value={f.value} onChange={f.onChange} placeholder={f.placeholder} dir={f.dir} inputMode={f.mode} autoFocus={f.focus} style={S("display:block;margin-top:8px;height:48px;width:100%;border-radius:12px;border:1.5px solid #E3CBD4;padding:0 14px;font-size:16px;background:#fff")} />
+                </label>
+              </Fragment>
+            ))}
+          </form>
+        </div>
+        </>
+      )}
+      {vm.dlg.error && (
+        <>
+        <div role="alert" style={S("margin-top:12px;font-size:14px;color:#B4233B")}>
+          {vm.dlg.error}
+        </div>
+        </>
+      )}
+      <div style={S("display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:24px")}>
+        <button type="button" onClick={vm.dlg.cancel} style={S("flex:1 1 120px;height:48px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
+          Cancel
+        </button>
+        <button type="submit" disabled={!!vm.dlg.busy} style={S(`flex:1 1 160px;height:48px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;opacity:${vm.dlg.op}`)}>
+          {vm.dlg.saveLabel}
+        </button>
+      </div>
+      {vm.waOpen && (
+        <>
+        <div dir="ltr" style={S("position:fixed;inset:0;z-index:40;display:flex;justify-content:flex-end")}>
+          <div onClick={vm.waClose} style={S("position:absolute;inset:0;background:rgba(26,8,21,.32)")} />
+          <aside role="dialog" aria-modal="true" aria-label="Connect WhatsApp" data-screen-label={vm.waLabel} style={S(`position:relative;width:${vm.L.drawerW};max-width:100%;height:100%;background:#fff;display:flex;flex-direction:column;box-shadow:-24px 0 60px -30px rgba(26,8,21,.35)`)}>
+            <div style={S("height:64px;flex:none;padding:0 12px 0 24px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F0E4E8")}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={S("display:block;flex:none")}>
+                <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
+                <path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff" />
+              </svg>
+              <span style={S("flex:1;font-size:15px;font-weight:600")}>
+                WhatsApp
+              </span>
+              <span style={S("font-size:13px;font-weight:500;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                {vm.waSetupLabel}
+              </span>
+              <button type="button" onClick={vm.waClose} aria-label="Close" style={S("width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M4 4l8 8M12 4l-8 8" stroke="#1A0815" strokeWidth="1.7" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            {vm.wa.intro && (
+              <>
+              <div style={S("flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)")}>
+                <span style={S("width:56px;height:56px;border-radius:16px;background:#EAF8EF;display:flex;align-items:center;justify-content:center")}>
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" style={S("display:block")}>
+                    <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
+                    <path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff" />
+                  </svg>
+                </span>
+                <h2 style={S("font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px;text-wrap:balance")}>
+                  Connect your WhatsApp Business
+                </h2>
+                <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
+                  Connect the WhatsApp number your customers use to place orders. Lumia will receive messages and help turn them into orders automatically.
+                </p>
+                <button type="button" onClick={vm.startConnect} style={S("margin-top:24px;height:54px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
+                  Connect WhatsApp
+                </button>
+                <span style={S("font-size:14px;font-weight:600;color:#8A5A6E;margin-top:26px")}>
+                  What happens next
+                </span>
+                <ol style={S("list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:12px")}>
+                  {(vm.waSteps as any[]).map((st: any, __i: number) => (
+                    <Fragment key={__i}>
+                      <li style={S("display:flex;align-items:center;gap:12px;font-size:15px")}>
+                        <span style={S("width:24px;height:24px;border-radius:50%;border:1.5px solid #ECD9E0;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#8A2040;font-variant-numeric:tabular-nums")}>
+                          {st.n}
+                        </span>
+                        {st.label}
+                      </li>
+                    </Fragment>
+                  ))}
+                </ol>
+                <div style={S("margin-top:26px;border-radius:16px;background:#FAF6FA;padding:16px 18px;display:flex;flex-direction:column;gap:12px")}>
+                  <div style={S("display:flex;gap:10px;align-items:flex-start;font-size:14px;font-weight:600;line-height:1.4")}>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={S("flex:none;margin-top:2px")}>
+                      <circle cx="8" cy="8" r="7" stroke="#8A5A6E" strokeWidth="1.4" />
+                      <path d="M8 7.2v4" stroke="#8A5A6E" strokeWidth="1.5" strokeLinecap="round" />
+                      <circle cx="8" cy="4.9" r=".85" fill="#8A5A6E" />
+                    </svg>
+                    <span>
+                      Your login number and business WhatsApp can be different.
+                    </span>
+                  </div>
+                  <div style={S("display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px")}>
+                    <div style={S("background:#fff;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px")}>
+                      <span style={S("font-size:12px;color:#8A5A6E")}>
+                        Your Lumia login
+                      </span>
+                      <span style={S("font-size:14px;font-weight:500;font-variant-numeric:tabular-nums")}>
+                        {vm.masked}
+                      </span>
+                    </div>
+                    <div style={S("background:#fff;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px")}>
+                      <span style={S("font-size:12px;color:#8A5A6E")}>
+                        Restaurant WhatsApp
+                      </span>
+                      <span style={S("font-size:14px;color:#3D1C31")}>
+                        Not connected yet
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <button type="button" onClick={vm.waClose} style={S("margin-top:20px;height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
+                  Do this later
+                </button>
+              </div>
+              </>
+            )}
+            {vm.wa.connecting && (
+              <>
+              <div style={S("flex:1;overflow:auto;padding:28px 24px;display:grid;align-content:safe center;justify-items:center;text-align:center")}>
+                <div style={S("position:relative;width:104px;height:104px;display:flex;align-items:center;justify-content:center")}>
+                  {vm.waRing}
+                  <span style={S("width:64px;height:64px;border-radius:20px;background:#fff;box-shadow:0 14px 30px -16px rgba(138,32,64,.45);display:flex;align-items:center;justify-content:center")}>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style={S("display:block")}>
+                      <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
+                      <path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff" />
+                    </svg>
+                  </span>
+                </div>
+                <h2 style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;margin-top:26px")}>
+                  Connecting to WhatsApp...
+                </h2>
+                <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;max-width:300px;text-wrap:pretty")}>
+                  Keep this window open while we finish the setup.
+                </p>
+                <button type="button" onClick={vm.cancelConnect} style={S("margin-top:28px;height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
+                  Cancel
+                </button>
+              </div>
+              </>
+            )}
+            {vm.wa.success && (
+              <>
+              <div style={S("flex:1;min-height:0;display:flex;flex-direction:column")}>
+                <div style={S("flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)")}>
+                  <span style={S("width:56px;height:56px;border-radius:50%;background:#E4F4EC;display:flex;align-items:center;justify-content:center")}>
+                    <svg width="28" height="28" viewBox="0 0 20 20" fill="none">
+                      <path d="M5 10.4 8.4 13.8 15 7" stroke="#16704A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                  {vm.waCatalog && (
+                    <>
+                    <h2 style={S("font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px")}>
+                      WhatsApp connected 🎉
+                    </h2>
+                    </>
+                  )}
+                  {vm.waNoCatalog && (
+                    <>
+                    <h2 style={S("font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px")}>
+                      WhatsApp connected successfully
+                    </h2>
+                    </>
+                  )}
+                  <div style={S("margin-top:22px;border:1px solid #ECD9E0;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px")}>
+                    <div style={S("display:flex;align-items:center;gap:14px")}>
+                      <span style={S("position:relative;width:52px;height:52px;border-radius:50%;background:#1A0815;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none")}>
+                        {vm.waInitials}
+                        <span style={S("position:absolute;right:-2px;bottom:-2px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center")}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={S("display:block")}>
+                            <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
+                            <path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff" />
+                          </svg>
+                        </span>
+                      </span>
+                      <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:2px")}>
+                        <span style={S("font-size:12px;color:#8A5A6E")}>
+                          WhatsApp Business
+                        </span>
+                        <span style={S("font-size:17px;font-weight:600;letter-spacing:-0.01em")}>
+                          {vm.waName}
+                        </span>
+                        <span style={S("font-size:14px;color:#3D1C31;font-variant-numeric:tabular-nums")}>
+                          {vm.waPhone}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={S("display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border-top:1px solid #F3EEF1;padding-top:14px")}>
+                      <div style={S("display:flex;flex-direction:column;gap:4px")}>
+                        <span style={S("font-size:12px;color:#8A5A6E")}>
+                          Status
+                        </span>
+                        <span style={S("display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:#16704A")}>
+                          <span style={S("width:8px;height:8px;border-radius:50%;background:#25D366")} />
+                          Connected
+                        </span>
+                      </div>
+                      <div style={S("display:flex;flex-direction:column;gap:4px")}>
+                        <span style={S("font-size:12px;color:#8A5A6E")}>
+                          Business account
+                        </span>
+                        <span style={S("font-size:14px;font-weight:500")}>
+                          Active
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {vm.waNoCatalog && (
+                    <>
+                    <p style={S("margin-top:14px;border-radius:14px;background:#FAF6FA;padding:12px 16px;font-size:14px;line-height:1.5;color:#3D1C31")}>
+                      No WhatsApp catalog was found. Your current Lumia menu will continue to be used.
+                    </p>
+                    </>
+                  )}
+                </div>
+                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
+                  <button type="button" onClick={vm.successContinue} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
+                    Continue
+                  </button>
+                  <button type="button" onClick={vm.manageConnection} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
+                    Manage connection
+                  </button>
+                </div>
+              </div>
+              </>
+            )}
+            {vm.wa.import && (
+              <>
+              <div style={S("flex:1;min-height:0;display:flex;flex-direction:column")}>
+                <div style={S("flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)")}>
+                  <h2 style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;line-height:1.15;text-wrap:balance")}>
+                    We found information from your WhatsApp Business account
+                  </h2>
+                  <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
+                    Nothing in Lumia changes until you choose to use it.
+                  </p>
+                  <div style={S("margin-top:20px;border:1px solid #ECD9E0;border-radius:16px;display:flex;flex-direction:column;padding:0 18px")}>
+                    {(vm.waImport as any[]).map((r: any, __i: number) => (
+                      <Fragment key={__i}>
+                        <div style={S(`display:flex;align-items:center;gap:12px;min-height:58px;padding:10px 0;border-top:${r.bt}`)}>
+                          <span style={S("flex:0 0 96px;font-size:13px;color:#8A5A6E")}>
+                            {r.label}
+                          </span>
+                          <div style={S("flex:1;min-width:0;display:flex;align-items:center;gap:10px")}>
+                            {r.isLogo && (
+                              <>
+                              <span style={S("width:38px;height:38px;border-radius:50%;background:#1A0815;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none")}>
+                                {vm.waInitials}
+                              </span>
+                              </>
+                            )}
+                            <span style={S("font-size:15px;font-weight:500;font-variant-numeric:tabular-nums")}>
+                              {r.value}
+                            </span>
+                          </div>
+                          {r.tag && (
+                            <>
+                            <span style={S(`font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:${r.tagBg};color:${r.tagFg};flex:none`)}>
+                              {r.tag}
+                            </span>
+                            </>
+                          )}
+                        </div>
+                      </Fragment>
+                    ))}
+                  </div>
+                </div>
+                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
+                  <button type="button" onClick={vm.useAll} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
+                    Use this information
+                  </button>
+                  <button type="button" onClick={vm.toReview} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
+                    Review first
+                  </button>
+                </div>
+              </div>
+              </>
+            )}
+            {vm.wa.review && (
+              <>
+              <div style={S("flex:1;min-height:0;display:flex;flex-direction:column")}>
+                <div style={S("flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)")}>
+                  <h2 style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;line-height:1.15")}>
+                    Review differences
+                  </h2>
+                  <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
+                    Choose which version Lumia should use for each item.
+                  </p>
+                  <div style={S("display:flex;flex-direction:column;gap:22px;margin-top:22px")}>
+                    {(vm.waDiffs as any[]).map((d: any, __i: number) => (
+                      <Fragment key={__i}>
+                        <div style={S("display:flex;flex-direction:column;gap:10px")}>
+                          <span style={S("font-size:14px;font-weight:600")}>
+                            {d.label}
+                          </span>
+                          <div style={S("display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px")}>
+                            {(d.opts as any[]).map((o: any, __i: number) => (
+                              <Fragment key={__i}>
+                                <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`text-align:start;border-radius:14px;border:1.5px solid ${o.bd};background:${o.bg};padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-height:88px`)} className="dch18">
+                                  <span style={S("display:flex;align-items:center;gap:8px;font-size:12px;color:#8A5A6E")}>
+                                    <span style={S(`width:16px;height:16px;border-radius:50%;border:${o.dotBd};background:#fff;flex:none`)} />
+                                    {o.src}
+                                  </span>
+                                  <span style={S(`font-size:15px;font-weight:500;color:${o.fg};overflow-wrap:anywhere`)}>
+                                    {o.value}
+                                  </span>
+                                </button>
+                              </Fragment>
+                            ))}
+                          </div>
+                        </div>
+                      </Fragment>
+                    ))}
+                  </div>
+                </div>
+                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:6px")}>
+                  <button type="button" onClick={vm.saveChoices} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
+                    Save choices
+                  </button>
+                  <button type="button" onClick={vm.toImport} style={S("height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
+                    Back
+                  </button>
+                </div>
+              </div>
+              </>
+            )}
+            {vm.wa.catalog && (
+              <>
+              <div style={S("flex:1;min-height:0;display:flex;flex-direction:column;position:relative")}>
+                <div style={S("flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)")}>
+                  <h2 style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;line-height:1.15")}>
+                    We found a WhatsApp catalog
+                  </h2>
+                  {vm.menuDone && (
+                    <>
+                    <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
+                      Your current Lumia menu stays as it is unless you choose to replace it.
+                    </p>
+                    </>
+                  )}
+                  <div style={S("display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:20px")}>
+                    <div style={S("border-radius:16px;border:1px solid #ECD9E0;padding:14px 16px;display:flex;flex-direction:column;gap:4px")}>
+                      <span style={S("display:flex;align-items:center;gap:7px;font-size:13px;color:#8A5A6E")}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={S("display:block;flex:none")}>
+                          <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
+                        </svg>
+                        WhatsApp catalog
+                      </span>
+                      <span style={S("font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums")}>
+                        {vm.waCatTotal}
+                      </span>
+                      <span style={S("font-size:14px;color:#3D1C31")}>
+                        {"products \u00b7 "}{vm.waCatCount}{" categories"}
+                      </span>
+                    </div>
+                    {vm.menuDone && (
+                      <>
+                      <div style={S("border-radius:16px;background:#FAF6FA;padding:14px 16px;display:flex;flex-direction:column;gap:4px")}>
+                        <span style={S("display:flex;align-items:center;gap:7px;font-size:13px;color:#8A5A6E")}>
+                          <span style={S("width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,#FF5577,#C93DFF)")} />
+                          Lumia menu · in use
+                        </span>
+                        <span style={S("font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums")}>
+                          {vm.lumiaItems}
+                        </span>
+                        <span style={S("font-size:14px;color:#3D1C31")}>
+                          {"items \u00b7 "}{vm.lumiaCats}{" categories"}
+                        </span>
+                      </div>
+                      </>
+                    )}
+                  </div>
+                  {vm.catOpen && (
+                    <>
+                    <div style={S("margin-top:14px;border:1px solid #ECD9E0;border-radius:16px;padding:4px 18px")}>
+                      {(vm.waCatList as any[]).map((g: any, __i: number) => (
+                        <Fragment key={__i}>
+                          <div style={S(`padding:12px 0;border-top:${g.bt};display:flex;flex-direction:column;gap:3px`)}>
+                            <div style={S("display:flex;justify-content:space-between;gap:10px")}>
+                              <span style={S("font-size:15px;font-weight:600")}>
+                                {g.cat}
+                              </span>
+                              <span style={S("font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                                {g.label}
+                              </span>
+                            </div>
+                            <span style={S("font-size:13px;line-height:1.45;color:#3D1C31")}>
+                              {g.sample}
+                            </span>
+                          </div>
+                        </Fragment>
+                      ))}
+                    </div>
+                    </>
+                  )}
+                </div>
+                {vm.menuDone && (
+                  <>
+                  <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
+                    <button type="button" onClick={vm.waFinish} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
+                      Keep current Lumia menu
+                    </button>
+                    <button type="button" onClick={vm.toggleCat} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
+                      {vm.catBtn}
+                    </button>
+                    <button type="button" onClick={vm.askReplace} style={S("height:40px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch19">
+                      Replace current menu
+                    </button>
+                  </div>
+                  </>
+                )}
+                {vm.menuEmpty && (
+                  <>
+                  <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
+                    <button type="button" onClick={vm.useCatalog} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
+                      Use WhatsApp catalog as menu
+                    </button>
+                    <button type="button" onClick={vm.toggleCat} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
+                      {vm.catBtn}
+                    </button>
+                    <button type="button" onClick={vm.waFinish} style={S("height:40px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
+                      Not now
+                    </button>
+                  </div>
+                  </>
+                )}
+                {vm.confirmReplace && (
+                  <>
+                  <div style={S("position:absolute;inset:0;background:rgba(26,8,21,.32);display:flex;align-items:flex-end;padding:16px")}>
+                    <div role="alertdialog" aria-modal="true" data-screen-label="08f Replace menu confirm" style={S("width:100%;background:#fff;border-radius:20px;padding:22px 20px 18px;box-shadow:0 20px 50px -20px rgba(26,8,21,.45);display:flex;flex-direction:column")}>
+                      <h3 style={S("font-size:20px;font-weight:600;letter-spacing:-0.025em")}>
+                        Replace current menu?
+                      </h3>
+                      <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;text-wrap:pretty")}>
+                        {"Your "}{vm.lumiaItems}{" Lumia menu items will be replaced by "}{vm.waCatTotal}{" products from your WhatsApp catalog. Prices and availability you set in Lumia won't be kept."}
+                      </p>
+                      <div style={S("display:flex;flex-wrap:wrap;gap:10px;margin-top:20px")}>
+                        <button type="button" onClick={vm.cancelReplace} style={S("flex:1 1 120px;height:48px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
+                          Cancel
+                        </button>
+                        <button type="button" onClick={vm.useCatalog} style={S("flex:1 1 140px;height:48px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px")} className="dch17">
+                          Replace menu
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  </>
+                )}
+              </div>
+              </>
+            )}
+            {vm.wa.error && (
+              <>
+              <div style={S("flex:1;min-height:0;display:flex;flex-direction:column")}>
+                <div style={S("flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)")}>
+                  <span style={S("width:56px;height:56px;border-radius:50%;background:#FDECEE;display:flex;align-items:center;justify-content:center")}>
+                    <svg width="26" height="26" viewBox="0 0 16 16" fill="none">
+                      <path d="M8 4.2v4.6" stroke="#B4233B" strokeWidth="1.7" strokeLinecap="round" />
+                      <circle cx="8" cy="11.4" r=".95" fill="#B4233B" />
+                    </svg>
+                  </span>
+                  <h2 style={S("font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px")}>
+                    We couldn't connect WhatsApp
+                  </h2>
+                  <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
+                    Your Lumia account is safe. Try connecting again or continue setup and return later.
+                  </p>
+                  <div style={S("margin-top:20px;border-radius:14px;background:#FAF6FA;padding:12px 16px;display:flex;flex-direction:column;gap:3px")}>
+                    <span style={S("font-size:12px;color:#8A5A6E")}>
+                      What happened
+                    </span>
+                    <span style={S("font-size:15px;line-height:1.45")}>
+                      {vm.waErrText}
+                    </span>
+                  </div>
+                </div>
+                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
+                  <button type="button" onClick={vm.startConnect} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
+                    Try again
+                  </button>
+                  <button type="button" onClick={vm.waClose} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
+                    Do this later
+                  </button>
+                </div>
+              </div>
+              </>
+            )}
+            {vm.wa.inUse && (
+              <>
+              <div style={S("flex:1;min-height:0;display:flex;flex-direction:column")}>
+                <div style={S("flex:1;overflow:auto;padding:28px 24px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr)")}>
+                  <span style={S("width:56px;height:56px;border-radius:50%;background:#FFF4E5;display:flex;align-items:center;justify-content:center")}>
+                    <svg width="24" height="24" viewBox="0 0 16 16" fill="none">
+                      <path d="M8 1.8 15 14H1z" stroke="#C26A00" strokeWidth="1.4" strokeLinejoin="round" />
+                      <path d="M8 6.2v3.4" stroke="#C26A00" strokeWidth="1.5" strokeLinecap="round" />
+                      <circle cx="8" cy="11.6" r=".8" fill="#C26A00" />
+                    </svg>
+                  </span>
+                  <h2 style={S("font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px;text-wrap:balance")}>
+                    This WhatsApp number is already connected
+                  </h2>
+                  <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
+                    Choose another number or manage the existing connection before continuing.
+                  </p>
+                  <div style={S("margin-top:20px;display:inline-flex;justify-self:start;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;background:#FAF6FA;font-size:14px;font-weight:500;font-variant-numeric:tabular-nums")}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={S("display:block;flex:none")}>
+                      <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
+                    </svg>
+                    {vm.waPhone}
+                  </div>
+                </div>
+                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
+                  <button type="button" onClick={vm.startConnect} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
+                    Choose another number
+                  </button>
+                  <a href="#help" style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#1A0815")} className="dch3">
+                    View help
+                  </a>
+                </div>
+              </div>
+              </>
+            )}
+          </aside>
+        </div>
+        </>
+      )}
+      {vm.sub.panel && (
+        <>
+        <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
+          <div onClick={vm.subLater} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
+          <div role="dialog" aria-modal="true" aria-labelledby="tr-h" data-screen-label="10 Free trial" style={S("position:relative;width:100%;max-width:440px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)")}>
+            <div style={S("padding:26px 26px 22px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);display:flex;flex-direction:column;gap:14px")}>
+              <span style={S("align-self:flex-start;height:28px;padding:0 11px;border-radius:999px;background:#fff;font-size:13px;font-weight:600;color:#8A2040;display:flex;align-items:center")}>
+                Free trial
+              </span>
+              <h2 id="tr-h" style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;line-height:1.15;text-wrap:balance")}>
+                {vm.sub.title}
+              </h2>
+              <div style={S("display:flex;flex-direction:column;gap:8px")}>
+                <span style={S("height:6px;border-radius:3px;background:rgba(26,8,21,.1);overflow:hidden;display:block")}>
+                  <span style={S(`display:block;height:100%;width:${vm.sub.barW};border-radius:3px;background:linear-gradient(90deg,#FF5577,#C93DFF)`)} />
+                </span>
+                <span style={S("font-size:14px;font-weight:500;color:#8A2040;font-variant-numeric:tabular-nums")}>
+                  {vm.sub.leftLabel}
+                </span>
+              </div>
+            </div>
+            <div style={S("padding:22px 26px 24px;display:flex;flex-direction:column;gap:20px")}>
+              <p style={S("font-size:15px;line-height:1.55;color:#3D1C31;text-wrap:pretty")}>
+                {vm.sub.body}
+              </p>
+              <div style={S("display:flex;flex-direction:column;gap:6px")}>
+                <button type="button" onClick={vm.subOpenPlans} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px")} className="dch1">
+                  Choose a plan
+                </button>
+                <button type="button" onClick={vm.subLater} style={S("height:44px;font-size:15px;font-weight:500;color:#3D1C31")} className="dch8">
+                  {vm.sub.later}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        </>
+      )}
+      {vm.lockOpen && (
+        <>
+        <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
+          <div onClick={vm.lockClose} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
+          <div role="dialog" aria-modal="true" aria-labelledby="lk-h" data-screen-label="14 Premium feature" style={S("position:relative;width:100%;max-width:420px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)")}>
+            <div style={S("padding:24px 24px 20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);display:flex;flex-direction:column;gap:14px")}>
+              <span style={S("align-self:flex-start;height:28px;padding:0 11px;border-radius:999px;background:#fff;font-size:13px;font-weight:600;color:#8A2040;display:flex;align-items:center;gap:6px")}>
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+                  <rect x="4.5" y="9" width="11" height="8" rx="2" stroke="currentColor" strokeWidth="1.8" />
+                  <path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" strokeWidth="1.8" />
+                </svg>
+                {vm.lock.tag}
+              </span>
+              <h2 id="lk-h" style={S("font-size:23px;font-weight:600;letter-spacing:-0.03em;line-height:1.15;text-wrap:balance")}>
+                {vm.lock.title}
+              </h2>
+            </div>
+            <div style={S("padding:20px 24px 22px;display:flex;flex-direction:column;gap:18px")}>
+              <p style={S("font-size:15px;line-height:1.55;color:#3D1C31;text-wrap:pretty")}>
+                {vm.lock.body}
+              </p>
+              <div style={S("display:flex;flex-direction:column;gap:8px;font-size:15px")}>
+                {(vm.lock.feats as any[]).map((f: any, __i: number) => (
+                  <Fragment key={__i}>
+                    <div style={S("display:flex;gap:10px")}>
+                      <span style={S("color:#FF5577;flex:none")}>
+                        ✓
+                      </span>
+                      <span>
+                        {f}
+                      </span>
+                    </div>
+                  </Fragment>
+                ))}
+              </div>
+              <div style={S("display:flex;flex-direction:column;gap:6px")}>
+                <button type="button" onClick={vm.lockUpgrade} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px")} className="dch1">
+                  {vm.lock.cta}
+                </button>
+                <button type="button" onClick={vm.lockClose} style={S("height:44px;font-size:15px;font-weight:500;color:#3D1C31")} className="dch8">
+                  Not now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        </>
+      )}
+      {vm.sub.done && (
+        <>
+        <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
+          <div onClick={vm.subLater} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
+          <div role="dialog" aria-modal="true" data-screen-label="13 Subscribed" style={S("position:relative;width:100%;max-width:420px;background:#fff;border-radius:24px;padding:32px 26px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)")}>
+            <span style={S("width:64px;height:64px;border-radius:50%;background:#E4F4EC;display:flex;align-items:center;justify-content:center")}>
+              <svg width="30" height="30" viewBox="0 0 20 20" fill="none">
+                <path d="m5 10.5 3.2 3L15 7" stroke="#16704A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+            <h2 style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;margin-top:18px")}>
+              {"You\u2019re on the "}{vm.sub.paidName}{" plan"}
+            </h2>
+            <p style={S("font-size:15px;line-height:1.55;color:#3D1C31;margin-top:8px;text-wrap:pretty")}>
+              Lumia will keep receiving WhatsApp orders without interruption. Your terminal arrives in 10–15 business days, and you can track it from Overview.
+            </p>
+            <button type="button" onClick={vm.subLater} style={S("margin-top:24px;width:100%;height:52px;border-radius:14px;background:#1A0815;color:#fff;font-weight:600;font-size:16px")} className="dch11">
+              Back to dashboard
+            </button>
+          </div>
+        </div>
+        </>
+      )}
     </>
   );
 }

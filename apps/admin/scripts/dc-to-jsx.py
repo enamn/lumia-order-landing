@@ -23,6 +23,7 @@ ATTR = re.compile(r"([^\s=>/]+)(?:=\"([^\"]*)\")?", re.S)
 class Node:
     def __init__(s, tag, attrs): s.tag, s.attrs, s.children = tag, attrs, []
 
+VOID = {"input", "img", "br", "hr", "meta", "link", "source", "area", "col", "embed", "param", "track", "wbr"}
 top = Node("#root", [])
 stack = [top]; pos = 0
 for m in TAG.finditer(body):
@@ -34,7 +35,7 @@ for m in TAG.finditer(body):
     else:
         node = Node(tag, [(a, v) for a, v in ATTR.findall(attrs)])
         stack[-1].children.append(node)
-        if not selfc: stack.append(node)
+        if not selfc and tag.lower() not in VOID: stack.append(node)  # <input ...> in HTML has no closing tag: what follows it is a sibling, not its child
 if pos < len(body): stack[-1].children.append(body[pos:])
 
 hover = {}   # (pseudo, declarations) -> class name
