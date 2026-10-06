@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { lumiaApi } from "@/server/lumia-api";
+import { brandedEmail } from "@/modules/email/layout";
 import { TRIAL_DAYS, accessOf, trialInfo } from "./service";
 
 // Reminder emails about the trial and the plan, sent from the hourly billing job (through lumia-order-api).
@@ -8,7 +9,6 @@ import { TRIAL_DAYS, accessOf, trialInfo } from "./service";
 type Kind = "trial_3d" | "trial_1d" | "trial_ended" | "plan_ending_3d" | "plan_ending_1d" | "payment_failed" | "plan_ended";
 interface Vars { business: string; date?: string; graceDate?: string }
 const DAY = 86_400_000;
-const esc = (v: string) => v.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[c]!);
 
 const COPY: Record<Kind, { en: (v: Vars) => [string, string]; ar: (v: Vars) => [string, string] }> = {
   trial_3d: { en: v => ["Your free trial ends in 3 days", `Your Lumia Order free trial for ${v.business} ends on ${v.date}. Choose a plan before then to keep receiving WhatsApp orders. After that the dashboard is locked and the assistant stops replying.`],
@@ -29,9 +29,13 @@ const COPY: Record<Kind, { en: (v: Vars) => [string, string]; ar: (v: Vars) => [
 
 export function renderEmail(kind: Kind, lang: "en" | "ar", vars: Vars, link: string) {
   const [subject, body] = COPY[kind][lang](vars);
-  const button = lang === "ar" ? "اختر باقة" : "Open Lumia Order";
-  const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#1A0815"${lang === "ar" ? ' dir="rtl"' : ""}><h2 style="margin:0 0 12px">${esc(subject)}</h2><p style="line-height:1.6;margin:0 0 20px">${esc(body)}</p><a href="${esc(link)}" style="display:inline-block;background:#FF5577;color:#fff;text-decoration:none;padding:12px 22px;border-radius:12px;font-weight:bold">${button}</a><p style="color:#8A5A6E;font-size:12px;margin-top:28px">Lumia Order</p></div>`;
-  return { subject, html, text: `${body}\n\n${link}` };
+  const ended = kind === "trial_ended" || kind === "plan_ended", failed = kind === "payment_failed";
+  const { html, text } = brandedEmail({
+    lang, heading: subject, body: [lang === "ar" ? `مرحباً ${vars.business}،` : `Hello ${vars.business},`, body], preheader: body.slice(0, 110),
+    button: { label: lang === "ar" ? (failed ? "تحديث البطاقة" : "اختيار باقة") : failed ? "Update my card" : ended || kind.startsWith("trial") ? "Choose a plan" : "Open Billing", url: link },
+    note: lang === "ar" ? "إذا كنت قد اتخذت الإجراء المطلوب فتجاهل هذه الرسالة." : "If you have already taken care of this, you can ignore this email.",
+  });
+  return { subject, html, text };
 }
 
 // Only the restaurant's confirmed contact email (Settings → Profile). Phone sign-ups have just a placeholder address, which is never used.

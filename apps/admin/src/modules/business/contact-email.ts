@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/server/db";
 import { authorize } from "@/server/authorization";
 import { AppError } from "@/server/errors";
+import { brandedEmail } from "@/modules/email/layout";
 import { lumiaApi } from "@/server/lumia-api";
 
 // The restaurant's contact email (billing and plan reminders). It is confirmed with a 6-digit code sent to it; only a confirmed address receives reminders.
@@ -33,9 +34,8 @@ export async function startEmailVerification(userId: string, businessId: string,
   await db.emailChallenge.upsert({ where: { businessId }, create: { businessId, ...data }, update: data });
   const ar = lang === "ar";
   const subject = ar ? "رمز التحقق من البريد في لوميا أوردر" : "Your Lumia Order email verification code";
-  const body = ar ? `رمز التحقق الخاص بك هو ${code}. صالح لمدة ${CODE_MINUTES} دقائق. إذا لم تطلب هذا الرمز فتجاهل هذه الرسالة.` : `Your verification code is ${code}. It is valid for ${CODE_MINUTES} minutes. If you did not ask for it, you can ignore this email.`;
-  const html = `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#1A0815"${ar ? ' dir="rtl"' : ""}><h2 style="margin:0 0 12px">${subject}</h2><p style="line-height:1.6">${body.replace(code, `</p><p style="font-size:32px;font-weight:bold;letter-spacing:6px;margin:12px 0">${code}</p><p style="line-height:1.6">`)}</p></div>`;
-  const sent = await lumiaApi("/internal/email/send", { to: email, subject, text: body, html }, 15_000).catch(() => ({ ok: false as const, status: 0 }));
+  const { html, text } = brandedEmail({ lang: ar ? "ar" : "en", heading: ar ? "وثّق بريدك الإلكتروني" : "Verify your email", body: [ar ? "أدخل هذا الرمز في لوميا أوردر لتأكيد بريدك واستلام تنبيهات الباقة والدفع." : "Enter this code in Lumia Order to confirm your email and get plan and payment reminders."], highlight: code, highlightLabel: ar ? `صالح لمدة ${CODE_MINUTES} دقائق` : `Valid for ${CODE_MINUTES} minutes`, note: ar ? "إذا لم تطلب هذا الرمز فتجاهل هذه الرسالة، ولن يتغير شيء." : "If you did not ask for this code, you can ignore this email. Nothing will change.", preheader: ar ? `رمز التحقق ${code}` : `Your code is ${code}` });
+  const sent = await lumiaApi("/internal/email/send", { to: email, subject, text, html }, 15_000).catch(() => ({ ok: false as const, status: 0 }));
   if (!sent.ok) { await db.emailChallenge.deleteMany({ where: { businessId } }); throw new AppError("EMAIL_FAILED", "We couldn’t send the code. Check the address and try again.", 502); }
   await db.business.update({ where: { id: businessId }, data: { email, emailVerifiedAt: null } });
   return { sent: true, alreadyVerified: false, resendAfter: RESEND_SECONDS };
