@@ -122,7 +122,7 @@ function PlanCard({ plan, billing }: { plan: Plan; billing: Billing }) {
         ))}
       </div>
       <div className="plan__cta">
-        <a href={SIGNUP_URL} className="btn btn--primary btn--md btn--block">{plan.cta}</a>
+        <a href={SIGNUP_URL} className="btn btn--primary btn--md btn--block" data-track={/free/i.test(plan.cta) ? 'free_trial' : 'signup'} data-loc={`plan:${plan.name.toLowerCase()}`}>{plan.cta}</a>
       </div>
     </div>
   );

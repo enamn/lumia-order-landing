@@ -822,3 +822,21 @@ model EmailChallenge {
   sendCount Int @default(1)
   @@map("email_challenges")
 }
+
+// Website analytics from the landing page (no cookies, no IP kept): one row per event. `visitor` is an anonymous code that changes every day.
+model AnalyticsEvent {
+  id String @id @default(uuid()) @map("_id")
+  at DateTime @default(now())
+  day String
+  visitor String
+  name String
+  loc String?
+  path String?
+  ref String?
+  utm String?
+  country String
+  device String
+  @@index([day, name])
+  @@index([at])
+  @@map("analytics_events")
+}

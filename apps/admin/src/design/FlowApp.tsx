@@ -24,6 +24,7 @@ export interface FlowProps {
   devLink: boolean;
   linkMode: "existing" | "new";
   userPhone?: string;
+  superAdmin?: boolean;
   lang: "en" | "ar";
   business?: { id: string; name: string; logoUrl: string | null; address: string };
   menu: MenuCat[];
@@ -319,6 +320,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const items = [
       { key: "settings", icon: "settings", label: A("Settings", "الإعدادات"), onPick: () => { this.setState({ page: "Settings" }); history.replaceState(null, "", `/dashboard?page=settings&businessId=${bid}`); } },
       { key: "billing", icon: "billing", label: A("Billing", "الفوترة"), onPick: () => this.openBilling() },
+      ...(this.props.superAdmin ? [{ key: "superadmin", icon: "billing", label: A("Super admin", "المشرف العام"), onPick: () => { window.location.assign("/superadmin"); } }] : []),
       { key: "logout", icon: "logout", label: A("Log out", "تسجيل الخروج"), danger: true, onPick: () => { this.signOut(); } },
     ];
     const avatar = s.logo ? <img src={s.logo} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} /> : initials;

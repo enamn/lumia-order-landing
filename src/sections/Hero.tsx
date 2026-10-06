@@ -59,7 +59,7 @@ export function Hero({ autoplay = true, speed = 1 }: Props) {
               Lumia Order handles customer orders through WhatsApp — from text and voice messages to confirmed, structured orders ready for your restaurant.
             </p>
             <div className="hero__ctas">
-              <a href={SIGNUP_URL} className="btn btn--primary">Start free</a>
+              <a href={SIGNUP_URL} className="btn btn--primary" data-track="free_trial" data-loc="hero">Start free</a>
               <a href="#demo" className="btn btn--ghost" style={{ padding: '0 22px' }}>
                 See it in action <span style={{ fontSize: 15 }}>↓</span>
               </a>

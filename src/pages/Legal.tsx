@@ -81,6 +81,7 @@ export function PrivacyPage() {
         <Section title="5. Technical data">
           <p>We may collect technical data such as:</p>
           <List items={['IP address', 'Browser / device type', 'Terminal identifiers', 'Application version', 'Diagnostic logs', 'Authentication and security events']} />
+          <p>On our public website we count visits, the pricing section being viewed and clicks on sign-up buttons. We do this without cookies and do not keep your IP address: we keep only your country and an anonymous code that changes every day. We do not count visitors whose browser sends Do Not Track or Global Privacy Control.</p>
         </Section>
         <Section title="6. Purpose of processing">
           <p>We use this information to:</p>
