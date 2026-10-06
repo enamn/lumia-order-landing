@@ -280,6 +280,14 @@ async function handleReviewTap(t: Target, tap: "confirm" | "change", pending: { 
   if (!order) { await refund(t.businessId, "orders", slot); return "skipped"; }
   return sendDirect(t, account, conversation.customer.phone, placedText(order.orderNumber, order.totalMinor, order.fulfillmentType === "DELIVERY" ? "delivery" : "pickup", lang));
 }
+// Confirms that offers were switched off (STOP) or on again (START). Sent even when the assistant is off: it is the customer's choice, and the 24-hour window is open (they just wrote).
+export async function replyToOptChange(t: Target, optedOut: boolean): Promise<"sent" | "skipped"> {
+  const account = await db.whatsAppAccount.findFirst({ where: { businessId: t.businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
+  const conversation = await db.conversation.findFirst({ where: { id: t.conversationId, businessId: t.businessId }, include: { customer: { select: { phone: true } } } });
+  if (!account || !conversation) return "skipped";
+  const text = optedOut ? "You won't receive offers from us anymore. Reply START to receive them again.\nلن تصلك عروضنا بعد الآن. أرسل «اشتراك» إذا أردت استقبالها من جديد." : "Great, you'll receive our offers again. Reply STOP any time to stop them.\nتم! ستصلك عروضنا من جديد. أرسل «إيقاف» في أي وقت لإيقافها.";
+  return sendDirect(t, account, conversation.customer.phone, text);
+}
 export const replyToUnreadable = (t: Target) => sendNotice(t, TYPE_ONLY);
 
 // A voice note: transcribe it, keep the transcript on the message so staff can read it, refuse other languages, otherwise answer it like typed text.

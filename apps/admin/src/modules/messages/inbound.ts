@@ -3,12 +3,15 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
-import { autoReply, handleVoice, replyToUnreadable, UNREADABLE_TYPES } from "./ai";
+import { autoReply, handleVoice, replyToOptChange, replyToUnreadable, UNREADABLE_TYPES } from "./ai";
 import { sendWelcome } from "./welcome";
 import { lumiaApi } from "@/server/lumia-api";
 
 // Messages customers send to a restaurant's linked WhatsApp number. lumia-order-api receives Meta's webhook and forwards them here;
 // we find the restaurant from the phone number ID, then keep one customer + conversation per person and one message per Meta message ID.
+// Words that mean "no more offers" / "offers again". "Cancel" is deliberately not one of them: customers use it to cancel an order.
+const OPT_OUT = /^(stop|unsubscribe|stop offers|إيقاف|ايقاف|توقف|الغاء الاشتراك|إلغاء الاشتراك)[.!؟?\s]*$/i;
+const OPT_IN = /^(start|subscribe|اشتراك|ابدأ)[.!؟?\s]*$/i;
 export const inboundSchema = z.object({ messages: z.array(z.object({
   phoneNumberId: z.string().regex(/^\d{5,30}$/), wabaId: z.string().regex(/^\d{5,30}$/).optional(),
   messageId: z.string().min(1).max(200), senderId: z.string().regex(/^\d{6,20}$/), timestamp: z.string().regex(/^\d{9,12}$/),
@@ -20,7 +23,7 @@ export type InboundResult = { stored: number; duplicates: number; unmatched: num
 export async function recordInbound(input: unknown): Promise<InboundResult> {
   const { messages } = inboundSchema.parse(input);
   const result: InboundResult = { stored: 0, duplicates: 0, unmatched: 0 };
-  const toAnswer: { businessId: string; conversationId: string; externalMessageId: string; kind: "text" | "voice" | "unreadable"; mediaId?: string }[] = [];
+  const toAnswer: { businessId: string; conversationId: string; externalMessageId: string; kind: "text" | "voice" | "unreadable" | "optout" | "optin"; mediaId?: string }[] = [];
   for (const m of messages) {
     const account = await db.whatsAppAccount.findFirst({ where: { phoneNumberId: m.phoneNumberId, status: "CONNECTED" }, select: { businessId: true, wabaId: true } });
     if (!account || (account.wabaId && m.wabaId && account.wabaId !== m.wabaId)) { result.unmatched++; continue; }
@@ -43,7 +46,12 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
         const shown = loc ? pinText(loc) : (m.textBody ?? null);
         await tx.message.create({ data: { conversationId: conversation.id, externalMessageId: m.messageId, direction: "INBOUND", senderType: "CUSTOMER", messageType: m.type.toUpperCase(), textContent: shown, status: "RECEIVED", createdAt: at } });
         if (loc) await tx.conversation.update({ where: { id: conversation.id }, data: { customerLocation: { latitude: loc.latitude, longitude: loc.longitude, name: loc.name ?? "", address: loc.address ?? "", at: at.toISOString() } } });
-        if (loc) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "text" };
+        // Replying STOP stops offers for good (START turns them back on); neither reaches the assistant.
+        const optText = m.type.toLowerCase() === "text" ? (m.textBody ?? "").trim() : "";
+        const optChange = OPT_OUT.test(optText) ? "optout" as const : OPT_IN.test(optText) ? "optin" as const : null;
+        if (optChange) await tx.customer.update({ where: { id: customer.id }, data: { marketingOptOut: optChange === "optout", marketingOptOutAt: optChange === "optout" ? at : null } });
+        if (optChange) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: optChange };
+        else if (loc) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "text" };
         else if (m.type.toLowerCase() === "text" && m.textBody) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "text" };
         else if (m.type.toLowerCase() === "audio" && m.mediaId) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "voice", mediaId: m.mediaId };
         else if (UNREADABLE_TYPES.has(m.type.toUpperCase())) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "unreadable" };
@@ -58,7 +66,7 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
     }
   }
   // Messages are stored first and never lost; an AI failure only means no automatic reply.
-  for (const t of toAnswer) await (t.kind === "text" ? autoReply(t) : t.kind === "voice" ? handleVoice({ ...t, mediaId: t.mediaId! }) : replyToUnreadable(t)).catch((e: { code?: unknown }) => console.error(JSON.stringify({ level: "error", code: "AI_REPLY_FAILED", reason: typeof e?.code === "string" ? e.code : "UNKNOWN" })));
+  for (const t of toAnswer) await (t.kind === "optout" || t.kind === "optin" ? replyToOptChange(t, t.kind === "optout") : t.kind === "text" ? autoReply(t) : t.kind === "voice" ? handleVoice({ ...t, mediaId: t.mediaId! }) : replyToUnreadable(t)).catch((e: { code?: unknown }) => console.error(JSON.stringify({ level: "error", code: "AI_REPLY_FAILED", reason: typeof e?.code === "string" ? e.code : "UNKNOWN" })));
   return result;
 }
 

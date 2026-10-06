@@ -15,10 +15,11 @@ export const VAT_PERCENT = 5;
 // What each plan includes every month, counted from the plan's own billing day. The limit restaurants see is WhatsApp orders. Behind it, AI replies,
 // voice notes and menu imports have a fair-use cap so chatting without ordering cannot run up costs. Sized from the real cost of an order (about 7 AI replies,
 // roughly AED 0.5), so a plan used to its limit still earns money.
-export interface Limits { orders: number; voice: number; imports: number }
-export const LIMITS: Record<PlanId, Limits> = { starter: { orders: 100, voice: 60, imports: 3 }, plus: { orders: 150, voice: 120, imports: 10 }, pro: { orders: 250, voice: 200, imports: 30 } };
+// campaigns: offer messages a restaurant can send to customers each month (Plus and Pro only; Meta bills marketing messages to the restaurant's own WhatsApp account).
+export interface Limits { orders: number; voice: number; imports: number; campaigns: number }
+export const LIMITS: Record<PlanId, Limits> = { starter: { orders: 100, voice: 60, imports: 3, campaigns: 0 }, plus: { orders: 150, voice: 120, imports: 10, campaigns: 500 }, pro: { orders: 250, voice: 200, imports: 30, campaigns: 3000 } };
 // The free trial reads a menu with AI only twice.
-export const TRIAL_LIMITS: Limits = { orders: 20, voice: 20, imports: 2 };
+export const TRIAL_LIMITS: Limits = { orders: 20, voice: 20, imports: 2, campaigns: 0 };
 // Branches: Starter 1, Plus 3 (fixed), Pro 3 and more at AED 99 a month each (AED 990 a year). Every extra branch adds some orders to the monthly limit.
 export const INCLUDED_BRANCHES: Record<PlanId, number> = { starter: 1, plus: 3, pro: 3 };
 export const EXTRA_BRANCH = { monthly: 99, yearly: 990, orders: 80, max: 27 };

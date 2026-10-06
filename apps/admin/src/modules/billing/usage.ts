@@ -6,7 +6,7 @@ import { getSubscriptionFor, trialInfo } from "./service";
 // Monthly allowances per plan. WhatsApp orders are what the restaurant sees; AI replies (a fair-use pool of REPLIES_PER_ORDER per order), voice notes and menu
 // imports are counted before they cost anything. Counts are claimed atomically so two messages arriving together cannot both slip past a limit.
 // Bought extra orders ("credits") are used only after the monthly orders and never expire.
-export type Kind = "orders" | "ai" | "voice" | "imports";
+export type Kind = "orders" | "ai" | "voice" | "imports" | "campaigns";
 const FOREVER = new Date(0);
 
 const monthAfter = (anchor: Date, n: number) => {
@@ -63,6 +63,19 @@ export async function canStartOrder(businessId: string, now = new Date()) {
   const [used, credits] = await Promise.all([db.usageCounter.findFirst({ where: { businessId, periodStart: period.start, kind: "orders" } }), db.usageCounter.findFirst({ where: { businessId, periodStart: FOREVER, kind: "credits" } })]);
   return (used?.used ?? 0) < limits.orders || (credits?.used ?? 0) > 0;
 }
+// Claims `n` units of a monthly allowance at once (a campaign's messages); all or nothing, and atomic like a single claim.
+export async function consumeMany(businessId: string, kind: "campaigns", n: number, now = new Date()): Promise<{ ok: true; periodStart: Date } | { ok: false; left: number }> {
+  const { limits, period } = await allowanceFor(businessId, now);
+  const limit = limits[kind], counter = await row(businessId, period.start, kind);
+  const claimed = (await db.usageCounter.updateMany({ where: { id: counter.id, used: { lte: limit - n } }, data: { used: { increment: n } } })).count === 1;
+  if (claimed) return { ok: true, periodStart: period.start };
+  return { ok: false, left: Math.max(0, limit - ((await db.usageCounter.findUnique({ where: { id: counter.id } }))?.used ?? 0)) };
+}
+export async function refundMany(businessId: string, kind: "campaigns", n: number, periodStart: Date) {
+  const counter = await row(businessId, periodStart, kind);
+  const cur = await db.usageCounter.findUnique({ where: { id: counter.id } });
+  if (cur) await db.usageCounter.update({ where: { id: counter.id }, data: { used: Math.max(0, cur.used - n) } });
+}
 // Gives a unit back when the work it paid for did not happen (the AI call failed, the order was not saved).
 export async function refund(businessId: string, kind: Kind, taken: Extract<Claim, { ok: true }>) {
   if (taken.from === "credits") { const credits = await row(businessId, FOREVER, "credits"); await db.usageCounter.update({ where: { id: credits.id }, data: { used: { increment: 1 } } }); return; }
@@ -81,6 +94,6 @@ export async function usageSummary(businessId: string, now = new Date()) {
   const used = (kind: string, at: Date) => rows.find(r => r.kind === kind && r.periodStart.getTime() === at.getTime())?.used ?? 0;
   return {
     source, periodStart: period.start.toISOString(), periodEnd: period.end.toISOString(), credits: used("credits", FOREVER),
-    orders: { used: used("orders", period.start), limit: limits.orders }, aiReplies: { used: used("ai", period.start), limit: REPLIES_PER_ORDER * (limits.orders + used("credits", FOREVER)) }, voice: { used: used("voice", period.start), limit: limits.voice }, imports: { used: used("imports", period.start), limit: limits.imports },
+    orders: { used: used("orders", period.start), limit: limits.orders }, aiReplies: { used: used("ai", period.start), limit: REPLIES_PER_ORDER * (limits.orders + used("credits", FOREVER)) }, voice: { used: used("voice", period.start), limit: limits.voice }, campaigns: { used: used("campaigns", period.start), limit: limits.campaigns }, imports: { used: used("imports", period.start), limit: limits.imports },
   };
 }
