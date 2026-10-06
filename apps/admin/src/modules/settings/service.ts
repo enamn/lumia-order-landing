@@ -1,5 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { decimalsOf, fromMinor, toMinor } from "../market/money";
+import { isCountryCode, marketOf, type CountryCode } from "../market/countries";
+import { isRegionOf, regionNames } from "../market/regions";
 import { db } from "@/server/db";
 import { transaction } from "@/server/transaction";
 import { authorize, can } from "@/server/authorization";
@@ -33,8 +35,9 @@ async function load(businessId: string, client: Prisma.TransactionClient | typeo
   return client.business.findUniqueOrThrow({ where: { id: businessId }, include: { locations: { orderBy: { createdAt: "asc" }, include: { hours: { orderBy: { dayOfWeek: "asc" } } } }, orderSettings: true } });
 }
 
+const cc = (code: string): CountryCode => (isCountryCode(code) ? code : "AE");
 function branchesOf(b: Loaded, s: Stored): Branch[] {
-  return b.locations.map(l => ({ id: l.id, name: l.name, emirate: (EMIRATES as readonly string[]).includes(l.emirate) ? l.emirate as Branch["emirate"] : "Dubai", area: l.city, address: l.addressLine1, phone: l.phone ?? "", eta: s.branchEta?.[l.id] ?? "45", active: l.status === "ACTIVE", pin: l.latitude !== null && l.longitude !== null, coords: coordsOf(l) }));
+  return b.locations.map(l => ({ id: l.id, name: l.name, emirate: isRegionOf(cc(b.countryCode), l.emirate) ? l.emirate : regionNames(cc(b.countryCode))[0]!, area: l.city, address: l.addressLine1, phone: l.phone ?? "", eta: s.branchEta?.[l.id] ?? "45", active: l.status === "ACTIVE", pin: l.latitude !== null && l.longitude !== null, coords: coordsOf(l) }));
 }
 function weekOf(l: Loaded["locations"][number] | undefined) {
   return DAYS.map((d, i) => { const h = l?.hours.find(x => x.dayOfWeek === dow(i)); return h ? dayRow(d, h.openTime, h.closeTime, !h.isClosed) : dayRow(d); });
@@ -70,7 +73,7 @@ export async function getSettings(userId: string, businessId: string) {
     business: { id: b.id, name: b.name, logoUrl: b.logoUrl },
     menu: { categories: new Set(items.map(i => i.categoryId).filter(Boolean)).size, items: items.length, missingPrices: items.filter(i => i.basePriceMinor <= 0).length, soldOut: items.filter(i => !i.isAvailable).length, updatedAt: items.reduce<Date | null>((m, i) => (!m || i.updatedAt > m ? i.updatedAt : m), null) },
     whatsapp: { connected: Boolean(wa), displayPhoneNumber: wa?.displayPhoneNumber ?? "" },
-    emailVerified: !!b.email && !!b.emailVerifiedAt, currency: b.currencyCode,
+    emailVerified: !!b.email && !!b.emailVerifiedAt, currency: b.currencyCode, country: b.countryCode,
     branchLimit: (await entitlementsFor(businessId)).branches,
     branchBuy: await branchOffer(businessId),
   };
@@ -94,6 +97,9 @@ export async function saveSettingsSection(userId: string, businessId: string, se
       await updateProgress(tx, businessId);
     } else if (key === "branches") {
       const list = data as Branch[], eta: Record<string, string> = {};
+      // Every branch is in the restaurant's own country: its region must be one of that country's regions (also when the request skips the form).
+      const country = cc((await tx.business.findUniqueOrThrow({ where: { id: businessId }, select: { countryCode: true } })).countryCode);
+      if (list.some(x => !isRegionOf(country, x.emirate))) throw new AppError("BRANCH_OUTSIDE_RESTAURANT_COUNTRY", `A branch must be in ${marketOf(country).nameEn}. Choose a ${marketOf(country).regionLabelEn.toLowerCase()} from the list.`, 422);
       const existing = await tx.location.findMany({ where: { businessId }, include: { hours: true }, orderBy: { createdAt: "asc" } });
       const template = existing[0]?.hours ?? [];
       const e = await entitlementsFor(businessId), limit = e.branches;
@@ -119,8 +125,10 @@ export async function saveSettingsSection(userId: string, businessId: string, se
       await tx.business.update({ where: { id: businessId }, data: { settings: next as Prisma.InputJsonValue } });
       if (key === "delivery") {
         // Fees and minimums are typed in the restaurant's currency: no more decimals than that currency has (2 for AED/SAR/QAR, 3 for OMR/BHD/KWD).
-        const money = (v: unknown) => (typeof v === "string" ? v : ""), dec = decimalsOf((await tx.business.findUniqueOrThrow({ where: { id: businessId }, select: { currencyCode: true } })).currencyCode);
+        const biz = await tx.business.findUniqueOrThrow({ where: { id: businessId }, select: { currencyCode: true, countryCode: true } });
+        const money = (v: unknown) => (typeof v === "string" ? v : ""), dec = decimalsOf(biz.currencyCode);
         const dd = data as Delivery, typed = [dd.minOrder, dd.freeAbove, ...dd.areas.flatMap(a => [a.fee, a.min]), ...dd.ranges.flatMap(r => [r.fee, r.min])].map(money);
+        if (dd.areas.some(a => !isRegionOf(cc(biz.countryCode), a.emirate)) || dd.freeEm.some(v => !isRegionOf(cc(biz.countryCode), v))) throw new AppError("INVALID_REGION", `Choose regions of ${marketOf(cc(biz.countryCode)).nameEn} only.`, 422);
         if (typed.some(v => (v.split(".")[1]?.length ?? 0) > dec)) throw new AppError("INVALID_AMOUNT", `Use at most ${dec} decimal places for amounts in this currency.`, 422);
         const cur = (await tx.business.findUniqueOrThrow({ where: { id: businessId }, select: { currencyCode: true } })).currencyCode, d = data as Delivery, fields = { supportsDelivery: d.status === "available", supportsPickup: true, minimumOrderAmountMinor: toMinor(num(d.minOrder), cur) };
         await tx.orderSettings.upsert({ where: { businessId }, update: fields, create: { businessId, ...fields, configuredAt: new Date() } });

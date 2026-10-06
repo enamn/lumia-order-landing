@@ -19,18 +19,18 @@ export const profileSection = z.object({
 }).strict().refine(v => !v.vat || v.trn.replace(/\D/g, "").length === 15, { path: ["trn"], message: "The tax registration number must be 15 digits." });
 
 export const branchSection = z.array(z.object({
-  id, name: text(120).min(2, "Every branch needs a name."), emirate: z.enum(EMIRATES), area: text(100), address: text(240), phone, eta: digits(3),
+  id, name: text(120).min(2, "Every branch needs a name."), emirate: text(60), area: text(100), address: text(240), phone, eta: digits(3),
   active: z.boolean(), pin: z.boolean(), coords: z.string().trim().max(60),
 }).strict()).min(1, "Keep at least one branch.").max(30);
 
 export const waSection = z.object({ routing: z.enum(["one", "all", "selected"]), one: z.string().max(64), sel: z.array(id).max(30) }).strict();
 
-const area = z.object({ emirate: z.enum(EMIRATES), area: text(100), fee: money, min: money, eta: digits(3), branch: z.string().max(64), on: z.boolean() }).strict();
+const area = z.object({ emirate: text(60), area: text(100), fee: money, min: money, eta: digits(3), branch: z.string().max(64), on: z.boolean() }).strict();
 const range = z.object({ from: money, to: money, fee: money, min: money, eta: digits(3), on: z.boolean() }).strict();
 export const deliverySection = z.object({
   status: z.enum(["available", "pickup", "paused"]), method: z.enum(["area", "distance", "free", "manual"]).nullable(),
   minOrder: money, freeAbove: money, eta: digits(3), pinReq: z.boolean(), areas: z.array(area).max(60), ranges: z.array(range).max(20),
-  freeEm: z.array(z.enum(EMIRATES)).max(7), freeAreas: text(200), freeBranch: z.string().max(64), manualMsg: text(300), confirmFirst: z.boolean(),
+  freeEm: z.array(text(60)).max(20), freeAreas: text(200), freeBranch: z.string().max(64), manualMsg: text(300), confirmFirst: z.boolean(),
 }).strict().superRefine((v, ctx) => {
   if (v.method !== "distance") return;
   const on = v.ranges.filter(r => r.on), hi = (r: { to: string }) => r.to === "" ? Infinity : +r.to;

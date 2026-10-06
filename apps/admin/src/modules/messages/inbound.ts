@@ -7,6 +7,8 @@ import { authorize } from "@/server/authorization";
 import { autoReply, handleVoice, replyToOptChange, replyToUnreadable, UNREADABLE_TYPES } from "./ai";
 import { sendWelcome } from "./welcome";
 import { accessFor } from "@/modules/billing/service";
+import { isCountryCode } from "@/modules/market/countries";
+import { regionFrom } from "@/modules/market/regions";
 import { lumiaApi } from "@/server/lumia-api";
 
 // Messages customers send to a restaurant's linked WhatsApp number. lumia-order-api receives Meta's webhook and forwards them here;
@@ -121,16 +123,18 @@ export async function listConversations(userId: string, businessId: string) {
 
 
 type Pin = { latitude: number; longitude: number; name?: string | undefined; address?: string | undefined };
-type Place = { emirate: string | null; area: string; street: string; place: string; formatted: string };
+type Place = { emirate: string | null; area: string; street: string; place: string; formatted: string; countryCode?: string; regionText?: string };
 export const mapLink = (p: { latitude: number; longitude: number }) => `https://maps.google.com/?q=${p.latitude},${p.longitude}`;
 // What the chat shows for a shared pin: the place WhatsApp sent or we looked up, never bare coordinates when we know better.
 export const pinText = (p: Pin, place?: Place | null) => `📍 ${[p.name, p.address].filter(Boolean).join(", ") || place?.formatted || "Location"}\n${mapLink(p)}`;
 async function resolvePin(conversationId: string, externalMessageId: string, pin: Pin) {
   const r = await lumiaApi<Place>("/internal/geo/reverse", { latitude: pin.latitude, longitude: pin.longitude }, 6000);
   if (!r.ok) return;
-  const place = r.data;
-  const conversation = await db.conversation.findUnique({ where: { id: conversationId }, select: { customerLocation: true } });
+  const conversation = await db.conversation.findUnique({ where: { id: conversationId }, select: { customerLocation: true, business: { select: { countryCode: true } } } });
+  // The region is named from the restaurant's own country's list; a pin in another country gets none (and is flagged), so no delivery area can match it.
+  const country = conversation?.business.countryCode ?? "AE", abroad = !!r.data.countryCode && r.data.countryCode !== country;
+  const place = { ...r.data, emirate: abroad ? null : regionFrom(isCountryCode(country) ? country : "AE", r.data.regionText, r.data.emirate) };
   const current = (conversation?.customerLocation ?? {}) as Record<string, unknown>;
-  await db.conversation.update({ where: { id: conversationId }, data: { customerLocation: { ...current, emirate: place.emirate, area: place.area, street: place.street, place: place.place, formatted: place.formatted } } });
+  await db.conversation.update({ where: { id: conversationId }, data: { customerLocation: { ...current, emirate: place.emirate, area: place.area, street: place.street, place: place.place, formatted: place.formatted, ...(abroad ? { outsideCountry: true } : {}) } } });
   await db.message.updateMany({ where: { conversationId, externalMessageId }, data: { textContent: pinText(pin, place) } });
 }

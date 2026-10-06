@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { fromMinor } from "../market/money";
 import { marketOf } from "../market/countries";
+import { regionNames } from "../market/regions";
 import { db } from "@/server/db";
 import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
@@ -9,7 +10,7 @@ import { decryptSecret } from "@/server/crypto";
 import { deliverOrderReview, deliverText, type Interactive } from "./reply";
 import { welcomeFor } from "./welcome-text";
 import { DRAFT_TTL_MS, type SavedAddr, draftKey, isComplete, meetsMinimum, money, orderItemLines, placedText, recheckText, codeText, langOf, removedText, resolveDraft, summaryText, type DeliveryContext, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
-import { branchFromText, looksLikeAddress, nearestBranch, quoteDelivery, type BranchPoint, type DeliveryRules } from "@/modules/orders/delivery";
+import { branchFromText, looksLikeAddress, nearestBranch, quoteDelivery, regionIn, type BranchPoint, type DeliveryRules } from "@/modules/orders/delivery";
 import { catalogIdFor } from "@/modules/menu/catalog";
 import { canPersonalize, entitlementsFor } from "@/modules/billing/service";
 import { canStartOrder, consume, refund } from "@/modules/billing/usage";
@@ -78,7 +79,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   let stored = prev && Date.now() - new Date(prev.updatedAt).getTime() < DRAFT_TTL_MS ? prev : null;
   // Delivery: the restaurant's pricing rules, its branches, the customer's shared location pin and WhatsApp name. The fee itself is worked out here, never by the assistant.
   const bizRow = await db.business.findUniqueOrThrow({ where: { id: t.businessId }, select: { settings: true, currencyCode: true, countryCode: true, locations: { where: { status: "ACTIVE" }, select: { id: true, name: true, latitude: true, longitude: true } } } });
-  options.currency = bizRow.currencyCode;
+  options.currency = bizRow.currencyCode; options.country = bizRow.countryCode;
   const rules = ((bizRow.settings as { delivery?: DeliveryRules } | null)?.delivery ?? null) as DeliveryRules | null;
   const branches: BranchPoint[] = bizRow.locations.map(l => ({ id: l.id, name: l.name, active: true, latitude: l.latitude, longitude: l.longitude }));
   const shared = conversation.customerLocation as { latitude: number; longitude: number; at: string; emirate?: string | null; area?: string; formatted?: string } | null;
@@ -94,7 +95,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   if (perBranch) {
     const near = pin ? nearestBranch(branches, pin) : null;
     if (near && near !== branchId) { branchSwitched = Boolean(branchId); if (branchSwitched) stored = null; branchId = near; }
-    if (!branchId) branchId = branchFromText(rules, branches, latestInbound.textContent); // the restaurant's own area rules name a branch, so no pin is needed
+    if (!branchId) branchId = branchFromText(rules, branches, latestInbound.textContent, bizRow.countryCode); // the restaurant's own area rules name a branch, so no pin is needed
     if (!branchId && branches.length === 1) branchId = branches[0]!.id;
   }
   const branchNeeded = perBranch && !branchId;
@@ -127,12 +128,12 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const wantsPin = !pin && ((preQuote.status === "needs" && preQuote.need === "pin") || branchNeeded);
   let newCandidate: Candidate | null = null;
   if (wantsPin && looksLikeAddress(latestInbound.textContent) && candidate?.query !== latestInbound.textContent) {
-    const g = await lumiaApi<{ found: boolean; latitude: number; longitude: number; emirate: string | null; area: string; street: string; place: string; formatted: string }>("/internal/geo/search", { query: `${latestInbound.textContent.slice(0, 160)}, UAE` }, 6000);
-    if (g.ok && g.data.found) newCandidate = candidate = { query: latestInbound.textContent, latitude: g.data.latitude, longitude: g.data.longitude, emirate: g.data.emirate, area: g.data.area, street: g.data.street, place: g.data.place, formatted: g.data.formatted, at: new Date().toISOString() };
+    const g = await lumiaApi<{ found: boolean; latitude: number; longitude: number; emirate: string | null; regionText?: string; area: string; street: string; place: string; formatted: string }>("/internal/geo/search", { query: `${latestInbound.textContent.slice(0, 160)}, ${marketOf(bizRow.countryCode).nameEn}`, country: bizRow.countryCode }, 6000);
+    if (g.ok && g.data.found) newCandidate = candidate = { query: latestInbound.textContent, latitude: g.data.latitude, longitude: g.data.longitude, emirate: regionIn(bizRow.countryCode, g.data.regionText, g.data.emirate), area: g.data.area, street: g.data.street, place: g.data.place, formatted: g.data.formatted, at: new Date().toISOString() };
   }
   const lastBranch = branchNeeded ? branches.find(b => b.id === conversation.customer.lastBranchId)?.name : undefined;
   const branchList = branches.map((b, i) => ({ id: String(i + 1), realId: b.id, name: b.name }));
-  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; branch?: string; askLocation?: boolean; locationConfirmed?: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; discountCode?: string; confirmed: boolean } | null }>("/internal/ai/reply", { market: { country: marketOf(bizRow.countryCode).nameEn, currency: bizRow.currencyCode }, businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: fromMinor(m.priceMinor, options.currency), available: m.available })), draft: apiDraft, delivery: deliveryHint, ...(branchNeeded ? { branchNeeded: true, branches: branchList.map(b => ({ id: b.id, name: b.name })), ...(lastBranch ? { lastBranch } : {}) } : {}), ...(wantsPin && candidate ? { candidate: candidate.formatted } : {}), customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: fromMinor(options.minimumMinor, options.currency) }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
+  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; branch?: string; askLocation?: boolean; locationConfirmed?: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; discountCode?: string; confirmed: boolean } | null }>("/internal/ai/reply", { market: { country: marketOf(bizRow.countryCode).nameEn, currency: bizRow.currencyCode, regionLabel: marketOf(bizRow.countryCode).regionLabelEn.toLowerCase(), regions: regionNames(marketOf(bizRow.countryCode).code) }, businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: fromMinor(m.priceMinor, options.currency), available: m.available })), draft: apiDraft, delivery: deliveryHint, ...(branchNeeded ? { branchNeeded: true, branches: branchList.map(b => ({ id: b.id, name: b.name })), ...(lastBranch ? { lastBranch } : {}) } : {}), ...(wantsPin && candidate ? { candidate: candidate.formatted } : {}), customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: fromMinor(options.minimumMinor, options.currency) }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
   if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "AI_REPLY_REJECTED", status: r.status, apiCode: r.code })); await refund(t.businessId, "ai", taken); return sendNotice(t, TRY_AGAIN, 300000).catch(() => "skipped" as const); } // an AI failure must never leave the customer in silence
   const lang = r.data.language; const parts = [r.data.reply];
   const data: { needsHuman?: boolean; aiPausedUntil?: Date | null; draftOrder?: object | null; branchId?: string | null; customerLocation?: object; candidateLocation?: object | null } = {};

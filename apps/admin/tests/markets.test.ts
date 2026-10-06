@@ -63,3 +63,19 @@ describe.skipIf(!enabled)("restaurant country", () => {
     await expect(changeCountry(stranger, made[0]!, { countryCode: "AE" }, "t")).rejects.toBeTruthy();
   });
 });
+
+import { saveSettingsSection, getSettings } from "../src/modules/settings/service";
+describe.skipIf(!enabled)("branches and delivery areas stay inside the restaurant's country", () => {
+  const suffix = crypto.randomUUID().slice(0, 8);
+  it("a Saudi restaurant uses Saudi regions; a UAE emirate is rejected, also through the API", async () => {
+    const o = (await db.user.create({ data: { name: "sa", email: `sa-${suffix}@test.invalid`, phoneNumber: `+9665${String(Date.now()).slice(-8)}`, phoneNumberVerified: true } })).id;
+    const b = (await createBusiness(o, { name: "Riyadh Grill 2", locationName: "Main" }, "t")).id;
+    const s = await getSettings(o, b); expect(s.country).toBe("SA"); expect(s.sections.branches[0].emirate).toBe("Riyadh");
+    const ok = s.sections.branches.map((x: any) => ({ ...x, emirate: "Makkah", area: "Jeddah" }));
+    await saveSettingsSection(o, b, "branches", ok, "t"); expect((await db.location.findFirstOrThrow({ where: { businessId: b } })).emirate).toBe("Makkah");
+    await expect(saveSettingsSection(o, b, "branches", ok.map((x: any) => ({ ...x, emirate: "Dubai" })), "t")).rejects.toMatchObject({ code: "BRANCH_OUTSIDE_RESTAURANT_COUNTRY" });
+    const del = (await getSettings(o, b)).sections.delivery;
+    await expect(saveSettingsSection(o, b, "delivery", { ...del, areas: [{ emirate: "Sharjah", area: "All areas", fee: "5", min: "", eta: "30", branch: "", on: true }] }, "t")).rejects.toMatchObject({ code: "INVALID_REGION" });
+    await saveSettingsSection(o, b, "delivery", { ...del, method: "area", areas: [{ emirate: "Riyadh", area: "All areas", fee: "12.50", min: "", eta: "30", branch: "", on: true }] }, "t");
+  });
+});

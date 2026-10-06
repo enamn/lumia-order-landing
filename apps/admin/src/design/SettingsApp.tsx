@@ -8,6 +8,8 @@ import "./dc-base.css";
 import "./settings-hover.css";
 import { SettingsTemplate } from "./SettingsTemplate";
 import { EmailVerify } from "./EmailVerify";
+import { isCountryCode, marketOf } from "@/modules/market/countries";
+import { regionNames } from "@/modules/market/regions";
 import { logoToDataUrl } from "@/lib/logo";
 import { ContentLoader } from "@/components/lumia-loader";
 
@@ -15,7 +17,7 @@ export interface SettingsProps {
   businessId: string;
   query: string;
   onPremium?: () => void; onSaved?: () => void;
-  initial: { sections: any; currency?: string; emailVerified?: boolean; branchLimit?: number; branchBuy?: { priceAed: number; period: string; payNowMinor: number; card: string | null; hasCard: boolean } | null; menu: { categories: number; items: number; missingPrices: number; soldOut: number; updatedAt: string | null }; whatsapp: { connected: boolean; displayPhoneNumber: string } };
+  initial: { sections: any; country?: string; currency?: string; emailVerified?: boolean; branchLimit?: number; branchBuy?: { priceAed: number; period: string; payNowMinor: number; card: string | null; hasCard: boolean } | null; menu: { categories: number; items: number; missingPrices: number; soldOut: number; updatedAt: string | null }; whatsapp: { connected: boolean; displayPhoneNumber: string } };
 }
 type Props = SettingsProps;
 
@@ -34,7 +36,6 @@ function coordsFromText(text: string): string | null {
   return `${m[1]}, ${m[2]}`;
 }
 
-const EM = ['Sharjah', 'Ajman', 'Dubai', 'Abu Dhabi', 'Umm Al Quwain', 'Ras Al Khaimah', 'Fujairah'];
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const PAGES = [
   ['profile', 'Profile', 'M4 8h12l-1.2-4H5.2zM5 8v8.5h10V8M8.5 16.5v-4h3v4'],
@@ -51,7 +52,7 @@ const OK: Record<string, string> = { profile: 'Restaurant profile saved.', branc
 const TONE: Record<string, string[]> = { ok: ['#E6F4EC', '#16704A'], warn: ['#FFF1DC', '#8A4B00'], bad: ['#FDECEC', '#B42318'], neutral: ['#F6EEF2', '#3D1C31'] };
 const clone = (o: any) => JSON.parse(JSON.stringify(o));
 const fmt12 = (t: string) => { if (!t) return ''; let [h, m] = t.split(':').map(Number); const ap = h >= 12 && h < 24 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${String(m).padStart(2, '0')} ${ap}`; };
-const newBranch = (): any => ({ name: '', emirate: 'Dubai', area: '', address: '', phone: '', eta: '45', active: true, pin: false, coords: '' });
+const newBranch = (region = ''): any => ({ name: '', emirate: region, area: '', address: '', phone: '', eta: '45', active: true, pin: false, coords: '' });
 class SettingsApp extends React.Component<Props, any> {
   tt: any; ro?: ResizeObserver; _lastPage?: string;
   rootRef = React.createRef<HTMLDivElement>();
@@ -59,7 +60,7 @@ class SettingsApp extends React.Component<Props, any> {
   constructor(props: Props) {
     super(props);
     const d = props.initial.sections, hp = typeof location !== 'undefined' ? location.hash.slice(1) : '';
-    this.state = { w: 1200, page: PAGES.some(p => p[0] === hp) ? hp : 'profile', draft: clone(d), saved: clone(d), toast: '', error: '', blocked: null, saving: false, adding: false, nb: newBranch(), pinMode: 'current', pinQ: '', calc: { branch: d.branches[0]?.id ?? '', emirate: 'Sharjah', area: '', dist: '7', sub: '45' }, menu: props.initial.menu, wa: props.initial.whatsapp };
+    this.state = { w: 1200, page: PAGES.some(p => p[0] === hp) ? hp : 'profile', draft: clone(d), saved: clone(d), toast: '', error: '', blocked: null, saving: false, adding: false, nb: newBranch(regionNames(isCountryCode(props.initial.country) ? props.initial.country : 'AE')[0]), pinMode: 'current', pinQ: '', calc: { branch: d.branches[0]?.id ?? '', emirate: regionNames(isCountryCode(props.initial.country) ? props.initial.country : 'AE')[0], area: '', dist: '7', sub: '45' }, menu: props.initial.menu, wa: props.initial.whatsapp };
   }
 
   componentDidMount() {
@@ -109,12 +110,15 @@ class SettingsApp extends React.Component<Props, any> {
   }
   discard() { const s = this.state, k = KEY[s.page]; const next = s.blocked; this.setState(st => ({ draft: { ...st.draft, [k]: clone(st.saved[k]) }, error: '', blocked: null, adding: false, ...(next ? { page: next } : {}) })); }
 
+  /** The regions of the restaurant's country, and what that level is called (Emirate, Region, Governorate, Municipality). */
+  get EMR(): string[] { return regionNames(isCountryCode(this.props.initial.country) ? this.props.initial.country : 'AE'); }
+  get REGION_LABEL(): string { return marketOf(this.props.initial.country).regionLabelEn; }
   renderVals() {
     const s = this.state, d = s.draft, sv = s.saved, wide = s.w >= 900, tw = s.w >= 560 ? s.w - (s.w >= 1000 ? 340 : 260) - 48 : s.w, tblWide = tw >= 700, M = s.menu, menuLevel = M.items === 0 ? 0 : M.missingPrices > 0 ? 2 : 4;
     const ce = React.createElement;
     const selStyle = (sm) => ({ height: sm ? 40 : 44, width: '100%', minWidth: 0, padding: '0 10px', borderRadius: sm ? 9 : 10, border: '1.5px solid #ECD9E0', background: '#fff', fontSize: sm ? 14 : 15 });
     const sel = (value, opts, onChange, sm = true, label) => ce('select', { value, onChange, style: selStyle(sm), 'aria-label': label }, opts.map(o => ce('option', { key: o.v, value: o.v }, o.l)));
-    const emOpts = EM.map(e => ({ v: e, l: e }));
+    const emOpts = this.EMR.map(e => ({ v: e, l: e }));
     const brOpts = d.branches.map(b => ({ v: b.id, l: b.name }));
     const bName = (id) => (d.branches.find(b => b.id === id) || {}).name || '—';
     const sw = (on, toggle, extra = {}) => ({ on, toggle, tBg: on ? 'linear-gradient(90deg,#FF5577,#C93DFF)' : '#EAD9E1', knob: on ? '20px' : '0px', ...extra });
@@ -176,7 +180,7 @@ class SettingsApp extends React.Component<Props, any> {
       ] }));
     const nbS = s.nb, setNb = (key, v) => this.setState(st => ({ nb: { ...st.nb, [key]: v } }));
     const nb = Object.fromEntries(['name', 'area', 'address', 'phone', 'eta'].map(k => [k, { v: nbS[k], set: (e) => setNb(k, e.target.value) }]));
-    nb.emSel = sel(nbS.emirate, emOpts, (e) => setNb('emirate', e.target.value), false, 'Emirate');
+    nb.emSel = sel(nbS.emirate, emOpts, (e) => setNb('emirate', e.target.value), false, this.REGION_LABEL);
     const setPin = () => {
       if (s.pinMode === 'paste') { const c = coordsFromText(s.pinQ); if (c) this.setState((st: any) => ({ nb: { ...st.nb, pin: true, coords: c }, error: '' })); else this.setState({ error: 'We couldn’t find a location in that link. Paste a Google Maps link that shows the pin, or "latitude, longitude".' }); }
       else this.locate((c: string) => this.setState((st: any) => ({ nb: { ...st.nb, pin: true, coords: c } })));
@@ -194,7 +198,7 @@ class SettingsApp extends React.Component<Props, any> {
     const rowSet = (list, i, keys) => Object.fromEntries(keys.map(k => [k, (e) => { const v = e.target.value; this.upd('delivery', x => { x[list][i][k] = v; }); }]));
     const areas = D.areas.map((r, i) => ({ ...r, op: r.on ? 1 : 0.5, feePh: r.on ? '0' : 'Not served', onLabel: r.on ? 'Active' : 'Inactive',
       set: rowSet('areas', i, ['area', 'fee', 'min', 'eta']),
-      emSel: sel(r.emirate, emOpts, (e) => { const v = e.target.value; this.upd('delivery', x => { x.areas[i].emirate = v; }); }, true, 'Emirate'),
+      emSel: sel(r.emirate, emOpts, (e) => { const v = e.target.value; this.upd('delivery', x => { x.areas[i].emirate = v; }); }, true, this.REGION_LABEL),
       brSel: sel(r.branch, [{ v: '', l: 'Choose…' }, ...brOpts], (e) => { const v = e.target.value; this.upd('delivery', x => { x.areas[i].branch = v; }); }, true, 'Branch'),
       sw: sw(r.on, () => this.upd('delivery', x => { x.areas[i].on = !x.areas[i].on; })),
       remove: () => this.upd('delivery', x => { x.areas.splice(i, 1); }) }));
@@ -202,7 +206,7 @@ class SettingsApp extends React.Component<Props, any> {
     const ranges = D.ranges.map((r, i) => ({ ...r, op: r.on ? 1 : 0.5, bd: badRange.has(i) ? '#E5484D' : '#ECD9E0', onLabel: r.on ? 'Active' : 'Inactive', set: rowSet('ranges', i, ['from', 'to', 'fee', 'min', 'eta']),
       sw: sw(r.on, () => this.upd('delivery', x => { x.ranges[i].on = !x.ranges[i].on; })), remove: () => this.upd('delivery', x => { x.ranges.splice(i, 1); }) }));
     const C = s.calc, setC = (k) => (e) => { const v = e.target.value; this.setState(st => ({ calc: { ...st.calc, [k]: v } })); };
-    const calc = { ...C, setArea: setC('area'), setDist: setC('dist'), setSub: setC('sub'), brSel: sel(C.branch, brOpts, setC('branch'), true, 'Branch'), emSel: sel(C.emirate, emOpts, setC('emirate'), true, 'Emirate') };
+    const calc = { ...C, setArea: setC('area'), setDist: setC('dist'), setSub: setC('sub'), brSel: sel(C.branch, brOpts, setC('branch'), true, 'Branch'), emSel: sel(C.emirate, emOpts, setC('emirate'), true, this.REGION_LABEL) };
     const CUR = this.props.initial.currency ?? 'AED';
     const res = (() => {
       const sub = +C.sub || 0, dist = +C.dist || 0, bad = (head, msg) => ({ ok: false, head, msg, rows: [], fg: '#B42318' });
@@ -270,7 +274,7 @@ class SettingsApp extends React.Component<Props, any> {
       pg: Object.fromEntries(PAGES.map(([k]) => [k, s.page === k])),
       nav, navGroups, steps, ready, todoSteps, doneSteps, hasDone: doneSteps.length > 0, setupOpen: todo.length > 0, setupDone: todo.length === 0,
       warnings, hasWarnings: warnings.length > 0, progressLabel: `${doneN} of ${steps.length} steps completed`,
-      cur: this.props.initial.currency ?? 'AED',
+      cur: this.props.initial.currency ?? 'AED', regionLabel: this.REGION_LABEL, regionLabelPlural: this.REGION_LABEL.endsWith('y') ? this.REGION_LABEL.slice(0, -1) + 'ies' : this.REGION_LABEL + 's',
       brand, initials, markDirty: () => {},
       emailVerifyNode: React.createElement(EmailVerify, { key: String(this.props.initial.emailVerified), businessId: this.props.businessId, email: this.props.initial.sections.profile?.email ?? '', verified: !!this.props.initial.emailVerified, variant: 'settings', draft: pr.email, onVerified: (e: string) => { this.props.initial.emailVerified = true; this.props.initial.sections.profile = { ...this.props.initial.sections.profile, email: e }; this.props.onSaved?.(); } }),
       logoNode: pr.logo ? React.createElement('img', { src: pr.logo, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }) : initials,
@@ -282,7 +286,7 @@ class SettingsApp extends React.Component<Props, any> {
       greetOpts: radio([['friendly', 'Friendly', 'Warm and casual'], ['formal', 'Formal', 'Polite and professional'], ['short', 'Short', 'Straight to the order']], pr.greet, (v) => this.upd('profile', x => { x.greet = v; })),
       greetBubbles,
       pinMissing, branchCards, adding: s.adding, notAdding: !s.adding,
-      startAdd: () => { const open = () => this.setState({ adding: true, nb: newBranch(), pinQ: '', pinMode: 'current' }); if (d.branches.filter((b: any) => b.active).length < (this.props.initial.branchLimit ?? 1)) return open(); const bb = this.props.initial.branchBuy; if (bb) return this.buyBranch(open); if (this.props.onPremium) return this.props.onPremium(); open(); }, cancelAdd: () => this.setState({ adding: false }),
+      startAdd: () => { const open = () => this.setState({ adding: true, nb: newBranch(this.EMR[0]), pinQ: '', pinMode: 'current' }); if (d.branches.filter((b: any) => b.active).length < (this.props.initial.branchLimit ?? 1)) return open(); const bb = this.props.initial.branchBuy; if (bb) return this.buyBranch(open); if (this.props.onPremium) return this.props.onPremium(); open(); }, cancelAdd: () => this.setState({ adding: false }),
       confirmAdd: () => { const b = { ...s.nb, id: String(Date.now()) }; this.upd('branches', x => { x.push(b); }); this.setState({ adding: false }); },
       nb, nbStatus: seg([[true, 'Active'], [false, 'Inactive']], nbS.active, (v) => setNb('active', v)),
       pinModes: [['current', 'Use current location'], ['paste', 'Paste Google Maps link']].map(([k, l]) => ({ ...chip(l, s.pinMode === k, () => this.setState({ pinMode: k })) })),
@@ -294,11 +298,11 @@ class SettingsApp extends React.Component<Props, any> {
       routeOpts, routeBranches, waMap, route, waFor: waMap[0],
       dStatusOpts: radio([['available', 'Delivery available', 'Lumia offers delivery and pickup.'], ['pickup', 'Pickup only', 'No delivery. Customers collect from the branch.'], ['paused', 'Delivery temporarily paused', 'Use when you are short on drivers.']], D.status, (v) => setD('status', v)),
       dl: { on: D.status === 'available', pickup: D.status === 'pickup', paused: D.status === 'paused', noMethod: !D.method, area: D.method === 'area', distance: D.method === 'distance', free: D.method === 'free', manual: D.method === 'manual' },
-      methodOpts: radio([['area', 'By area / emirate', 'A fixed fee for each emirate or area.'], ['distance', 'By distance range', 'Fee grows with distance from the branch.'], ['free', 'Free delivery only', 'Free in the areas you choose.'], ['manual', 'Manual confirmation', 'You confirm the fee for each order.']], D.method, (v) => this.upd('delivery', x => { x.method = v; if (v === 'distance') x.pinReq = true; })),
+      methodOpts: radio([['area', 'By area / ' + this.REGION_LABEL.toLowerCase(), 'A fixed fee for each ' + this.REGION_LABEL.toLowerCase() + ' or area.'], ['distance', 'By distance range', 'Fee grows with distance from the branch.'], ['free', 'Free delivery only', 'Free in the areas you choose.'], ['manual', 'Manual confirmation', 'You confirm the fee for each order.']], D.method, (v) => this.upd('delivery', x => { x.method = v; if (v === 'distance') x.pinReq = true; })),
       areas, ranges,
-      addArea: () => this.upd('delivery', x => { x.areas.push({ emirate: 'Dubai', area: 'All areas', fee: '', min: x.minOrder, eta: x.eta, branch: '', on: true }); }),
+      addArea: () => this.upd('delivery', x => { x.areas.push({ emirate: this.EMR[0], area: 'All areas', fee: '', min: x.minOrder, eta: x.eta, branch: '', on: true }); }),
       addRange: () => this.upd('delivery', x => { const last = x.ranges[x.ranges.length - 1]; x.ranges.push({ from: last ? (last.to || '') : '0', to: '', fee: '', min: x.minOrder, eta: x.eta, on: true }); }),
-      freeEm: EM.map(e => chip(e, D.freeEm.includes(e), () => this.upd('delivery', x => { x.freeEm = x.freeEm.includes(e) ? x.freeEm.filter(i => i !== e) : [...x.freeEm, e]; }))),
+      freeEm: this.EMR.map(e => chip(e, D.freeEm.includes(e), () => this.upd('delivery', x => { x.freeEm = x.freeEm.includes(e) ? x.freeEm.filter(i => i !== e) : [...x.freeEm, e]; }))),
       freeBrSel: sel(D.freeBranch, brOpts, (e) => setD('freeBranch', e.target.value), false, 'Branch'),
       dlf: bind('delivery', ['freeAreas', 'manualMsg', 'minOrder', 'freeAbove', 'eta']),
       confirmSw: sw(D.confirmFirst, () => setD('confirmFirst', !D.confirmFirst)),
@@ -343,7 +347,7 @@ const FRESH_MS = 60_000;
 export function prefetchSettings(businessId: string) {
   const hit = cache.get(businessId);
   if (hit && Date.now() - hit.at < FRESH_MS) return hit;
-  const entry: { at: number; promise: Promise<Loaded>; data?: Loaded } = { at: Date.now(), promise: api(`/api/v1/businesses/${businessId}/settings`).then((r: any) => ({ sections: r.sections, menu: r.menu, whatsapp: r.whatsapp, branchLimit: r.branchLimit, branchBuy: r.branchBuy, emailVerified: r.emailVerified, currency: r.currency })) };
+  const entry: { at: number; promise: Promise<Loaded>; data?: Loaded } = { at: Date.now(), promise: api(`/api/v1/businesses/${businessId}/settings`).then((r: any) => ({ sections: r.sections, menu: r.menu, whatsapp: r.whatsapp, branchLimit: r.branchLimit, branchBuy: r.branchBuy, emailVerified: r.emailVerified, currency: r.currency, country: r.country })) };
   entry.promise.then(d => { entry.data = d; }, () => { if (cache.get(businessId) === entry) cache.delete(businessId); });
   cache.set(businessId, entry);
   return entry;

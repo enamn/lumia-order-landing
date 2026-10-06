@@ -405,7 +405,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         </label>
                         <label style={S("display:flex;flex-direction:column;gap:6px")}>
                           <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                            Emirate
+                            {vm.regionLabel}
                           </span>
                           {vm.nb.emSel}
                         </label>
@@ -886,7 +886,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                     <>
                                     <div style={S(`display:grid;grid-template-columns:${vm.L.areaCols};gap:10px;padding-bottom:8px;font-size:13px;font-weight:500;color:#8A5A6E`)}>
                                       <span>
-                                        Emirate
+                                        {vm.regionLabel}
                                       </span>
                                       <span>
                                         Area
@@ -915,7 +915,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                       <div style={S(`display:grid;grid-template-columns:${vm.L.areaCols};gap:10px;align-items:end;padding:${vm.L.rowPad};border-top:1px solid #F3EEF1`)}>
                                         <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
                                           <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
-                                            Emirate
+                                            {vm.regionLabel}
                                           </span>
                                           {r.emSel}
                                         </label>
@@ -1106,7 +1106,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                               <div style={S("display:flex;flex-direction:column;gap:16px;padding-top:16px")}>
                                 <div style={S("display:flex;flex-direction:column;gap:8px")}>
                                   <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                                    Served emirates
+                                    {"Served "}{vm.regionLabelPlural}
                                   </span>
                                   <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
                                     {(vm.freeEm as any[]).map((o: any, __i: number) => (
@@ -1266,7 +1266,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                 </label>
                                 <label style={S("display:flex;flex-direction:column;gap:6px")}>
                                   <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
-                                    Emirate
+                                    {vm.regionLabel}
                                   </span>
                                   {vm.calc.emSel}
                                 </label>

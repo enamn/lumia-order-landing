@@ -1,7 +1,9 @@
 // Delivery pricing, decided by the server from the restaurant's Settings and where the customer is. The assistant never states a fee itself.
 import { toMinor } from "../market/money";
-export const EMIRATES = ["Sharjah", "Ajman", "Dubai", "Abu Dhabi", "Umm Al Quwain", "Ras Al Khaimah", "Fujairah"] as const;
-export type Emirate = (typeof EMIRATES)[number];
+import { isCountryCode, type CountryCode } from "../market/countries";
+import { regionFrom, regionNames } from "../market/regions";
+export const EMIRATES = regionNames("AE") as readonly string[]; // the UAE regions, kept for older callers
+export type Emirate = string;
 
 export interface DeliveryRules {
   status: "available" | "pickup" | "paused"; method: "area" | "distance" | "free" | "manual" | null; minOrder: string; freeAbove: string; eta: string; pinReq: boolean;
@@ -18,15 +20,9 @@ export type Quote =
   | { status: "outside"; reason: "range" | "area" | "emirate"; where: string }
   | { status: "unavailable"; reason: "PICKUP_ONLY" | "PAUSED" };
 
-const EMIRATE_WORDS: [Emirate, RegExp][] = [
-  ["Sharjah", /sharjah|الشارقة|الشارقه|sharja/i], ["Ajman", /ajman|عجمان/i], ["Dubai", /dubai|دبي|dxb/i], ["Abu Dhabi", /abu\s*dhabi|أبو\s*ظبي|ابو\s*ظبي|ابوظبي|أبوظبي/i],
-  ["Umm Al Quwain", /umm\s*al\s*quwain|um\s*al\s*quwain|uaq|أم\s*القيوين|ام\s*القيوين/i], ["Ras Al Khaimah", /ras\s*al\s*khaimah|rak\b|رأس\s*الخيمة|راس\s*الخيمة|رأس\s*الخيمه/i], ["Fujairah", /fujairah|fujeirah|الفجيرة|الفجيره/i],
-];
-// The assistant returns a canonical emirate; this also finds one in free text (English or Arabic) as a safety net.
-export function emirateFrom(...texts: (string | null | undefined)[]): Emirate | null {
-  for (const t of texts) { if (!t) continue; const exact = EMIRATES.find(e => e.toLowerCase() === t.trim().toLowerCase()); if (exact) return exact; for (const [e, re] of EMIRATE_WORDS) if (re.test(t)) return e; }
-  return null;
-}
+// The assistant returns a canonical region; this also finds one in free text (English or Arabic) as a safety net. `country` is the restaurant's country (default UAE).
+export function emirateFrom(...texts: (string | null | undefined)[]): string | null { return regionFrom("AE", ...texts); }
+export const regionIn = (country: CountryCode | string | null | undefined, ...texts: (string | null | undefined)[]): string | null => regionFrom(isCountryCode(country) ? country : "AE", ...texts);
 
 const minorOf = (currency: string) => (v: string | undefined) => { const n = Number(String(v ?? "").replace(",", ".")); return Number.isFinite(n) && n > 0 ? toMinor(n, currency) : 0; };
 const mins = (v: string | undefined) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.round(n) : null; };
@@ -44,9 +40,9 @@ export function nearestBranch(branches: BranchPoint[], pin: { latitude: number; 
   return ranked[0]?.id ?? null;
 }
 // The branch the restaurant's own rules assign to a place the customer named in words (no pin needed): an area rule that names a branch, or the branch for free delivery.
-export function branchFromText(rules: DeliveryRules | null, branches: BranchPoint[], text: string): string | null {
+export function branchFromText(rules: DeliveryRules | null, branches: BranchPoint[], text: string, country: string = "AE"): string | null {
   if (!rules || !text.trim()) return null;
-  const t = norm(text), em = emirateFrom(text), live = (id: string) => (branches.some(b => b.id === id && b.active) ? id : null);
+  const t = norm(text), em = regionIn(country, text), live = (id: string) => (branches.some(b => b.id === id && b.active) ? id : null);
   if (rules.method === "area") for (const r of rules.areas) { const a = norm(r.area); if (r.on && r.branch && a && !allAreas(r.area) && t.includes(a) && (!em || r.emirate === em) && live(r.branch)) return r.branch; }
   // "All areas of <emirate>" rules, when the customer only named the emirate.
   if (rules.method === "area" && em) for (const r of rules.areas) if (r.on && r.branch && allAreas(r.area) && r.emirate === em && live(r.branch)) return r.branch;

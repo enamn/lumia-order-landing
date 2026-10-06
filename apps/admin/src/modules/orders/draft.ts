@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { amountText } from "../market/money";
-import { emirateFrom, quoteDelivery, type BranchPoint, type DeliveryRules, type Quote } from "./delivery";
+import { regionIn, quoteDelivery, type BranchPoint, type DeliveryRules, type Quote } from "./delivery";
 
 // Pure order logic: the AI only proposes menu IDs and quantities. Names, prices and totals always come from the restaurant's own menu.
 export type Lang = "en" | "ar";
@@ -23,7 +23,7 @@ export function normalizeLabel(raw: string | undefined | null): string {
   return t;
 }
 export const labelFor = (label: string, lang: Lang) => (lang === "ar" ? (label === "Home" ? "المنزل" : label === "Work" ? "العمل" : label) : label);
-export interface Options { delivery: boolean; pickup: boolean; minimumMinor: number; /** The restaurant's order currency (default AED). */ currency?: string }
+export interface Options { delivery: boolean; pickup: boolean; minimumMinor: number; /** The restaurant's order currency (default AED). */ currency?: string; /** The restaurant's country code (default AE). */ country?: string }
 
 export const DRAFT_TTL_MS = 12 * 3600 * 1000;
 const label = (e: { name: string; nameAr: string }, lang: Lang) => (lang === "ar" ? e.nameAr || e.name : e.name || e.nameAr);
@@ -45,7 +45,7 @@ export function resolveDraft(menu: MenuEntry[], d: Pick<ModelDraft, "items" | "f
   // The customer picked one of their saved addresses: its text, area, emirate and location pin are used (no need to ask or share again).
   const saved = isDelivery && d.savedAddress ? ctx?.saved?.find(a => a.id === d.savedAddress) : undefined;
   const addr = saved ? saved.text : address, area = isDelivery ? (saved ? saved.area : (d.area ?? "")).trim() : "";
-  const emirate = isDelivery ? (saved?.emirate ?? emirateFrom(d.emirate, addr, area) ?? null) : null, name = isDelivery ? ((d.customerName ?? "").trim() || ctx?.profileName.trim() || "") : "";
+  const emirate = isDelivery ? (saved?.emirate ?? regionIn(options.country, d.emirate, addr, area) ?? null) : null, name = isDelivery ? ((d.customerName ?? "").trim() || ctx?.profileName.trim() || "") : "";
   const pin = saved && saved.latitude !== null && saved.longitude !== null ? { latitude: saved.latitude, longitude: saved.longitude } : saved ? undefined : ctx?.pin;
   const label = isDelivery ? (saved ? saved.label : normalizeLabel(d.addressLabel)) : "";
   const delivery = isDelivery && ctx ? quoteDelivery(ctx.rules, ctx.branches, { emirate, area, ...(pin ?? {}) }, subtotalMinor, options.minimumMinor, options.currency) : null;
