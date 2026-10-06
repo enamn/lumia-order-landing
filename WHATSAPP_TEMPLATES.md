@@ -10,7 +10,7 @@ Quick-reply buttons **Confirm order** and **Change order** (Lumia recognises the
 Settings (API): `META_ORDER_REVIEW_TEMPLATE_NAME`, `META_ORDER_REVIEW_TEMPLATE_LANGUAGE` (default `en_US`; must equal the approved language code).
 
 ## 2. Campaign with an image — create: `lumia_campaign_offer_v1`
-- **Category:** Marketing  **Language:** English (US), code `en_US`
+- **Category:** Marketing  **Language:** English, code `en` (this is how `lumia_campaign_offer_v1` was created and approved; the language code must match exactly)
 - **Header:** Image (sample: any square offer picture)
 - **Body** (exactly; three variables, none at the very start or end):
 
@@ -26,8 +26,8 @@ Reply STOP to unsubscribe. · أرسل «إيقاف» لإلغاء الاشتر�
 - **Sample values** (Meta asks for them): `{{1}}` = `Burger House`, `{{2}}` = `Hi Sara, this weekend only: 20% off all burgers. Reply here to order.`, `{{3}}` = `Code WEEKEND20: 20% off, valid until 12 Oct.`
 - **Buttons:** one **Quick reply**: `Order now`
 
-## 3. Campaign without an image — create: `lumia_campaign_text_v1`
-Same as above, **no header**. Same body, samples and the `Order now` quick-reply button.
+## 3. Campaign without an image — still to create: `lumia_campaign_text_v1`
+Same as above (language English `en`), **no header**. Same body, samples and the `Order now` quick-reply button.
 
 ## How Lumia fills them
 - `{{1}}` the restaurant's name, `{{2}}` the message the owner wrote (`{name}` replaced by the customer's first name), `{{3}}` the offer line
@@ -42,7 +42,7 @@ Same as above, **no header**. Same body, samples and the `Order now` quick-reply
 |---|---|
 | `META_CAMPAIGN_TEMPLATE_IMAGE` | `lumia_campaign_offer_v1` |
 | `META_CAMPAIGN_TEMPLATE_TEXT` | `lumia_campaign_text_v1` |
-| `META_CAMPAIGN_TEMPLATE_LANGUAGE` | `en_US` |
+| `META_CAMPAIGN_TEMPLATE_LANGUAGE` | `en` |
 | `META_ORDER_REVIEW_TEMPLATE_NAME` | `lumia_order_review_confirm_v1` |
 | `META_ORDER_REVIEW_TEMPLATE_LANGUAGE` | `en_US` |
 
