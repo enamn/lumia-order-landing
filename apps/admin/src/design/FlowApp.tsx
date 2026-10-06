@@ -15,7 +15,7 @@ import { BillingPage } from "./BillingPage";
 import { mountEmbeddedCheckout } from "@/lib/stripe-embed";
 import { authClient } from "@/lib/auth-client";
 import { logoToDataUrl } from "@/lib/logo";
-import { COUNTRIES, groupDigits as fmt, maskPhone } from "@/modules/auth/countries";
+import { COUNTRIES, countryOf, groupDigits as fmt, maskPhone } from "@/modules/auth/countries";
 
 export interface FlowProps {
   initialStep: "phone" | "name" | "dash";
@@ -436,7 +436,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   sendCode = async (e?: any, channel: "whatsapp" | "sms" = "whatsapp") => {
     e?.preventDefault?.(); const { num, cc, sending } = this.state; const c = COUNTRIES[cc];
     if (sending) return;
-    if (!c.re.test(num)) { this.setState({ invalid: true, srvErr: "" }); this.focus(this.phoneRef); return; }
+    if (!countryOf(c.dial + num)) { this.setState({ invalid: true, srvErr: "" }); this.focus(this.phoneRef); return; }
     this.setState({ sending: true, invalid: false, srvErr: "", ccOpen: false });
     try {
       const r = await api("/api/auth/whatsapp/send-code", "POST", { phoneNumber: c.dial + num, language: "en", channel });
@@ -655,7 +655,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       back: () => { const prev = ({ otp: "phone", name: "phone", menu: s.businessId && p.initialStep === "dash" ? "dash" : "name" } as any)[s.step]; this.clearTimers(); this.setState({ verifying: false }); this.go(prev); },
       devRef: this.devRef, noop,
       // phone
-      cc: c, phoneRef: this.phoneRef, sending: s.sending, ccOpen: s.ccOpen, pf: ring(s.invalid, s.focused, s.sending), phoneDisplay: fmt(s.num, c.groups), phoneValid: c.re.test(s.num) && !s.sending, phoneInvalid: s.invalid, phoneHint: !s.invalid,
+      cc: c, phoneRef: this.phoneRef, sending: s.sending, ccOpen: s.ccOpen, pf: ring(s.invalid, s.focused, s.sending), phoneDisplay: fmt(s.num, c.groups), phoneValid: !!countryOf(c.dial + s.num) && !s.sending, phoneInvalid: s.invalid, phoneHint: !s.invalid,
       phoneInvalidMsg: s.srvErr || (s.num ? `Enter a valid ${c.label} mobile number, e.g. ${c.ex}` : "Enter your mobile number to continue"), spinnerSend: null, sendLabel: s.sending ? "Sending code…" : "Continue",
       countries: COUNTRIES.map((x, i) => ({ ...x, bg: i === s.cc ? "#FDEAF2" : "transparent", pick: () => { this.setState({ cc: i, ccOpen: false, num: s.num.slice(0, x.len), invalid: false, srvErr: "" }); this.focus(this.phoneRef); } })), toggleCC: () => this.setState({ ccOpen: !s.ccOpen }),
       onPhone: (e: any) => { let d = e.target.value.replace(/\D/g, ""); const dial = c.dial.slice(1); if (d.startsWith("00" + dial)) d = d.slice(2 + dial.length); else if (d.startsWith(dial) && d.length > c.len) d = d.slice(dial.length); if (d.startsWith("0")) d = d.slice(1); this.setState({ num: d.slice(0, c.len), invalid: false, srvErr: "" }); },
