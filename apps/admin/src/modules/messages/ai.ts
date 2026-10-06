@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { fromMinor } from "../market/money";
+import { marketOf } from "../market/countries";
 import { db } from "@/server/db";
 import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
@@ -75,7 +77,8 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const prev = conversation.draftOrder as StoredDraft | null;
   let stored = prev && Date.now() - new Date(prev.updatedAt).getTime() < DRAFT_TTL_MS ? prev : null;
   // Delivery: the restaurant's pricing rules, its branches, the customer's shared location pin and WhatsApp name. The fee itself is worked out here, never by the assistant.
-  const bizRow = await db.business.findUniqueOrThrow({ where: { id: t.businessId }, select: { settings: true, locations: { where: { status: "ACTIVE" }, select: { id: true, name: true, latitude: true, longitude: true } } } });
+  const bizRow = await db.business.findUniqueOrThrow({ where: { id: t.businessId }, select: { settings: true, currencyCode: true, countryCode: true, locations: { where: { status: "ACTIVE" }, select: { id: true, name: true, latitude: true, longitude: true } } } });
+  options.currency = bizRow.currencyCode;
   const rules = ((bizRow.settings as { delivery?: DeliveryRules } | null)?.delivery ?? null) as DeliveryRules | null;
   const branches: BranchPoint[] = bizRow.locations.map(l => ({ id: l.id, name: l.name, active: true, latitude: l.latitude, longitude: l.longitude }));
   const shared = conversation.customerLocation as { latitude: number; longitude: number; at: string; emirate?: string | null; area?: string; formatted?: string } | null;
@@ -102,7 +105,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const ctx: DeliveryContext = { rules, branches, profileName: conversation.customer.displayName ?? "", saved, ...(pin ? { pin } : {}) };
   const apiDraft = stored ? { items: stored.items.flatMap(l => byItem.has(l.itemId) ? [{ id: byItem.get(l.itemId)!, quantity: l.quantity, notes: l.notes }] : []), fulfillment: stored.fulfillment, address: stored.address, emirate: stored.emirate ?? pinPlace.emirate, area: stored.area || pinPlace.area, customerName: stored.name ?? "", addressLabel: stored.label ?? "", savedAddress: stored.savedId ?? "", discountCode: stored.discountCode ?? "", confirmed: false } : null;
   const known = apiDraft ? resolveDraft(menu, { ...apiDraft, fulfillment: "delivery" }, options, ctx) : null;
-  const preQuote = known?.delivery ?? quoteDelivery(rules, branches, { emirate: stored?.emirate ?? pinPlace.emirate, area: stored?.area || pinPlace.area, ...(pin ?? {}) }, 0, options.minimumMinor);
+  const preQuote = known?.delivery ?? quoteDelivery(rules, branches, { emirate: stored?.emirate ?? pinPlace.emirate, area: stored?.area || pinPlace.area, ...(pin ?? {}) }, 0, options.minimumMinor, options.currency);
   const deliveryHint = options.delivery ? { method: rules?.method ?? null, needs: preQuote.status === "needs" ? preQuote.need : null, pinReceived: Boolean(pin), emirate: known?.emirate ?? stored?.emirate ?? pinPlace.emirate, area: stored?.area || pinPlace.area, note: pinPlace.formatted ? `The location pin the customer shared is at: ${pinPlace.formatted}. Do not ask for the emirate or area again; still ask for the building, flat or landmark if the address text is missing.` : "" } : null;
   const useName = await canPersonalize(t.businessId);
   // A tap on the review template's buttons is handled directly: no AI call, nothing counted against the AI allowance.
@@ -129,7 +132,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   }
   const lastBranch = branchNeeded ? branches.find(b => b.id === conversation.customer.lastBranchId)?.name : undefined;
   const branchList = branches.map((b, i) => ({ id: String(i + 1), realId: b.id, name: b.name }));
-  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; branch?: string; askLocation?: boolean; locationConfirmed?: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; discountCode?: string; confirmed: boolean } | null }>("/internal/ai/reply", { businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: m.priceMinor / 100, available: m.available })), draft: apiDraft, delivery: deliveryHint, ...(branchNeeded ? { branchNeeded: true, branches: branchList.map(b => ({ id: b.id, name: b.name })), ...(lastBranch ? { lastBranch } : {}) } : {}), ...(wantsPin && candidate ? { candidate: candidate.formatted } : {}), customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: options.minimumMinor / 100 }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
+  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; branch?: string; askLocation?: boolean; locationConfirmed?: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; discountCode?: string; confirmed: boolean } | null }>("/internal/ai/reply", { market: { country: marketOf(bizRow.countryCode).nameEn, currency: bizRow.currencyCode }, businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: fromMinor(m.priceMinor, options.currency), available: m.available })), draft: apiDraft, delivery: deliveryHint, ...(branchNeeded ? { branchNeeded: true, branches: branchList.map(b => ({ id: b.id, name: b.name })), ...(lastBranch ? { lastBranch } : {}) } : {}), ...(wantsPin && candidate ? { candidate: candidate.formatted } : {}), customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: fromMinor(options.minimumMinor, options.currency) }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
   if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "AI_REPLY_REJECTED", status: r.status, apiCode: r.code })); await refund(t.businessId, "ai", taken); return sendNotice(t, TRY_AGAIN, 300000).catch(() => "skipped" as const); } // an AI failure must never leave the customer in silence
   const lang = r.data.language; const parts = [r.data.reply];
   const data: { needsHuman?: boolean; aiPausedUntil?: Date | null; draftOrder?: object | null; branchId?: string | null; customerLocation?: object; candidateLocation?: object | null } = {};
@@ -169,7 +172,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
           const pending = await findPendingOrder(t.conversationId);
           order = (pending && await confirmPendingOrder({ businessId: t.businessId, orderId: pending.id })) || await createOrderFromDraft({ businessId: t.businessId, conversationId: t.conversationId, customerId: conversation.customerId, customerName: conversation.customer.displayName ?? "", customerPhone: conversation.customer.phone, resolved: { ...resolved, fulfillment: resolved.fulfillment }, branchId: perBranch ? branchId : null });
         } catch (e) { await refund(t.businessId, "orders", slot); throw e; } // an order that was not saved does not count
-        parts.length = 0; parts.push(placedText(order.orderNumber, order.totalMinor, resolved.fulfillment, lang));
+        parts.length = 0; parts.push(placedText(order.orderNumber, order.totalMinor, resolved.fulfillment, lang, options.currency));
         if (perBranch && branchId) await db.customer.update({ where: { id: conversation.customerId }, data: { lastBranchId: branchId } });
       }
     } else if (!resolved.lines.length) { await discardPendingOrders(t.conversationId); data.draftOrder = null as never; if (resolved.removed.length) parts.push(removedText(resolved.removed, lang)); }
@@ -189,7 +192,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
         try {
           await discardPendingOrders(t.conversationId);
           const pending = await createOrderFromDraft({ businessId: t.businessId, conversationId: t.conversationId, customerId: conversation.customerId, customerName: conversation.customer.displayName ?? "", customerPhone: conversation.customer.phone, resolved: { ...resolved, fulfillment: resolved.fulfillment }, branchId: perBranch ? branchId : null, pending: true });
-          const review = { customerName: resolved.name || conversation.customer.displayName || "", orderNumber: `#${pending.orderNumber}`, restaurantName: conversation.business.name, items: orderItemLines(resolved.lines, lang), total: `${money(pending.totalMinor)} AED` };
+          const review = { customerName: resolved.name || conversation.customer.displayName || "", orderNumber: `#${pending.orderNumber}`, restaurantName: conversation.business.name, items: orderItemLines(resolved.lines, lang), total: `${money(pending.totalMinor, options.currency)} ${options.currency}` };
           reviewId = await deliverOrderReview(account, conversation.customer.phone, review);
           if (reviewId) { reviewed = true; parts.length = 0; parts.push(reviewText(review, lang)); } else await discardPendingOrders(t.conversationId);
         } catch { await discardPendingOrders(t.conversationId).catch(() => undefined); }
@@ -278,7 +281,7 @@ async function handleReviewTap(t: Target, tap: "confirm" | "change", pending: { 
   let order: Awaited<ReturnType<typeof confirmPendingOrder>>;
   try { order = await confirmPendingOrder({ businessId: t.businessId, orderId: pending.id }); } catch (e) { await refund(t.businessId, "orders", slot); throw e; }
   if (!order) { await refund(t.businessId, "orders", slot); return "skipped"; }
-  return sendDirect(t, account, conversation.customer.phone, placedText(order.orderNumber, order.totalMinor, order.fulfillmentType === "DELIVERY" ? "delivery" : "pickup", lang));
+  return sendDirect(t, account, conversation.customer.phone, placedText(order.orderNumber, order.totalMinor, order.fulfillmentType === "DELIVERY" ? "delivery" : "pickup", lang, order.currencyCode));
 }
 // Confirms that offers were switched off (STOP) or on again (START). Sent even when the assistant is off: it is the customer's choice, and the 24-hour window is open (they just wrote).
 export async function replyToOptChange(t: Target, optedOut: boolean): Promise<"sent" | "skipped"> {

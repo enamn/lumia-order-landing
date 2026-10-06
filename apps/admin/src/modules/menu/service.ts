@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { toMinor } from "../market/money";
 import { db } from "@/server/db";
 import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
@@ -51,7 +52,7 @@ export async function addItem(userId: string, businessId: string, input: unknown
     const key = (data.category || data.categoryAr).toLowerCase();
     const category = catalog.categories.find(c => (c.name || c.nameAr || "").toLowerCase() === key)
       ?? await tx.catalogCategory.create({ data: { catalogId: catalog.id, name: data.category, nameAr: data.categoryAr || null, sortOrder: catalog.categories.length } });
-    const item = await tx.catalogItem.create({ data: { catalogId: catalog.id, categoryId: category.id, name: data.name, nameAr: data.nameAr || null, basePriceMinor: Math.round(data.price * 100), currencyCode: "AED", status: "ACTIVE" } });
+    const item = await tx.catalogItem.create({ data: { catalogId: catalog.id, categoryId: category.id, name: data.name, nameAr: data.nameAr || null, basePriceMinor: toMinor(data.price, business.currencyCode), currencyCode: business.currencyCode, status: "ACTIVE" } });
     await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "CatalogItem", entityId: item.id, action: "menu.item.created", requestId } });
     return { id: item.id };
   });

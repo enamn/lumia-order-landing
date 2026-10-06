@@ -11,6 +11,8 @@ import { SettingsLoader, prefetchSettings } from "./SettingsApp";
 import { MenuScope, type Scope } from "./MenuScope";
 import { EmailVerify } from "./EmailVerify";
 import { CountryPick } from "./CountryPick";
+import { formatMoney, fromMinor, parseAmount, scaleOf, toMinor } from "@/modules/market/money";
+import { marketOf } from "@/modules/market/countries";
 import { AccountMenu, PlanBadge } from "./AccountMenu";
 import { BillingPage } from "./BillingPage";
 import { mountEmbeddedCheckout } from "@/lib/stripe-embed";
@@ -26,6 +28,8 @@ export interface FlowProps {
   linkMode: "existing" | "new";
   userPhone?: string;
   superAdmin?: boolean;
+  /** The restaurant's order currency (ISO code). */
+  currency?: string;
   lang: "en" | "ar";
   business?: { id: string; name: string; logoUrl: string | null; address: string };
   menu: MenuCat[];
@@ -46,9 +50,9 @@ const T_EN = { menu: "Menu", items: "items", categories: "categories", created: 
 const T_AR = { menu: "القائمة", items: "صنف", categories: "فئات", created: "أنشأتها Lumia AI", addItem: "إضافة صنف", search: "ابحث عن صنف", all: "كل الأصناف", soldOut: "نفد", addAr: "أضف الاسم بالعربية", noResults: "لا توجد أصناف مطابقة لبحثك.", setupTitle: "جهّز Lumia لاستقبال الطلبات", continueSetup: "متابعة الإعداد", setup: ["تم إنشاء المطعم", "تمت إضافة القائمة", ["ربط واتساب", "تم ربط واتساب"], "إعداد التوصيل والطلبات", "تجربة Lumia"] as any[] };
 const aed = (p: number | string) => "AED " + p;
 const money = (minor: number) => (minor % 100 ? (minor / 100).toFixed(2) : String(minor / 100));
-const toCats = (menu: MenuCat[]): Cat[] => menu.map(c => ({ id: c.id, cat: c.name || c.nameAr, catAr: c.name ? c.nameAr : "", items: c.items.map(i => ({ id: i.id, n: i.name || i.nameAr, ar: i.name ? i.nameAr : "", p: i.priceMinor / 100, on: i.isAvailable })) }));
+const toCats = (menu: MenuCat[], cur = "AED"): Cat[] => menu.map(c => ({ id: c.id, cat: c.name || c.nameAr, catAr: c.name ? c.nameAr : "", items: c.items.map(i => ({ id: i.id, n: i.name || i.nameAr, ar: i.name ? i.nameAr : "", p: fromMinor(i.priceMinor, cur), on: i.isAvailable })) }));
 const count = (m: { items: unknown[] }[]) => m.reduce((a, c) => a + c.items.length, 0);
-const priceNum = (v: string) => { const n = Number(v.replace(",", ".")); return v.trim() !== "" && Number.isFinite(n) && n >= 0 ? n : null; };
+const priceNum = (v: string) => (v.trim() === "" ? null : parseAmount(v));
 const toBase64 = (file: File) => new Promise<string>((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result).split(",")[1] ?? ""); r.onerror = () => reject(Error("We couldn’t read that file.")); r.readAsDataURL(file); });
 
 async function api(path: string, method = "GET", body?: unknown) {
@@ -95,9 +99,9 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const business = props.business;
     this.state = {
       step: props.initialStep, num: "", cc: 0, focused: false, invalid: false, srvErr: "", sending: false, ccOpen: false, e164: "",
-      opCountry: "", digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
+      currency: "", opCountry: "", digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
-      phase: 0, menuDone: count(toCats(props.menu)) > 0, cat: "All", menu: toCats(props.menu), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
+      phase: 0, menuDone: count(toCats(props.menu, props.currency)) > 0, cat: "All", menu: toCats(props.menu, props.currency), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
       page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", embedId: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
       custList: null as any, custErr: "", custSel: [] as string[], custOpen: null as any, custQ: "", campMode: "all", campCode: true, campPct: 20, campDays: 7, campMsgAll: `Hi {name}, this weekend only: 20% off all burgers at ${business?.name ?? "our restaurant"}. Reply here to order.`, campMsgOffer: `Hi {name}, thanks for ordering with us. Here’s a discount on your next order from ${business?.name ?? "us"}.`, campCodeTxt: "WEEKEND20", campImg: "", campImgFile: null as any, campImgName: "", campSending: false, campToast: "", campErr: "", campHist: null as any,
       menuScope: null as Scope | null, menuBranch: "", scopeBusy: false, scopeErr: "", lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
@@ -127,6 +131,8 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   }
   componentWillUnmount() { window.removeEventListener("resize", this.onResize); this.ro?.disconnect(); clearInterval(this.tick); clearInterval(this.statsTimer); clearInterval(this.ordersTimer); this.unmountStripe(); this.clearTimers(); }
   componentDidUpdate() { if (this.state.embedSecret) this.mountStripe(); if (this.prevStep !== this.state.step) { this.prevStep = this.state.step; if (this.devRef.current) this.devRef.current.scrollTop = 0; window.scrollTo(0, 0); } }
+  /** The restaurant's order currency: from its account, or (while it is being created) from the chosen country. */
+  get cur(): string { return this.state.currency || this.props.currency || marketOf(this.state.opCountry || countryOf(this.state.e164 || this.props.userPhone || "")?.code).currency; }
   focus(ref: React.RefObject<HTMLElement | null>) { setTimeout(() => ref.current?.focus(), 60); }
   go(step: string, extra: any = {}) {
     this.setState({ step, ...extra });
@@ -139,7 +145,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   menuQuery = (forWrite = false) => { const s = this.state, b = s.menuScope?.branches.find((x: any) => x.id === s.menuBranch); return b && (!forWrite || b.hasOwnMenu) ? `?branchId=${b.id}` : ""; };
   async refreshMenu() {
     const data: MenuCat[] = await api(`/api/v1/businesses/${this.state.businessId}/menu${this.menuQuery()}`);
-    const menu = toCats(data); this.setState({ menu, menuDone: count(menu) > 0 });
+    const menu = toCats(data, this.cur); this.setState({ menu, menuDone: count(menu) > 0 });
   }
   loadCustomers = () => { const id = this.state.businessId; if (!id) return Promise.resolve(); return api(`/api/v1/businesses/${id}/customers`).then((r: any) => this.setState({ custList: r.customers, custErr: "" })).catch((e: any) => { if (e.code === "PLAN_REQUIRED") this.setState({ lock: "customers", page: "Overview" }); else this.setState({ custErr: e.message, custList: [] }); }); };
   loadCampaigns = () => { const id = this.state.businessId; if (!id) return Promise.resolve(); return api(`/api/v1/businesses/${id}/campaigns`).then((r: any) => this.setState({ campHist: r.campaigns })).catch(() => this.setState({ campHist: [] })); };
@@ -198,7 +204,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const inTab = (o: any, t: string) => (t === "done" ? o.st === "completed" || o.st === "cancelled" : o.st === t);
     const os: any[] = s.orders ?? [], q = s.ordQ.trim().toLowerCase();
     const match = (o: any) => String(o.id).includes(q.replace("#", "")) || o.name.toLowerCase().includes(q) || o.phone.replace(/\s/g, "").includes(q.replace(/\s/g, ""));
-    const money = (n: number) => "AED " + (Number.isInteger(n) ? n : n.toFixed(2));
+    const cur0 = this.cur, money = (n: number) => formatMoney(toMinor(n, cur0), cur0);
     const ago = (o: any) => (o.min < 60 ? A(`${o.min} min ago`, `منذ ${o.min} د`) : A(`${Math.floor(o.min / 60)} h ago`, `منذ ${Math.floor(o.min / 60)} س`));
     const typeL = (o: any) => (o.type === "delivery" ? A("Delivery", "توصيل") : A("Pickup", "استلام"));
     const told = A("Customer notified on WhatsApp.", "تم إبلاغ العميل على واتساب.");
@@ -370,7 +376,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
         sendOffer: () => { this.setState({ page: "Campaigns", campMode: "offer", campErr: "" }); this.loadCampaigns(); history.replaceState(null, "", `/dashboard?page=campaigns&businessId=${this.state.businessId}`); },
         empty: s.custList !== null && !list.length,
         rows: list.map((c: any, i: number) => { const on = isSel(c.id), open = s.custOpen === c.id; return { ...ck(on), name: c.name + (c.optedOut ? " · opted out of offers" : ""), phone: phone(c.phone), ini: ini(c.name), av: AV[i % 4],
-          orders: c.orders, spent: "AED " + Math.round(c.spentMinor / 100).toLocaleString("en-US"), last: last(c.lastOrderAt), isOpen: open, rot: open ? "180deg" : "0deg", bd: on ? "#F3B8CB" : "#F0E4E8",
+          orders: c.orders, spent: formatMoney(c.spentMinor, this.cur), last: last(c.lastOrderAt), isOpen: open, rot: open ? "180deg" : "0deg", bd: on ? "#F3B8CB" : "#F0E4E8",
           ckLabel: (on ? "Deselect " : "Select ") + c.name, toggle: () => { if (!c.optedOut) toggle(c.id); }, open: () => this.setState({ custOpen: open ? null : c.id }),
           addrs: c.addresses.map((a: any, j: number) => ({ label: a.label, text: a.text, def: a.isDefault || j === 0 && !c.addresses.some((x: any) => x.isDefault), uses: a.uses ? (a.uses === 1 ? "Used for 1 order" : `Used for ${a.uses} orders`) : "Not used yet" })) }; }),
       },
@@ -408,7 +414,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     };
   }
   overviewVm(ar: boolean, narrow: boolean) {
-    const s = this.state, o = s.overview, loc = ar ? "ar" : "en-US", f = (n: number) => n.toLocaleString(loc), cur = o?.currency ?? "AED", money = (m: number) => `${cur} ${f(Math.round(m / 100))}`;
+    const s = this.state, o = s.overview, loc = ar ? "ar" : "en-US", f = (n: number) => n.toLocaleString(loc), cur = o?.currency ?? this.cur, money = (m: number) => `${cur} ${f(Math.round(m / (o?.scale ?? scaleOf(cur))))}`;
     const nm = s.name || "your restaurant", period: string = s.period, cu = o?.current, pv = o?.previous;
     const pct = (a: number, b: number) => b > 0 ? Math.round((a - b) / b * 100) : null;
     const vs = ar ? "عن الفترة السابقة" : period === "today" ? "vs yesterday" : "vs previous period";
@@ -472,7 +478,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     this.setState({ busy: true });
     try {
       const b = await api("/api/v1/businesses", "POST", { name, locationName: "Main branch", businessType: "RESTAURANT", countryCode: this.state.opCountry || countryOf(this.state.e164 || this.props.userPhone || "")?.code || COUNTRIES[this.state.cc].code, ...(this.state.logo?.startsWith("data:") ? { logoUrl: this.state.logo } : {}) });
-      this.setState({ busy: false, businessId: b.id }); this.go("menu", { menuErr: "" });
+      this.setState({ busy: false, businessId: b.id, currency: b.currencyCode ?? "" }); this.go("menu", { menuErr: "" });
     } catch (err) { this.setState({ busy: false, nameErr: true, nameFail: err instanceof Error ? err.message : "Please try again." }); }
   };
   onLogo = async (e: any) => { const f = e.target.files?.[0]; e.target.value = ""; if (!f) return; try { this.setState({ logo: await logoToDataUrl(f), nameErr: false, nameFail: "" }); } catch (err) { this.setState({ nameErr: true, nameFail: err instanceof Error ? err.message : "Try another image." }); } };
@@ -622,7 +628,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const draft: Draft[] = s.draft; const flagN = draft.reduce((n, c) => n + c.items.filter(i => i.flag).length, 0);
     const setItem = (ci: number, ii: number, patch: any) => this.setState((st: any) => ({ draft: st.draft.map((c: Draft, a: number) => a !== ci ? c : { ...c, items: c.items.map((i, b) => b === ii ? { ...i, ...patch } : i) }) }));
     const review = draft.map((g, gi) => { const open = !!s.open[gi]; const fl = g.items.filter(i => i.flag).length; return { cat: g.cat, label: `${g.items.length} items`, open, rot: open ? "180deg" : "0deg", bt: gi ? "1px solid #F0E4E8" : "0", flagged: fl > 0, flagLabel: fl === 1 ? "1 to check" : `${fl} to check`, toggle: () => this.setState((st: any) => ({ open: { ...st.open, [gi]: !st.open[gi] } })),
-      items: g.items.map((it, ii) => ({ n: it.n, price: it.p, flag: it.flag, bd: it.flag ? "#F2B45C" : "#ECD9E0", bg: it.flag ? "#FFF9F0" : "#fff", onPrice: (e: any) => setItem(gi, ii, { p: e.target.value.replace(/[^\d.]/g, ""), flag: false }), ok: () => setItem(gi, ii, { flag: priceNum(it.p) === null }) })) }; });
+      items: g.items.map((it, ii) => ({ n: it.n, price: it.p, flag: it.flag, bd: it.flag ? "#F2B45C" : "#ECD9E0", bg: it.flag ? "#FFF9F0" : "#fff", onPrice: (e: any) => setItem(gi, ii, { p: e.target.value.replace(/[^\d.,\u0660-\u0669\u06F0-\u06F9\u066B\u066C]/g, ""), flag: false }), ok: () => setItem(gi, ii, { flag: priceNum(it.p) === null }) })) }; });
     // dashboard data
     const waOn = s.waStatus === "connected"; const M: Cat[] = s.menu; const ar = s.lang === "ar"; const T: any = ar ? T_AR : T_EN;
     const qRaw = s.q.trim(), q = qRaw.toLowerCase(); const match = (i: Item) => i.n.toLowerCase().includes(q) || i.ar.includes(qRaw);
@@ -630,7 +636,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const sections = M.filter(g => q || s.cat === "All" || g.id === s.cat).map(g => {
       const its = g.items.filter(i => !q || match(i)); const soldN = its.filter(i => !i.on).length;
       return { name: catName(g), alt: ar ? (g.catAr ? g.cat : "") : g.catAr, meta: its.length + " " + T.items + (soldN ? " · " + soldN + " " + T.soldOut : ""),
-        items: its.map((i, idx) => { const alt = ar ? (i.ar ? i.n : null) : (i.ar || null); return { main: ar ? (i.ar || i.n) : i.n, alt, hasAlt: !!alt, noAlt: !alt && p.canEdit, on: i.on, sold: !i.on, price: aed(money(Math.round(i.p * 100))), bt: idx ? "1px solid #F3EEF1" : "0", nameFg: i.on ? "#1A0815" : "#8A5A6E", tBg: i.on ? "linear-gradient(90deg,#FF5577,#C93DFF)" : "#EAD9E1", knob: i.on ? (ar ? "-20px" : "20px") : "0px", toggle: () => p.canEdit && this.toggleItem(i), editAr: () => this.editAr(i) }; }) };
+        items: its.map((i, idx) => { const alt = ar ? (i.ar ? i.n : null) : (i.ar || null); return { main: ar ? (i.ar || i.n) : i.n, alt, hasAlt: !!alt, noAlt: !alt && p.canEdit, on: i.on, sold: !i.on, price: formatMoney(toMinor(i.p, this.cur), this.cur), bt: idx ? "1px solid #F3EEF1" : "0", nameFg: i.on ? "#1A0815" : "#8A5A6E", tBg: i.on ? "linear-gradient(90deg,#FF5577,#C93DFF)" : "#EAD9E1", knob: i.on ? (ar ? "-20px" : "20px") : "0px", toggle: () => p.canEdit && this.toggleItem(i), editAr: () => this.editAr(i) }; }) };
     }).filter(g => g.items.length);
     const langFor = (short: boolean) => [["en", "EN"], ["ar", short ? "ع" : "العربية"]].map(([k, label]) => { const on = s.lang === k; return { label, on, fw: on ? 600 : 500, bg: on ? "#fff" : "transparent", fg: on ? "#1A0815" : "#8A5A6E", sh: on ? "0 1px 2px rgba(26,8,21,.12)" : "none", pick: () => this.setLang(k as any) }; });
     const nm = s.name.trim() || "Burger House"; const initials = nm.split(/\s+/).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase();

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { toMinor } from "../market/money";
 import { authorize } from "@/server/authorization";
 import { transaction } from "@/server/transaction";
 import { AppError } from "@/server/errors";
@@ -16,12 +17,12 @@ export interface DraftMenu { categories: { name: string; nameAr: string; items: 
 
 // Reading the menu file (Claude) happens in lumia-order-api; this app only authorizes, forwards and later saves the confirmed draft.
 export async function extractMenu(userId: string, businessId: string, input: unknown): Promise<DraftMenu> {
-  await authorize(userId, businessId, "operations.manage");
+  const { business } = await authorize(userId, businessId, "operations.manage");
   const file = uploadSchema.parse(input);
   if (!/^[A-Za-z0-9+/=]+$/.test(file.data) || file.data.length * 0.75 > MAX_FILE_BYTES) throw new AppError("FILE_TOO_LARGE", "That file is too large. Use a file under 8 MB.", 413);
   const taken = await consume(businessId, "imports"); // AI menu reading is counted per month
   if (!taken.ok) throw new AppError("LIMIT_REACHED", "You’ve used all AI menu imports included in your plan this month. You can add items manually, or upgrade your plan.", 429);
-  const result = await lumiaApi<DraftMenu>("/internal/menu/extract", { mediaType: file.mediaType, data: file.data }, 130000);
+  const result = await lumiaApi<DraftMenu>("/internal/menu/extract", { mediaType: file.mediaType, data: file.data, currency: business.currencyCode }, 130000);
   if (result.ok) return result.data;
   await refund(businessId, "imports", taken); // nothing was read, so it does not count
   if (result.code === "AI_NOT_CONFIGURED") throw new AppError("AI_NOT_CONFIGURED", "AI menu import isn’t available yet. You can add your menu manually.", 503);
@@ -34,6 +35,7 @@ export interface SaveItem { name: string; nameAr?: string; price: number }
 export interface SaveCategory { name: string; nameAr?: string; items: SaveItem[] }
 // Writes categories/items into the business's active catalog. `replace` archives the existing active items first.
 export async function saveMenu(tx: Tx, business: { organizationId: string }, userId: string, businessId: string, categories: SaveCategory[], requestId: string, action: string, replace = false, branchId?: string | null) {
+  const { currencyCode } = await tx.business.findUniqueOrThrow({ where: { id: businessId }, select: { currencyCode: true } });
   const withRels = { categories: true, items: { where: { status: "ACTIVE" }, select: { categoryId: true, name: true, nameAr: true } } } as const;
   const ownId = await writableBranchCatalogId(tx, businessId, branchId);
   const catalog = (ownId ? await tx.catalog.findUnique({ where: { id: ownId }, include: withRels }) : null) ?? await tx.catalog.findFirst({ where: { businessId, status: "ACTIVE", ...SHARED }, orderBy: { createdAt: "asc" }, include: withRels }) ?? await tx.catalog.create({ data: { businessId, name: "Menu", status: "ACTIVE" }, include: withRels });
@@ -43,7 +45,7 @@ export async function saveMenu(tx: Tx, business: { organizationId: string }, use
     const key = (c.name || c.nameAr || "").toLowerCase();
     const category = catalog.categories.find(x => (x.name || x.nameAr || "").toLowerCase() === key) ?? await tx.catalogCategory.create({ data: { catalogId: catalog.id, name: c.name, nameAr: c.nameAr || null, sortOrder: order++ } });
     const fresh = c.items.filter(i => !existing.has(`${category.id}|${(i.name || i.nameAr || "").toLowerCase()}`));
-    if (fresh.length) await tx.catalogItem.createMany({ data: fresh.map((i, n) => ({ catalogId: catalog.id, categoryId: category.id, name: i.name, nameAr: i.nameAr || null, basePriceMinor: Math.round(i.price * 100), currencyCode: "AED", status: "ACTIVE", sortOrder: n })) });
+    if (fresh.length) await tx.catalogItem.createMany({ data: fresh.map((i, n) => ({ catalogId: catalog.id, categoryId: category.id, name: i.name, nameAr: i.nameAr || null, basePriceMinor: toMinor(i.price, currencyCode), currencyCode, status: "ACTIVE", sortOrder: n })) });
     created += fresh.length;
   }
   await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "Catalog", entityId: catalog.id, action, requestId, afterData: { items: created, replace } } });

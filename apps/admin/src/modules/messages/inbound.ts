@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { decimalsOf, scaleOf } from "../market/money";
 import { Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { transaction } from "@/server/transaction";
@@ -106,10 +107,10 @@ export async function getOverview(userId: string, businessId: string, period: st
   const top = [...qty].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([name, sold]) => ({ name, sold }));
   const strip = ({ rows: _rows, ...rest }: typeof cur) => rest;
   // Setup checklist: delivery rules saved in Settings, and at least one order placed (a real or test order).
-  const biz = await db.business.findUniqueOrThrow({ where: { id: businessId }, select: { settings: true } });
+  const biz = await db.business.findUniqueOrThrow({ where: { id: businessId }, select: { settings: true, currencyCode: true } });
   const delivery = (biz.settings as { delivery?: { method?: string | null; status?: string } } | null)?.delivery;
   const setup = { delivery: Boolean(delivery && (delivery.method || (delivery.status && delivery.status !== "available"))), tested: (await db.order.count({ where: { businessId, status: { not: "AWAITING_CUSTOMER_CONFIRMATION" } } })) > 0 };
-  return { setup, period: period in PERIODS ? period : "week", currency: orders[0]?.currencyCode ?? "AED", current: strip(cur), previous: strip(prev), buckets, top };
+  return { setup, period: period in PERIODS ? period : "week", currency: biz.currencyCode, scale: scaleOf(biz.currencyCode), decimals: decimalsOf(biz.currencyCode), current: strip(cur), previous: strip(prev), buckets, top };
 }
 
 export async function listConversations(userId: string, businessId: string) {

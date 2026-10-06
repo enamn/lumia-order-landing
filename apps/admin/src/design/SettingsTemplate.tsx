@@ -892,7 +892,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                         Area
                                       </span>
                                       <span>
-                                        Fee (AED)
+                                        Fee ({vm.cur})
                                       </span>
                                       <span>
                                         Min. order
@@ -927,7 +927,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                         </label>
                                         <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
                                           <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
-                                            Fee (AED)
+                                            Fee ({vm.cur})
                                           </span>
                                           <input inputMode="decimal" value={r.fee} placeholder={r.feePh} onChange={r.set.fee} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
                                         </label>
@@ -1017,7 +1017,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                         To (km)
                                       </span>
                                       <span>
-                                        Fee (AED)
+                                        Fee ({vm.cur})
                                       </span>
                                       <span>
                                         Min. order
@@ -1049,7 +1049,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                         </label>
                                         <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
                                           <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
-                                            Fee (AED)
+                                            Fee ({vm.cur})
                                           </span>
                                           <input inputMode="decimal" value={r.fee} onChange={r.set.fee} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
                                         </label>
@@ -1204,13 +1204,13 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                               <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:16px 20px")}>
                                 <label style={S("display:flex;flex-direction:column;gap:6px")}>
                                   <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                                    Minimum order (AED)
+                                    Minimum order ({vm.cur})
                                   </span>
                                   <input inputMode="decimal" value={vm.dlf.minOrder.v} onChange={vm.dlf.minOrder.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
                                 </label>
                                 <label style={S("display:flex;flex-direction:column;gap:6px")}>
                                   <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                                    Free delivery above (AED)
+                                    Free delivery above ({vm.cur})
                                   </span>
                                   <input inputMode="decimal" value={vm.dlf.freeAbove.v} onChange={vm.dlf.freeAbove.set} placeholder="Off" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
                                 </label>
@@ -1284,7 +1284,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                 </label>
                                 <label style={S("display:flex;flex-direction:column;gap:6px")}>
                                   <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
-                                    Order subtotal (AED)
+                                    Order subtotal ({vm.cur})
                                   </span>
                                   <input inputMode="decimal" value={vm.calc.sub} onChange={vm.calc.setSub} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
                                 </label>
@@ -1614,7 +1614,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         Do you have chicken burger?
                       </div>
                       <div style={S("align-self:flex-start;max-width:85%;background:#fff;border-radius:4px 14px 14px 14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.06)")}>
-                        Yes, we have Chicken Burger for AED 24.
+                        {"Yes, we have Chicken Burger for "}{vm.cur}{" 24."}
                       </div>
                     </div>
                   </div>
@@ -1804,7 +1804,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         <>
                         <label style={S("display:flex;flex-direction:column;gap:6px;max-width:240px")}>
                           <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                            Orders above (AED)
+                            Orders above ({vm.cur})
                           </span>
                           <input inputMode="decimal" value={vm.payf.threshold.v} onChange={vm.payf.threshold.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
                         </label>

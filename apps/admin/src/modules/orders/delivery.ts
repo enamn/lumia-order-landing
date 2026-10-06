@@ -1,4 +1,5 @@
 // Delivery pricing, decided by the server from the restaurant's Settings and where the customer is. The assistant never states a fee itself.
+import { toMinor } from "../market/money";
 export const EMIRATES = ["Sharjah", "Ajman", "Dubai", "Abu Dhabi", "Umm Al Quwain", "Ras Al Khaimah", "Fujairah"] as const;
 export type Emirate = (typeof EMIRATES)[number];
 
@@ -27,7 +28,7 @@ export function emirateFrom(...texts: (string | null | undefined)[]): Emirate | 
   return null;
 }
 
-const fils = (v: string | undefined) => { const n = Number(String(v ?? "").replace(",", ".")); return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0; };
+const minorOf = (currency: string) => (v: string | undefined) => { const n = Number(String(v ?? "").replace(",", ".")); return Number.isFinite(n) && n > 0 ? toMinor(n, currency) : 0; };
 const mins = (v: string | undefined) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.round(n) : null; };
 const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
 const allAreas = (a: string) => !a.trim() || /^all\b|^كل|^جميع/i.test(a.trim());
@@ -58,7 +59,8 @@ const firstBranch = (branches: BranchPoint[]) => branches.find(b => b.active)?.i
 const hasPin = (c: CustomerPlace): c is CustomerPlace & { latitude: number; longitude: number } => typeof c.latitude === "number" && typeof c.longitude === "number";
 
 // Works out the delivery fee for one customer. `rules` null means delivery was never configured in Settings: delivery stays free of charge, as before.
-export function quoteDelivery(rules: DeliveryRules | null, branches: BranchPoint[], place: CustomerPlace, subtotalMinor: number, fallbackMinimumMinor: number): Quote {
+export function quoteDelivery(rules: DeliveryRules | null, branches: BranchPoint[], place: CustomerPlace, subtotalMinor: number, fallbackMinimumMinor: number, currency = "AED"): Quote {
+  const fils = minorOf(currency);
   if (!rules) return { status: "ok", feeMinor: 0, minimumMinor: fallbackMinimumMinor, etaMinutes: null, branchId: firstBranch(branches), manual: false, free: true };
   if (rules.status === "pickup") return { status: "unavailable", reason: "PICKUP_ONLY" };
   if (rules.status === "paused") return { status: "unavailable", reason: "PAUSED" };

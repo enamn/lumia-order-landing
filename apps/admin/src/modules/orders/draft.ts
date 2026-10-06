@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { amountText } from "../market/money";
 import { emirateFrom, quoteDelivery, type BranchPoint, type DeliveryRules, type Quote } from "./delivery";
 
 // Pure order logic: the AI only proposes menu IDs and quantities. Names, prices and totals always come from the restaurant's own menu.
@@ -22,7 +23,7 @@ export function normalizeLabel(raw: string | undefined | null): string {
   return t;
 }
 export const labelFor = (label: string, lang: Lang) => (lang === "ar" ? (label === "Home" ? "المنزل" : label === "Work" ? "العمل" : label) : label);
-export interface Options { delivery: boolean; pickup: boolean; minimumMinor: number }
+export interface Options { delivery: boolean; pickup: boolean; minimumMinor: number; /** The restaurant's order currency (default AED). */ currency?: string }
 
 export const DRAFT_TTL_MS = 12 * 3600 * 1000;
 const label = (e: { name: string; nameAr: string }, lang: Lang) => (lang === "ar" ? e.nameAr || e.name : e.name || e.nameAr);
@@ -47,7 +48,7 @@ export function resolveDraft(menu: MenuEntry[], d: Pick<ModelDraft, "items" | "f
   const emirate = isDelivery ? (saved?.emirate ?? emirateFrom(d.emirate, addr, area) ?? null) : null, name = isDelivery ? ((d.customerName ?? "").trim() || ctx?.profileName.trim() || "") : "";
   const pin = saved && saved.latitude !== null && saved.longitude !== null ? { latitude: saved.latitude, longitude: saved.longitude } : saved ? undefined : ctx?.pin;
   const label = isDelivery ? (saved ? saved.label : normalizeLabel(d.addressLabel)) : "";
-  const delivery = isDelivery && ctx ? quoteDelivery(ctx.rules, ctx.branches, { emirate, area, ...(pin ?? {}) }, subtotalMinor, options.minimumMinor) : null;
+  const delivery = isDelivery && ctx ? quoteDelivery(ctx.rules, ctx.branches, { emirate, area, ...(pin ?? {}) }, subtotalMinor, options.minimumMinor, options.currency) : null;
   const feeMinor = delivery?.status === "ok" ? delivery.feeMinor : 0;
   // A valid campaign code takes a percentage off the items (not the delivery fee).
   const discountMinor = ctx?.discount && subtotalMinor > 0 ? Math.min(subtotalMinor, Math.round(subtotalMinor * ctx.discount.percent / 100)) : 0;
@@ -60,7 +61,7 @@ export const draftKey = (r: Pick<Resolved, "lines" | "fulfillment" | "address" |
 export const isComplete = (r: Resolved) => r.lines.length > 0 && r.fulfillment !== null && (r.fulfillment === "pickup" || (r.address.length >= 3 && (r.delivery === null || (r.name.length >= 2 && r.label.length >= 1 && r.delivery.status === "ok"))));
 export const minimumFor = (r: Resolved, o: Options) => (r.delivery?.status === "ok" ? r.delivery.minimumMinor : o.minimumMinor);
 export const meetsMinimum = (r: Resolved, o: Options) => r.subtotalMinor >= minimumFor(r, o);
-export const money = (minor: number) => (minor % 100 === 0 ? String(minor / 100) : (minor / 100).toFixed(2));
+export const money = (minor: number, currency = "AED") => amountText(minor, currency);
 
 // Template parameter {{4}} is one multiline value, so the same approved Meta
 // template supports any number of items without adding more placeholders.
@@ -69,21 +70,21 @@ export function orderItemLines(lines: Pick<PricedLine, "quantity" | "name" | "na
 }
 
 const T = {
-  en: { order: "🧾 Your order", total: "Total", pickup: "Pickup from the restaurant", delivery: "Delivery to", payment: "Pay cash on delivery or pickup", confirm: "Reply YES to confirm your order.", minimum: (m: string) => `The minimum order is ${m} AED.`, subtotal: "Subtotal", discount: (c: string, p: number) => `Discount (${c}, ${p}%)`, fee: "Delivery fee", free: "Free", manualFee: "The restaurant will confirm the delivery fee", totalBefore: "Total before delivery fee", eta: (m: number) => `Estimated delivery: about ${m} minutes`, forName: "For", noPickupOnly: "Delivery is not available, but you can order for pickup.", pausedNow: "Delivery is paused right now, but you can order for pickup.", outside: (w: string) => `Sorry, we don't deliver to ${w} yet. You can order for pickup instead.`, recheck: "Please check these details, then reply YES to confirm your order.", removed: (n: string) => `Sorry, ${n} is not available right now, so I left it out.`, placed: (no: string, t: string, how: string) => `✅ Order #${no} received. Total ${t} AED, ${how}. We'll message you as soon as the restaurant confirms it.`, how: { pickup: "pickup", delivery: "delivery" } },
-  ar: { order: "🧾 طلبك", total: "المجموع", pickup: "استلام من المطعم", delivery: "التوصيل إلى", payment: "الدفع نقداً عند الاستلام أو التوصيل", confirm: "للتأكيد أرسل «نعم».", minimum: (m: string) => `الحد الأدنى للطلب ${m} درهم.`, subtotal: "المجموع الفرعي", discount: (c: string, p: number) => `خصم (${c}، ${p}%)`, fee: "رسوم التوصيل", free: "مجاني", manualFee: "سيؤكد المطعم رسوم التوصيل", totalBefore: "المجموع قبل رسوم التوصيل", eta: (m: number) => `وقت التوصيل المتوقع: حوالي ${m} دقيقة`, forName: "باسم", noPickupOnly: "التوصيل غير متاح، لكن يمكنك الطلب للاستلام.", pausedNow: "التوصيل متوقف حالياً، لكن يمكنك الطلب للاستلام.", outside: (w: string) => `عذراً، لا نوصّل إلى ${w} حالياً. يمكنك الطلب للاستلام بدلاً من ذلك.`, recheck: "فضلاً راجع التفاصيل التالية ثم أرسل «نعم» لتأكيد طلبك.", removed: (n: string) => `عذراً، ${n} غير متوفر حالياً فلم أضفه.`, placed: (no: string, t: string, how: string) => `✅ تم استلام طلبك رقم ${no}. المجموع ${t} درهم، ${how}. سنراسلك فور تأكيد المطعم.`, how: { pickup: "استلام", delivery: "توصيل" } },
+  en: { order: "🧾 Your order", total: "Total", pickup: "Pickup from the restaurant", delivery: "Delivery to", payment: "Pay cash on delivery or pickup", confirm: "Reply YES to confirm your order.", minimum: (m: string) => `The minimum order is ${m}.`, subtotal: "Subtotal", discount: (c: string, p: number) => `Discount (${c}, ${p}%)`, fee: "Delivery fee", free: "Free", manualFee: "The restaurant will confirm the delivery fee", totalBefore: "Total before delivery fee", eta: (m: number) => `Estimated delivery: about ${m} minutes`, forName: "For", noPickupOnly: "Delivery is not available, but you can order for pickup.", pausedNow: "Delivery is paused right now, but you can order for pickup.", outside: (w: string) => `Sorry, we don't deliver to ${w} yet. You can order for pickup instead.`, recheck: "Please check these details, then reply YES to confirm your order.", removed: (n: string) => `Sorry, ${n} is not available right now, so I left it out.`, placed: (no: string, t: string, how: string) => `✅ Order #${no} received. Total ${t}, ${how}. We'll message you as soon as the restaurant confirms it.`, how: { pickup: "pickup", delivery: "delivery" } },
+  ar: { order: "🧾 طلبك", total: "المجموع", pickup: "استلام من المطعم", delivery: "التوصيل إلى", payment: "الدفع نقداً عند الاستلام أو التوصيل", confirm: "للتأكيد أرسل «نعم».", minimum: (m: string) => `الحد الأدنى للطلب ${m}.`, subtotal: "المجموع الفرعي", discount: (c: string, p: number) => `خصم (${c}، ${p}%)`, fee: "رسوم التوصيل", free: "مجاني", manualFee: "سيؤكد المطعم رسوم التوصيل", totalBefore: "المجموع قبل رسوم التوصيل", eta: (m: number) => `وقت التوصيل المتوقع: حوالي ${m} دقيقة`, forName: "باسم", noPickupOnly: "التوصيل غير متاح، لكن يمكنك الطلب للاستلام.", pausedNow: "التوصيل متوقف حالياً، لكن يمكنك الطلب للاستلام.", outside: (w: string) => `عذراً، لا نوصّل إلى ${w} حالياً. يمكنك الطلب للاستلام بدلاً من ذلك.`, recheck: "فضلاً راجع التفاصيل التالية ثم أرسل «نعم» لتأكيد طلبك.", removed: (n: string) => `عذراً، ${n} غير متوفر حالياً فلم أضفه.`, placed: (no: string, t: string, how: string) => `✅ تم استلام طلبك رقم ${no}. المجموع ${t}، ${how}. سنراسلك فور تأكيد المطعم.`, how: { pickup: "استلام", delivery: "توصيل" } },
 };
 
 export function summaryText(r: Resolved, lang: Lang, options: Options): string {
-  const t = T[lang]; const out = [t.order];
-  for (const l of r.lines) out.push(`${l.quantity} × ${label(l, lang)}${l.notes ? ` (${l.notes})` : ""} — ${money(l.totalMinor)} AED`);
+  const t = T[lang]; const out = [t.order]; const cur = options.currency ?? "AED", m = (minor: number) => `${money(minor, cur)} ${cur}`;
+  for (const l of r.lines) out.push(`${l.quantity} × ${label(l, lang)}${l.notes ? ` (${l.notes})` : ""} — ${m(l.totalMinor)}`);
   const q = r.delivery;
   const afterDiscount = r.subtotalMinor - r.discountMinor;
-  if (r.discountMinor) { out.push(`${t.subtotal}: ${money(r.subtotalMinor)} AED`); out.push(`${t.discount(r.discountCode, r.discountPercent)}: -${money(r.discountMinor)} AED`); }
+  if (r.discountMinor) { out.push(`${t.subtotal}: ${m(r.subtotalMinor)}`); out.push(`${t.discount(r.discountCode, r.discountPercent)}: -${m(r.discountMinor)}`); }
   if (r.fulfillment === "delivery" && q?.status === "ok") {
-    if (!r.discountMinor) out.push(`${t.subtotal}: ${money(r.subtotalMinor)} AED`);
-    if (q.manual) { out.push(`${t.fee}: ${t.manualFee}`); out.push(`${t.totalBefore}: ${money(afterDiscount)} AED`); }
-    else { out.push(`${t.fee}: ${r.feeMinor ? `${money(r.feeMinor)} AED` : t.free}`); out.push(`${t.total}: ${money(r.totalMinor)} AED`); }
-  } else out.push(`${t.total}: ${money(afterDiscount)} AED`);
+    if (!r.discountMinor) out.push(`${t.subtotal}: ${m(r.subtotalMinor)}`);
+    if (q.manual) { out.push(`${t.fee}: ${t.manualFee}`); out.push(`${t.totalBefore}: ${m(afterDiscount)}`); }
+    else { out.push(`${t.fee}: ${r.feeMinor ? `${m(r.feeMinor)}` : t.free}`); out.push(`${t.total}: ${m(r.totalMinor)}`); }
+  } else out.push(`${t.total}: ${m(afterDiscount)}`);
   if (r.fulfillment === "pickup") out.push(t.pickup);
   else if (r.fulfillment === "delivery") {
     if (r.address) out.push(`${t.delivery}${r.label ? ` (${labelFor(r.label, lang)})` : ""}: ${r.address}`);
@@ -92,7 +93,7 @@ export function summaryText(r: Resolved, lang: Lang, options: Options): string {
     if (q?.status === "unavailable") out.push(q.reason === "PAUSED" ? t.pausedNow : t.noPickupOnly);
     else if (q?.status === "outside") out.push(t.outside(q.where));
   }
-  if (isComplete(r)) { out.push(t.payment); if (meetsMinimum(r, options)) out.push(t.confirm); else out.push(t.minimum(money(minimumFor(r, options)))); }
+  if (isComplete(r)) { out.push(t.payment); if (meetsMinimum(r, options)) out.push(t.confirm); else out.push(t.minimum(m(minimumFor(r, options)))); }
   return out.join("\n");
 }
 // A discount code that does not count: said once, in the customer's language, never by the assistant.
@@ -101,5 +102,5 @@ export const codeText = (reason: "UNKNOWN" | "EXPIRED" | "USED", lang: Lang) => 
   : (reason === "USED" ? "That code was already used on your account." : reason === "EXPIRED" ? "Sorry, that code has expired." : "Sorry, that code isn't valid.");
 export const recheckText = (lang: Lang) => T[lang].recheck;
 export const removedText = (names: string[], lang: Lang) => names.map(n => T[lang].removed(n)).join("\n");
-export const placedText = (orderNumber: string, totalMinor: number, fulfillment: Fulfillment, lang: Lang) => T[lang].placed(orderNumber, money(totalMinor), T[lang].how[fulfillment]);
+export const placedText = (orderNumber: string, totalMinor: number, fulfillment: Fulfillment, lang: Lang, currency = "AED") => T[lang].placed(orderNumber, `${money(totalMinor, currency)} ${currency}`, T[lang].how[fulfillment]);
 export const langOf = (text: string): Lang => (/[؀-ۿ]/.test(text) ? "ar" : "en");

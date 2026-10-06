@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { decimalsOf, fromMinor, toMinor } from "../market/money";
 import { db } from "@/server/db";
 import { transaction } from "@/server/transaction";
 import { authorize, can } from "@/server/authorization";
@@ -42,7 +43,7 @@ function sectionsOf(b: Loaded) {
   const s = stored(b.settings), branches = branchesOf(b, s), first = b.locations[0];
   const os = b.orderSettings;
   const profile: Profile = { name: s.profile?.name || b.name, brand: b.name, cuisine: s.profile?.cuisine ?? "", phone: b.phone ?? "", support: s.profile?.support ?? "", email: b.email ?? "", vat: b.vatRegistered, trn: b.taxRegistrationNumber ?? "", lang: s.profile?.lang ?? "both", greet: s.profile?.greet ?? "friendly", logo: b.logoUrl };
-  const delivery: Delivery = s.delivery ?? { status: os && !os.supportsDelivery ? "pickup" : "available", method: null, minOrder: os ? String(os.minimumOrderAmountMinor / 100) : "0", freeAbove: "", eta: "45", pinReq: true, areas: [], ranges: [], freeEm: [], freeAreas: "All areas", freeBranch: first?.id ?? "", manualMsg: "Delivery fee will be confirmed by the restaurant after checking your location.", confirmFirst: true };
+  const delivery: Delivery = s.delivery ?? { status: os && !os.supportsDelivery ? "pickup" : "available", method: null, minOrder: os ? String(fromMinor(os.minimumOrderAmountMinor, b.currencyCode)) : "0", freeAbove: "", eta: "45", pinReq: true, areas: [], ranges: [], freeEm: [], freeAreas: "All areas", freeBranch: first?.id ?? "", manualMsg: "Delivery fee will be confirmed by the restaurant after checking your location.", confirmFirst: true };
   const week = weekOf(first);
   const hours: Hours = s.hours ?? { mode: "custom", scope: "same", sel: first?.id ?? "", every: { ...week[0], day: "Every day" }, closedUntil: "", same: week, per: {} };
   const per = { ...hours.per }; for (const l of b.locations) if (!per[l.id]) per[l.id] = hours.same.map(x => ({ ...x }));
@@ -69,7 +70,7 @@ export async function getSettings(userId: string, businessId: string) {
     business: { id: b.id, name: b.name, logoUrl: b.logoUrl },
     menu: { categories: new Set(items.map(i => i.categoryId).filter(Boolean)).size, items: items.length, missingPrices: items.filter(i => i.basePriceMinor <= 0).length, soldOut: items.filter(i => !i.isAvailable).length, updatedAt: items.reduce<Date | null>((m, i) => (!m || i.updatedAt > m ? i.updatedAt : m), null) },
     whatsapp: { connected: Boolean(wa), displayPhoneNumber: wa?.displayPhoneNumber ?? "" },
-    emailVerified: !!b.email && !!b.emailVerifiedAt,
+    emailVerified: !!b.email && !!b.emailVerifiedAt, currency: b.currencyCode,
     branchLimit: (await entitlementsFor(businessId)).branches,
     branchBuy: await branchOffer(businessId),
   };
@@ -117,7 +118,11 @@ export async function saveSettingsSection(userId: string, businessId: string, se
       (next as Record<string, unknown>)[key] = data;
       await tx.business.update({ where: { id: businessId }, data: { settings: next as Prisma.InputJsonValue } });
       if (key === "delivery") {
-        const d = data as Delivery, fields = { supportsDelivery: d.status === "available", supportsPickup: true, minimumOrderAmountMinor: Math.round(num(d.minOrder) * 100) };
+        // Fees and minimums are typed in the restaurant's currency: no more decimals than that currency has (2 for AED/SAR/QAR, 3 for OMR/BHD/KWD).
+        const money = (v: unknown) => (typeof v === "string" ? v : ""), dec = decimalsOf((await tx.business.findUniqueOrThrow({ where: { id: businessId }, select: { currencyCode: true } })).currencyCode);
+        const dd = data as Delivery, typed = [dd.minOrder, dd.freeAbove, ...dd.areas.flatMap(a => [a.fee, a.min]), ...dd.ranges.flatMap(r => [r.fee, r.min])].map(money);
+        if (typed.some(v => (v.split(".")[1]?.length ?? 0) > dec)) throw new AppError("INVALID_AMOUNT", `Use at most ${dec} decimal places for amounts in this currency.`, 422);
+        const cur = (await tx.business.findUniqueOrThrow({ where: { id: businessId }, select: { currencyCode: true } })).currencyCode, d = data as Delivery, fields = { supportsDelivery: d.status === "available", supportsPickup: true, minimumOrderAmountMinor: toMinor(num(d.minOrder), cur) };
         await tx.orderSettings.upsert({ where: { businessId }, update: fields, create: { businessId, ...fields, configuredAt: new Date() } });
       }
       if (key === "hours") {

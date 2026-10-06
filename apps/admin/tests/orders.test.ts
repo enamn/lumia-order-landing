@@ -100,7 +100,7 @@ describe.skipIf(!enabled)("taking orders over WhatsApp", () => {
     r = await turn("نعم أضف 3 كلاسيك", id => ({ ...reply(draft(id, [["Classic", 4], ["Fries", 1]], "delivery", "Al Majaz, building 4"), "تمام!"), language: "ar" }), c3);
     expect(r).not.toContain("تمام!"); expect(r).toContain("راجع التفاصيل"); expect(r).toContain("المجموع: 124 AED"); expect(r).toContain("التوصيل إلى"); expect(r).toContain("نعم");
     r = await turn("نعم", id => ({ ...reply(draft(id, [["Classic", 4], ["Fries", 1]], "delivery", "Al Majaz, building 4", true)), language: "ar" }), c3);
-    expect(r).toBe("✅ تم استلام طلبك رقم 1003. المجموع 124 درهم، توصيل. سنراسلك فور تأكيد المطعم.");
+    expect(r).toBe("✅ تم استلام طلبك رقم 1003. المجموع 124 AED، توصيل. سنراسلك فور تأكيد المطعم.");
     const o = await db.order.findFirstOrThrow({ where: { orderNumber: "1003", businessId: biz }, include: { deliveryDetails: true } }); expect(o.deliveryDetails).toMatchObject({ addressText: "Al Majaz, building 4", recipientPhone: "+971500000444" });
   });
   it("lets staff move orders along, tells the customer, and blocks invalid steps and viewers", async () => {

@@ -6,7 +6,7 @@ export type Section = (typeof SECTIONS)[number];
 
 const text = (max: number) => z.string().trim().max(max);
 const digits = (max: number) => z.string().trim().regex(new RegExp(`^\\d{0,${max}}$`), "Use numbers only.");
-const money = z.string().trim().regex(/^\d{0,6}(\.\d{1,2})?$/, "Use a number, e.g. 30 or 12.5.");
+const money = z.string().trim().regex(/^\d{0,6}(\.\d{1,3})?$/, "Use a number, e.g. 30 or 12.5.");
 const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use a time like 09:30.");
 const phone = z.string().trim().transform(v => v.replace(/[\s()-]/g, "")).pipe(z.union([z.literal(""), z.string().regex(/^\+[1-9]\d{6,14}$/, "Use international format, e.g. +971 50 123 4567")]));
 const id = z.string().min(1).max(64);
