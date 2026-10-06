@@ -3,13 +3,14 @@ import { Prisma } from "@prisma/client";
 import { auth } from "./auth";
 import { AppError } from "./errors";
 import { db } from "./db";
+import { originAllowed } from "./origin";
 export async function api(request: Request, action: (userId: string, requestId: string) => Promise<unknown>) {
   const requestId = crypto.randomUUID();
   let status = 200;
   try {
     if (!["GET", "HEAD"].includes(request.method)) {
       const origin = request.headers.get("origin");
-      if (!origin || origin !== new URL(process.env.APP_URL ?? "http://localhost:3000").origin) throw new AppError("INVALID_ORIGIN", "Invalid request origin.", 403);
+      if (!originAllowed(origin)) throw new AppError("INVALID_ORIGIN", "Invalid request origin.", 403);
       if (!request.headers.get("content-type")?.includes("application/json")) throw new AppError("INVALID_CONTENT_TYPE", "Use application/json.", 415);
     }
     const session = await auth.api.getSession({ headers: request.headers });

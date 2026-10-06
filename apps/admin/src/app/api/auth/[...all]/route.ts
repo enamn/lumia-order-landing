@@ -1,11 +1,11 @@
 import { auth } from "@/server/auth";
 import { toNextJsHandler } from "better-auth/next-js";
+import { originAllowed } from "@/server/origin";
 const handlers = toNextJsHandler(auth);
 export const GET = handlers.GET;
 export async function POST(request: Request) {
   const requestId = crypto.randomUUID();
-  const origin = new URL(process.env.APP_URL ?? "http://localhost:3000").origin;
-  if (request.headers.get("origin") !== origin) return Response.json({ code: "INVALID_ORIGIN", message: "Invalid request origin.", requestId }, { status: 403 });
+  if (!originAllowed(request.headers.get("origin"))) return Response.json({ code: "INVALID_ORIGIN", message: "Invalid request origin.", requestId }, { status: 403 });
   if (!request.headers.get("content-type")?.includes("application/json")) return Response.json({ code: "INVALID_CONTENT_TYPE", message: "Use application/json.", requestId }, { status: 415 });
   // Read the body once (bounded), validate it, then hand the auth library a fresh request. Avoids Request.clone(), which is fragile across runtimes.
   let text: string;
