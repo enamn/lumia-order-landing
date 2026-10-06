@@ -29,6 +29,7 @@ stack = [top]; pos = 0
 for m in TAG.finditer(body):
     if m.start() > pos: stack[-1].children.append(body[pos:m.start()])
     pos = m.end(); closing, tag, attrs, selfc = m.groups()
+    if closing and tag.lower() in VOID: continue  # the design sometimes writes <input ...></input>: nothing was opened, so there is nothing to close
     if closing:
         while len(stack) > 1 and stack[-1].tag != tag: stack.pop()
         if len(stack) > 1: stack.pop()
