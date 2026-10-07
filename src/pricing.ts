@@ -13,17 +13,19 @@ export const terminalOf = (info: PriceInfo | null): TerminalPrices | null => (in
 export const AED: Pick<PriceInfo, 'currency' | 'decimals' | 'local'> = { currency: 'AED', decimals: 2, local: false };
 
 // One shared request for the whole page: every price, demo amount and FAQ answer reads the same result.
-let shared: PriceInfo | null = (() => { try { const v = sessionStorage.getItem('lumia-prices'); return v ? (JSON.parse(v) as PriceInfo) : null; } catch { return null; } })();
+// `?country=XX` (or the development override) asks for another country's view, so the saved copy is kept per asked country.
+const asked = () => new URLSearchParams(location.search).get('country') ?? (env?.DEV ? env.VITE_FORCE_COUNTRY : undefined);
+const CACHE = `lumia-prices:${asked() ?? ''}`;
+let shared: PriceInfo | null = (() => { try { const v = sessionStorage.getItem(CACHE); return v ? (JSON.parse(v) as PriceInfo) : null; } catch { return null; } })();
 let started = false;
 const listeners = new Set<() => void>();
 function load() {
   if (started || shared || !ADMIN) return;
   started = true;
-  // `?country=SA`, or on a developer's computer VITE_FORCE_COUNTRY=SA, pretends the visitor is in that country.
-  const asked = new URLSearchParams(location.search).get('country') ?? (env?.DEV ? env.VITE_FORCE_COUNTRY : undefined);
-  fetch(`${ADMIN}/api/public/pricing${asked ? `?country=${encodeURIComponent(asked)}` : ''}`, { credentials: 'omit' })
+  const want = asked(); // `?country=SA`, or on a developer's computer VITE_FORCE_COUNTRY=SA, pretends the visitor is in that country
+  fetch(`${ADMIN}/api/public/pricing${want ? `?country=${encodeURIComponent(want)}` : ''}`, { credentials: 'omit' })
     .then(r => (r.ok ? r.json() : null))
-    .then(j => { const d = j?.data as PriceInfo | undefined; if (d) { shared = d; try { sessionStorage.setItem('lumia-prices', JSON.stringify(d)); } catch { /* optional */ } listeners.forEach(f => f()); } })
+    .then(j => { const d = j?.data as PriceInfo | undefined; if (d) { shared = d; try { sessionStorage.setItem(CACHE, JSON.stringify(d)); } catch { /* optional */ } listeners.forEach(f => f()); } })
     .catch(() => undefined);
 }
 
