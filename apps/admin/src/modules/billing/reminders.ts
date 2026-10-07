@@ -51,7 +51,9 @@ async function recipients(businessId: string) {
   return { name: b.name, list };
 }
 
-const fmt = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Dubai" });
+// Dates in a reminder use the restaurant's own country time zone (Riyadh, Muscat, ...), not Dubai.
+const zoneOf = async (businessId: string) => (await db.business.findUnique({ where: { id: businessId }, select: { timezone: true } }))?.timezone ?? "Asia/Dubai";
+const fmt = (d: Date, timeZone = "Asia/Dubai") => d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone });
 
 export async function notify(businessId: string, kind: Kind, periodKey: string, vars: Omit<Vars, "business">): Promise<boolean> {
   try { await db.billingNotice.create({ data: { businessId, kind, periodKey } }); }
@@ -83,7 +85,7 @@ export async function runReminders(now = new Date()) {
   const subbed = new Set((await db.subscription.findMany({ where: { businessId: { in: trials.map(b => b.id) } }, select: { businessId: true } })).map(s => s.businessId));
   for (const b of trials) {
     if (subbed.has(b.id)) continue;
-    const info = trialInfo(b.start, t), date = fmt(new Date(info.endsAt));
+    const info = trialInfo(b.start, t), date = fmt(new Date(info.endsAt), await zoneOf(b.id));
     if (info.daysLeft === 0) await count(notify(b.id, "trial_ended", "trial", {}));
     else if (info.daysLeft <= 1) await count(notify(b.id, "trial_1d", "trial", { date }));
     else await count(notify(b.id, "trial_3d", "trial", { date }));
@@ -92,8 +94,8 @@ export async function runReminders(now = new Date()) {
   const subs = await db.subscription.findMany({ where: { OR: [{ status: "ACTIVE", cancelAtPeriodEnd: true, currentPeriodEnd: { lte: new Date(t + 3 * DAY), gt: now } }, { status: "PAST_DUE" }, { status: { in: ["ENDED", "CANCELED"] }, updatedAt: { gte: new Date(t - 14 * DAY) } }] }, take: 500 });
   for (const s of subs) {
     const key = s.currentPeriodEnd.toISOString().slice(0, 10);
-    if (s.status === "ACTIVE") await count(notify(s.businessId, s.currentPeriodEnd.getTime() - t <= DAY ? "plan_ending_1d" : "plan_ending_3d", key, { date: fmt(s.currentPeriodEnd) }));
-    else if (s.status === "PAST_DUE") { const a = accessOf(s, new Date(0), t); if (a.active && a.graceEndsAt) await count(notify(s.businessId, "payment_failed", `${key}:${s.failedAttempts}`, { graceDate: fmt(new Date(a.graceEndsAt)) })); }
+    if (s.status === "ACTIVE") await count(notify(s.businessId, s.currentPeriodEnd.getTime() - t <= DAY ? "plan_ending_1d" : "plan_ending_3d", key, { date: fmt(s.currentPeriodEnd, await zoneOf(s.businessId)) }));
+    else if (s.status === "PAST_DUE") { const a = accessOf(s, new Date(0), t); if (a.active && a.graceEndsAt) await count(notify(s.businessId, "payment_failed", `${key}:${s.failedAttempts}`, { graceDate: fmt(new Date(a.graceEndsAt), await zoneOf(s.businessId)) })); }
     else await count(notify(s.businessId, "plan_ended", key, {}));
   }
   return out;

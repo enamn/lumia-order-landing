@@ -22,10 +22,10 @@ export const sendSchema = z.object({
 }).strict();
 
 const isArabic = (t: string) => /[؀-ۿ]/.test(t);
-const dateLabel = (d: Date, ar: boolean) => d.toLocaleDateString(ar ? "ar-AE" : "en-GB", { day: "numeric", month: "short", timeZone: "Asia/Dubai" });
+const dateLabel = (d: Date, ar: boolean, timeZone = "Asia/Dubai") => d.toLocaleDateString(ar ? "ar-AE" : "en-GB", { day: "numeric", month: "short", timeZone });
 const firstName = (name: string, phone: string, ar: boolean) => (name && name !== phone ? name.split(/\s+/)[0]! : ar ? "عزيزي العميل" : "there");
-export const offerLine = (code: { code: string; percent: number } | null, until: Date | null, ar: boolean) => code && until
-  ? (ar ? `الكود ${code.code}: خصم ${code.percent}%، صالح حتى ${dateLabel(until, true)}.` : `Code ${code.code}: ${code.percent}% off, valid until ${dateLabel(until, false)}.`)
+export const offerLine = (code: { code: string; percent: number } | null, until: Date | null, ar: boolean, zone = "Asia/Dubai") => code && until
+  ? (ar ? `الكود ${code.code}: خصم ${code.percent}%، صالح حتى ${dateLabel(until, true, zone)}.` : `Code ${code.code}: ${code.percent}% off, valid until ${dateLabel(until, false, zone)}.`)
   : (ar ? "رد على هذه الرسالة للطلب." : "Reply to this message to order.");
 
 const REASONS: Record<string, [string, number]> = {
@@ -94,7 +94,7 @@ export async function sendCampaign(userId: string, businessId: string, input: un
     }
 
     lap.upload = Date.now() - t0 - lap.prepare!;
-    const ar = isArabic(body.message), line = offerLine(code, until, ar), restaurant = (await db.business.findUniqueOrThrow({ where: { id: businessId }, select: { name: true } })).name;
+    const ar = isArabic(body.message), biz = await db.business.findUniqueOrThrow({ where: { id: businessId }, select: { name: true, timezone: true } }), line = offerLine(code, until, ar, biz.timezone), restaurant = biz.name;
     let aborted: string | null = null, next = 0, sent = 0;
     const recipients = await db.campaignRecipient.findMany({ where: { campaignId } });
     const byCustomer = new Map(picked.map(c => [c.id, c]));
