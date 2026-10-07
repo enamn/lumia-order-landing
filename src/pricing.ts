@@ -2,7 +2,7 @@
 // The country is looked up by the admin app from the visitor's IP; nothing is stored. While it loads, or if it fails, the UAE prices show.
 import { useEffect, useState } from 'react';
 
-const env = (import.meta as unknown as { env?: { VITE_ADMIN_URL?: string; DEV?: boolean } }).env;
+const env = (import.meta as unknown as { env?: { VITE_ADMIN_URL?: string; VITE_FORCE_COUNTRY?: string; DEV?: boolean } }).env;
 const ADMIN = (env?.VITE_ADMIN_URL ?? (env?.DEV ? 'http://localhost:3000' : '')).replace(/\/$/, '');
 
 export interface TerminalPrices { currency: string; decimals: number; yearly: Record<'starter' | 'plus' | 'pro', number>; monthly: number; extra: number; regular?: number }
@@ -19,7 +19,8 @@ const listeners = new Set<() => void>();
 function load() {
   if (started || shared || !ADMIN) return;
   started = true;
-  const asked = new URLSearchParams(location.search).get('country');
+  // `?country=SA`, or on a developer's computer VITE_FORCE_COUNTRY=SA, pretends the visitor is in that country.
+  const asked = new URLSearchParams(location.search).get('country') ?? (env?.DEV ? env.VITE_FORCE_COUNTRY : undefined);
   fetch(`${ADMIN}/api/public/pricing${asked ? `?country=${encodeURIComponent(asked)}` : ''}`, { credentials: 'omit' })
     .then(r => (r.ok ? r.json() : null))
     .then(j => { const d = j?.data as PriceInfo | undefined; if (d) { shared = d; try { sessionStorage.setItem('lumia-prices', JSON.stringify(d)); } catch { /* optional */ } listeners.forEach(f => f()); } })
