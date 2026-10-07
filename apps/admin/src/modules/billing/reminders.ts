@@ -56,6 +56,7 @@ const zoneOf = async (businessId: string) => (await db.business.findUnique({ whe
 const fmt = (d: Date, timeZone = "Asia/Dubai") => d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone });
 
 export async function notify(businessId: string, kind: Kind, periodKey: string, vars: Omit<Vars, "business">): Promise<boolean> {
+  if (await db.billingNotice.findFirst({ where: { businessId, kind, periodKey }, select: { id: true } })) return false; // already sent (also guards a database without the unique index)
   try { await db.billingNotice.create({ data: { businessId, kind, periodKey } }); }
   catch (e) { if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") return false; throw e; }
   const to = await recipients(businessId);
