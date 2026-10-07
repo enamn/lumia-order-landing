@@ -23,6 +23,9 @@ env:
   - variable: NEXT_PUBLIC_VAT_GATE
     value: "off"
     availability: [BUILD, RUNTIME]
+  # --- currencies the payment account has been checked for (comma-separated); a country can sell only when its currency is listed ---
+  - variable: STRIPE_ENABLED_CURRENCIES
+    value: "AED,SAR"
   # --- Meta Embedded Signup (public ids) ---
   - variable: NEXT_PUBLIC_META_APP_ID
     value: "1074049208555666"
