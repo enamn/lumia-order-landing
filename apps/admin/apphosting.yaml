@@ -19,6 +19,10 @@ env:
   # --- super admin: phone numbers (comma-separated) that may open /superadmin after the normal phone-code sign-in ---
   - variable: SUPER_ADMIN_PHONES
     value: "+971588031592"
+  # --- VAT requirement for Saudi Arabia, Oman and Bahrain: "off" = restaurants there sign up and go live without a VAT number (set back to "on" or remove to require it) ---
+  - variable: NEXT_PUBLIC_VAT_GATE
+    value: "off"
+    availability: [BUILD, RUNTIME]
   # --- Meta Embedded Signup (public ids) ---
   - variable: NEXT_PUBLIC_META_APP_ID
     value: "1074049208555666"
