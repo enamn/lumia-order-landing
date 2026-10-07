@@ -12,15 +12,27 @@ export const UAE_TERMINAL: TerminalPrices = { currency: 'AED', decimals: 2, year
 export const terminalOf = (info: PriceInfo | null): TerminalPrices | null => (info ? info.terminal : UAE_TERMINAL);
 export const AED: Pick<PriceInfo, 'currency' | 'decimals' | 'local'> = { currency: 'AED', decimals: 2, local: false };
 
+// One shared request for the whole page: every price, demo amount and FAQ answer reads the same result.
+let shared: PriceInfo | null = (() => { try { const v = sessionStorage.getItem('lumia-prices'); return v ? (JSON.parse(v) as PriceInfo) : null; } catch { return null; } })();
+let started = false;
+const listeners = new Set<() => void>();
+function load() {
+  if (started || shared || !ADMIN) return;
+  started = true;
+  const asked = new URLSearchParams(location.search).get('country');
+  fetch(`${ADMIN}/api/public/pricing${asked ? `?country=${encodeURIComponent(asked)}` : ''}`, { credentials: 'omit' })
+    .then(r => (r.ok ? r.json() : null))
+    .then(j => { const d = j?.data as PriceInfo | undefined; if (d) { shared = d; try { sessionStorage.setItem('lumia-prices', JSON.stringify(d)); } catch { /* optional */ } listeners.forEach(f => f()); } })
+    .catch(() => undefined);
+}
+
 export function usePriceInfo(): PriceInfo | null {
-  const [info, setInfo] = useState<PriceInfo | null>(() => { try { const v = sessionStorage.getItem('lumia-prices'); return v ? (JSON.parse(v) as PriceInfo) : null; } catch { return null; } });
+  const [info, setInfo] = useState<PriceInfo | null>(shared);
   useEffect(() => {
-    if (!ADMIN || info) return;
-    let live = true;
-    fetch(`${ADMIN}/api/public/pricing${new URLSearchParams(location.search).get('country') ? `?country=${encodeURIComponent(new URLSearchParams(location.search).get('country')!)}` : ''}`, { credentials: 'omit' })
-      .then(r => (r.ok ? r.json() : null)).then(j => { const d = j?.data as PriceInfo | undefined; if (d && live) { setInfo(d); try { sessionStorage.setItem('lumia-prices', JSON.stringify(d)); } catch { /* optional */ } } }).catch(() => undefined);
-    return () => { live = false; };
-  }, [info]);
+    const f = () => setInfo(shared);
+    listeners.add(f); load(); f();
+    return () => { listeners.delete(f); };
+  }, []);
   return info;
 }
 
