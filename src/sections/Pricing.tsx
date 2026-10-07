@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Terminal } from '../components/Terminal';
 import { PLANS, SIGNUP_URL, type Billing, type Plan } from '../data';
-import { money, terminalOf, usePriceInfo, type PriceInfo } from '../pricing';
+import { terminalOf, usePriceInfo, type PriceInfo } from '../pricing';
+import { Money } from '../components/Money';
 
 export function Pricing() {
   const [billing, setBilling] = useState<Billing>('yearly');
@@ -47,9 +48,9 @@ export function Pricing() {
               </div>
               {term ? (
                 <>
-                  {term.regular ? <div className="price-strike" style={{ marginTop: 12 }}>{money(term.regular, term.currency, term.decimals)}</div> : <div style={{ marginTop: 12 }} />}
+                  {term.regular ? <div className="price-strike" style={{ marginTop: 12 }}><Money n={term.regular} cur={term.currency} dec={term.decimals} /></div> : <div style={{ marginTop: 12 }} />}
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                    <span className="price-big" style={{ fontSize: 'clamp(32px,3.2vw,40px)' }}>{money(term.monthly, term.currency, term.decimals)}</span>
+                    <span className="price-big" style={{ fontSize: 'clamp(32px,3.2vw,40px)' }}><Money n={term.monthly} cur={term.currency} dec={term.decimals} /></span>
                     {term.regular ? <span className="pill-ok">Launch offer</span> : null}
                   </div>
                 </>
@@ -68,12 +69,12 @@ export function Pricing() {
                 <div key={k} className="tprice-row">
                   <span>{k[0]!.toUpperCase() + k.slice(1)} {billing === 'yearly' ? 'Yearly' : 'Monthly'}</span>
                   <span style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-                    {term.regular ? <span className="muted" style={{ fontSize: 13, textDecoration: 'line-through' }}>{money(term.regular, term.currency, term.decimals)}</span> : null}
-                    <span style={{ fontWeight: 600 }}>{money(billing === 'yearly' ? term.yearly[k] : term.monthly, term.currency, term.decimals)}</span>
+                    {term.regular ? <span className="muted" style={{ fontSize: 13, textDecoration: 'line-through' }}><Money n={term.regular} cur={term.currency} dec={term.decimals} /></span> : null}
+                    <span style={{ fontWeight: 600 }}><Money n={billing === 'yearly' ? term.yearly[k] : term.monthly} cur={term.currency} dec={term.decimals} /></span>
                   </span>
                 </div>
               ))}
-              {term && <div className="tprice-row"><span>Additional terminal</span><span style={{ fontWeight: 600 }}>{money(term.extra, term.currency, term.decimals)}</span></div>}
+              {term && <div className="tprice-row"><span>Additional terminal</span><span style={{ fontWeight: 600 }}><Money n={term.extra} cur={term.currency} dec={term.decimals} /></span></div>}
               <div className="tprice-row" style={{ borderBottom: 0 }}>
                 <span>Multi-branch deployments</span>
                 <a href="#contact" style={{ fontWeight: 600, color: 'var(--violet)' }}>Contact sales</a>
@@ -102,7 +103,8 @@ function PlanCard({ plan, billing, info }: { plan: Plan; billing: Billing; info:
   const key = plan.name.toLowerCase() as 'starter' | 'plus' | 'pro', local = info?.local ? info.plans[key] : null;
   const cur = local && info ? info.currency : 'AED', dec = local && info ? info.decimals : 2;
   const m = local ? local.monthly : plan.amounts.month, y = local ? local.yearly : plan.amounts.year;
-  const price = { month: money(m, cur, dec), year: money(y, cur, dec), strike: money(m * 12, cur, dec), perMonth: money(Math.round(y / 12), cur, dec) };
+  const M = (n: number) => <Money n={n} cur={cur} dec={dec} />;
+  const price = { month: M(m), year: M(y), strike: M(m * 12), perMonth: M(Math.round(y / 12)) };
   return (
     <div className={`plan${plan.highlight ? ' gradient-border' : ''}`}>
       <div className="row-between" style={{ alignItems: 'center', gap: 8 }}>

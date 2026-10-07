@@ -1,6 +1,7 @@
 import { ScaledTerminal, Terminal } from '../components/Terminal';
 import { TERMINAL_SPECS } from '../data';
-import { money, terminalOf, usePriceInfo } from '../pricing';
+import { terminalOf, usePriceInfo } from '../pricing';
+import { Money } from '../components/Money';
 
 const FLOW: [string, boolean][] = [
   ['Customer orders on WhatsApp', false],
@@ -40,9 +41,9 @@ export function TerminalIntro() {
             <div>
               {term ? (
                 <>
-                  {term.regular ? <div className="price-strike">{money(term.regular, term.currency, term.decimals)}</div> : null}
+                  {term.regular ? <div className="price-strike"><Money n={term.regular} cur={term.currency} dec={term.decimals} /></div> : null}
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                    <span className="price-big">{money(term.monthly, term.currency, term.decimals)}</span>
+                    <span className="price-big"><Money n={term.monthly} cur={term.currency} dec={term.decimals} /></span>
                     {term.regular ? <span className="pill-ok">Launch offer</span> : null}
                   </div>
                 </>
@@ -51,7 +52,7 @@ export function TerminalIntro() {
               )}
             </div>
             <div style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--ink-2)', maxWidth: 260 }}>
-              {term ? <>From {money(term.yearly.pro, term.currency, term.decimals)} with a yearly Pro plan.<br /></> : null}Estimated delivery: 10–15 business days.
+              {term ? <>From <Money n={term.yearly.pro} cur={term.currency} dec={term.decimals} /> with a yearly Pro plan.<br /></> : null}Estimated delivery: 10–15 business days.
             </div>
           </div>
           <a href="#pricing" className="btn btn--primary btn--md" style={{ marginTop: 24 }}>See terminal pricing</a>
