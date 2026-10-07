@@ -60,4 +60,18 @@ export async function setMarketPrice(actorId: string, input: unknown) {
   await db.taxAudit.create({ data: { actorId, entity: "MarketPrice", entityId: row.id, action: `price.${b.status.toLowerCase()}`, reason: `${b.country} ${b.item} ${b.amount} ${market.currency} v${b.version}`, after: { country: b.country, item: b.item, amountMinor, currency: market.currency, effectiveFrom: b.effectiveFrom } } });
   return row;
 }
+// One country's whole price list at once (all items or none): used by the super admin price screen.
+const bulkSchema = z.object({
+  country: z.string().length(2).toUpperCase(), status: z.enum(["DRAFT", "ACTIVE"]), effectiveFrom: z.string().datetime(), version: z.string().trim().min(1).max(40),
+  amounts: z.record(z.string(), z.number().positive().max(1_000_000)),
+}).strict();
+export async function setMarketPriceList(actorId: string, input: unknown) {
+  const b = bulkSchema.parse(input), items = itemsOf();
+  const unknown = Object.keys(b.amounts).filter(i => !items.includes(i));
+  if (unknown.length) throw new AppError("VALIDATION_FAILED", "Unknown price items.", 422, { unknown });
+  if (b.status === "ACTIVE") { const missing = items.filter(i => !(i in b.amounts)); if (missing.length) throw new AppError("MARKET_PRICE_NOT_CONFIGURED", "To make a price list active, every price must be filled in.", 422, { missing }); }
+  const rows = [];
+  for (const item of Object.keys(b.amounts)) rows.push(await setMarketPrice(actorId, { country: b.country, item, amount: b.amounts[item], status: b.status, effectiveFrom: b.effectiveFrom, version: b.version }));
+  return rows;
+}
 export const listMarketPrices = () => db.marketPrice.findMany({ orderBy: [{ country: "asc" }, { item: "asc" }, { effectiveFrom: "desc" }], take: 300 });
