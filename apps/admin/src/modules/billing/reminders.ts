@@ -55,8 +55,17 @@ async function recipients(businessId: string) {
 const zoneOf = async (businessId: string) => (await db.business.findUnique({ where: { id: businessId }, select: { timezone: true } }))?.timezone ?? "Asia/Dubai";
 const fmt = (d: Date, timeZone = "Asia/Dubai") => d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone });
 
+// At most one email a day per restaurant (calendar day in its own time zone). The two final notices ("trial ended", "plan ended") are outcomes, not reminders, and are exempt.
+const UNCAPPED: Kind[] = ["trial_ended", "plan_ended"];
+export const startOfDay = (now: Date, timeZone: string) => {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }).formatToParts(now).map(x => [x.type, Number(x.value)]));
+  const offset = Date.UTC(p.year!, p.month! - 1, p.day!, p.hour!, p.minute!, p.second!) - Math.floor(now.getTime() / 1000) * 1000;
+  return new Date(Date.UTC(p.year!, p.month! - 1, p.day!) - offset);
+};
+let runNow: Date | null = null;
 export async function notify(businessId: string, kind: Kind, periodKey: string, vars: Omit<Vars, "business">): Promise<boolean> {
-  if (await db.billingNotice.findFirst({ where: { businessId, kind, periodKey }, select: { id: true } })) return false; // already sent (also guards a database without the unique index)
+  if (await db.billingNotice.findFirst({ where: { businessId, kind, periodKey }, select: { id: true } })) return false;
+  if (!UNCAPPED.includes(kind) && await db.billingNotice.findFirst({ where: { businessId, sentAt: { gte: startOfDay(runNow ?? new Date(), await zoneOf(businessId)) } }, select: { id: true } })) return false; // already emailed today: try again tomorrow // already sent (also guards a database without the unique index)
   try { await db.billingNotice.create({ data: { businessId, kind, periodKey } }); }
   catch (e) { if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") return false; throw e; }
   const to = await recipients(businessId);
@@ -73,6 +82,7 @@ export async function notify(businessId: string, kind: Kind, periodKey: string, 
 }
 
 export async function runReminders(now = new Date()) {
+  runNow = now;
   const out = { sent: 0, checked: 0 };
   const t = now.getTime();
   const count = async (p: Promise<boolean>) => { out.checked++; try { if (await p) out.sent++; } catch { console.error(JSON.stringify({ level: "error", code: "REMINDER_ITEM_FAILED" })); } };

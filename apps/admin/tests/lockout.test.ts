@@ -46,6 +46,8 @@ describe.skipIf(!enabled)("trial and plan expiry", () => {
     let mine = emails().filter(e => e.to === `lo-${suffix}@example.com`);
     expect(mine.length).toBe(1); expect(mine[0].subject).toBe("Your free trial ends in 3 days");
     await ageTrial(13); calls = []; await runReminders();
+    expect(emails().filter(e => e.to === `lo-${suffix}@example.com`)).toEqual([]); // one email a day: the next reminder waits for tomorrow
+    await db.billingNotice.updateMany({ where: { businessId: biz }, data: { sentAt: new Date(Date.now() - 2 * DAY) } }); calls = []; await runReminders();
     mine = emails().filter(e => e.to === `lo-${suffix}@example.com`); expect(mine.map(e => e.subject)).toEqual(["Your free trial ends tomorrow"]);
   });
   it("emails only a verified contact email, never a placeholder or an unverified one", async () => {
@@ -68,6 +70,7 @@ describe.skipIf(!enabled)("trial and plan expiry", () => {
   it("keeps everything on while a failed renewal is retried, then locks when the plan ends", async () => {
     const sub = await db.subscription.create({ data: { businessId: biz, plan: "plus", billing: "monthly", status: "PAST_DUE", failedAttempts: 1, nextChargeAt: new Date(Date.now() + DAY), currentPeriodStart: new Date(Date.now() - 30 * DAY), currentPeriodEnd: new Date(Date.now() - DAY), startedAt: new Date(Date.now() - 60 * DAY) } });
     calls = []; await requireAccess(owner, biz); await say("still there?"); expect(ai().length).toBe(1);
+    await db.billingNotice.updateMany({ where: { businessId: biz }, data: { sentAt: new Date(Date.now() - 2 * DAY) } }); // the trial emails went out on earlier days
     await runReminders(); await runReminders(); expect(emails().filter(e => e.to === `lo-${suffix}@example.com`).map(e => e.subject)).toEqual(["We couldn’t renew your plan"]);
     await db.subscription.update({ where: { id: sub.id }, data: { status: "ENDED", nextChargeAt: null } }); calls = [];
     await expect(requireAccess(owner, biz)).rejects.toMatchObject({ code: "SUBSCRIPTION_REQUIRED" });
