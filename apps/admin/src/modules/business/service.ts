@@ -26,6 +26,9 @@ export async function createBusiness(userId: string, input: unknown, requestId: 
     const same = mine.find(b => b.countryCode === chosen) ?? (!data.countryCode ? mine[0] : undefined);
     if (same) return same;
     await requireRegistration(chosen);
+    // Saudi Arabia, Oman and Bahrain: only VAT-registered restaurants can open an account. The number is saved for review; the restaurant goes live once the review verifies it.
+    const vatNumber = (data.vatNumber ?? "").toUpperCase().replace(/[\s.-]/g, "");
+    if (market.requiresVerifiedVatForSaas && !/^[A-Z0-9]{8,20}$/.test(vatNumber)) throw new AppError("VAT_REGISTRATION_REQUIRED", `Only VAT-registered restaurants can open an account in ${market.nameEn}. Enter your VAT registration number (8 to 20 letters or digits).`, 422);
     const user = await tx.user.findFirst({ where: { id: userId, status: "ACTIVE" } });
     if (!user) throw new AppError("UNAUTHENTICATED", "Please sign in.", 401);
     const org = await tx.organization.create({ data: { name: data.name, slug: `org-${crypto.randomUUID()}`, members: { create: { userId, role: "OWNER" } } } });
@@ -34,6 +37,7 @@ export async function createBusiness(userId: string, input: unknown, requestId: 
       locations: { create: { name: data.locationName, code: "MAIN", countryCode: market.code, timezone: market.timezone, hours: { create: Array.from({ length: 7 }, (_, dayOfWeek) => ({ dayOfWeek, isClosed: false, openTime: "09:00", closeTime: "22:00" })) } } },
       onboarding: { create: { steps: { create: steps.map(stepKey => ({ stepKey, status: stepKey === "BUSINESS" ? "IN_PROGRESS" : "PENDING" })) } } },
     } });
+    if (market.requiresVerifiedVatForSaas) await tx.billingTaxProfile.create({ data: { businessId: business.id, billingCountry: market.code, legalName: data.name, vatRegistered: true, vatNumber, vatCountry: market.code, vatVerificationStatus: "PENDING", submittedAt: new Date() } });
     await tx.auditLog.create({ data: { organizationId: org.id, businessId: business.id, userId, entityType: "Business", entityId: business.id, action: "business.created", afterData: { countryCode: market.code, currency: market.currency }, requestId } });
     return business;
   });

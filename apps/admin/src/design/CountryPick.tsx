@@ -2,9 +2,10 @@
 // The country the restaurant operates in (asked once, when the restaurant is created). Fetches the markets so a market that is not open is shown as such.
 import React from "react";
 import { COUNTRIES } from "@/modules/auth/countries";
+import { isCountryCode, MARKETS } from "@/modules/market/countries";
 
 interface M { code: string; nameEn: string; nameAr: string; flag: string; currency: string; registrationEnabled: boolean; paidActivationEnabled: boolean }
-export function CountryPick({ value, onChange, ar }: { value: string; onChange: (code: string) => void; ar?: boolean }) {
+export function CountryPick({ value, onChange, ar, vat = "", onVat }: { value: string; onChange: (code: string) => void; ar?: boolean; vat?: string; onVat?: (v: string) => void }) {
   const [markets, setMarkets] = React.useState<M[] | null>(null);
   React.useEffect(() => { let live = true; fetch("/api/v1/markets", { cache: "no-store" }).then(r => r.json()).then(j => live && setMarkets(j.data ?? j)).catch(() => undefined); return () => { live = false; }; }, []);
   const list: M[] = markets ?? COUNTRIES.map(c => ({ code: c.code, nameEn: c.name, nameAr: c.nameAr, flag: c.flag, currency: "", registrationEnabled: true, paidActivationEnabled: true }));
@@ -18,6 +19,11 @@ export function CountryPick({ value, onChange, ar }: { value: string; onChange: 
         {list.map(m => <option key={m.code} value={m.code} disabled={!m.registrationEnabled}>{m.flag} {ar ? m.nameAr : m.nameEn}{m.registrationEnabled ? "" : ` ${t.closed}`}</option>)}
       </select>
       <div style={{ marginTop: 8, fontSize: 13, color: "#8A5A6E", lineHeight: 1.5 }}>{t.note}{cur?.currency || ""}.</div>
+      {isCountryCode(value) && MARKETS[value].requiresVerifiedVatForSaas && onVat && <div style={{ marginTop: 16 }}>
+        <label htmlFor="pd-vat" style={{ display: "block", fontSize: 14, fontWeight: 500, color: "#3D1C31" }}>{ar ? "رقم التسجيل في ضريبة القيمة المضافة" : "VAT registration number"}</label>
+        <input id="pd-vat" value={vat} onChange={e => onVat(e.target.value)} dir="ltr" autoComplete="off" inputMode="text" maxLength={30} style={{ marginTop: 8, height: 56, width: "100%", borderRadius: 14, border: "1.5px solid #E3CBD4", padding: "0 14px", fontSize: 17, background: "#fff", boxSizing: "border-box" }} />
+        <div style={{ marginTop: 8, fontSize: 13, color: "#8A5A6E", lineHeight: 1.5 }}>{ar ? "يمكن فقط للمطاعم المسجلة في ضريبة القيمة المضافة فتح حساب في هذه الدولة. يراجع فريقنا الرقم قبل تفعيل مطعمك." : "Only VAT-registered restaurants can open an account in this country. Our team checks the number before your restaurant goes live."}</div>
+      </div>}
       {cur && !cur.paidActivationEnabled && <div style={{ marginTop: 6, fontSize: 13, color: "#8A4B00" }}>{t.soon}</div>}
     </div>
   );

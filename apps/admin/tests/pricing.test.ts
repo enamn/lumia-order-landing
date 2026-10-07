@@ -28,7 +28,7 @@ describe.skipIf(!enabled)("market prices", () => {
     process.env.LUMIA_API_URL = "http://api.test"; process.env.INTERNAL_API_KEY = "k".repeat(32); process.env.APP_URL = "https://app.test";
     vi.stubGlobal("fetch", vi.fn(async (url: string, init: RequestInit) => { const path = new URL(url).pathname; calls.push({ path, body: JSON.parse(String(init.body)) }); return Response.json({ id: "cs_new", clientSecret: "cs_s", publishableKey: "pk_x", customerId: "cus_1" }); }));
     admin = await user("+9715", "adm"); saOwner = await user("+9665", "sa"); kwOwner = await user("+9655", "kw"); aeOwner = await user("+9715", "ae");
-    sa = (await createBusiness(saOwner, { name: "Riyadh Prices", locationName: "Main" }, "t")).id; kw = (await createBusiness(kwOwner, { name: "Kuwait Prices", locationName: "Main" }, "t")).id; ae = (await createBusiness(aeOwner, { name: "Dubai Prices", locationName: "Main" }, "t")).id;
+    sa = (await createBusiness(saOwner, { name: "Riyadh Prices", vatNumber: "300123456700003", locationName: "Main" }, "t")).id; kw = (await createBusiness(kwOwner, { name: "Kuwait Prices", locationName: "Main" }, "t")).id; ae = (await createBusiness(aeOwner, { name: "Dubai Prices", locationName: "Main" }, "t")).id;
     calls = [];
   });
   afterAll(async () => { delete process.env.STRIPE_ENABLED_CURRENCIES; await setMarketFlags(admin, "SA", { paidActivationEnabled: false }, "test clean-up"); await setMarketFlags(admin, "KW", { paidActivationEnabled: false }, "test clean-up"); vi.unstubAllGlobals(); await db.$disconnect(); });
@@ -64,7 +64,7 @@ describe.skipIf(!enabled)("market prices", () => {
     await expect(startCheckout(kwOwner, kw, { plan: "plus", billing: "monthly", terminals: 1, address: "Salmiya, Kuwait" })).rejects.toMatchObject({ code: "TERMINAL_UNAVAILABLE" });
   });
   it("a Saudi restaurant cannot start checkout until its VAT registration is verified, whatever the prices", async () => {
-    await expect(startCheckout(saOwner, sa, { plan: "plus", billing: "monthly", terminals: 0 })).rejects.toMatchObject({ code: "VAT_REGISTRATION_REQUIRED" });
+    await expect(startCheckout(saOwner, sa, { plan: "plus", billing: "monthly", terminals: 0 })).rejects.toMatchObject({ code: "VAT_VERIFICATION_PENDING" }); // the number entered at sign-up is waiting for review
     await saveBillingTax(saOwner, sa, { legalName: "Riyadh Prices Co", billingAddress: { line1: "Olaya Street", city: "Riyadh" }, vatRegistered: true, vatNumber: "300555666777003" });
     await expect(startCheckout(saOwner, sa, { plan: "plus", billing: "monthly", terminals: 0 })).rejects.toMatchObject({ code: "VAT_VERIFICATION_PENDING" });
     await reviewVat(admin, sa, { decision: "VERIFIED", method: "MANUAL_DOCUMENT_REVIEW", evidenceReference: "doc-5", validTo: new Date(Date.now() + 200 * 86_400_000).toISOString(), reason: "checked" });

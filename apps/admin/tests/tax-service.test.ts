@@ -7,7 +7,7 @@ const DAY = 86_400_000;
 
 describe.skipIf(!enabled)("tax profiles, review and eligibility", () => {
   const suffix = crypto.randomUUID().slice(0, 8); let admin: string, saOwner: string, sa: string, ae: string, aeOwner: string, kw: string, kwOwner: string;
-  const mk = async (prefix: string, name: string) => { const u = (await db.user.create({ data: { name, email: `${name}-${suffix}@test.invalid`, phoneNumber: `${prefix}${String(Date.now() + Math.floor(Math.random() * 1e6)).slice(-7)}`, phoneNumberVerified: true } })).id; return { u, b: (await createBusiness(u, { name: `${name} Grill`, locationName: "Main" }, "t")).id }; };
+  const mk = async (prefix: string, name: string) => { const u = (await db.user.create({ data: { name, email: `${name}-${suffix}@test.invalid`, phoneNumber: `${prefix}${String(Date.now() + Math.floor(Math.random() * 1e6)).slice(-7)}`, phoneNumberVerified: true } })).id; return { u, b: (await createBusiness(u, { name: `${name} Grill`, vatNumber: "300123456700003", locationName: "Main" }, "t")).id }; };
   const details = (over: object = {}) => ({ legalName: "Riyadh Grill Trading Co", billingAddress: { line1: "King Fahd Road", city: "Riyadh" }, vatRegistered: true, vatNumber: "300000000000003", ...over });
   beforeAll(async () => {
     admin = (await db.user.create({ data: { name: "adm", email: `adm-${suffix}@test.invalid`, phoneNumber: `+9715${String(Date.now()).slice(-8)}`, phoneNumberVerified: true } })).id;
@@ -24,8 +24,8 @@ describe.skipIf(!enabled)("tax profiles, review and eligibility", () => {
     expect((await getBillingTax(aeOwner, ae)).vatVerificationStatus).toBe("NOT_REQUIRED");
   });
   it("a Saudi restaurant cannot buy before its VAT is verified", async () => {
-    expect((await getBillingTax(saOwner, sa))).toMatchObject({ vatRequired: true, vatVerificationStatus: "NOT_SUBMITTED" });
-    await expect(requireTaxEligible(sa)).rejects.toMatchObject({ code: "VAT_REGISTRATION_REQUIRED", status: 409 });
+    expect((await getBillingTax(saOwner, sa))).toMatchObject({ vatRequired: true, vatVerificationStatus: "PENDING" }); // the number given at sign-up is waiting for review
+    await expect(requireTaxEligible(sa)).rejects.toMatchObject({ code: "VAT_VERIFICATION_PENDING", status: 409 });
     await expect(saveBillingTax(saOwner, sa, details({ vatNumber: "" }))).rejects.toMatchObject({ code: "VAT_REGISTRATION_REQUIRED" });
     expect(await saveBillingTax(saOwner, sa, details({ vatRegistered: false, vatNumber: "" }))).toMatchObject({ vatVerificationStatus: "NOT_SUBMITTED" });
     expect(await saveBillingTax(saOwner, sa, details())).toMatchObject({ vatVerificationStatus: "PENDING", vatNumber: "300000000000003" });
@@ -76,7 +76,7 @@ describe.skipIf(!enabled)("turnover monitoring", () => {
   it("adds up paid Lumia invoices before tax over 12 months by currency, warns near the threshold, never counts restaurants' food sales", async () => {
     const before = await turnoverReport(); expect(before.level).toBe("OK");
     const owner = (await db.user.create({ data: { name: "to", email: `to-${crypto.randomUUID().slice(0, 6)}@test.invalid`, phoneNumber: `+9715${String(Date.now()).slice(-8)}`, phoneNumberVerified: true } })).id;
-    const biz = (await createBusiness(owner, { name: "Turnover Grill", locationName: "Main" }, "t")).id;
+    const biz = (await createBusiness(owner, { name: "Turnover Grill", vatNumber: "300123456700003", locationName: "Main" }, "t")).id;
     const sub = await db.subscription.create({ data: { businessId: biz, plan: "pro", billing: "yearly", status: "ACTIVE", currentPeriodStart: new Date(), currentPeriodEnd: new Date(Date.now() + 365 * 86_400_000), startedAt: new Date() } });
     const inv = (n: number, subtotalMinor: number, currency = "AED", daysAgo = 10) => db.billingInvoice.create({ data: { businessId: biz, subscriptionId: sub.id, number: `TO-${crypto.randomUUID().slice(0, 8)}-${n}`, kind: "RENEWAL", status: "PAID", lines: [], subtotalMinor, vatMinor: 0, totalMinor: subtotalMinor, currency, periodStart: new Date(), periodEnd: new Date(), createdAt: new Date(Date.now() - daysAgo * 86_400_000) } });
     await inv(1, Math.round(VAT_THRESHOLD_AED_MINOR * 0.85)); await inv(2, 12_345_000, "KWD");

@@ -25,7 +25,7 @@ describe.skipIf(!enabled)("a Saudi restaurant goes live only after its VAT regis
     }));
     owner = (await db.user.create({ data: { name: "lv", email: `lv-${suffix}@test.invalid`, phoneNumber: `+9665${String(Date.now()).slice(-8)}`, phoneNumberVerified: true } })).id;
     admin = (await db.user.create({ data: { name: "lva", email: `lva-${suffix}@test.invalid`, phoneNumber: `+9715${String(Date.now() + 3).slice(-8)}`, phoneNumberVerified: true } })).id;
-    biz = (await createBusiness(owner, { name: "Riyadh Live", locationName: "Main" }, "t")).id;
+    biz = (await createBusiness(owner, { name: "Riyadh Live", vatNumber: "300123456700003", locationName: "Main" }, "t")).id;
     await db.whatsAppAccount.create({ data: { businessId: biz, phoneNumberId: PNID, wabaId: "9990016", status: "CONNECTED", accessTokenEncrypted: encryptSecret("biz-token"), connectedAt: new Date() } });
     await db.business.update({ where: { id: biz }, data: { createdAt: new Date(Date.now() - 60 * DAY) } }); // old account: the trial must not have been running
     calls = [];
@@ -37,7 +37,7 @@ describe.skipIf(!enabled)("a Saudi restaurant goes live only after its VAT regis
     await requireAccess(owner, biz);
     const before = await db.message.count({ where: { conversation: { businessId: biz } } });
     await say("hi"); expect(ai().length).toBe(0); expect(await db.message.count({ where: { conversation: { businessId: biz } } })).toBe(before + 1);
-    const sub = await getSubscription(owner, biz); expect(sub.access).toMatchObject({ reason: "setup" }); expect(sub.trial).toMatchObject({ started: false }); expect(sub.tax).toMatchObject({ eligible: false, vatStatus: "NOT_SUBMITTED" });
+    const sub = await getSubscription(owner, biz); expect(sub.access).toMatchObject({ reason: "setup" }); expect(sub.trial).toMatchObject({ started: false }); expect(sub.tax).toMatchObject({ eligible: false, vatStatus: "PENDING" });
   });
   it("goes live, with a 14-day trial counted from the verification, once the VAT registration is approved", async () => {
     await saveBillingTax(owner, biz, { legalName: "Riyadh Live Trading", billingAddress: { line1: "Olaya Street", city: "Riyadh" }, vatRegistered: true, vatNumber: "300111222333003" });

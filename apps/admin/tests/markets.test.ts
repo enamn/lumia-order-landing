@@ -30,7 +30,7 @@ describe.skipIf(!enabled)("restaurant country", () => {
     await expect(marketFlags("EG")).rejects.toMatchObject({ code: "COUNTRY_NOT_SUPPORTED" });
   });
   it("creates the restaurant in the country of the owner's phone, with that country's currency and time zone", async () => {
-    const b = await createBusiness(owner, { name: "Riyadh Grill", locationName: "Main" }, "t"); made.push(b.id);
+    const b = await createBusiness(owner, { name: "Riyadh Grill", vatNumber: "300123456700003", locationName: "Main" }, "t"); made.push(b.id);
     expect(b).toMatchObject({ countryCode: "SA", currencyCode: "SAR", timezone: "Asia/Riyadh" });
     const loc = await db.location.findFirstOrThrow({ where: { businessId: b.id } }); expect(loc).toMatchObject({ countryCode: "SA", timezone: "Asia/Riyadh" });
     expect((await createBusiness(owner, { name: "again", locationName: "Main" }, "t")).id).toBe(b.id); // no country named: the same account
@@ -69,7 +69,7 @@ describe.skipIf(!enabled)("branches and delivery areas stay inside the restauran
   const suffix = crypto.randomUUID().slice(0, 8);
   it("a Saudi restaurant uses Saudi regions; a UAE emirate is rejected, also through the API", async () => {
     const o = (await db.user.create({ data: { name: "sa", email: `sa-${suffix}@test.invalid`, phoneNumber: `+9665${String(Date.now()).slice(-8)}`, phoneNumberVerified: true } })).id;
-    const b = (await createBusiness(o, { name: "Riyadh Grill 2", locationName: "Main" }, "t")).id;
+    const b = (await createBusiness(o, { name: "Riyadh Grill 2", vatNumber: "300123456700003", locationName: "Main" }, "t")).id;
     const s = await getSettings(o, b); expect(s.country).toBe("SA"); expect(s.sections.branches[0].emirate).toBe("Riyadh");
     const ok = s.sections.branches.map((x: any) => ({ ...x, emirate: "Makkah", area: "Jeddah" }));
     await saveSettingsSection(o, b, "branches", ok, "t"); expect((await db.location.findFirstOrThrow({ where: { businessId: b } })).emirate).toBe("Makkah");
@@ -77,5 +77,16 @@ describe.skipIf(!enabled)("branches and delivery areas stay inside the restauran
     const del = (await getSettings(o, b)).sections.delivery;
     await expect(saveSettingsSection(o, b, "delivery", { ...del, areas: [{ emirate: "Sharjah", area: "All areas", fee: "5", min: "", eta: "30", branch: "", on: true }] }, "t")).rejects.toMatchObject({ code: "INVALID_REGION" });
     await saveSettingsSection(o, b, "delivery", { ...del, method: "area", areas: [{ emirate: "Riyadh", area: "All areas", fee: "12.50", min: "", eta: "30", branch: "", on: true }] }, "t");
+  });
+  it("Saudi Arabia, Oman and Bahrain need a VAT number to open an account (saved for review); Qatar and Kuwait do not", async () => {
+    const mk = async (prefix: string) => (await db.user.create({ data: { name: "vat", email: `vat-${crypto.randomUUID()}@test.invalid`, phoneNumber: `${prefix}${String(Date.now() + Math.floor(Math.random() * 1e6)).slice(-7)}`, phoneNumberVerified: true } })).id;
+    const sa = await mk("+9665");
+    await expect(createBusiness(sa, { name: "No VAT", locationName: "Main", countryCode: "SA" }, "t")).rejects.toMatchObject({ code: "VAT_REGISTRATION_REQUIRED" });
+    await expect(createBusiness(sa, { name: "Bad VAT", locationName: "Main", countryCode: "SA", vatNumber: "12" }, "t")).rejects.toMatchObject({ code: "VAT_REGISTRATION_REQUIRED" });
+    const b = await createBusiness(sa, { name: "With VAT", locationName: "Main", countryCode: "SA", vatNumber: "3001 2345-6700003" }, "t");
+    expect(await db.billingTaxProfile.findUnique({ where: { businessId: b.id } })).toMatchObject({ vatNumber: "300123456700003", vatRegistered: true, vatVerificationStatus: "PENDING", billingCountry: "SA" });
+    for (const [prefix, code] of [["+968", "OM"], ["+973", "BH"]] as const) await expect(createBusiness(await mk(prefix), { name: "xx", locationName: "Main", countryCode: code }, "t")).rejects.toMatchObject({ code: "VAT_REGISTRATION_REQUIRED" });
+    const qa = await createBusiness(await mk("+974"), { name: "Doha ok", locationName: "Main", countryCode: "QA" }, "t").catch(e => e); // Qatar may be closed by its market flag, but never asks for VAT
+    if (qa?.code) expect(qa.code).not.toBe("VAT_REGISTRATION_REQUIRED");
   });
 });

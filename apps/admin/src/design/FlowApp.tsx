@@ -13,7 +13,7 @@ import { EmailVerify } from "./EmailVerify";
 import { CountryPick } from "./CountryPick";
 import { StatusBanner } from "./StatusBanner";
 import { formatMoney, fromMinor, parseAmount, scaleOf, toMinor } from "@/modules/market/money";
-import { marketOf } from "@/modules/market/countries";
+import { marketOf, isCountryCode, MARKETS } from "@/modules/market/countries";
 import { AccountMenu, PlanBadge } from "./AccountMenu";
 import { BillingPage } from "./BillingPage";
 import { mountEmbeddedCheckout } from "@/lib/stripe-embed";
@@ -107,7 +107,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const business = props.business;
     this.state = {
       step: props.initialStep, num: "", cc: 0, focused: false, invalid: false, srvErr: "", sending: false, ccOpen: false, e164: "",
-      currency: "", opCountry: "", digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
+      currency: "", opCountry: "", opVat: "", digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu, props.currency)) > 0, cat: "All", menu: toCats(props.menu, props.currency), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
       page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", embedId: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
@@ -487,9 +487,11 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   submitName = async (e: any) => {
     e.preventDefault(); const name = this.state.name.trim();
     if (!name) { this.setState({ nameErr: true, nameFail: "" }); this.focus(this.nameRef); return; }
+    const country = this.state.opCountry || countryOf(this.state.e164 || this.props.userPhone || "")?.code || COUNTRIES[this.state.cc].code, vatOn = isCountryCode(country) && MARKETS[country].requiresVerifiedVatForSaas;
+    if (vatOn && !/^[A-Z0-9]{8,20}$/.test(this.state.opVat.toUpperCase().replace(/[\s.-]/g, ""))) { this.setState({ nameErr: true, nameFail: "Only VAT-registered restaurants can open an account in this country. Enter your VAT registration number (8 to 20 letters or digits)." }); return; }
     this.setState({ busy: true });
     try {
-      const b = await api("/api/v1/businesses", "POST", { name, locationName: "Main branch", businessType: "RESTAURANT", countryCode: this.state.opCountry || countryOf(this.state.e164 || this.props.userPhone || "")?.code || COUNTRIES[this.state.cc].code, ...(this.state.logo?.startsWith("data:") ? { logoUrl: this.state.logo } : {}) });
+      const b = await api("/api/v1/businesses", "POST", { name, locationName: "Main branch", businessType: "RESTAURANT", countryCode: country, ...(vatOn ? { vatNumber: this.state.opVat } : {}), ...(this.state.logo?.startsWith("data:") ? { logoUrl: this.state.logo } : {}) });
       this.setState({ busy: false, businessId: b.id, currency: b.currencyCode ?? "" }); this.go("menu", { menuErr: "" });
     } catch (err) { this.setState({ busy: false, nameErr: true, nameFail: err instanceof Error ? err.message : "Please try again." }); }
   };
@@ -689,7 +691,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       resend: () => this.resend("whatsapp"), sms: () => this.resend("sms"), changeNumber: () => { this.clearTimers(); this.setState({ verifying: false }); this.go("phone"); },
       // name
       nameRef: this.nameRef, name: s.name, nameErr: s.nameErr, nameErrText: s.nameFail || "Enter your restaurant name to continue", nf: ring(s.nameErr, s.nameFocused, false), onName: (e: any) => this.setState({ name: e.target.value, nameErr: false, nameFail: "" }),
-      countryNode: <CountryPick value={opCountry} onChange={code => this.setState({ opCountry: code })} ar={ar}/>,
+      countryNode: <CountryPick value={opCountry} onChange={code => this.setState({ opCountry: code })} ar={ar} vat={s.opVat} onVat={v => this.setState({ opVat: v })}/>,
       nameFocus: () => this.setState({ nameFocused: true }), nameBlur: () => this.setState({ nameFocused: false }), submitName: this.submitName,
       planBadge: this.planBadge(s, ar), accountNode: this.accountMenu("sidebar", s, nm, initials, ar), accountNodeMobile: this.accountMenu("header", s, nm, initials, ar),
       logo: s.logo, noLogo: !s.logo, logoImg: s.logo ? ce("img", { key: "lg", src: s.logo, alt: "", style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } }) : null, logoBtn: s.logo ? "Change logo" : "Upload logo", logoTile: { bd: s.logo ? "transparent" : "#E3CBD4" }, onLogo: this.onLogo, initials, nameOrDefault: nm,
