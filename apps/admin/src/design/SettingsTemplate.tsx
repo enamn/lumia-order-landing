@@ -1728,6 +1728,11 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                             </Fragment>
                           ))}
                         </dl>
+                        <div style={S("display:flex;gap:10px;flex-wrap:wrap;margin-top:6px")}>
+                          <button type="button" onClick={vm.startPair} style={S("height:44px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")} className="dcs6">
+                            Connect
+                          </button>
+                        </div>
                       </div>
                     </article>
                     </>

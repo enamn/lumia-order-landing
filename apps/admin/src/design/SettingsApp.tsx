@@ -322,7 +322,7 @@ class SettingsApp extends React.Component<Props, any> {
       hm: { closed: H.mode === 'closed', rows: H.mode !== 'closed' }, hf: bind('hours', ['closedUntil']), dayRows, hoursBubbles,
       menuSteps, menuStats, menuNotApproved: menuLevel < 3, menuPrimary, menuLive: menuLevel === 4,
       hasDevices: false, pairing: false, noDevicesIdle: !term, deviceCards, ...termVm,
-      startPair: () => this.flash('Order devices are coming soon.'), cancelPair: () => {}, finishPair: () => {},
+      startPair: () => this.flash('Connecting a terminal with a QR code is coming soon.'), cancelPair: () => {}, finishPair: () => {},
       dashUrl: `/dashboard${this.props.query}`, menuUrl: `/dashboard?page=menu&businessId=${this.props.businessId}`,
       codSw: sw(PV.cod, () => this.upd('pay', x => { x.cod = !x.cod; })), noCod: !PV.cod,
       verifySw: sw(PV.verify, () => this.upd('pay', x => { x.verify = !x.verify; })),
