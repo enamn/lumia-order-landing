@@ -139,7 +139,8 @@ function Prices() {
     setBusy(false);
   };
   const cell = (item: string) => <td style={{ padding: "6px 14px 6px 0", whiteSpace: "nowrap" }}><input type="number" inputMode="decimal" min="0" step={dec === 3 ? "0.01" : "0.01"} aria-label={`${country[1]} ${item}`} style={inp} value={vals[item] ?? ""} placeholder="–" onChange={e => setVals(v => ({ ...v, [item]: e.target.value }))} /><span style={{ fontSize: 12, color: muted, marginInlineStart: 8 }}>AED {uae(item)}</span>{current.get(item) && <span style={{ fontSize: 11, marginInlineStart: 6, color: current.get(item).live ? "#16704A" : "#A86A00" }}>{current.get(item).live ? "live" : "draft"}</span>}</td>;
-  const Row = ({ label, a, b }: { label: string; a: string; b?: string }) => <tr style={{ borderTop: `1px solid ${line}` }}><td style={{ padding: "6px 14px 6px 0", fontWeight: 600 }}>{label}</td>{cell(a)}{b ? cell(b) : <td />}</tr>;
+  // A plain function, not a component: a component defined inside Prices is a new type on every render, which remounts the inputs and drops the cursor after each key.
+  const row = (label: string, a: string, b?: string) => <tr key={a} style={{ borderTop: `1px solid ${line}` }}><td style={{ padding: "6px 14px 6px 0", fontWeight: 600 }}>{label}</td>{cell(a)}{b ? cell(b) : <td />}</tr>;
   const check = (on: boolean, text: string) => <div style={{ fontSize: 13, display: "flex", gap: 8, alignItems: "center" }}><span aria-hidden style={{ color: on ? "#16704A" : "#B4233B" }}>{on ? "✓" : "✗"}</span><span>{text}</span></div>;
   return (
     <section style={{ ...card, marginTop: 12 }}>
@@ -151,11 +152,11 @@ function Prices() {
       <div style={{ overflowX: "auto" }}><table style={{ borderCollapse: "collapse", fontSize: 14 }}>
         <thead><tr style={{ textAlign: "left", color: muted }}><th style={{ padding: "4px 14px 6px 0", fontWeight: 500 }}>{cur}</th><th style={{ padding: "4px 14px 6px 0", fontWeight: 500 }}>Monthly</th><th style={{ padding: "4px 14px 6px 0", fontWeight: 500 }}>Yearly</th></tr></thead>
         <tbody>
-          {PLAN_ROWS.map(([id, name]) => <Row key={id} label={name} a={`plan:${id}:monthly`} b={`plan:${id}:yearly`} />)}
-          <Row label="Extra branch" a="branch:monthly" b="branch:yearly" />
+          {PLAN_ROWS.map(([id, name]) => row(name, `plan:${id}:monthly`, `plan:${id}:yearly`))}
+          {row("Extra branch", "branch:monthly", "branch:yearly")}
           <tr><td colSpan={3} style={{ padding: "12px 0 4px", color: muted, fontSize: 13 }}>Extra orders (one-time packs)</td></tr>
-          <Row label="50 orders" a="topup:orders50" />
-          <Row label="200 orders" a="topup:orders200" />
+          {row("50 orders", "topup:orders50")}
+          {row("200 orders", "topup:orders200")}
         </tbody></table></div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginTop: 14 }}>
         <label style={{ fontSize: 14 }}>Starts on <input type="date" value={from} onChange={e => setFrom(e.target.value)} style={{ ...inp, width: 150, marginInlineStart: 6 }} /></label>
