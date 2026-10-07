@@ -1,3 +1,4 @@
+import { superAdminPhones } from "@/server/superadmin";
 import { createHmac, randomInt, randomUUID, timingSafeEqual } from "node:crypto";
 import { db } from "@/server/db";
 import { transaction } from "@/server/transaction";
@@ -52,7 +53,7 @@ export async function verifyCode(phoneNumber: string, code: string) {
     if (existing && existing.status !== "ACTIVE") return { error: "ACCOUNT_UNAVAILABLE" as const };
     const user = existing ? await tx.user.update({ where: { id: existing.id }, data: { phoneNumberVerified: true, preferredLanguage: challenge.language } }) : await tx.user.create({ data: { name: challenge.language === "ar" ? "صاحب المطعم" : "Restaurant owner", preferredLanguage: challenge.language, phoneNumber, phoneNumberVerified: true, email: `${randomUUID()}@phone.lumia.invalid`, emailVerified: false } });
     const membership = await tx.membership.findFirst({ where: { userId: user.id, status: "ACTIVE", organization: { status: "ACTIVE" } } });
-    return { user, redirectTo: membership ? "/dashboard" : `/onboarding?lang=${challenge.language}` };
+    return { user, redirectTo: superAdminPhones().has(user.phoneNumber) ? "/superadmin" : membership ? "/dashboard" : `/onboarding?lang=${challenge.language}` }; // super admin numbers go straight to the super admin
   });
   if ("error" in result) {
     const messages = { INVALID_CODE: "That code isn’t correct. Check the latest WhatsApp message and try again.", CODE_EXPIRED: "This code has expired. Request a new code.", ATTEMPTS_EXCEEDED: "Too many attempts. Request a new code.", ACCOUNT_UNAVAILABLE: "This account is unavailable. Contact support." };

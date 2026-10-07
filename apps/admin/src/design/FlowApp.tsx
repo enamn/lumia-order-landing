@@ -467,6 +467,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     this.setState({ verifying: true, otpErr: null, otpFail: "", note: null });
     try {
       const r = await api("/api/auth/whatsapp/verify-code", "POST", { phoneNumber: this.state.e164, code });
+      if (String(r.redirectTo).startsWith("/superadmin")) { window.location.assign("/superadmin"); return; }
       if (String(r.redirectTo).startsWith("/dashboard")) { window.location.assign("/dashboard"); return; }
       this.setState({ verifying: false }); this.go("verified"); this.later(1300, () => this.go("name"));
     } catch (err: any) {
