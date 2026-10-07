@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Terminal, type TerminalScreen } from '../components/Terminal';
 import { fade, useWide } from '../components/hooks';
 import { AI_STAGES, DEMO_CAPTIONS, DEMO_DURATIONS, DEMO_LAST_STEP, MINI_WAVE, SIGNUP_URL } from '../data';
+import { Aed } from '../components/Money';
 
 type Props = { autoplay?: boolean; speed?: number };
 
@@ -119,8 +120,8 @@ export function Hero({ autoplay = true, speed = 1 }: Props) {
                       <div style={{ marginTop: 4, color: 'var(--ink-2)' }}>
                         2 × Chicken Burger (1 no pickles)<br />1 × Large Fries<br />2 × Coca-Cola
                       </div>
-                      <div style={{ marginTop: 4, color: 'var(--ink-2)' }}>Subtotal AED 74 · Delivery AED 8</div>
-                      <div style={{ marginTop: 2, fontWeight: 600 }}>Total AED 82. Shall I confirm?</div>
+                      <div style={{ marginTop: 4, color: 'var(--ink-2)' }}>Subtotal <Aed n={74} /> · Delivery <Aed n={8} /></div>
+                      <div style={{ marginTop: 2, fontWeight: 600 }}>Total <Aed n={82} />. Shall I confirm?</div>
                       <div className="msg__time">21:04</div>
                     </div>
                   </div>
@@ -170,9 +171,9 @@ export function Hero({ autoplay = true, speed = 1 }: Props) {
                 </div>
                 <div className="dashed" style={{ margin: '16px 0 12px' }} />
                 <div className="ai__totals tabnum" style={{ opacity: s >= 6 ? 1 : 0 }}>
-                  <div className="row-between"><span>Subtotal</span><span>AED 74</span></div>
-                  <div className="row-between"><span>Delivery</span><span>AED 8</span></div>
-                  <div className="row-between ai__total"><span>Total</span><span>AED 82</span></div>
+                  <div className="row-between"><span>Subtotal</span><span><Aed n={74} /></span></div>
+                  <div className="row-between"><span>Delivery</span><span><Aed n={8} /></span></div>
+                  <div className="row-between ai__total"><span>Total</span><span><Aed n={82} /></span></div>
                 </div>
                 <div className="ai__status" style={{ background: status.bg, color: status.fg, letterSpacing: status.ls }}>
                   {status.text}

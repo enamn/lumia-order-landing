@@ -1,7 +1,7 @@
 import { ScaledTerminal, Terminal } from '../components/Terminal';
 import { TERMINAL_SPECS } from '../data';
 import { terminalOf, usePriceInfo } from '../pricing';
-import { Money } from '../components/Money';
+import { Aed, Money } from '../components/Money';
 
 const FLOW: [string, boolean][] = [
   ['Customer orders on WhatsApp', false],
@@ -145,10 +145,10 @@ export function Channels() {
 }
 
 function BrowserMock() {
-  const orders: [string, string, string, boolean][] = [
-    ['#1048', 'AED 82', 'Samer · New', true],
-    ['#1047', 'AED 64', 'Noura · Accepted', false],
-    ['#1046', 'AED 58', 'Omar · Preparing', false],
+  const orders: [string, number, string, boolean][] = [
+    ['#1048', 82, 'Samer · New', true],
+    ['#1047', 64, 'Noura · Accepted', false],
+    ['#1046', 58, 'Omar · Preparing', false],
   ];
   return (
     <div style={{ position: 'absolute', inset: '16px 16px 0', background: '#fff', borderRadius: '12px 12px 0 0', border: '1px solid var(--line)', borderBottom: 0, overflow: 'hidden' }}>
@@ -165,7 +165,7 @@ function BrowserMock() {
         <div className="tabnum" style={{ flex: 1, padding: 10, display: 'flex', flexDirection: 'column', gap: 7, fontSize: 11 }}>
           {orders.map(([id, amt, who, sel]) => (
             <div key={id} style={{ borderRadius: 8, padding: 8, ...(sel ? { boxShadow: '0 0 0 1.5px #FF5577' } : { border: '1px solid var(--line-3)' }) }}>
-              <div className="row-between"><span className="mono">{id}</span><b>{amt}</b></div>
+              <div className="row-between"><span className="mono">{id}</span><b><Aed n={amt} /></b></div>
               <div className="muted">{who}</div>
             </div>
           ))}

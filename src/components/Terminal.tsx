@@ -1,5 +1,6 @@
 import { LogoMark } from './Logo';
 import './terminal.css';
+import { Aed } from './Money';
 
 export type TerminalScreen = 'boot' | 'ready' | 'new' | 'new2' | 'eta' | 'accepted';
 
@@ -72,7 +73,7 @@ export function Terminal({ screen = 'ready', eta = null, ring = false, receipt =
             <hr />
             <div className="row-between" style={{ fontWeight: 500 }}>
               <span>TOTAL</span>
-              <span>AED 82.00</span>
+              <span><Aed n={82} fixed /></span>
             </div>
             <div>ETA {etaLabel}</div>
           </div>
@@ -149,7 +150,7 @@ function ScreenContent({ screen, eta, etaLabel }: { screen: TerminalScreen; eta:
           <div className="dashed" style={{ margin: '8px 0' }} />
           <div className="row-between" style={{ alignItems: 'baseline' }}>
             <span className="ts__label">Total</span>
-            <span style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.03em' }}>AED 82.00</span>
+            <span style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.03em' }}><Aed n={82} fixed /></span>
           </div>
           <div className="ts__label" style={{ marginTop: 6 }}>Delivery</div>
           <div style={{ fontSize: 12.5 }}>Al Majaz 2, Sharjah</div>
@@ -169,7 +170,7 @@ function ScreenContent({ screen, eta, etaLabel }: { screen: TerminalScreen; eta:
           </div>
           <div className="ts__center" style={{ gap: 6 }}>
             <div className="mono" style={{ fontSize: 18, fontWeight: 500, color: 'var(--muted)' }}>#1052</div>
-            <div style={{ fontSize: 48, fontWeight: 600, letterSpacing: '-0.04em', lineHeight: 1 }}>AED 96</div>
+            <div style={{ fontSize: 48, fontWeight: 600, letterSpacing: '-0.04em', lineHeight: 1 }}><Aed n={96} /></div>
             <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>Customer confirmed on WhatsApp</div>
           </div>
           <div className="ts__actions">
@@ -187,7 +188,7 @@ function ScreenContent({ screen, eta, etaLabel }: { screen: TerminalScreen; eta:
             style={{ margin: '0 -14px', padding: '11px 14px', background: '#fff', borderBottom: '1px solid var(--line-3)', alignItems: 'center', fontSize: 12.5 }}
           >
             <span><span className="mono" style={{ fontWeight: 500 }}>#1048</span> · Samer</span>
-            <span style={{ fontWeight: 600 }}>AED 82.00</span>
+            <span style={{ fontWeight: 600 }}><Aed n={82} fixed /></span>
           </div>
           <div style={{ fontSize: 19, fontWeight: 600, letterSpacing: '-0.02em', marginTop: 18 }}>Choose ETA</div>
           <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 2 }}>Sent to the customer on WhatsApp.</div>

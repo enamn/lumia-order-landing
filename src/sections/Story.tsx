@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { fade } from '../components/hooks';
 import { WAVE } from '../data';
+import { Aed } from '../components/Money';
 
 export function Stats() {
   const stats = [
@@ -56,7 +57,7 @@ export function WhatsAppChaos() {
               <div className="item__mod" style={{ paddingInlineStart: 36 }}>– 1 × No cheese</div>
               <div className="item" style={{ fontSize: 15, marginTop: 10 }}><span className="item__qty" style={{ width: 26 }}>1×</span><span>Fries</span></div>
               <div className="dashed" style={{ margin: '14px 0 10px' }} />
-              <div className="row-between" style={{ fontSize: 15 }}><span className="muted">Delivery</span><span>AED 8</span></div>
+              <div className="row-between" style={{ fontSize: 15 }}><span className="muted">Delivery</span><span><Aed n={8} /></span></div>
               <div className="note note--ok" style={{ marginTop: 14, padding: '9px 12px' }}>Customer confirmed ✓</div>
             </div>
           </div>
@@ -127,7 +128,7 @@ export function HowItWorks() {
           </Step>
           <Step n="03" color="#DC46C6" title="Customer confirms" text="Lumia sends the complete order and total. The customer confirms before submission.">
             <div className="how__demo">
-              <div className="bubble bubble--in" style={{ border: '1px solid var(--line)' }}>Total AED 82. Confirm?</div>
+              <div className="bubble bubble--in" style={{ border: '1px solid var(--line)' }}>Total <Aed n={82} />. Confirm?</div>
               <div className="bubble">Yes ✓</div>
             </div>
           </Step>
@@ -284,9 +285,9 @@ export function Menu() {
           <div>
             <div className="eyebrow">03 · PRODUCTS · PRICES · MODIFIERS</div>
             <div className="tabnum" style={{ display: 'flex', flexDirection: 'column', marginTop: 12, fontSize: 14 }}>
-              <div className="price-row"><span>Chicken Burger</span><span>AED 25</span></div>
-              <div className="price-row"><span>Beef Burger</span><span>AED 29</span></div>
-              <div className="price-row"><span>Fries</span><span>AED 12</span></div>
+              <div className="price-row"><span>Chicken Burger</span><span><Aed n={25} /></span></div>
+              <div className="price-row"><span>Beef Burger</span><span><Aed n={29} /></span></div>
+              <div className="price-row"><span>Fries</span><span><Aed n={12} /></span></div>
             </div>
             <div className="tags" style={{ gap: 5, marginTop: 10 }}>
               {['No pickles', 'Spicy', 'Large'].map((t) => (

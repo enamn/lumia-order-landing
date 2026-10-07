@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { LogoMark } from '../components/Logo';
+import { Aed } from '../components/Money';
 
 type DashState = 'new' | 'eta' | 'done' | 'rejected';
 
@@ -70,15 +71,15 @@ export function Dashboard() {
               <div className="grid tabnum" style={{ ['--min' as string]: '220px', gap: 14, marginTop: 16, alignItems: 'start' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div className="ocard" style={{ boxShadow: `0 0 0 2px ${selRing}` }}>
-                    <div className="row-between"><span className="mono" style={{ fontWeight: 500 }}>#1048</span><span style={{ fontWeight: 600 }}>AED 82</span></div>
+                    <div className="row-between"><span className="mono" style={{ fontWeight: 500 }}>#1048</span><span style={{ fontWeight: 600 }}><Aed n={82} /></span></div>
                     <div className="muted" style={{ marginTop: 4 }}>Samer · {stateLabel}</div>
                   </div>
                   <div className="ocard">
-                    <div className="row-between"><span className="mono">#1049</span><span style={{ fontWeight: 600 }}>AED 46</span></div>
+                    <div className="row-between"><span className="mono">#1049</span><span style={{ fontWeight: 600 }}><Aed n={46} /></span></div>
                     <div className="muted" style={{ marginTop: 4 }}>Fatima · New</div>
                   </div>
                   <div className="ocard muted">
-                    <div className="row-between"><span className="mono">#1046</span><span>AED 58</span></div>
+                    <div className="row-between"><span className="mono">#1046</span><span><Aed n={58} /></span></div>
                     <div style={{ marginTop: 4 }}>Omar · Preparing</div>
                   </div>
                 </div>
@@ -92,7 +93,7 @@ export function Dashboard() {
                   <div style={{ fontSize: 14, color: 'var(--ink-2)', marginTop: 6, lineHeight: 1.6 }}>
                     2 Chicken Burgers<br />1 Fries<br />2 Coca-Cola
                   </div>
-                  <div style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em', marginTop: 10 }}>AED 82</div>
+                  <div style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em', marginTop: 10 }}><Aed n={82} /></div>
                   <div className="muted" style={{ fontSize: 12, marginTop: 10 }}>Delivery</div>
                   <div style={{ fontSize: 14 }}>Al Majaz 2, Sharjah</div>
 
@@ -149,13 +150,13 @@ export function Dashboard() {
                 </div>
               ))}
               <div className="eyebrow" style={{ marginTop: 16 }}>DELIVERY AREAS</div>
-              <div className="price-row"><span>Sharjah</span><span style={{ fontWeight: 500 }}>AED 8</span></div>
-              <div className="price-row"><span>Ajman</span><span style={{ fontWeight: 500 }}>AED 12</span></div>
+              <div className="price-row"><span>Sharjah</span><span style={{ fontWeight: 500 }}><Aed n={8} /></span></div>
+              <div className="price-row"><span>Ajman</span><span style={{ fontWeight: 500 }}><Aed n={12} /></span></div>
               <div className="price-row muted" style={{ borderBottom: 0 }}><span>Dubai</span><span>Not available</span></div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
                 <div className="mini">
                   <div className="muted" style={{ fontSize: 11.5 }}>Minimum Order</div>
-                  <div style={{ fontSize: 17, fontWeight: 600, marginTop: 2 }}>AED 40</div>
+                  <div style={{ fontSize: 17, fontWeight: 600, marginTop: 2 }}><Aed n={40} /></div>
                 </div>
                 <div className="mini">
                   <div className="muted" style={{ fontSize: 11.5 }}>Payment</div>
