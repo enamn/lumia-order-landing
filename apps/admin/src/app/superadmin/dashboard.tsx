@@ -267,11 +267,63 @@ function Terminals() {
     </section>
   );
 }
+const STATE: Record<string, [string, string]> = { trial: ["Free trial", "#FFF1DC"], subscribed: ["Subscribed", "#E4F4EC"], ending: ["Ending", "#FFF1DC"], past_due: ["Payment failed", "#FDECEC"], ended: ["Plan ended", "#F3EEF1"], trial_ended: ["Trial ended", "#F3EEF1"] };
+function Customers() {
+  const [d, setD] = React.useState<any>(null), [err, setErr] = React.useState(""), [tab, setTab] = React.useState("restaurants"), [q, setQ] = React.useState(""), [st, setSt] = React.useState("all"), [open, setOpen] = React.useState(""), [inv, setInv] = React.useState<any[] | null>(null);
+  React.useEffect(() => { fetch("/api/superadmin/customers", { cache: "no-store" }).then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error?.message ?? "Could not load."); setD(j.data ?? j); }).catch(e => setErr(e.message)); }, []);
+  const toggle = (id: string) => { if (open === id) { setOpen(""); return; } setOpen(id); setInv(null); fetch(`/api/superadmin/customers?invoices=${id}`, { cache: "no-store" }).then(r => r.json()).then(j => setInv((j.data ?? j).invoices ?? [])).catch(() => setInv([])); };
+  const day = (v: any) => (v ? new Date(v).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "–");
+  const money = (m: number, c: string) => `${c} ${(m / (["OMR", "BHD", "KWD"].includes(c) ? 1000 : 100)).toLocaleString("en-US", { minimumFractionDigits: ["OMR", "BHD", "KWD"].includes(c) ? 3 : 2 })}`;
+  if (!d) return <section style={card}><h2 style={h2}>Customers</h2>{err ? <div role="alert" style={{ color: "#B4233B" }}>{err}</div> : <span style={{ color: muted }}>Loading…</span>}</section>;
+  const needle = q.trim().toLowerCase().replace(/\s+/g, "");
+  const rest = d.restaurants.filter((r: any) => (st === "all" || (st === "locked" ? r.locked : st === "subscribed" ? ["subscribed", "ending"].includes(r.state) : r.state === st)) && (!needle || `${r.name}${r.ownerPhone}${r.ownerName}${r.email}`.toLowerCase().replace(/\s+/g, "").includes(needle)));
+  const accts = d.accounts.filter((a: any) => !needle || `${a.name}${a.phone}`.toLowerCase().replace(/\s+/g, "").includes(needle));
+  const sm = d.summary;
+  return (
+    <div style={{ display: "grid", gap: 12 }}>
+      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 12 }}>
+        <Kpi label="Restaurants" value={num(sm.restaurants)} sub={`${num(sm.users)} accounts`} /><Kpi label="Free trial" value={num(sm.trial)} /><Kpi label="Subscribed" value={num(sm.subscribed)} /><Kpi label="Payment failed" value={num(sm.pastDue)} /><Kpi label="Locked" value={num(sm.lockedOrEnded)} sub="trial or plan ended" /><Kpi label="No restaurant yet" value={num(sm.usersWithoutRestaurant)} sub="signed in only" />
+      </section>
+      <section style={card}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginBottom: 12 }}>
+          <div role="tablist" style={{ display: "flex", gap: 6 }}>{[["restaurants", "Restaurants"], ["accounts", "Users"]].map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k!)} style={{ ...btnSm, background: tab === k ? "#FBF1FF" : "#fff", borderColor: tab === k ? "#C93DFF" : "#ECD9E0" }}>{l}</button>)}</div>
+          <input aria-label="Search" placeholder={tab === "restaurants" ? "Search name, phone or email" : "Search name or phone"} value={q} onChange={e => setQ(e.target.value)} style={{ flex: "1 1 220px", maxWidth: 360, height: 36, borderRadius: 10, border: "1.5px solid #ECD9E0", padding: "0 12px", fontSize: 14 }} />
+          {tab === "restaurants" && <select aria-label="Filter" value={st} onChange={e => setSt(e.target.value)} style={{ height: 36, borderRadius: 10, border: "1.5px solid #ECD9E0", padding: "0 8px", fontSize: 14, background: "#fff" }}>{[["all", "All"], ["trial", "Free trial"], ["subscribed", "Subscribed"], ["past_due", "Payment failed"], ["locked", "Locked"]].map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>}
+        </div>
+        {tab === "restaurants" ? <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+          <thead><tr style={{ textAlign: "left", color: muted }}>{["Restaurant", "Owner", "Status", "Plan", "Renews / trial ends", "Orders", "WhatsApp", "Joined"].map(h => <th key={h} style={{ padding: "6px 12px 8px 0", fontWeight: 500, whiteSpace: "nowrap" }}>{h}</th>)}</tr></thead>
+          <tbody>{rest.map((r: any) => { const [label, bg] = STATE[r.state] ?? [r.state, "#eee"]; return [
+            <tr key={r.id} onClick={() => toggle(r.id)} style={{ borderTop: `1px solid ${line}`, cursor: "pointer", background: open === r.id ? "#FBF7F9" : undefined }}>
+              <td style={{ padding: "9px 12px 9px 0", whiteSpace: "nowrap" }}><b>{flag(r.country)} {r.name}</b></td>
+              <td style={{ padding: "9px 12px 9px 0", whiteSpace: "nowrap" }}>{r.ownerPhone || "–"}</td>
+              <td style={{ padding: "9px 12px 9px 0" }}><span style={{ fontSize: 12, fontWeight: 600, borderRadius: 999, padding: "2px 9px", background: bg, whiteSpace: "nowrap" }}>{label}</span></td>
+              <td style={{ padding: "9px 12px 9px 0", whiteSpace: "nowrap", textTransform: "capitalize" }}>{r.plan ? `${r.plan} · ${r.billing}` : "–"}</td>
+              <td style={{ padding: "9px 12px 9px 0", whiteSpace: "nowrap" }}>{day(r.periodEnd ?? r.trialEndsAt)}</td>
+              <td style={{ padding: "9px 12px 9px 0" }}>{num(r.orders)}</td>
+              <td style={{ padding: "9px 12px 9px 0" }}>{r.whatsapp ? "Connected" : <span style={{ color: muted }}>No</span>}</td>
+              <td style={{ padding: "9px 0", whiteSpace: "nowrap" }}>{day(r.createdAt)}</td>
+            </tr>,
+            open === r.id && <tr key={r.id + "d"}><td colSpan={8} style={{ padding: "4px 0 14px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 14, fontSize: 13 }}>
+                <div><div style={{ color: muted }}>Contact</div><div>{r.ownerName || "–"} · {r.ownerPhone || "–"}</div><div>{r.email ? `${r.email} ${r.emailVerified ? "(verified)" : "(not verified)"}` : "No email"}</div></div>
+                <div><div style={{ color: muted }}>Subscription</div><div style={{ textTransform: "capitalize" }}>{r.plan ? `${r.plan} · ${r.billing}` : "No plan"}{r.state === "ending" ? " · cancels at period end" : ""}</div><div>{r.cardLast4 ? `Card ending ${r.cardLast4}` : "No card saved"} · {r.terminals} terminal{r.terminals === 1 ? "" : "s"}</div></div>
+                <div><div style={{ color: muted }}>Activity</div><div>{num(r.orders)} orders · {num(r.customers)} customers</div><div>{r.currency}</div></div>
+                <div><div style={{ color: muted }}>Invoices</div>{inv === null ? <div style={{ color: muted }}>Loading…</div> : inv.length ? inv.map((i: any) => <div key={i.id}>{i.number} · {day(i.createdAt)} · {money(i.totalMinor, i.currency)} · {i.status.toLowerCase()}</div>) : <div style={{ color: muted }}>None</div>}</div>
+              </div></td></tr>]; })}
+            {!rest.length && <tr><td colSpan={8} style={{ padding: "14px 0", color: muted }}>No restaurants match.</td></tr>}</tbody></table></div>
+        : <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+          <thead><tr style={{ textAlign: "left", color: muted }}>{["Name", "Phone", "Restaurant", "Verified", "Joined"].map(h => <th key={h} style={{ padding: "6px 12px 8px 0", fontWeight: 500 }}>{h}</th>)}</tr></thead>
+          <tbody>{accts.map((a: any) => <tr key={a.id} style={{ borderTop: `1px solid ${line}` }}><td style={{ padding: "9px 12px 9px 0" }}>{a.name}</td><td style={{ padding: "9px 12px 9px 0", whiteSpace: "nowrap" }}>{a.phone}</td><td style={{ padding: "9px 12px 9px 0" }}>{a.restaurants ? "Yes" : <span style={{ color: muted }}>None yet</span>}</td><td style={{ padding: "9px 12px 9px 0" }}>{a.verified ? "Yes" : "No"}</td><td style={{ padding: "9px 0", whiteSpace: "nowrap" }}>{day(a.createdAt)}</td></tr>)}
+            {!accts.length && <tr><td colSpan={5} style={{ padding: "14px 0", color: muted }}>No users match.</td></tr>}</tbody></table></div>}
+      </section>
+    </div>
+  );
+}
 const NAV: [string, string, () => React.ReactElement][] = [
-  ["analytics", "Analytics", () => <Analytics />], ["prices", "Plan prices", () => <Prices />], ["terminals", "Terminal orders", () => <Terminals />], ["markets", "Markets", () => <Markets />], ["tax", "Tax and VAT", () => <Tax />],
+  ["customers", "Restaurants and users", () => <Customers />], ["analytics", "Analytics", () => <Analytics />], ["prices", "Plan prices", () => <Prices />], ["terminals", "Terminal orders", () => <Terminals />], ["markets", "Markets", () => <Markets />], ["tax", "Tax and VAT", () => <Tax />],
 ];
 export default function SuperAdminDashboard() {
-  const [tab, setTab] = React.useState("analytics");
+  const [tab, setTab] = React.useState("customers");
   React.useEffect(() => { const read = () => { const h = window.location.hash.slice(1); if (NAV.some(n => n[0] === h)) setTab(h); }; read(); window.addEventListener("hashchange", read); return () => window.removeEventListener("hashchange", read); }, []);
   const [out, setOut] = React.useState(false);
   const signOut = async () => { setOut(true); try { await authClient.signOut(); } finally { window.location.assign("/login"); } };
