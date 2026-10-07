@@ -23,6 +23,7 @@ export function Pricing() {
               </button>
             </div>
             <div className="muted" style={{ fontSize: 14 }}>0% commission on orders · AI ordering included, subject to fair-use terms</div>
+            <div className="muted" style={{ fontSize: 14, marginTop: 6 }}>Prices in UAE dirhams (AED). Saudi Arabia, Oman, Bahrain, Qatar and Kuwait: local-currency plans are coming soon.</div>
           </div>
         </div>
 

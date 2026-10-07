@@ -231,7 +231,7 @@ export function Voice() {
 
         <div className="grid" style={{ ['--min' as string]: '300px', marginTop: 'clamp(40px,5vw,56px)', paddingTop: 'clamp(28px,3vw,36px)', borderTop: '1px solid var(--line-2)', gap: 'clamp(16px,2vw,28px)', alignItems: 'center' }}>
           <div>
-            <div className="eyebrow">Built for the UAE</div>
+            <div className="eyebrow">Built for the Gulf</div>
             <p style={{ fontSize: 18, lineHeight: 1.5, marginTop: 10, maxWidth: 360, textWrap: 'pretty' }}>
               Customers mix Arabic and English in one message. The order comes out the same.
             </p>
