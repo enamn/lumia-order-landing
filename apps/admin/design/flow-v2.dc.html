@@ -968,7 +968,7 @@ input::placeholder{color:#B89AA8}
               <div style="display:flex;flex-direction:column;gap:10px;font-size:15px;font-variant-numeric:tabular-nums;padding-top:14px;border-top:1px solid #ECD9E0">
                 <div style="display:flex;justify-content:space-between;gap:12px;color:#3D1C31"><span>{{ sub.selName }}</span><span>{{ sub.planAmt }}</span></div>
                 <div style="display:flex;justify-content:space-between;gap:12px;color:#3D1C31"><span>{{ sub.termLine }}</span><span>{{ sub.termAmt }}</span></div>
-                <div style="display:flex;justify-content:space-between;gap:12px;color:#3D1C31"><span>VAT (5%)</span><span>{{ sub.vat }}</span></div>
+                <sc-if value="{{ sub.hasVat }}" hint-placeholder-val="{{ true }}"><div style="display:flex;justify-content:space-between;gap:12px;color:#3D1C31"><span>{{ sub.vatLabel }}</span><span>{{ sub.vat }}</span></div></sc-if>
                 <div style="display:flex;justify-content:space-between;gap:12px;font-size:18px;font-weight:600;padding-top:10px;border-top:1px solid #ECD9E0"><span>Total today</span><span>{{ sub.total }}</span></div>
               </div>
               <p style="font-size:13px;color:#8A5A6E">Renews on {{ sub.renew }}.</p>
@@ -2052,6 +2052,6 @@ class Component extends DCLogic {
   }
 }
 </script>
-<!-- LUMIA-LOCK --><!-- LUMIA-EMAIL --><!-- LUMIA-COUNTRY -->
+<!-- LUMIA-LOCK --><!-- LUMIA-EMAIL --><!-- LUMIA-COUNTRY --><!-- LUMIA-TAX -->
 </body>
 </html>

@@ -2201,14 +2201,18 @@ export function DcTemplate({ vm }: { vm: any }) {
                                             {vm.sub.termAmt}
                                           </span>
                                         </div>
-                                        <div style={S("display:flex;justify-content:space-between;gap:12px;color:#3D1C31")}>
-                                          <span>
-                                            VAT (5%)
-                                          </span>
-                                          <span>
-                                            {vm.sub.vat}
-                                          </span>
-                                        </div>
+                                        {vm.sub.hasVat && (
+                                          <>
+                                          <div style={S("display:flex;justify-content:space-between;gap:12px;color:#3D1C31")}>
+                                            <span>
+                                              {vm.sub.vatLabel}
+                                            </span>
+                                            <span>
+                                              {vm.sub.vat}
+                                            </span>
+                                          </div>
+                                          </>
+                                        )}
                                         <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:18px;font-weight:600;padding-top:10px;border-top:1px solid #ECD9E0")}>
                                           <span>
                                             Total today

@@ -58,9 +58,9 @@ function sectionsOf(b: Loaded) {
 async function branchOffer(businessId: string) {
   const sub = await getSubscriptionFor(businessId), e = entitlements(sub);
   if (!e.canBuyBranches || !sub || (sub.extraBranches ?? 0) >= EXTRA_BRANCH.max) return null;
-  const month = sub.billing === "yearly" ? "year" : "month", q = quoteExtraBranch(sub.billing as Billing, sub.currentPeriodStart, sub.currentPeriodEnd, new Date(), (await taxDecisionFor(businessId)).ratePercent);
+  const tax = await taxDecisionFor(businessId), month = sub.billing === "yearly" ? "year" : "month", q = quoteExtraBranch(sub.billing as Billing, sub.currentPeriodStart, sub.currentPeriodEnd, new Date(), tax.ratePercent);
   const price = EXTRA_BRANCH[sub.billing as Billing];
-  return { priceAed: price, period: month, payNowMinor: q.totalMinor, card: (sub.card as { last4?: string } | null)?.last4 ?? null, hasCard: Boolean(sub.stripeCustomerId && sub.stripePaymentMethodId) };
+  return { ratePercent: tax.ratePercent, priceAed: price, period: month, payNowMinor: q.totalMinor, card: (sub.card as { last4?: string } | null)?.last4 ?? null, hasCard: Boolean(sub.stripeCustomerId && sub.stripePaymentMethodId) };
 }
 
 export async function getSettings(userId: string, businessId: string) {

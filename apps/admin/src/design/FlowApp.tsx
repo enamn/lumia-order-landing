@@ -279,7 +279,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const money = (n: number) => "AED " + n.toLocaleString("en-US", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
     const yr = s.bill === "yearly", sel = SUB_PLANS.find(p => p.id === s.plan) || SUB_PLANS[1];
     const tPrice = (id: string) => (yr ? TERM[id] : 599), qty = s.termQty || 1, termAmt = tPrice(sel.id) + (qty - 1) * 599;
-    const planAmt = yr ? sel.y : sel.m, base = planAmt + termAmt, vat = Math.round(base * 5) / 100, tot = base + vat, addrVal: string = s.addr ?? d?.defaults?.address ?? "", addrOk = addrVal.trim().length > 5, paying = s.sub === "paying";
+    const planAmt = yr ? sel.y : sel.m, base = planAmt + termAmt, rate = d?.tax?.ratePercent ?? 0, vat = Math.round(base * rate) / 100, tot = base + vat, addrVal: string = s.addr ?? d?.defaults?.address ?? "", addrOk = addrVal.trim().length > 5, paying = s.sub === "paying";
     const paidPlan = active ? SUB_PLANS.find(p => p.id === d.plan) : undefined, endDate = fd(new Date(d?.trial?.endsAt ?? Date.now()));
     const periodEnd = d?.currentPeriodEnd ? new Date(d.currentPeriodEnd) : null, pastDue = d?.status === "PAST_DUE";
     const tab = (v: string, label: string) => { const on = s.bill === v; return { label, on, fw: on ? 600 : 500, bg: on ? "#fff" : "transparent", fg: on ? "#1A0815" : "#8A5A6E", sh: on ? "0 1px 3px rgba(26,8,21,.12)" : "none", pick: () => this.setState({ bill: v }) }; };
@@ -307,7 +307,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
           cta: "Choose " + p.name, term: money(tPrice(p.id)), ctaBg: on ? "linear-gradient(90deg,#FF5577,#C93DFF)" : "#1A0815", choose: () => this.setState({ plan: p.id, planStep: "pay", subErr: "" }), bd: on ? "#FF5577" : "#F0E4E8", bg: on ? "#FFF7FA" : "#fff", ring: on ? "#FF5577" : "#D9BFCB", dot: on ? "#FF5577" : "transparent", pick: () => this.setState({ plan: p.id }) }; }),
         selName: sel.name + " plan", selBilling: yr ? "Billed yearly" : "Billed monthly", planAmt: money(planAmt), termAmt: money(termAmt), termLine: qty > 1 ? `Terminal × ${qty}` : "Terminal", termPrice: money(tPrice(sel.id)), termQty: qty, termMin: qty <= 1, decOp: qty <= 1 ? 0.3 : 1,
         termQtyNote: qty > 1 ? "Extra terminals AED 599 each" : "Need one per branch?", addr: addrVal, addrErr: s.addrTry && !addrOk, addrBd: s.addrTry && !addrOk ? "#B42318" : "#ECD9E0",
-        subtotal: money(base), vat: money(vat), total: money(tot), payLabel: paying ? "Opening secure payment…" : "Continue to payment · " + money(tot), renew: fd(new Date(Date.now() + (yr ? 365 : 30) * 86_400_000)), invalid: paying, payOp: paying ? 0.7 : 1,
+        subtotal: money(base), vat: money(vat), hasVat: rate > 0, vatLabel: `VAT (${rate}%)`, total: money(tot), payLabel: paying ? "Opening secure payment…" : "Continue to payment · " + money(tot), renew: fd(new Date(Date.now() + (yr ? 365 : 30) * 86_400_000)), invalid: paying, payOp: paying ? 0.7 : 1,
         cols: narrow || s.w < 1100 ? "minmax(0,1fr)" : "minmax(0,1.5fr) minmax(340px,1fr)", err: s.subErr, embed: !!s.embedSecret, notEmbed: !s.embedSecret,
       },
       term: { show: active && !!T, label: STEPS[st], pillBg: pill[0], pillFg: pill[1], msg: MSG[st], no: "#LT-" + String(d?.terminalNo ?? d?.startedAt ?? "").replace(/\D/g, "").slice(-5).padStart(5, "0"), qtyLabel: (d?.terminals ?? 1) === 1 ? "1 terminal" : (d?.terminals ?? 1) + " terminals", addr: d?.terminalAddress ?? "",

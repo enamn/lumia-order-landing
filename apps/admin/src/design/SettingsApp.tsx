@@ -85,7 +85,7 @@ class SettingsApp extends React.Component<Props, any> {
   async buyBranch(then: () => void) {
     const bb = this.props.initial.branchBuy; if (!bb) return;
     if (!bb.hasCard) { this.setState({ error: 'Add a card in Billing first to add a branch.' }); return; }
-    if (!window.confirm(`Add a branch for AED ${bb.priceAed} a ${bb.period} (+ VAT)? You pay AED ${(bb.payNowMinor / 100).toFixed(2)} now for the rest of this period, charged to your card ending ${bb.card ?? ''}.`)) return;
+    if (!window.confirm(`Add a branch for AED ${bb.priceAed} a ${bb.period}${bb.ratePercent > 0 ? ' (+ VAT)' : ''}? You pay AED ${(bb.payNowMinor / 100).toFixed(2)} now for the rest of this period, charged to your card ending ${bb.card ?? ''}.`)) return;
     try { await api(`/api/v1/businesses/${this.props.businessId}/subscription/branch`, 'POST', { requestId: crypto.randomUUID() }); this.props.initial.branchLimit = (this.props.initial.branchLimit ?? 1) + 1; cache.delete(this.props.businessId); this.flash('Branch added to your plan.'); then(); }
     catch (e: any) { this.setState({ error: e.message }); }
   }
