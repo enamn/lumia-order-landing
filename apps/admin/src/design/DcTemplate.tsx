@@ -2094,11 +2094,33 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           <section style={S("border:2px solid #FF5577;background:#FFF7FA;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px")}>
                                             <div style={S("display:flex;gap:14px;align-items:flex-start")}>
                                               <div style={S("flex:none;width:64px;height:112px;position:relative;overflow:hidden;border-radius:10px;background:#fff")}>
-                                                <div style={S("width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C0284F")}>
-                                                  <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
-                                                    <path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                  </svg>
-                                                </div>
+                                                <svg width="64" height="112" viewBox="0 0 64 112" role="img" aria-label="Lumia Order Terminal">
+                                                  <defs>
+                                                    <linearGradient id="lt-scr" x1="0" y1="0" x2="0" y2="1">
+                                                      <stop offset="0" stopColor="#fff" />
+                                                      <stop offset="1" stopColor="#f6ecff" />
+                                                    </linearGradient>
+                                                    <linearGradient id="lt-g" x1="0" y1="0" x2="1" y2="0">
+                                                      <stop offset="0" stopColor="#FF5577" />
+                                                      <stop offset="1" stopColor="#C93DFF" />
+                                                    </linearGradient>
+                                                  </defs>
+                                                  <ellipse cx="32" cy="108" rx="20" ry="3" fill="#28081e" opacity=".25" />
+                                                  <rect x="9" y="4" width="46" height="102" rx="10" fill="#1b1b1e" />
+                                                  <rect x="9" y="4" width="46" height="26" rx="10" fill="#2a2a2e" />
+                                                  <rect x="12" y="22" width="40" height="8" fill="#151517" />
+                                                  <text x="32" y="19" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="7" fontWeight="700" fill="#fff">
+                                                    lumia
+                                                  </text>
+                                                  <rect x="13" y="30" width="38" height="2" rx="1" fill="#070707" />
+                                                  <rect x="13" y="35" width="38" height="65" rx="4" fill="#060607" />
+                                                  <rect x="15" y="37" width="34" height="61" rx="2" fill="url(#lt-scr)" />
+                                                  <rect x="15" y="45" width="34" height="9" fill="url(#lt-g)" />
+                                                  <rect x="19" y="60" width="20" height="3" rx="1.5" fill="#E9D5DF" />
+                                                  <rect x="19" y="67" width="26" height="3" rx="1.5" fill="#F0E4E8" />
+                                                  <rect x="19" y="74" width="16" height="3" rx="1.5" fill="#F0E4E8" />
+                                                  <rect x="19" y="86" width="26" height="7" rx="3.5" fill="#1A0815" />
+                                                </svg>
                                               </div>
                                               <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:4px")}>
                                                 <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px")}>
@@ -2106,11 +2128,11 @@ export function DcTemplate({ vm }: { vm: any }) {
                                                     Lumia Order Terminal
                                                   </span>
                                                   <span style={S("font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#1A0815;color:#fff")}>
-                                                    Required
+                                                    {vm.sub.termBadge}
                                                   </span>
                                                 </div>
                                                 <span style={S("font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty")}>
-                                                  The Lumia Order terminal for your restaurant. Orders are handled from your dashboard. Every subscription includes at least one terminal.
+                                                  {"The Lumia Order terminal for your restaurant. Orders are handled from your dashboard. "}{vm.sub.termDesc}
                                                 </span>
                                                 <span style={S("display:flex;align-items:baseline;gap:8px;margin-top:4px;font-variant-numeric:tabular-nums")}>
                                                   <span style={S("font-size:14px;color:#8A5A6E;text-decoration:line-through")}>
@@ -2141,22 +2163,26 @@ export function DcTemplate({ vm }: { vm: any }) {
                                                 </button>
                                               </div>
                                             </div>
-                                            <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                              <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                                                Delivery address for the terminal
-                                              </span>
-                                              <input autoComplete="street-address" placeholder="Building, street, area, emirate" value={vm.sub.addr} onChange={vm.onAddr} style={S(`height:48px;padding:0 14px;border-radius:12px;border:1.5px solid ${vm.sub.addrBd};background:#fff;font-size:15px`)} className="dch14" />
-                                            </label>
-                                            {vm.sub.addrErr && (
+                                            {vm.sub.hasTerm && (
                                               <>
-                                              <span style={S("font-size:13px;color:#B42318;margin-top:-6px")}>
-                                                Add a delivery address for your terminal to continue.
+                                              <label style={S("display:flex;flex-direction:column;gap:6px")}>
+                                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                                  Delivery address for the terminal
+                                                </span>
+                                                <input autoComplete="street-address" placeholder="Building, street, area, emirate" value={vm.sub.addr} onChange={vm.onAddr} style={S(`height:48px;padding:0 14px;border-radius:12px;border:1.5px solid ${vm.sub.addrBd};background:#fff;font-size:15px`)} className="dch14" />
+                                              </label>
+                                              {vm.sub.addrErr && (
+                                                <>
+                                                <span style={S("font-size:13px;color:#B42318;margin-top:-6px")}>
+                                                  Add a delivery address for your terminal to continue.
+                                                </span>
+                                                </>
+                                              )}
+                                              <span style={S("font-size:13px;color:#8A5A6E;margin-top:-4px")}>
+                                                Estimated delivery: 10–15 business days.
                                               </span>
                                               </>
                                             )}
-                                            <span style={S("font-size:13px;color:#8A5A6E;margin-top:-4px")}>
-                                              Estimated delivery: 10–15 business days.
-                                            </span>
                                           </section>
                                           </>
                                         )}
