@@ -865,3 +865,64 @@ model MarketChange {
   @@index([code, at])
   @@map("market_changes")
 }
+
+// Afkar IO's own tax registrations (one row, id "platform"). Restaurant staff cannot edit it; only a super admin can, and every change is audited.
+model PlatformTaxProfile {
+  id String @id @map("_id")
+  legalName String
+  country String @default("AE")
+  registrations Json
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+  @@map("platform_tax_profile")
+}
+// An approved, effective-dated rule for how Afkar IO treats a service sale to a country once it is registered for UAE VAT.
+model TaxPolicy {
+  id String @id @default(uuid()) @map("_id")
+  country String
+  uaeTreatment String
+  effectiveFrom DateTime
+  effectiveTo DateTime?
+  version String
+  approvedBy String
+  evidence String
+  createdAt DateTime @default(now())
+  @@index([country, effectiveFrom])
+  @@map("tax_policies")
+}
+// The billing tax details of a restaurant (who is invoiced, and its VAT registration in its own country). Separate from the VAT it charges its own customers.
+model BillingTaxProfile {
+  id String @id @default(uuid()) @map("_id")
+  businessId String @unique
+  billingCountry String
+  legalName String @default("")
+  billingAddress Json?
+  vatRegistered Boolean?
+  vatNumber String?
+  vatCountry String?
+  vatVerificationStatus String @default("NOT_SUBMITTED")
+  verificationMethod String?
+  submittedAt DateTime?
+  verifiedAt DateTime?
+  verifiedBy String?
+  validFrom DateTime?
+  validTo DateTime?
+  evidenceReference String?
+  rejectionReason String?
+  updatedAt DateTime @updatedAt
+  @@map("billing_tax_profiles")
+}
+// Every change to tax settings or a VAT review: who, what, when and why.
+model TaxAudit {
+  id String @id @default(uuid()) @map("_id")
+  at DateTime @default(now())
+  actorId String
+  entity String
+  entityId String
+  action String
+  reason String
+  before Json?
+  after Json?
+  @@index([entity, entityId, at])
+  @@map("tax_audit")
+}
