@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { db } from "../src/server/db";
 import { ensureMongoIndexes } from "../scripts/mongo-indexes";
 import { createBusiness, setMember } from "../src/modules/business/service";
+import { setSupplierRegistration } from "../src/modules/tax/service";
 import { PLANS, addPeriod, quoteRenewal, quoteSignup, quoteUpgrade, isUpgrade } from "../src/modules/billing/plans";
 import { getSubscription, startCheckout, startCardUpdate, confirmSession, handleBillingEvent, runBilling, changePlan, quotePlanChange, setCancel, listInvoices, entitlements, trialInfo } from "../src/modules/billing/service";
 import { getSettings, saveSettingsSection } from "../src/modules/settings/service";
@@ -9,11 +10,11 @@ const enabled = process.env.RUN_DB_TESTS === "true";
 
 describe("plans, prices and periods", () => {
   it("prices a yearly Plus signup with two terminals and 5% VAT as separate lines that add up exactly", () => {
-    const q = quoteSignup("plus", "yearly", 2);
+    const q = quoteSignup("plus", "yearly", 2, 5);
     expect(q.lines.map(l => [l.name, l.unitMinor, l.quantity])).toEqual([["Lumia Order Plus (yearly)", 249000, 1], ["Lumia Order Terminal", 49900, 1], ["Lumia Order Terminal (extra)", 59900, 1]]);
     expect(q).toMatchObject({ subtotalMinor: 358800, vatMinor: 17940, totalMinor: 376740 });
-    expect(quoteSignup("starter", "monthly", 1)).toMatchObject({ subtotalMinor: 74800, vatMinor: 3740, totalMinor: 78540 }); // 149 + 599 terminal
-    expect(quoteRenewal("pro", "monthly")).toMatchObject({ subtotalMinor: 39900, vatMinor: 1995, totalMinor: 41895 }); // renewals never include a terminal
+    expect(quoteSignup("starter", "monthly", 1, 5)).toMatchObject({ subtotalMinor: 74800, vatMinor: 3740, totalMinor: 78540 }); // 149 + 599 terminal
+    expect(quoteRenewal("pro", "monthly", 0, 5)).toMatchObject({ subtotalMinor: 39900, vatMinor: 1995, totalMinor: 41895 }); // renewals never include a terminal
   });
   it("adds one month or year, keeping the day where it can", () => {
     expect(addPeriod(new Date("2026-10-04T10:00:00Z"), "monthly").toISOString()).toBe("2026-11-04T10:00:00.000Z");
@@ -23,9 +24,9 @@ describe("plans, prices and periods", () => {
   });
   it("charges only the price difference for the time left when upgrading", () => {
     const start = new Date("2026-10-01T00:00:00Z"), end = new Date("2026-10-31T00:00:00Z");
-    expect(quoteUpgrade("starter", "plus", "monthly", start, end, new Date("2026-10-16T00:00:00Z"))).toMatchObject({ subtotalMinor: 5000, vatMinor: 250, totalMinor: 5250 }); // half of AED 100
-    expect(quoteUpgrade("starter", "pro", "monthly", start, end, start).subtotalMinor).toBe(25000); // the whole difference on day one
-    expect(quoteUpgrade("starter", "pro", "monthly", start, end, new Date("2026-11-05T00:00:00Z")).subtotalMinor).toBe(0); // nothing left
+    expect(quoteUpgrade("starter", "plus", "monthly", start, end, new Date("2026-10-16T00:00:00Z"), 5)).toMatchObject({ subtotalMinor: 5000, vatMinor: 250, totalMinor: 5250 }); // half of AED 100
+    expect(quoteUpgrade("starter", "pro", "monthly", start, end, start, 5).subtotalMinor).toBe(25000); // the whole difference on day one
+    expect(quoteUpgrade("starter", "pro", "monthly", start, end, new Date("2026-11-05T00:00:00Z"), 5).subtotalMinor).toBe(0); // nothing left
     expect(isUpgrade("plus", "pro")).toBe(true); expect(isUpgrade("pro", "plus")).toBe(false); expect(PLANS.starter.rank).toBe(1);
   });
   it("counts 14 trial days and gives the smallest plan's limits without an active plan", () => {
@@ -43,10 +44,12 @@ describe.skipIf(!enabled)("Lumia-run subscriptions, Stripe only takes payments",
   let session: any, charge: any, cardInfo = { brand: "visa", last4: "4242", expMonth: 12, expYear: 2030 };
   const T0 = new Date("2026-10-04T10:00:00Z");
   const paid = (meta: Record<string, string>, amountTotalMinor?: number, extra: object = {}) => ({ sessionId: `cs_${Math.random().toString(36).slice(2, 10)}`, mode: meta.kind === "card" ? "setup" : "payment", complete: true, paid: true, customerId: "cus_1", paymentMethodId: "pm_1", paymentIntentId: "pi_1", amountTotalMinor, metadata: { businessId: biz, ...meta }, ...extra });
-  const signup = (plan = "plus", billing = "yearly", terminals = 2) => paid({ kind: "signup", plan, billing, terminals: String(terminals), terminalAddress: "Shop 4, Al Majaz 2" }, quoteSignup(plan as any, billing as any, terminals).totalMinor);
+  const signup = (plan = "plus", billing = "yearly", terminals = 2) => paid({ kind: "signup", plan, billing, terminals: String(terminals), terminalAddress: "Shop 4, Al Majaz 2", taxRate: "5" }, quoteSignup(plan as any, billing as any, terminals, 5).totalMinor);
   const sub = () => db.subscription.findFirstOrThrow({ where: { businessId: biz } });
   beforeAll(async () => {
     await ensureMongoIndexes();
+    // These tests are about VAT on Lumia's invoices, so Afkar IO's UAE VAT registration is switched on (it is inactive by default: see the tax tests).
+    await setSupplierRegistration("test-admin", { country: "AE", number: "100123456700003", state: "ACTIVE", effectiveFrom: new Date(Date.now() - 86_400_000).toISOString(), effectiveTo: null, reason: "test set-up" });
     process.env.LUMIA_API_URL = "http://api.test"; process.env.INTERNAL_API_KEY = "k".repeat(32); process.env.APP_URL = "https://app.test";
     vi.stubGlobal("fetch", vi.fn(async (url: string, init: RequestInit) => {
       const path = new URL(url).pathname, body = JSON.parse(String(init.body)); calls.push({ path, body });
@@ -61,7 +64,7 @@ describe.skipIf(!enabled)("Lumia-run subscriptions, Stripe only takes payments",
     biz = (await createBusiness(owner, { name: "Billing Burgers", locationName: "Main" }, "t")).id;
     await setMember(owner, biz, { phoneNumber: "+971508883002", role: "VIEWER" }, "t");
   });
-  afterAll(async () => { vi.unstubAllGlobals(); await db.$disconnect(); });
+  afterAll(async () => { await setSupplierRegistration("test-admin", { country: "AE", number: "", state: "INACTIVE", effectiveFrom: null, effectiveTo: null, reason: "test clean-up" }); vi.unstubAllGlobals(); await db.$disconnect(); });
 
   it("starts in the trial with no plan", async () => {
     const s = await getSubscription(owner, biz);
@@ -101,7 +104,7 @@ describe.skipIf(!enabled)("Lumia-run subscriptions, Stripe only takes payments",
     expect(await confirmSession(owner, biz, { sessionId: session.sessionId })).toMatchObject({ applied: false, reason: "ALREADY_APPLIED" }); expect(await listInvoices(owner, biz)).toHaveLength(1);
     expect(await handleBillingEvent({ id: "evt_1", type: "checkout.session.completed", session })).toMatchObject({ applied: false, reason: "ALREADY_APPLIED" }); // the webhook for the same payment changes nothing
     const view = await getSubscription(owner, biz);
-    expect(view).toMatchObject({ status: "ACTIVE", plan: "plus", entitlements: { plan: "plus", customers: true, branches: 3 }, nextCharge: { amountMinor: quoteRenewal("plus", "yearly").totalMinor }, card: { last4: "4242" } });
+    expect(view).toMatchObject({ status: "ACTIVE", plan: "plus", entitlements: { plan: "plus", customers: true, branches: 3 }, nextCharge: { amountMinor: quoteRenewal("plus", "yearly", 0, 5).totalMinor }, card: { last4: "4242" } });
     await expect(startCheckout(owner, biz, { plan: "pro", billing: "monthly", terminals: 1, address: "Shop 4, Al Majaz 2" })).rejects.toMatchObject({ code: "ALREADY_SUBSCRIBED" });
   });
   it("renews when due: charges the card on file once, moves the period on and issues an invoice", async () => {
@@ -110,9 +113,9 @@ describe.skipIf(!enabled)("Lumia-run subscriptions, Stripe only takes payments",
     charge = { status: "succeeded", paymentIntentId: "pi_renew" }; calls = [];
     expect(await runBilling(due)).toMatchObject({ checked: 1, renewed: 1, failed: 0 });
     const body = calls.find(c => c.path === "/internal/billing/charge")!.body;
-    expect(body).toMatchObject({ customerId: "cus_1", paymentMethodId: "pm_1", amountMinor: quoteRenewal("plus", "yearly").totalMinor, metadata: { kind: "renewal" } }); expect(body.idempotencyKey).toMatch(/^renew:.+:\d{4}-\d{2}-\d{2}:1$/);
+    expect(body).toMatchObject({ customerId: "cus_1", paymentMethodId: "pm_1", amountMinor: quoteRenewal("plus", "yearly", 0, 5).totalMinor, metadata: { kind: "renewal" } }); expect(body.idempotencyKey).toMatch(/^renew:.+:\d{4}-\d{2}-\d{2}:1$/);
     const s1 = await sub(); expect(s1.currentPeriodStart.getTime()).toBe(s0.currentPeriodEnd.getTime()); expect(s1.currentPeriodEnd.getTime()).toBe(addPeriod(s0.currentPeriodEnd, "yearly").getTime()); expect(s1.failedAttempts).toBe(0);
-    expect((await listInvoices(owner, biz))[0]).toMatchObject({ kind: "RENEWAL", totalMinor: quoteRenewal("plus", "yearly").totalMinor });
+    expect((await listInvoices(owner, biz))[0]).toMatchObject({ kind: "RENEWAL", totalMinor: quoteRenewal("plus", "yearly", 0, 5).totalMinor });
     expect(await runBilling(due)).toMatchObject({ checked: 0 }); // running it again does not bill twice
   });
   it("retries a failed renewal after 1, 3 and 5 days, keeps the plan meanwhile, then lets it lapse", async () => {
@@ -149,12 +152,12 @@ describe.skipIf(!enabled)("Lumia-run subscriptions, Stripe only takes payments",
     expect((await getSettings(owner, biz)).branchLimit).toBe(3);
     // downgrade waits for the renewal
     expect(await changePlan(owner, biz, { plan: "plus", billing: "monthly" })).toMatchObject({ plan: "pro", pendingPlan: "plus" });
-    expect((await getSubscription(owner, biz)).nextCharge).toMatchObject({ amountMinor: quoteRenewal("plus", "monthly").totalMinor });
+    expect((await getSubscription(owner, biz)).nextCharge).toMatchObject({ amountMinor: quoteRenewal("plus", "monthly", 0, 5).totalMinor });
     expect(await changePlan(owner, biz, { plan: "pro", billing: "monthly" })).toMatchObject({ pendingPlan: undefined }); // choosing the current plan again undoes it
     await changePlan(owner, biz, { plan: "plus", billing: "yearly" }); expect(await sub()).toMatchObject({ pendingPlan: "plus", pendingBilling: "yearly" });
     charge = { status: "succeeded", paymentIntentId: "pi_next" }; calls = [];
     await runBilling(new Date(end.getTime() + 1000));
-    expect(calls.find(c => c.path === "/internal/billing/charge")!.body.amountMinor).toBe(quoteRenewal("plus", "yearly").totalMinor);
+    expect(calls.find(c => c.path === "/internal/billing/charge")!.body.amountMinor).toBe(quoteRenewal("plus", "yearly", 0, 5).totalMinor);
     expect(await sub()).toMatchObject({ plan: "plus", billing: "yearly", pendingPlan: null });
     // cancel: keeps the plan until the period ends, then no charge
     expect(await setCancel(owner, biz, true)).toMatchObject({ cancelAtPeriodEnd: true, nextCharge: null }); expect((await getSubscription(owner, biz)).entitlements.plan).toBe("plus");

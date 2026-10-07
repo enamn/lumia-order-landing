@@ -10,7 +10,6 @@ export const PLANS: Record<PlanId, { name: string; monthly: number; yearly: numb
 };
 // The first terminal costs less on a yearly plan; extra terminals are the same for everyone.
 export const TERMINAL = { yearly: { starter: 549, plus: 499, pro: 399 } as Record<PlanId, number>, monthly: 599, extra: 599 };
-export const VAT_PERCENT = 5;
 
 // What each plan includes every month, counted from the plan's own billing day. The limit restaurants see is WhatsApp orders. Behind it, AI replies,
 // voice notes and menu imports have a fair-use cap so chatting without ordering cannot run up costs. Sized from the real cost of an order (about 7 AI replies,
@@ -39,35 +38,36 @@ export interface Quote { lines: Line[]; subtotalMinor: number; vatMinor: number;
 const fils = (aed: number) => Math.round(aed * 100);
 export const planMinor = (plan: PlanId, billing: Billing) => fils(PLANS[plan][billing]);
 const planName = (plan: PlanId, billing: Billing) => `Lumia Order ${PLANS[plan].name} (${billing})`;
-// VAT is 5% of the subtotal, rounded to the nearest fils, and shown as its own line so the total is exactly what is charged.
-export function withVat(lines: Line[]): Quote {
-  const subtotalMinor = lines.reduce((t, l) => t + l.unitMinor * l.quantity, 0), vatMinor = Math.round(subtotalMinor * VAT_PERCENT / 100);
+// The tax rate comes from the tax decision for that restaurant (see modules/tax/policy.ts), never from a constant: 0 while Afkar IO has no UAE VAT registration.
+// The tax is a percentage of the subtotal, rounded to the nearest fils, and shown as its own line so the total is exactly what is charged.
+export function withTax(lines: Line[], ratePercent: number): Quote {
+  const subtotalMinor = lines.reduce((t, l) => t + l.unitMinor * l.quantity, 0), vatMinor = Math.round(subtotalMinor * ratePercent / 100);
   return { lines, subtotalMinor, vatMinor, totalMinor: subtotalMinor + vatMinor };
 }
-export function quoteSignup(plan: PlanId, billing: Billing, terminals: number): Quote {
+export function quoteSignup(plan: PlanId, billing: Billing, terminals: number, ratePercent: number): Quote {
   const first = fils(billing === "yearly" ? TERMINAL.yearly[plan] : TERMINAL.monthly);
   const lines: Line[] = [{ name: planName(plan, billing), unitMinor: planMinor(plan, billing), quantity: 1 }, { name: "Lumia Order Terminal", unitMinor: first, quantity: 1 }];
   if (terminals > 1) lines.push({ name: "Lumia Order Terminal (extra)", unitMinor: fils(TERMINAL.extra), quantity: terminals - 1 });
-  return withVat(lines);
+  return withTax(lines, ratePercent);
 }
-export function quoteRenewal(plan: PlanId, billing: Billing, extraBranches = 0): Quote {
+export function quoteRenewal(plan: PlanId, billing: Billing, extraBranches: number, ratePercent: number): Quote {
   const lines: Line[] = [{ name: planName(plan, billing), unitMinor: planMinor(plan, billing), quantity: 1 }];
   if (plan === "pro" && extraBranches > 0) lines.push({ name: `Extra branch (${billing})`, unitMinor: fils(EXTRA_BRANCH[billing]), quantity: extraBranches });
-  return withVat(lines);
+  return withTax(lines, ratePercent);
 }
 // One more branch in the middle of a period pays for the time that is left.
-export function quoteExtraBranch(billing: Billing, periodStart: Date, periodEnd: Date, now: Date): Quote {
+export function quoteExtraBranch(billing: Billing, periodStart: Date, periodEnd: Date, now: Date, ratePercent: number): Quote {
   const total = periodEnd.getTime() - periodStart.getTime(), left = Math.max(0, Math.min(total, periodEnd.getTime() - now.getTime()));
-  return withVat([{ name: "Extra branch (rest of period)", unitMinor: Math.round(fils(EXTRA_BRANCH[billing]) * (total > 0 ? left / total : 0)), quantity: 1 }]);
+  return withTax([{ name: "Extra branch (rest of period)", unitMinor: Math.round(fils(EXTRA_BRANCH[billing]) * (total > 0 ? left / total : 0)), quantity: 1 }], ratePercent);
 }
-export const quoteTopUp = (pack: TopUpId): Quote => withVat([{ name: `Lumia Order extra orders (${TOPUPS[pack].orders})`, unitMinor: fils(TOPUPS[pack].price), quantity: 1 }]);
+export const quoteTopUp = (pack: TopUpId, ratePercent: number): Quote => withTax([{ name: `Lumia Order extra orders (${TOPUPS[pack].orders})`, unitMinor: fils(TOPUPS[pack].price), quantity: 1 }], ratePercent);
 export const isUpgrade = (from: PlanId, to: PlanId) => PLANS[to].rank > PLANS[from].rank;
 
 // An upgrade in the middle of a period pays the price difference for the time that is left (same billing cycle).
-export function quoteUpgrade(from: PlanId, to: PlanId, billing: Billing, periodStart: Date, periodEnd: Date, now: Date): Quote {
+export function quoteUpgrade(from: PlanId, to: PlanId, billing: Billing, periodStart: Date, periodEnd: Date, now: Date, ratePercent: number): Quote {
   const total = periodEnd.getTime() - periodStart.getTime(), left = Math.max(0, Math.min(total, periodEnd.getTime() - now.getTime()));
   const amount = Math.round((planMinor(to, billing) - planMinor(from, billing)) * (total > 0 ? left / total : 0));
-  return withVat([{ name: `Upgrade ${PLANS[from].name} → ${PLANS[to].name} (rest of period)`, unitMinor: Math.max(amount, 0), quantity: 1 }]);
+  return withTax([{ name: `Upgrade ${PLANS[from].name} → ${PLANS[to].name} (rest of period)`, unitMinor: Math.max(amount, 0), quantity: 1 }], ratePercent);
 }
 
 // One month or one year later, keeping the day of the month where possible (31 Jan -> 28/29 Feb).

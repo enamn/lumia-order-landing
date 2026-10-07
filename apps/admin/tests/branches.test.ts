@@ -18,16 +18,16 @@ describe("branches per plan and the price of an extra branch", () => {
     expect(entitlements(null)).toMatchObject({ branches: 1 });
   });
   it("adds AED 99 per extra branch to a Pro renewal as its own line, with 5% VAT", () => {
-    expect(quoteRenewal("pro", "monthly", 2).lines.map(l => [l.name, l.unitMinor, l.quantity])).toEqual([["Lumia Order Pro (monthly)", 39900, 1], ["Extra branch (monthly)", 9900, 2]]);
-    expect(quoteRenewal("pro", "monthly", 2)).toMatchObject({ subtotalMinor: 59700, vatMinor: 2985, totalMinor: 62685 });
-    expect(quoteRenewal("pro", "yearly", 1).subtotalMinor).toBe(399000 + 99000);
-    expect(quoteRenewal("plus", "monthly", 3).lines).toHaveLength(1); // only Pro has extra branches
+    expect(quoteRenewal("pro", "monthly", 2, 5).lines.map(l => [l.name, l.unitMinor, l.quantity])).toEqual([["Lumia Order Pro (monthly)", 39900, 1], ["Extra branch (monthly)", 9900, 2]]);
+    expect(quoteRenewal("pro", "monthly", 2, 5)).toMatchObject({ subtotalMinor: 59700, vatMinor: 2985, totalMinor: 62685 });
+    expect(quoteRenewal("pro", "yearly", 1, 5).subtotalMinor).toBe(399000 + 99000);
+    expect(quoteRenewal("plus", "monthly", 3, 5).lines).toHaveLength(1); // only Pro has extra branches
   });
   it("charges an extra branch only for the time left in the period", () => {
     const start = new Date("2026-10-01T00:00:00Z"), end = new Date("2026-10-31T00:00:00Z");
-    expect(quoteExtraBranch("monthly", start, end, start)).toMatchObject({ subtotalMinor: 9900, totalMinor: 10395 });
-    expect(quoteExtraBranch("monthly", start, end, new Date("2026-10-16T00:00:00Z")).subtotalMinor).toBe(4950);
-    expect(quoteExtraBranch("monthly", start, end, new Date("2026-11-02T00:00:00Z")).subtotalMinor).toBe(0);
+    expect(quoteExtraBranch("monthly", start, end, start, 5)).toMatchObject({ subtotalMinor: 9900, totalMinor: 10395 });
+    expect(quoteExtraBranch("monthly", start, end, new Date("2026-10-16T00:00:00Z"), 5).subtotalMinor).toBe(4950);
+    expect(quoteExtraBranch("monthly", start, end, new Date("2026-11-02T00:00:00Z"), 5).subtotalMinor).toBe(0);
   });
 });
 
@@ -87,10 +87,10 @@ describe.skipIf(!enabled)("branch limits, buying and releasing branches", () => 
     await expect(setExtraBranches(owner, biz, { extra: 0 })).rejects.toMatchObject({ code: "PLAN_LIMIT" }); // 4 branches are active
     const cur = (await getSettings(owner, biz)).sections.branches as any[]; await save("branches", cur.map((b, i) => (i >= 3 ? { ...b, active: false } : b)));
     const v = await setExtraBranches(owner, biz, { extra: 0 }); expect(v.branches).toMatchObject({ extra: 1, pendingExtra: 0 });
-    expect(v.nextCharge!.amountMinor).toBe(quoteRenewal("pro", "monthly", 0).totalMinor);
+    expect(v.nextCharge!.amountMinor).toBe(quoteRenewal("pro", "monthly", 0, 0).totalMinor);
     await db.subscription.update({ where: { id: sub.id }, data: { pendingExtraBranches: null, nextChargeAt: new Date(Date.now() - 1000), currentPeriodEnd: new Date(Date.now() - 1000) } });
     calls = []; await runBilling();
-    expect(calls.find(c => c.path === "/internal/billing/charge" && c.body.metadata?.subscriptionId === sub.id)!.body.amountMinor).toBe(quoteRenewal("pro", "monthly", 1).totalMinor);
+    expect(calls.find(c => c.path === "/internal/billing/charge" && c.body.metadata?.subscriptionId === sub.id)!.body.amountMinor).toBe(quoteRenewal("pro", "monthly", 1, 0).totalMinor);
   });
   it("a downgrade is refused while more branches than the smaller plan allows are active", async () => {
     await expect(changePlan(owner, biz, { plan: "starter", billing: "monthly" })).rejects.toMatchObject({ code: "PLAN_LIMIT" });

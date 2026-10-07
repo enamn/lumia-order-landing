@@ -16,7 +16,7 @@ describe("monthly periods and top-up prices", () => {
     expect(usagePeriod(new Date("2026-10-04T10:00:00Z"), new Date("2026-10-04T09:00:00Z")).start).toEqual(new Date("2026-10-04T10:00:00Z"));
   });
   it("prices a top-up with 5% VAT as its own amount", () => {
-    expect(quoteTopUp("orders50")).toMatchObject({ subtotalMinor: 7900, vatMinor: 395, totalMinor: 8295 });
+    expect(quoteTopUp("orders50", 5)).toMatchObject({ subtotalMinor: 7900, vatMinor: 395, totalMinor: 8295 });
     expect(TOPUPS.orders200.orders).toBe(200); expect(LIMITS.pro.orders).toBeGreaterThan(LIMITS.plus.orders); expect(LIMITS.plus.orders).toBeGreaterThan(LIMITS.starter.orders); expect(TRIAL_LIMITS.orders).toBeLessThan(LIMITS.starter.orders); expect(TRIAL_LIMITS.imports).toBe(2);
   });
 });
@@ -66,15 +66,15 @@ describe.skipIf(!enabled)("plan allowances, buffer, credits and top-ups", () => 
     const p = await consume(biz, "imports"); expect((await usageSummary(biz)).imports.used).toBe(1); await refund(biz, "imports", p as any); expect((await usageSummary(biz)).imports.used).toBe(0);
     expect((await usageSummary(biz)).aiReplies.limit).toBe(REPLIES_PER_ORDER * (LIMITS.plus.orders + 1)); // bought orders widen the fair-use reply pool too
   });
-  it("sells extra orders with the card on file: charged with VAT once, orders added, invoice written, nothing added when the card fails", async () => {
+  it("sells extra orders with the card on file: charged once (no VAT while Afkar's UAE VAT registration is inactive), orders added, invoice written, nothing added when the card fails", async () => {
     calls = []; charge = { status: "failed", failureMessage: "Declined" };
     await expect(buyTopUp(owner, biz, { pack: "orders50", requestId: "req-aaaaaaaa" })).rejects.toMatchObject({ code: "PAYMENT_FAILED" });
     const before = (await usageSummary(biz)).credits;
     charge = { status: "succeeded", paymentIntentId: "pi_topup" };
     const s = await buyTopUp(owner, biz, { pack: "orders50", requestId: "req-bbbbbbbb" });
-    expect(calls.at(-1)).toMatchObject({ path: "/internal/billing/charge", body: { amountMinor: 8295, idempotencyKey: `topup:sub-${suffix}:req-bbbbbbbb` } });
+    expect(calls.at(-1)).toMatchObject({ path: "/internal/billing/charge", body: { amountMinor: 7900, idempotencyKey: `topup:sub-${suffix}:req-bbbbbbbb` } });
     expect(s.usage.credits).toBe(before + 50);
-    expect(await db.billingInvoice.findFirstOrThrow({ where: { businessId: biz, kind: "TOPUP" } })).toMatchObject({ totalMinor: 8295, vatMinor: 395 });
+    expect(await db.billingInvoice.findFirstOrThrow({ where: { businessId: biz, kind: "TOPUP" } })).toMatchObject({ totalMinor: 7900, vatMinor: 0 }); // Afkar's UAE VAT registration is inactive: no VAT collected
     expect(s.topups.map(t => t.id)).toEqual(["orders50", "orders200"]);
     await expect(buyTopUp(owner, biz, { pack: "nope", requestId: "req-cccccccc" })).rejects.toBeTruthy();
     await db.subscription.update({ where: { id: `sub-${suffix}` }, data: { stripePaymentMethodId: null } });

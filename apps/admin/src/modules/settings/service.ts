@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { decimalsOf, fromMinor, toMinor } from "../market/money";
 import { isCountryCode, marketOf, type CountryCode } from "../market/countries";
 import { isRegionOf, regionNames } from "../market/regions";
+import { taxDecisionFor } from "../tax/service";
 import { db } from "@/server/db";
 import { transaction } from "@/server/transaction";
 import { authorize, can } from "@/server/authorization";
@@ -57,7 +58,7 @@ function sectionsOf(b: Loaded) {
 async function branchOffer(businessId: string) {
   const sub = await getSubscriptionFor(businessId), e = entitlements(sub);
   if (!e.canBuyBranches || !sub || (sub.extraBranches ?? 0) >= EXTRA_BRANCH.max) return null;
-  const month = sub.billing === "yearly" ? "year" : "month", q = quoteExtraBranch(sub.billing as Billing, sub.currentPeriodStart, sub.currentPeriodEnd, new Date());
+  const month = sub.billing === "yearly" ? "year" : "month", q = quoteExtraBranch(sub.billing as Billing, sub.currentPeriodStart, sub.currentPeriodEnd, new Date(), (await taxDecisionFor(businessId)).ratePercent);
   const price = EXTRA_BRANCH[sub.billing as Billing];
   return { priceAed: price, period: month, payNowMinor: q.totalMinor, card: (sub.card as { last4?: string } | null)?.last4 ?? null, hasCard: Boolean(sub.stripeCustomerId && sub.stripePaymentMethodId) };
 }
