@@ -100,7 +100,7 @@ export async function getSubscription(userId: string, businessId: string) {
     contactEmail: { email: b.email ?? "", verified: !!b.email && !!b.emailVerifiedAt },
     access: accessOf(sub, b.createdAt, Date.now(), vat), trial: { ...trialInfo(trialStart), started: !vat.required || !!vat.verifiedFrom }, entitlements: entitlements(sub), usage,
     branches: { ...(await branchInfo(businessId, sub, tax.ratePercent, pbook)) },
-    prices: pbook ? { currency: pbook.currency, decimals: pbook.decimals, plans: pbook.plans, terminal: !!pbook.terminal } : null, pricesUnavailable: pbook ? null : priceCode,
+    prices: pbook ? { currency: pbook.currency, decimals: pbook.decimals, plans: pbook.plans, terminal: !!pbook.terminal, terminalBook: pbook.terminal } : null, pricesUnavailable: pbook ? null : priceCode,
     tax: { eligible: tax.eligible, reasons: tax.reasons, ratePercent: tax.ratePercent, destinationTreatment: tax.destinationTreatment, uaeTreatment: tax.uaeTreatment, vatStatus: tax.customer.vatStatus },
     topups: pbook ? TOPUP_IDS.map(id => ({ id, orders: TOPUPS[id].orders, totalMinor: quoteTopUp(id, tax.ratePercent, pbook).totalMinor, subtotalMinor: quoteTopUp(id, tax.ratePercent, pbook).subtotalMinor })) : [],
   };

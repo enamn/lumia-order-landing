@@ -7,6 +7,10 @@ import { PLAN_IDS, TOPUP_IDS, UAE_BOOK, type PriceBook, type PlanId } from "./pl
 
 // What a restaurant is charged is decided here and nowhere else: the UAE price list from code, every other market only from prices a super admin approved.
 // Nothing is invented for a market without prices, and nothing is converted from another currency.
+// Terminal prices of a market: all five must be approved for the terminal to be sold there (and the market's terminal switch must be on); the regular price is only the struck-through one.
+export const TERMINAL_REQUIRED = ["terminal:yearly:starter", "terminal:yearly:plus", "terminal:yearly:pro", "terminal:monthly", "terminal:extra"] as const;
+export const terminalItemsOf = () => [...TERMINAL_REQUIRED, "terminal:regular"];
+export const allItemsOf = () => [...itemsOf(), ...terminalItemsOf()];
 export const itemsOf = () => [...PLAN_IDS.flatMap(p => (["monthly", "yearly"] as const).map(i => `plan:${p}:${i}`)), "branch:monthly", "branch:yearly", ...TOPUP_IDS.map(t => `topup:${t}`)];
 // Currencies the payment account can really charge, checked with the provider: set STRIPE_ENABLED_CURRENCIES once a currency is confirmed (default: AED only).
 export const enabledCurrencies = () => new Set((process.env.STRIPE_ENABLED_CURRENCIES ?? "AED").split(",").map(c => c.trim().toUpperCase()).filter(Boolean));
@@ -33,7 +37,7 @@ export async function priceBookFor(country: string, now = new Date()): Promise<P
     plans: Object.fromEntries(PLAN_IDS.map(p => [p, { monthly: unit(`plan:${p}:monthly`), yearly: unit(`plan:${p}:yearly`) }])) as Record<PlanId, { monthly: number; yearly: number }>,
     extraBranch: { monthly: unit("branch:monthly"), yearly: unit("branch:yearly") },
     topups: { orders50: unit("topup:orders50"), orders200: unit("topup:orders200") },
-    terminal: null, // hardware is sold only where terminal sales are switched on and priced (the UAE today)
+    terminal: flags.terminalSalesEnabled && TERMINAL_REQUIRED.every(i => latest.has(i)) ? { yearly: { starter: unit("terminal:yearly:starter"), plus: unit("terminal:yearly:plus"), pro: unit("terminal:yearly:pro") }, monthly: unit("terminal:monthly"), extra: unit("terminal:extra"), ...(latest.has("terminal:regular") ? { regular: unit("terminal:regular") } : {}) } : null, // hardware is sold only where it is priced and the market's terminal switch is on
   };
 }
 export async function priceBookForBusiness(businessId: string, now = new Date()) {
@@ -47,7 +51,7 @@ export async function priceBookOrNull(businessId: string, now = new Date()): Pro
 
 // ---- super admin: enter and approve prices ----
 const priceSchema = z.object({
-  country: z.string().length(2).toUpperCase(), item: z.string().refine(i => itemsOf().includes(i), "Unknown item."), amount: z.number().positive().max(1_000_000),
+  country: z.string().length(2).toUpperCase(), item: z.string().refine(i => allItemsOf().includes(i), "Unknown item."), amount: z.number().positive().max(1_000_000),
   status: z.enum(["DRAFT", "ACTIVE"]), effectiveFrom: z.string().datetime(), version: z.string().trim().min(1).max(40), providerPriceRef: z.string().trim().max(80).optional(),
 }).strict();
 export async function setMarketPrice(actorId: string, input: unknown) {
@@ -67,9 +71,13 @@ const bulkSchema = z.object({
 }).strict();
 export async function setMarketPriceList(actorId: string, input: unknown) {
   const b = bulkSchema.parse(input), items = itemsOf();
-  const unknown = Object.keys(b.amounts).filter(i => !items.includes(i));
+  const unknown = Object.keys(b.amounts).filter(i => !allItemsOf().includes(i));
   if (unknown.length) throw new AppError("VALIDATION_FAILED", "Unknown price items.", 422, { unknown });
-  if (b.status === "ACTIVE") { const missing = items.filter(i => !(i in b.amounts)); if (missing.length) throw new AppError("MARKET_PRICE_NOT_CONFIGURED", "To make a price list active, every price must be filled in.", 422, { missing }); }
+  if (b.status === "ACTIVE") {
+    const missing = items.filter(i => !(i in b.amounts)); if (missing.length) throw new AppError("MARKET_PRICE_NOT_CONFIGURED", "To make a price list active, every plan price must be filled in.", 422, { missing });
+    const some = TERMINAL_REQUIRED.filter(i => i in b.amounts), lacking = TERMINAL_REQUIRED.filter(i => !(i in b.amounts));
+    if (some.length && lacking.length) throw new AppError("MARKET_PRICE_NOT_CONFIGURED", "Terminal prices go together: fill in all five, or leave them all empty.", 422, { missing: lacking });
+  }
   const rows = [];
   for (const item of Object.keys(b.amounts)) rows.push(await setMarketPrice(actorId, { country: b.country, item, amount: b.amounts[item], status: b.status, effectiveFrom: b.effectiveFrom, version: b.version }));
   return rows;

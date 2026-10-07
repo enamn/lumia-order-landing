@@ -935,7 +935,7 @@ input::placeholder{color:#B89AA8}
                   <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
                     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"><span style="font-size:16px;font-weight:600">Lumia Order Terminal</span><span style="font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#1A0815;color:#fff">{{ sub.termBadge }}</span></div>
                     <span style="font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty">{{ sub.termDesc }}</span>
-                    <span style="display:flex;align-items:baseline;gap:8px;margin-top:4px;font-variant-numeric:tabular-nums"><span style="font-size:14px;color:#8A5A6E;text-decoration:line-through">AED 699</span><span style="font-size:18px;font-weight:600">{{ sub.termPrice }}</span><span style="font-size:13px;color:#8A5A6E">one-time</span></span>
+                    <span style="display:flex;align-items:baseline;gap:8px;margin-top:4px;font-variant-numeric:tabular-nums"><sc-if value="{{ sub.hasRegular }}" hint-placeholder-val="{{ true }}"><span style="font-size:14px;color:#8A5A6E;text-decoration:line-through">{{ sub.termRegular }}</span></sc-if><span style="font-size:18px;font-weight:600">{{ sub.termPrice }}</span><span style="font-size:13px;color:#8A5A6E">one-time</span></span>
                   </div>
                 </div>
                 <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding-top:12px;border-top:1px solid #F3D6E2">
@@ -2053,6 +2053,6 @@ class Component extends DCLogic {
   }
 }
 </script>
-<!-- LUMIA-LOCK --><!-- LUMIA-EMAIL --><!-- LUMIA-COUNTRY --><!-- LUMIA-TAX --><!-- LUMIA-PRICES --><!-- LUMIA-TERMINAL --><!-- LUMIA-TERMINAL-DASH -->
+<!-- LUMIA-LOCK --><!-- LUMIA-EMAIL --><!-- LUMIA-COUNTRY --><!-- LUMIA-TAX --><!-- LUMIA-PRICES --><!-- LUMIA-TERMINAL --><!-- LUMIA-TERMINAL-PRICE --><!-- LUMIA-TERMINAL-DASH -->
 </body>
 </html>

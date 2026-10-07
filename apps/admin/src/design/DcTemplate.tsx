@@ -2105,9 +2105,13 @@ export function DcTemplate({ vm }: { vm: any }) {
                                                   {vm.sub.termDesc}
                                                 </span>
                                                 <span style={S("display:flex;align-items:baseline;gap:8px;margin-top:4px;font-variant-numeric:tabular-nums")}>
-                                                  <span style={S("font-size:14px;color:#8A5A6E;text-decoration:line-through")}>
-                                                    AED 699
-                                                  </span>
+                                                  {vm.sub.hasRegular && (
+                                                    <>
+                                                    <span style={S("font-size:14px;color:#8A5A6E;text-decoration:line-through")}>
+                                                      {vm.sub.termRegular}
+                                                    </span>
+                                                    </>
+                                                  )}
                                                   <span style={S("font-size:18px;font-weight:600")}>
                                                     {vm.sub.termPrice}
                                                   </span>

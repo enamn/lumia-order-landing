@@ -91,19 +91,6 @@ export const PLANS: Plan[] = [
   },
 ];
 
-export const TERMINAL_PRICES: Record<Billing, [string, string][]> = {
-  yearly: [
-    ['Starter Yearly', 'AED 549'],
-    ['Plus Yearly', 'AED 499'],
-    ['Pro Yearly', 'AED 399'],
-  ],
-  monthly: [
-    ['Starter Monthly', 'AED 599'],
-    ['Plus Monthly', 'AED 599'],
-    ['Pro Monthly', 'AED 599'],
-  ],
-};
-
 export const FAQ: [string, string][] = [
   ['Does Lumia Order replace my WhatsApp number?', "No. Lumia Order connects your restaurant's supported WhatsApp Business ordering experience to the Lumia platform, so customers keep messaging the number they know."],
   ['Can customers send voice messages?', 'Yes. Lumia turns supported voice messages into the same structured order as a text message.'],

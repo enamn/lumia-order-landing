@@ -9,7 +9,7 @@ export const PLANS: Record<PlanId, { name: string; monthly: number; yearly: numb
   pro: { name: "Pro", monthly: 399, yearly: 3990, rank: 3 },
 };
 // The first terminal costs less on a yearly plan; extra terminals are the same for everyone.
-export const TERMINAL = { yearly: { starter: 549, plus: 499, pro: 399 } as Record<PlanId, number>, monthly: 599, extra: 599 };
+export const TERMINAL = { yearly: { starter: 549, plus: 499, pro: 399 } as Record<PlanId, number>, monthly: 599, extra: 599, regular: 699 }; // `regular` is only the struck-through price shown next to the offer price
 
 // The prices that apply to one market, in whole units of its billing currency (like the constants above, which are the approved UAE list). The terminal is sold only where
 // `terminal` is set. Other markets get their book from the prices a super admin approved (see pricing.ts); there are no built-in prices for them.
@@ -18,7 +18,7 @@ export interface PriceBook {
   plans: Record<PlanId, { monthly: number; yearly: number }>;
   extraBranch: { monthly: number; yearly: number };
   topups: Record<"orders50" | "orders200", number>;
-  terminal: { yearly: Record<PlanId, number>; monthly: number; extra: number } | null;
+  terminal: { yearly: Record<PlanId, number>; monthly: number; extra: number; regular?: number } | null;
 }
 
 // What each plan includes every month, counted from the plan's own billing day. The limit restaurants see is WhatsApp orders. Behind it, AI replies,

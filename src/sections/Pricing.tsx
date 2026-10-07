@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Terminal } from '../components/Terminal';
-import { PLANS, SIGNUP_URL, TERMINAL_PRICES, type Billing, type Plan } from '../data';
-import { money, usePriceInfo, type PriceInfo } from '../pricing';
+import { PLANS, SIGNUP_URL, type Billing, type Plan } from '../data';
+import { money, terminalOf, usePriceInfo, type PriceInfo } from '../pricing';
 
 export function Pricing() {
   const [billing, setBilling] = useState<Billing>('yearly');
-  const info = usePriceInfo();
+  const info = usePriceInfo(), term = terminalOf(info);
 
   return (
     <section id="pricing" className="section section--soft">
@@ -45,11 +45,17 @@ export function Pricing() {
                 <span style={{ fontSize: 21, fontWeight: 600 }}>Lumia Order Terminal</span>
                 <span className="badge">RECOMMENDED</span>
               </div>
-              <div className="price-strike" style={{ marginTop: 12 }}>AED 699</div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                <span className="price-big" style={{ fontSize: 'clamp(32px,3.2vw,40px)' }}>AED 599</span>
-                <span className="pill-ok">Launch offer</span>
-              </div>
+              {term ? (
+                <>
+                  {term.regular ? <div className="price-strike" style={{ marginTop: 12 }}>{money(term.regular, term.currency, term.decimals)}</div> : <div style={{ marginTop: 12 }} />}
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                    <span className="price-big" style={{ fontSize: 'clamp(32px,3.2vw,40px)' }}>{money(term.monthly, term.currency, term.decimals)}</span>
+                    {term.regular ? <span className="pill-ok">Launch offer</span> : null}
+                  </div>
+                </>
+              ) : (
+                <div style={{ marginTop: 12, fontSize: 15, color: 'var(--ink-2)' }}>Terminal prices for {info?.countryName} are coming soon.</div>
+              )}
               <div style={{ fontSize: 14, color: 'var(--ink-2)', marginTop: 8, lineHeight: 1.5 }}>
                 One-time device price. Optional: every plan works with the web dashboard.
               </div>
@@ -58,16 +64,16 @@ export function Pricing() {
           <div>
             <div className="eyebrow">Terminal price with a {billing} plan</div>
             <div className="tabnum" style={{ marginTop: 10, borderTop: '1px solid var(--line)' }}>
-              {TERMINAL_PRICES[billing].map(([plan, price]) => (
-                <div key={plan} className="tprice-row">
-                  <span>{plan}</span>
+              {term && (['starter', 'plus', 'pro'] as const).map((k) => (
+                <div key={k} className="tprice-row">
+                  <span>{k[0]!.toUpperCase() + k.slice(1)} {billing === 'yearly' ? 'Yearly' : 'Monthly'}</span>
                   <span style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-                    <span className="muted" style={{ fontSize: 13, textDecoration: 'line-through' }}>AED 699</span>
-                    <span style={{ fontWeight: 600 }}>{price}</span>
+                    {term.regular ? <span className="muted" style={{ fontSize: 13, textDecoration: 'line-through' }}>{money(term.regular, term.currency, term.decimals)}</span> : null}
+                    <span style={{ fontWeight: 600 }}>{money(billing === 'yearly' ? term.yearly[k] : term.monthly, term.currency, term.decimals)}</span>
                   </span>
                 </div>
               ))}
-              <div className="tprice-row"><span>Additional terminal</span><span style={{ fontWeight: 600 }}>AED 599</span></div>
+              {term && <div className="tprice-row"><span>Additional terminal</span><span style={{ fontWeight: 600 }}>{money(term.extra, term.currency, term.decimals)}</span></div>}
               <div className="tprice-row" style={{ borderBottom: 0 }}>
                 <span>Multi-branch deployments</span>
                 <a href="#contact" style={{ fontWeight: 600, color: 'var(--violet)' }}>Contact sales</a>
@@ -86,7 +92,7 @@ export function Pricing() {
 
 // What the note under the toggle says: where the prices come from, and what is not open yet.
 function priceNote(info: PriceInfo | null) {
-  if (info?.local) return `Prices in ${info.currency} for ${info.countryName}. Terminal prices are in UAE dirhams (AED).${info.paidOpen ? '' : ` Paid plans in ${info.countryName} open soon: you can start your free trial now.`}`;
+  if (info?.local) return `Prices in ${info.currency} for ${info.countryName}.${info.paidOpen ? '' : ` Paid plans in ${info.countryName} open soon: you can start your free trial now.`}`;
   if (info && info.detected && info.detected !== 'AE' && info.countryName !== 'United Arab Emirates') return `Prices in UAE dirhams (AED). Local-currency plans for ${info.countryName} are coming soon.`;
   return 'Prices in UAE dirhams (AED). Saudi Arabia, Oman, Bahrain, Qatar and Kuwait: local-currency plans are coming soon.';
 }

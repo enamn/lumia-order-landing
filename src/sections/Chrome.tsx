@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Brand, LogoMark } from '../components/Logo';
 import { FAQ, LOGIN_URL, NAV_LINKS, SIGNUP_URL } from '../data';
+import { money, terminalOf, usePriceInfo } from '../pricing';
 
 export function Header() {
   return (
@@ -21,6 +22,10 @@ export function Header() {
 
 export function Faq() {
   const [open, setOpen] = useState(0);
+  const info = usePriceInfo(), t = terminalOf(info), m = (n: number) => (t ? money(n, t.currency, t.decimals) : '');
+  const terminalAnswer = t
+    ? `${m(t.monthly)}${t.regular ? ` at launch (regular price ${m(t.regular)})` : ''}. With a yearly plan it is ${m(t.yearly.starter)} on Starter, ${m(t.yearly.plus)} on Plus and ${m(t.yearly.pro)} on Pro. Additional terminals are ${m(t.extra)}.`
+    : `Terminal prices for ${info?.countryName} are coming soon. Contact us and we will tell you as soon as they are set.`;
   return (
     <section id="faq" className="section">
       <div className="wrap grid" style={{ ['--min' as string]: '380px', gap: '40px 72px', alignItems: 'start' }}>
@@ -28,8 +33,8 @@ export function Faq() {
           Questions from restaurant owners.
         </h2>
         <div style={{ borderTop: '1px solid var(--line)' }}>
-          {FAQ.map(([q, a], i) => {
-            const isOpen = open === i;
+          {FAQ.map(([q, a0], i) => {
+            const isOpen = open === i, a = /^How much is the terminal/.test(q) ? terminalAnswer : a0;
             return (
               <div key={q} style={{ borderBottom: '1px solid var(--line)' }}>
                 <button className="faq__q" aria-expanded={isOpen} aria-controls={`faq-${i}`} onClick={() => setOpen(isOpen ? -1 : i)}>

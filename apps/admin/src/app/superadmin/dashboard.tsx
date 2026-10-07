@@ -126,13 +126,14 @@ function Prices() {
   }, [d, cc]);
   React.useEffect(() => { const v: Record<string, string> = {}; current.forEach((x, item) => { v[item] = unit(x.p.amountMinor); }); setVals(v); setOk(""); setErr(""); }, [current]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!d) return <section style={{ ...card, marginTop: 12 }}><h2 style={h2}>Plan prices</h2>{err ? <div role="alert" style={{ color: "#B4233B" }}>{err}</div> : <span style={{ color: muted }}>Loading…</span>}</section>;
-  const items: string[] = d.items, filled = items.filter(i => Number(vals[i]) > 0), allFilled = filled.length === items.length;
-  const liveCount = items.filter(i => current.get(i)?.live).length;
+  const items: string[] = d.items, tItems: string[] = d.terminalItems ?? [], tReq = tItems.filter(i => i !== "terminal:regular"), has = (i: string) => Number(vals[i]) > 0;
+  const filled = [...items, ...tItems].filter(has), plansFilled = items.filter(has), tCount = tReq.filter(has).length, terminalOk = tCount === 0 || tCount === tReq.length, allFilled = plansFilled.length === items.length && terminalOk;
+  const liveCount = items.filter(i => current.get(i)?.live).length, liveTerm = tReq.every(i => current.get(i)?.live);
   const mk = flags.find((m: any) => m.code === cc), curOn = d.enabledCurrencies.includes(cur);
   const status = (code: string) => { const rows = d.prices.filter((p: any) => p.country === code); if (!rows.length) return ["Not set", "#F3EEF1"]; const n = new Set(rows.filter((p: any) => p.status === "ACTIVE" && new Date(p.effectiveFrom) <= new Date()).map((p: any) => p.item)).size; return n === items.length ? ["Prices live", "#E4F4EC"] : ["Draft", "#FFF1DC"]; };
-  const uae = (item: string) => { const [kind, a, b] = item.split(":"); return kind === "plan" ? d.uae.plans[a][b] : kind === "branch" ? d.uae.extraBranch[a] : d.uae.topups[a]; };
+  const uae = (item: string) => { const [kind, a, b] = item.split(":"); return kind === "plan" ? d.uae.plans[a][b] : kind === "branch" ? d.uae.extraBranch[a] : kind === "terminal" ? (a === "yearly" ? d.uae.terminal?.yearly?.[b!] : d.uae.terminal?.[a!]) : d.uae.topups[a]; };
   const save = async (statusTo: "DRAFT" | "ACTIVE") => {
-    const amounts: Record<string, number> = {}; for (const i of items) if (Number(vals[i]) > 0) amounts[i] = Number(vals[i]);
+    const amounts: Record<string, number> = {}; for (const i of [...items, ...tItems]) if (Number(vals[i]) > 0) amounts[i] = Number(vals[i]);
     if (statusTo === "ACTIVE" && !window.confirm(`Make these ${cur} prices active from ${from}? New subscriptions in ${country[1]} will be charged these amounts (before tax).`)) return;
     setBusy(true); setErr(""); setOk("");
     try { const r = await fetch("/api/superadmin/prices", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ country: cc, status: statusTo, amounts, effectiveFrom: new Date(from + "T00:00:00+04:00").toISOString(), version: `${from}-${Date.now().toString(36)}` }) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error?.message ?? "Could not save."); setOk(statusTo === "ACTIVE" ? "Prices are active." : "Draft saved. It is not used for sales yet."); await load(); }
@@ -158,19 +159,23 @@ function Prices() {
           <tr><td colSpan={3} style={{ padding: "12px 0 4px", color: muted, fontSize: 13 }}>Extra orders (one-time packs)</td></tr>
           {row("50 orders", "topup:orders50")}
           {row("200 orders", "topup:orders200")}
+          <tr><td colSpan={3} style={{ padding: "14px 0 4px", color: muted, fontSize: 13 }}>Terminal (one-time price per device). Leave all empty to sell software only in this country.</td></tr>
+          {row("With a yearly plan", "terminal:yearly:starter")}{row("  … Plus", "terminal:yearly:plus")}{row("  … Pro", "terminal:yearly:pro")}
+          {row("With a monthly plan", "terminal:monthly")}{row("Extra terminal", "terminal:extra")}{row("Regular price (crossed out, optional)", "terminal:regular")}
         </tbody></table></div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginTop: 14 }}>
         <label style={{ fontSize: 14 }}>Starts on <input type="date" value={from} onChange={e => setFrom(e.target.value)} style={{ ...inp, width: 150, marginInlineStart: 6 }} /></label>
         <button type="button" disabled={busy || !filled.length} onClick={() => save("DRAFT")} style={{ ...btnSm, background: "#fff" }}>Save draft</button>
         <button type="button" disabled={busy || !allFilled} onClick={() => save("ACTIVE")} style={{ ...btnSm, border: 0, color: "#fff", background: grad, opacity: busy || !allFilled ? 0.5 : 1 }}>Make active</button>
-        {!allFilled && <span style={{ fontSize: 13, color: muted }}>{filled.length} of {items.length} prices filled</span>}
+        {!allFilled && <span style={{ fontSize: 13, color: muted }}>{!terminalOk ? "Terminal prices go together: fill in all five or none." : `${plansFilled.length} of ${items.length} plan prices filled`}</span>}
       </div>
       <div style={{ marginTop: 16, paddingTop: 12, borderTop: `1px solid ${line}`, display: "grid", gap: 4 }}>
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>Ready to sell in {country[1]}?</div>
         {check(liveCount === items.length, `All ${items.length} prices are active (${liveCount} now)`)}
         {check(curOn, curOn ? `${cur} payments are enabled on the payment account` : `${cur} payments are not enabled on the payment account yet (enabled now: ${d.enabledCurrencies.join(", ")}). This is a server setting; ask me to enable it after checking ${cur} on Stripe.`)}
         {check(!!mk?.paidActivationEnabled, mk?.paidActivationEnabled ? "“Paid plans” is switched on for this market" : "Switch on “Paid plans” for this market in Markets")}
-        <div style={{ fontSize: 12, color: muted, marginTop: 4 }}>Terminals are not priced here yet: they are sold only in the UAE for now.</div>
+        {check(tCount === tReq.length && liveTerm, `Terminal prices are active${tCount === tReq.length ? "" : " (not set: software only)"}`)}
+        {check(!!mk?.terminalSalesEnabled, mk?.terminalSalesEnabled ? "“Terminal sales” is switched on for this market" : "Switch on “Terminal sales” for this market in Markets to sell terminals")}
       </div>
     </section>
   );

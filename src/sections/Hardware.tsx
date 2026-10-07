@@ -1,5 +1,6 @@
 import { ScaledTerminal, Terminal } from '../components/Terminal';
 import { TERMINAL_SPECS } from '../data';
+import { money, terminalOf, usePriceInfo } from '../pricing';
 
 const FLOW: [string, boolean][] = [
   ['Customer orders on WhatsApp', false],
@@ -11,6 +12,7 @@ const FLOW: [string, boolean][] = [
 ];
 
 export function TerminalIntro() {
+  const info = usePriceInfo(), term = terminalOf(info);
   return (
     <section id="terminal" className="section">
       <div className="wrap grid" style={{ ['--min' as string]: '420px', gap: 'clamp(48px,6vw,88px)', alignItems: 'center' }}>
@@ -36,14 +38,20 @@ export function TerminalIntro() {
           </ol>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '12px 28px', marginTop: 32, paddingTop: 24, borderTop: '1px solid var(--line)' }}>
             <div>
-              <div className="price-strike">AED 699</div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                <span className="price-big">AED 599</span>
-                <span className="pill-ok">Launch offer</span>
-              </div>
+              {term ? (
+                <>
+                  {term.regular ? <div className="price-strike">{money(term.regular, term.currency, term.decimals)}</div> : null}
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                    <span className="price-big">{money(term.monthly, term.currency, term.decimals)}</span>
+                    {term.regular ? <span className="pill-ok">Launch offer</span> : null}
+                  </div>
+                </>
+              ) : (
+                <div style={{ fontSize: 16, color: 'var(--ink-2)' }}>Terminal prices for {info?.countryName} are coming soon.</div>
+              )}
             </div>
             <div style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--ink-2)', maxWidth: 260 }}>
-              From AED 399 with a yearly Pro plan.<br />Estimated delivery: 10–15 business days.
+              {term ? <>From {money(term.yearly.pro, term.currency, term.decimals)} with a yearly Pro plan.<br /></> : null}Estimated delivery: 10–15 business days.
             </div>
           </div>
           <a href="#pricing" className="btn btn--primary btn--md" style={{ marginTop: 24 }}>See terminal pricing</a>
