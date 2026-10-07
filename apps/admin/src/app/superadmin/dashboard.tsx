@@ -49,6 +49,58 @@ function Markets() {
   );
 }
 
+function Tax() {
+  const [d, setD] = React.useState<any>(null), [err, setErr] = React.useState(""), [busy, setBusy] = React.useState(false);
+  const load = () => fetch("/api/superadmin/tax", { cache: "no-store" }).then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error?.message ?? "Could not load."); setD(j.data ?? j); }).catch(e => setErr(e.message));
+  React.useEffect(() => { load(); }, []);
+  const send = async (body: object) => { setBusy(true); setErr(""); try { const r = await fetch("/api/superadmin/tax", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error?.message ?? "Could not save."); await load(); } catch (e) { setErr((e as Error).message); } setBusy(false); };
+  const day = (v: string | null) => (v ? new Date(v).toLocaleDateString("en-GB") : "–");
+  const reg = d?.supplier?.registrations?.[0];
+  const setRegistration = () => {
+    const state = (window.prompt("Afkar IO's UAE VAT registration: type ACTIVE or INACTIVE", reg?.state ?? "INACTIVE") ?? "").toUpperCase(); if (state !== "ACTIVE" && state !== "INACTIVE") return;
+    const number = state === "ACTIVE" ? window.prompt("The registration number (TRN) exactly as on the FTA certificate", reg?.number ?? "") ?? "" : "";
+    const from = state === "ACTIVE" ? window.prompt("The date it takes effect (YYYY-MM-DD), from the certificate", "") ?? "" : "";
+    const reason = window.prompt("Why? (saved in the change log, e.g. the certificate reference)") ?? ""; if (reason.trim().length < 5) return;
+    send({ action: "registration", data: { country: "AE", number, state, effectiveFrom: state === "ACTIVE" && from ? new Date(from + "T00:00:00+04:00").toISOString() : null, effectiveTo: null, reason } });
+  };
+  const addPolicy = () => {
+    const country = (window.prompt("Destination country code (SA, OM, BH, QA or KW)") ?? "").toUpperCase(); if (!country) return;
+    const t = (window.prompt("Afkar's UAE treatment for this service: DOMESTIC_STANDARD, ZERO_RATED or OUTSIDE_SCOPE") ?? "").toUpperCase(); if (!t) return;
+    const from = window.prompt("In force from (YYYY-MM-DD)", new Date().toISOString().slice(0, 10)) ?? ""; const evidence = window.prompt("Evidence: who approved it and where it is recorded") ?? ""; if (!from || evidence.trim().length < 5) return;
+    send({ action: "policy", data: { country, uaeTreatment: t, effectiveFrom: new Date(from + "T00:00:00+04:00").toISOString(), effectiveTo: null, version: `${country}-${from}`, evidence } });
+  };
+  const review = (businessId: string, decision: "VERIFIED" | "REJECTED") => {
+    const method = (window.prompt("How was it checked? OFFICIAL_LOOKUP or MANUAL_DOCUMENT_REVIEW", "MANUAL_DOCUMENT_REVIEW") ?? "").toUpperCase(); if (!method) return;
+    let evidenceReference = "", validTo: string | null = null;
+    if (decision === "VERIFIED") { evidenceReference = window.prompt("Evidence reference (where the certificate or lookup result is kept)") ?? ""; const v = window.prompt("The registration is valid until (YYYY-MM-DD)") ?? ""; validTo = v ? new Date(v + "T23:59:59+04:00").toISOString() : null; }
+    const reason = window.prompt(decision === "VERIFIED" ? "Note (saved in the change log)" : "Why is it rejected? (the owner sees this)") ?? ""; if (reason.trim().length < 5) return;
+    send({ action: "review", businessId, data: { decision, method, evidenceReference, validFrom: null, validTo, reason } });
+  };
+  return (
+    <section style={{ ...card, marginTop: 12 }}>
+      <h2 style={h2}>Tax</h2>
+      {err && <div role="alert" style={{ color: "#B4233B", fontSize: 14, marginBottom: 8 }}>{err}</div>}
+      {d && <>
+        <div style={{ fontSize: 14, marginBottom: 14 }}>
+          <b>Afkar IO · UAE VAT registration:</b> {reg?.state === "ACTIVE" ? `active, number ${reg.number}, from ${day(reg.effectiveFrom)}` : "not registered (no VAT is charged on subscriptions)"}
+          <button type="button" disabled={busy} onClick={setRegistration} style={{ marginInlineStart: 10, fontSize: 13, fontWeight: 600, textDecoration: "underline", color: "#C0284F", cursor: "pointer" }}>Change</button>
+          <div style={{ fontSize: 12, color: muted, marginTop: 4 }}>Only enter this when the registration really exists. A threshold alert is not a registration.</div>
+        </div>
+        <div style={{ fontSize: 14, marginBottom: 14 }}><b>Approved policies</b> (needed for foreign sales once Afkar is registered)
+          <button type="button" disabled={busy} onClick={addPolicy} style={{ marginInlineStart: 10, fontSize: 13, fontWeight: 600, textDecoration: "underline", color: "#C0284F", cursor: "pointer" }}>Add</button>
+          {d.policies.length ? d.policies.map((p: any) => <div key={p.id} style={{ fontSize: 13, color: muted }}>{p.country} · {p.uaeTreatment} · from {day(p.effectiveFrom)} · {p.version}</div>) : <div style={{ fontSize: 13, color: muted }}>None.</div>}</div>
+        <div style={{ fontSize: 14 }}><b>VAT registrations waiting for review ({d.pending.length})</b>
+          {d.pending.map((r: any) => <div key={r.businessId} style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", padding: "8px 0", borderTop: `1px solid ${line}` }}>
+            <span style={{ flex: "1 1 260px" }}>{r.restaurant} · {r.country} · {r.legalName}<br /><span style={{ color: muted, fontSize: 13 }}>VAT number {r.vatNumber} · submitted {day(r.submittedAt)}</span></span>
+            <button type="button" disabled={busy} onClick={() => review(r.businessId, "VERIFIED")} style={{ ...btnSm, background: "#E4F4EC" }}>Approve</button><button type="button" disabled={busy} onClick={() => review(r.businessId, "REJECTED")} style={{ ...btnSm, background: "#FDECEC" }}>Reject</button></div>)}
+          {!d.pending.length && <div style={{ fontSize: 13, color: muted }}>Nothing waiting.</div>}</div>
+        {d.audit.length > 0 && <details style={{ marginTop: 14, fontSize: 13 }}><summary style={{ cursor: "pointer", color: muted }}>Change log</summary>{d.audit.map((a: any, i: number) => <div key={i} style={{ padding: "3px 0", color: muted }}>{new Date(a.at).toLocaleString("en-GB")} · {a.action} · {a.reason}</div>)}</details>}
+      </>}
+    </section>
+  );
+}
+const btnSm: React.CSSProperties = { height: 34, padding: "0 14px", borderRadius: 10, border: "1px solid #ECD9E0", fontWeight: 600, fontSize: 13, cursor: "pointer" };
+
 export default function SuperAdminDashboard() {
   const [days, setDays] = React.useState(30), [data, setData] = React.useState<any>(null), [err, setErr] = React.useState(""), [gccOnly, setGccOnly] = React.useState(false);
   React.useEffect(() => {
@@ -98,6 +150,7 @@ export default function SuperAdminDashboard() {
         </section>
       </>}
       <Markets />
+      <Tax />
     </main>
   );
 }

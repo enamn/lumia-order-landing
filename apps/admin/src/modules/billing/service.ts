@@ -7,6 +7,7 @@ import { lumiaApi } from "@/server/lumia-api";
 import { EXTRA_BRANCH, INCLUDED_BRANCHES, PLANS, RETRY_DAYS, TOPUPS, TOPUP_IDS, addPeriod, isUpgrade, quoteExtraBranch, quoteRenewal, quoteSignup, quoteTopUp, quoteUpgrade, withTax, type Billing, type PlanId, type Quote } from "./plans";
 import { addCredits, usageSummary } from "./usage";
 import { requireTaxEligible, taxDecisionFor } from "../tax/service";
+import { MARKETS, isCountryCode } from "../market/countries";
 import type { TaxDecision } from "../tax/policy";
 
 // Subscriptions are run by Lumia: the plan, the billing period, renewals, retries, plan changes, cancellation and invoices all live here.
@@ -32,21 +33,35 @@ export const trialInfo = (createdAt: Date, now = Date.now()) => {
 export const getSubscriptionFor = async (businessId: string) => db.subscription.findFirst({ where: { businessId } });
 // Whether a restaurant may use the product right now. Free trial and paid plans: yes. A failed renewal keeps everything working through the retry window (a grace period);
 // once the trial is over, the plan is cancelled or the retries run out, the dashboard is locked and the assistant stops answering.
-export type AccessReason = "trial" | "paid" | "grace" | "trial_ended" | "ended";
-export interface Access { active: boolean; reason: AccessReason; graceEndsAt?: string }
-export function accessOf(sub: Pick<Subscription, "status" | "failedAttempts" | "nextChargeAt"> | null, createdAt: Date, now = Date.now()): Access {
-  if (!sub) return trialInfo(createdAt, now).daysLeft > 0 ? { active: true, reason: "trial" } : { active: false, reason: "trial_ended" };
-  if (sub.status === "ACTIVE") return { active: true, reason: "paid" };
+export type AccessReason = "trial" | "paid" | "grace" | "setup" | "trial_ended" | "ended";
+// `active`: the dashboard works. `liveOrdering`: the WhatsApp assistant may answer customers. They differ only for a restaurant in Saudi Arabia, Oman or Bahrain
+// whose VAT registration is not verified yet: it can set everything up ("setup"), but live ordering (and the free trial) starts once the registration is verified.
+export interface Access { active: boolean; liveOrdering: boolean; reason: AccessReason; graceEndsAt?: string }
+export function accessOf(sub: Pick<Subscription, "status" | "failedAttempts" | "nextChargeAt"> | null, createdAt: Date, now = Date.now(), vat?: { required: boolean; verifiedFrom: Date | null }): Access {
+  if (!sub) {
+    if (vat?.required) {
+      if (!vat.verifiedFrom) return { active: true, liveOrdering: false, reason: "setup" };
+      return trialInfo(vat.verifiedFrom, now).daysLeft > 0 ? { active: true, liveOrdering: true, reason: "trial" } : { active: false, liveOrdering: false, reason: "trial_ended" };
+    }
+    return trialInfo(createdAt, now).daysLeft > 0 ? { active: true, liveOrdering: true, reason: "trial" } : { active: false, liveOrdering: false, reason: "trial_ended" };
+  }
+  if (sub.status === "ACTIVE") return { active: true, liveOrdering: true, reason: "paid" };
   if (sub.status === "PAST_DUE") {
     const later = RETRY_DAYS.slice(Math.max(1, sub.failedAttempts)).reduce((a, d) => a + d, 0);
     const end = (sub.nextChargeAt ?? new Date(now)).getTime() + later * 86_400_000;
-    return end > now ? { active: true, reason: "grace", graceEndsAt: new Date(end).toISOString() } : { active: false, reason: "ended" };
+    return end > now ? { active: true, liveOrdering: true, reason: "grace", graceEndsAt: new Date(end).toISOString() } : { active: false, liveOrdering: false, reason: "ended" };
   }
-  return { active: false, reason: "ended" };
+  return { active: false, liveOrdering: false, reason: "ended" };
+}
+// The VAT position that matters for access: is a local VAT registration required here, and since when is it verified (and still valid)?
+export async function vatGate(businessId: string, now = Date.now()): Promise<{ required: boolean; verifiedFrom: Date | null }> {
+  const [b, p] = await Promise.all([db.business.findUnique({ where: { id: businessId }, select: { countryCode: true } }), db.billingTaxProfile.findUnique({ where: { businessId } })]);
+  const required = !!b && isCountryCode(b.countryCode) && MARKETS[b.countryCode].requiresVerifiedVatForSaas;
+  return { required, verifiedFrom: required && p?.vatVerificationStatus === "VERIFIED" && p.verifiedAt && (!p.validTo || p.validTo.getTime() > now) ? p.verifiedAt : null };
 }
 export async function accessFor(businessId: string, now = Date.now()): Promise<Access> {
-  const [sub, b] = await Promise.all([getSubscriptionFor(businessId), db.business.findUnique({ where: { id: businessId }, select: { createdAt: true } })]);
-  return b ? accessOf(sub, b.createdAt, now) : { active: false, reason: "ended" };
+  const [sub, b, vat] = await Promise.all([getSubscriptionFor(businessId), db.business.findUnique({ where: { id: businessId }, select: { createdAt: true } }), vatGate(businessId, now)]);
+  return b ? accessOf(sub, b.createdAt, now, vat) : { active: false, liveOrdering: false, reason: "ended" };
 }
 export async function requireAccess(userId: string, businessId: string) {
   await authorize(userId, businessId);
@@ -72,6 +87,7 @@ const iso = (d: Date | null | undefined) => (d ? d.toISOString() : undefined);
 export async function getSubscription(userId: string, businessId: string) {
   const { member } = await authorize(userId, businessId);
   const [b, sub, known, usage, tax] = await Promise.all([db.business.findUniqueOrThrow({ where: { id: businessId }, select: { createdAt: true, stripeCustomerId: true, email: true, emailVerifiedAt: true } }), getSubscriptionFor(businessId), knownDetails(businessId), usageSummary(businessId), taxDecisionFor(businessId)]);
+  const vat = await vatGate(businessId), trialStart = vat.required ? vat.verifiedFrom ?? b.createdAt : b.createdAt;
   const active = isActive(sub), nextPlan = (sub?.pendingPlan ?? sub?.plan) as PlanId | undefined, nextBilling = (sub?.pendingBilling ?? sub?.billing) as Billing | undefined;
   return {
     status: (sub?.status ?? "NONE") as SubStatus, plan: sub?.plan, billing: sub?.billing, currentPeriodStart: iso(sub?.currentPeriodStart), currentPeriodEnd: iso(sub?.currentPeriodEnd), cancelAtPeriodEnd: sub?.cancelAtPeriodEnd ?? false,
@@ -80,7 +96,7 @@ export async function getSubscription(userId: string, businessId: string) {
     card: (sub?.card as Card | null) ?? undefined, terminals: sub?.terminals, terminalAddress: sub?.terminalAddress ?? undefined, terminal: (sub?.terminal as Terminal | null) ?? undefined, startedAt: iso(sub?.startedAt),
     hasCustomer: Boolean(sub?.stripeCustomerId || b.stripeCustomerId), defaults: { address: known.address }, canManage: member.role === "OWNER" || member.role === "ADMIN",
     contactEmail: { email: b.email ?? "", verified: !!b.email && !!b.emailVerifiedAt },
-    access: accessOf(sub, b.createdAt), trial: trialInfo(b.createdAt), entitlements: entitlements(sub), usage,
+    access: accessOf(sub, b.createdAt, Date.now(), vat), trial: { ...trialInfo(trialStart), started: !vat.required || !!vat.verifiedFrom }, entitlements: entitlements(sub), usage,
     branches: { ...(await branchInfo(businessId, sub, tax.ratePercent)) },
     tax: { eligible: tax.eligible, reasons: tax.reasons, ratePercent: tax.ratePercent, destinationTreatment: tax.destinationTreatment, uaeTreatment: tax.uaeTreatment, vatStatus: tax.customer.vatStatus },
     topups: TOPUP_IDS.map(id => ({ id, orders: TOPUPS[id].orders, totalMinor: quoteTopUp(id, tax.ratePercent).totalMinor, subtotalMinor: quoteTopUp(id, tax.ratePercent).subtotalMinor })),

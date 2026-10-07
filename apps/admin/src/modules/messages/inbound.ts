@@ -32,7 +32,7 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
     const account = await db.whatsAppAccount.findFirst({ where: { phoneNumberId: m.phoneNumberId, status: "CONNECTED" }, select: { businessId: true, wabaId: true } });
     if (!account || (account.wabaId && m.wabaId && account.wabaId !== m.wabaId)) { result.unmatched++; continue; }
     // Trial over or plan ended (after the grace period): the assistant is off. Messages are still stored for the owner.
-    const live = (await accessFor(account.businessId)).active;
+    const live = (await accessFor(account.businessId)).liveOrdering;
     if (m.type === "request_welcome") {
       if (!live) continue;
       // Someone just opened the chat: greet them. A failed greeting must not fail the whole batch.

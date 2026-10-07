@@ -2,13 +2,14 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/server/db";
 import { lumiaApi } from "@/server/lumia-api";
 import { brandedEmail } from "@/modules/email/layout";
+import { MARKETS } from "@/modules/market/countries";
 import { TRIAL_DAYS, accessOf, trialInfo } from "./service";
 
 // Reminder emails about the trial and the plan, sent from the hourly billing job (through lumia-order-api).
 // Each email goes out once per period: a BillingNotice row is claimed first, and removed again if the email could not be sent so the next run retries.
 type Kind = "trial_3d" | "trial_1d" | "trial_ended" | "plan_ending_3d" | "plan_ending_1d" | "payment_failed" | "plan_ended";
 interface Vars { business: string; date?: string; graceDate?: string }
-const DAY = 86_400_000;
+const DAY = 86_400_000, VAT_COUNTRIES = Object.values(MARKETS).filter(m => m.requiresVerifiedVatForSaas).map(m => m.code);
 
 const COPY: Record<Kind, { en: (v: Vars) => [string, string]; ar: (v: Vars) => [string, string] }> = {
   trial_3d: { en: v => ["Your free trial ends in 3 days", `Your Lumia Order free trial for ${v.business} ends on ${v.date}. Choose a plan before then to keep receiving WhatsApp orders. After that the dashboard is locked and the assistant stops replying.`],
@@ -74,11 +75,15 @@ export async function runReminders(now = new Date()) {
   const count = async (p: Promise<boolean>) => { out.checked++; try { if (await p) out.sent++; } catch { console.error(JSON.stringify({ level: "error", code: "REMINDER_ITEM_FAILED" })); } };
 
   // Free trial: no plan yet. Looks at businesses whose trial ends within 3 days, or ended in the last two weeks.
-  const trials = await db.business.findMany({ where: { createdAt: { gte: new Date(t - (TRIAL_DAYS + 14) * DAY), lte: new Date(t - (TRIAL_DAYS - 3) * DAY) } }, select: { id: true, createdAt: true }, take: 500 });
+  // The trial starts when the restaurant is created, except in Saudi Arabia, Oman and Bahrain where it starts when the VAT registration is verified.
+  const from = (days: number) => new Date(t - days * DAY), window = { gte: from(TRIAL_DAYS + 14), lte: from(TRIAL_DAYS - 3) };
+  const plain = await db.business.findMany({ where: { createdAt: window, countryCode: { notIn: VAT_COUNTRIES } }, select: { id: true, createdAt: true }, take: 500 });
+  const verified = await db.billingTaxProfile.findMany({ where: { vatVerificationStatus: "VERIFIED", verifiedAt: window, billingCountry: { in: VAT_COUNTRIES } }, select: { businessId: true, verifiedAt: true }, take: 500 });
+  const trials = [...plain.map(b => ({ id: b.id, start: b.createdAt })), ...verified.map(v => ({ id: v.businessId, start: v.verifiedAt! }))];
   const subbed = new Set((await db.subscription.findMany({ where: { businessId: { in: trials.map(b => b.id) } }, select: { businessId: true } })).map(s => s.businessId));
   for (const b of trials) {
     if (subbed.has(b.id)) continue;
-    const info = trialInfo(b.createdAt, t), date = fmt(new Date(info.endsAt));
+    const info = trialInfo(b.start, t), date = fmt(new Date(info.endsAt));
     if (info.daysLeft === 0) await count(notify(b.id, "trial_ended", "trial", {}));
     else if (info.daysLeft <= 1) await count(notify(b.id, "trial_1d", "trial", { date }));
     else await count(notify(b.id, "trial_3d", "trial", { date }));

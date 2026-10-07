@@ -50,10 +50,11 @@ export function BillingPage({ businessId, onChoosePlan, onChanged }: { businessI
     <div><h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.035em", margin: 0 }}>Billing</h1><p style={{ ...muted, marginTop: 6 }}>Your plan, payment card and invoices.</p></div>
     {error && <div role="alert" style={{ fontSize: 14, color: "#B42318" }}>{error}</div>}
     {note && <div role="status" style={{ fontSize: 14, color: "#16704A", fontWeight: 500 }}>{note}</div>}
+    <TaxDetails businessId={businessId} canManage={!!canManage} onSaved={() => { load(); onChanged(); }} />
 
     <section style={card}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}><h2 style={h2}>{active || sub.status !== "NONE" ? `${planName} plan` : "No plan yet"}</h2><span style={pill(status[1]!, status[2]!)}>{status[0]}</span></div>
-      {!active && sub.status === "NONE" && <><p style={muted}>{sub.trial.daysLeft ? `Your free trial ends on ${date(sub.trial.endsAt)}.` : "Your free trial has ended."} Choose a plan to keep receiving WhatsApp orders.</p><div><button type="button" style={gradient} onClick={onChoosePlan}>Choose a plan</button></div></>}
+      {!active && sub.status === "NONE" && <><p style={muted}>{sub.trial.started === false ? "Your free trial starts once your VAT registration is verified." : sub.trial.daysLeft ? `Your free trial ends on ${date(sub.trial.endsAt)}.` : "Your free trial has ended."} Choose a plan to keep receiving WhatsApp orders.</p><div><button type="button" style={gradient} onClick={onChoosePlan}>Choose a plan</button></div></>}
       {(sub.status === "ENDED" || sub.status === "CANCELED") && <><p style={muted}>{sub.status === "ENDED" ? "Your last renewal could not be paid, so the plan lapsed." : "Your plan was cancelled."} You can subscribe again at any time.</p><div><button type="button" style={gradient} onClick={onChoosePlan}>Choose a plan</button></div></>}
       {active && <>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12 }}>
@@ -137,4 +138,46 @@ export function BillingPage({ businessId, onChoosePlan, onChanged }: { businessI
       </div>}
     </section>
   </div>;
+}
+
+// The business's billing tax details: who is invoiced, and (for Saudi Arabia, Oman and Bahrain) the local VAT registration that has to be verified before a plan can be bought.
+const VAT_COPY: Record<string, [string, string, string]> = {
+  NOT_REQUIRED: ["Not required", "#F6EEF2", "#3D1C31"], NOT_SUBMITTED: ["Not submitted", "#FFF1DC", "#8A4B00"], PENDING: ["Being reviewed", "#FFF1DC", "#8A4B00"], VERIFIED: ["Verified", "#E4F4EC", "#16704A"], REJECTED: ["Not verified", "#FDECEC", "#B42318"], EXPIRED: ["Expired", "#FDECEC", "#B42318"],
+};
+const field: React.CSSProperties = { height: 44, width: "100%", padding: "0 12px", borderRadius: 10, border: "1.5px solid #ECD9E0", background: "#fff", fontSize: 15, boxSizing: "border-box" };
+export function TaxDetails({ businessId, canManage, onSaved }: { businessId: string; canManage: boolean; onSaved: () => void }) {
+  const base = `/api/v1/businesses/${businessId}/billing-tax`;
+  const [p, setP] = React.useState<any>(null), [f, setF] = React.useState<any>({ legalName: "", line1: "", city: "", vatRegistered: false, vatNumber: "" }), [err, setErr] = React.useState(""), [busy, setBusy] = React.useState(false), [saved, setSaved] = React.useState(false);
+  const fill = (v: any) => { setP(v); setF({ legalName: v.legalName ?? "", line1: v.billingAddress?.line1 ?? "", city: v.billingAddress?.city ?? "", vatRegistered: v.vatRegistered ?? v.vatRequired, vatNumber: v.vatNumber ?? "" }); };
+  React.useEffect(() => { api(base).then(fill).catch(e => setErr(e.message)); }, [base]);
+  if (!p) return err ? <div role="alert" style={{ color: "#B42318", fontSize: 14 }}>{err}</div> : null;
+  const [label, bg, fg] = VAT_COPY[p.vatVerificationStatus] ?? VAT_COPY.NOT_SUBMITTED!;
+  const note = p.vatVerificationStatus === "PENDING" ? "Your VAT details are being reviewed. You can continue preparing your restaurant while we verify your business."
+    : p.vatVerificationStatus === "VERIFIED" ? `Your VAT registration is verified${p.validTo ? ` until ${date(p.validTo)}` : ""}.`
+    : p.vatVerificationStatus === "REJECTED" ? `We couldn’t verify your VAT details${p.rejectionReason ? `: ${p.rejectionReason}` : ""}. Check them and submit again.`
+    : p.vatVerificationStatus === "EXPIRED" ? "Your VAT verification has expired. Submit your details again to renew it."
+    : p.vatRequired ? "For this market, Lumia Order currently supports subscriptions for VAT-registered businesses. Enter your business VAT number to continue. If you are not registered, contact sales to discuss future availability." : "";
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault(); setBusy(true); setErr(""); setSaved(false);
+    try { const v = await api(base, "PUT", { legalName: f.legalName, billingAddress: { line1: f.line1, city: f.city }, vatRegistered: !!f.vatRegistered, vatNumber: f.vatRegistered ? f.vatNumber : "" }); fill(v); setSaved(true); onSaved(); } catch (e2: any) { setErr(e2.message); }
+    setBusy(false);
+  };
+  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
+  return <section style={card}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}><h2 style={h2}>Tax details</h2>{p.vatRequired && <span style={pill(bg, fg)}>VAT: {label}</span>}</div>
+    <p style={muted}>These details appear on your invoices{p.vatRequired ? ", and your VAT registration decides whether a plan can be bought" : ""}.</p>
+    {note && <p style={{ ...muted, color: p.vatVerificationStatus === "REJECTED" || p.vatVerificationStatus === "EXPIRED" ? "#B42318" : "#3D1C31" }}>{note}</p>}
+    <form onSubmit={save} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 12 }}>
+      <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, fontWeight: 500 }}>Legal name of the business<input style={field} value={f.legalName} onChange={set("legalName")} disabled={!canManage} required minLength={2} /></label>
+      <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, fontWeight: 500 }}>Billing address<input style={field} value={f.line1} onChange={set("line1")} disabled={!canManage} required minLength={3} /></label>
+      <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, fontWeight: 500 }}>City<input style={field} value={f.city} onChange={set("city")} disabled={!canManage} required minLength={2} /></label>
+      <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 500, alignSelf: "end", minHeight: 44 }}><input type="checkbox" checked={!!f.vatRegistered} onChange={set("vatRegistered")} disabled={!canManage || p.vatRequired && false} />My business is VAT registered in {p.billingCountry}</label>
+      {f.vatRegistered && <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, fontWeight: 500 }}>VAT registration number<input style={field} value={f.vatNumber} onChange={set("vatNumber")} disabled={!canManage} required={p.vatRequired} inputMode="text" autoComplete="off" /></label>}
+      <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        {canManage && <button type="submit" style={gradient} disabled={busy}>{busy ? "Saving…" : "Save tax details"}</button>}
+        {saved && <span role="status" style={{ fontSize: 14, color: "#16704A", fontWeight: 500 }}>Saved.</span>}
+        {err && <span role="alert" style={{ fontSize: 14, color: "#B42318" }}>{err}</span>}
+      </div>
+    </form>
+  </section>;
 }
