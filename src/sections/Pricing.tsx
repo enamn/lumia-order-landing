@@ -103,8 +103,10 @@ function PlanCard({ plan, billing, info }: { plan: Plan; billing: Billing; info:
   const key = plan.name.toLowerCase() as 'starter' | 'plus' | 'pro', local = info?.local ? info.plans[key] : null;
   const cur = local && info ? info.currency : 'AED', dec = local && info ? info.decimals : 2;
   const m = local ? local.monthly : plan.amounts.month, y = local ? local.yearly : plan.amounts.year;
-  const M = (n: number) => <Money n={n} cur={cur} dec={dec} />;
-  const price = { month: M(m), year: M(y), strike: M(m * 12), perMonth: M(Math.round(y / 12)) };
+  // Amounts with fractions (3-decimal currencies such as 15.900) are all shown with the currency's decimals, so a card never mixes "159" with "190.800".
+  const frac = !Number.isInteger(m) || !Number.isInteger(y), scale = 10 ** dec, perMonth = frac ? Math.round((y / 12) * scale) / scale : Math.round(y / 12);
+  const M = (n: number) => <Money n={Math.round(n * scale) / scale} cur={cur} dec={dec} fixed={frac} />;
+  const price = { month: M(m), year: M(y), strike: M(m * 12), perMonth: M(perMonth) };
   return (
     <div className={`plan${plan.highlight ? ' gradient-border' : ''}`}>
       <div className="row-between" style={{ alignItems: 'center', gap: 8 }}>
