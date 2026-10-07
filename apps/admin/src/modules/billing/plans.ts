@@ -11,6 +11,16 @@ export const PLANS: Record<PlanId, { name: string; monthly: number; yearly: numb
 // The first terminal costs less on a yearly plan; extra terminals are the same for everyone.
 export const TERMINAL = { yearly: { starter: 549, plus: 499, pro: 399 } as Record<PlanId, number>, monthly: 599, extra: 599 };
 
+// The prices that apply to one market, in whole units of its billing currency (like the constants above, which are the approved UAE list). The terminal is sold only where
+// `terminal` is set. Other markets get their book from the prices a super admin approved (see pricing.ts); there are no built-in prices for them.
+export interface PriceBook {
+  country: string; currency: string; decimals: 2 | 3;
+  plans: Record<PlanId, { monthly: number; yearly: number }>;
+  extraBranch: { monthly: number; yearly: number };
+  topups: Record<"orders50" | "orders200", number>;
+  terminal: { yearly: Record<PlanId, number>; monthly: number; extra: number } | null;
+}
+
 // What each plan includes every month, counted from the plan's own billing day. The limit restaurants see is WhatsApp orders. Behind it, AI replies,
 // voice notes and menu imports have a fair-use cap so chatting without ordering cannot run up costs. Sized from the real cost of an order (about 7 AI replies,
 // roughly AED 0.5), so a plan used to its limit still earns money.
@@ -30,13 +40,14 @@ export const ORDER_BUFFER = 0.1;
 export const TOPUPS = { orders50: { orders: 50, price: 79 }, orders200: { orders: 200, price: 249 } } as const;
 export type TopUpId = keyof typeof TOPUPS;
 export const TOPUP_IDS = Object.keys(TOPUPS) as TopUpId[];
+export const UAE_BOOK: PriceBook = { country: "AE", currency: "AED", decimals: 2, plans: { starter: { monthly: PLANS.starter.monthly, yearly: PLANS.starter.yearly }, plus: { monthly: PLANS.plus.monthly, yearly: PLANS.plus.yearly }, pro: { monthly: PLANS.pro.monthly, yearly: PLANS.pro.yearly } }, extraBranch: { monthly: EXTRA_BRANCH.monthly, yearly: EXTRA_BRANCH.yearly }, topups: { orders50: TOPUPS.orders50.price, orders200: TOPUPS.orders200.price }, terminal: TERMINAL };
 // Retries after a failed renewal, in days after the previous attempt. After the last one fails the subscription lapses.
 export const RETRY_DAYS = [1, 3, 5];
 
 export interface Line { name: string; unitMinor: number; quantity: number }
 export interface Quote { lines: Line[]; subtotalMinor: number; vatMinor: number; totalMinor: number }
-const fils = (aed: number) => Math.round(aed * 100);
-export const planMinor = (plan: PlanId, billing: Billing) => fils(PLANS[plan][billing]);
+const minor = (amount: number, book: PriceBook) => Math.round(amount * (book.decimals === 3 ? 1000 : 100));
+export const planMinor = (plan: PlanId, billing: Billing, book: PriceBook = UAE_BOOK) => minor(book.plans[plan][billing], book);
 const planName = (plan: PlanId, billing: Billing) => `Lumia Order ${PLANS[plan].name} (${billing})`;
 // The tax rate comes from the tax decision for that restaurant (see modules/tax/policy.ts), never from a constant: 0 while Afkar IO has no UAE VAT registration.
 // The tax is a percentage of the subtotal, rounded to the nearest fils, and shown as its own line so the total is exactly what is charged.
@@ -44,29 +55,33 @@ export function withTax(lines: Line[], ratePercent: number): Quote {
   const subtotalMinor = lines.reduce((t, l) => t + l.unitMinor * l.quantity, 0), vatMinor = Math.round(subtotalMinor * ratePercent / 100);
   return { lines, subtotalMinor, vatMinor, totalMinor: subtotalMinor + vatMinor };
 }
-export function quoteSignup(plan: PlanId, billing: Billing, terminals: number, ratePercent: number): Quote {
-  const first = fils(billing === "yearly" ? TERMINAL.yearly[plan] : TERMINAL.monthly);
-  const lines: Line[] = [{ name: planName(plan, billing), unitMinor: planMinor(plan, billing), quantity: 1 }, { name: "Lumia Order Terminal", unitMinor: first, quantity: 1 }];
-  if (terminals > 1) lines.push({ name: "Lumia Order Terminal (extra)", unitMinor: fils(TERMINAL.extra), quantity: terminals - 1 });
+// The terminal is optional: 0 terminals is software only (the dashboard receives and manages the orders). Where no terminal is sold (book.terminal null) only 0 is possible.
+export function quoteSignup(plan: PlanId, billing: Billing, terminals: number, ratePercent: number, book: PriceBook = UAE_BOOK): Quote {
+  const lines: Line[] = [{ name: planName(plan, billing), unitMinor: planMinor(plan, billing, book), quantity: 1 }];
+  if (terminals > 0) {
+    if (!book.terminal) throw new Error("TERMINAL_UNAVAILABLE");
+    lines.push({ name: "Lumia Order Terminal", unitMinor: minor(billing === "yearly" ? book.terminal.yearly[plan] : book.terminal.monthly, book), quantity: 1 });
+    if (terminals > 1) lines.push({ name: "Lumia Order Terminal (extra)", unitMinor: minor(book.terminal.extra, book), quantity: terminals - 1 });
+  }
   return withTax(lines, ratePercent);
 }
-export function quoteRenewal(plan: PlanId, billing: Billing, extraBranches: number, ratePercent: number): Quote {
-  const lines: Line[] = [{ name: planName(plan, billing), unitMinor: planMinor(plan, billing), quantity: 1 }];
-  if (plan === "pro" && extraBranches > 0) lines.push({ name: `Extra branch (${billing})`, unitMinor: fils(EXTRA_BRANCH[billing]), quantity: extraBranches });
+export function quoteRenewal(plan: PlanId, billing: Billing, extraBranches: number, ratePercent: number, book: PriceBook = UAE_BOOK): Quote {
+  const lines: Line[] = [{ name: planName(plan, billing), unitMinor: planMinor(plan, billing, book), quantity: 1 }];
+  if (plan === "pro" && extraBranches > 0) lines.push({ name: `Extra branch (${billing})`, unitMinor: minor(book.extraBranch[billing], book), quantity: extraBranches });
   return withTax(lines, ratePercent);
 }
 // One more branch in the middle of a period pays for the time that is left.
-export function quoteExtraBranch(billing: Billing, periodStart: Date, periodEnd: Date, now: Date, ratePercent: number): Quote {
+export function quoteExtraBranch(billing: Billing, periodStart: Date, periodEnd: Date, now: Date, ratePercent: number, book: PriceBook = UAE_BOOK): Quote {
   const total = periodEnd.getTime() - periodStart.getTime(), left = Math.max(0, Math.min(total, periodEnd.getTime() - now.getTime()));
-  return withTax([{ name: "Extra branch (rest of period)", unitMinor: Math.round(fils(EXTRA_BRANCH[billing]) * (total > 0 ? left / total : 0)), quantity: 1 }], ratePercent);
+  return withTax([{ name: "Extra branch (rest of period)", unitMinor: Math.round(minor(book.extraBranch[billing], book) * (total > 0 ? left / total : 0)), quantity: 1 }], ratePercent);
 }
-export const quoteTopUp = (pack: TopUpId, ratePercent: number): Quote => withTax([{ name: `Lumia Order extra orders (${TOPUPS[pack].orders})`, unitMinor: fils(TOPUPS[pack].price), quantity: 1 }], ratePercent);
+export const quoteTopUp = (pack: TopUpId, ratePercent: number, book: PriceBook = UAE_BOOK): Quote => withTax([{ name: `Lumia Order extra orders (${TOPUPS[pack].orders})`, unitMinor: minor(book.topups[pack], book), quantity: 1 }], ratePercent);
 export const isUpgrade = (from: PlanId, to: PlanId) => PLANS[to].rank > PLANS[from].rank;
 
 // An upgrade in the middle of a period pays the price difference for the time that is left (same billing cycle).
-export function quoteUpgrade(from: PlanId, to: PlanId, billing: Billing, periodStart: Date, periodEnd: Date, now: Date, ratePercent: number): Quote {
+export function quoteUpgrade(from: PlanId, to: PlanId, billing: Billing, periodStart: Date, periodEnd: Date, now: Date, ratePercent: number, book: PriceBook = UAE_BOOK): Quote {
   const total = periodEnd.getTime() - periodStart.getTime(), left = Math.max(0, Math.min(total, periodEnd.getTime() - now.getTime()));
-  const amount = Math.round((planMinor(to, billing) - planMinor(from, billing)) * (total > 0 ? left / total : 0));
+  const amount = Math.round((planMinor(to, billing, book) - planMinor(from, billing, book)) * (total > 0 ? left / total : 0));
   return withTax([{ name: `Upgrade ${PLANS[from].name} → ${PLANS[to].name} (rest of period)`, unitMinor: Math.max(amount, 0), quantity: 1 }], ratePercent);
 }
 

@@ -10,7 +10,8 @@ import { AppError } from "@/server/errors";
 import { updateProgress } from "../business/service";
 import { entitlements, entitlementsFor, getSubscriptionFor } from "../billing/service";
 import { SHARED } from "../menu/catalog";
-import { EXTRA_BRANCH, quoteExtraBranch, type Billing } from "../billing/plans";
+import { EXTRA_BRANCH, UAE_BOOK, quoteExtraBranch, type Billing } from "../billing/plans";
+import { priceBookOrNull } from "../billing/pricing";
 import { SECTIONS, sectionSchemas, EMIRATES, type Section, type Profile, type Branch, type Delivery, type Hours } from "./schema";
 
 // The restaurant settings. Profile basics, branches, hours and ordering rules live in the tables the rest of the app already reads
@@ -58,9 +59,9 @@ function sectionsOf(b: Loaded) {
 async function branchOffer(businessId: string) {
   const sub = await getSubscriptionFor(businessId), e = entitlements(sub);
   if (!e.canBuyBranches || !sub || (sub.extraBranches ?? 0) >= EXTRA_BRANCH.max) return null;
-  const tax = await taxDecisionFor(businessId), month = sub.billing === "yearly" ? "year" : "month", q = quoteExtraBranch(sub.billing as Billing, sub.currentPeriodStart, sub.currentPeriodEnd, new Date(), tax.ratePercent);
-  const price = EXTRA_BRANCH[sub.billing as Billing];
-  return { ratePercent: tax.ratePercent, priceAed: price, period: month, payNowMinor: q.totalMinor, card: (sub.card as { last4?: string } | null)?.last4 ?? null, hasCard: Boolean(sub.stripeCustomerId && sub.stripePaymentMethodId) };
+  const { book } = await priceBookOrNull(businessId), tax = await taxDecisionFor(businessId), month = sub.billing === "yearly" ? "year" : "month", q = quoteExtraBranch(sub.billing as Billing, sub.currentPeriodStart, sub.currentPeriodEnd, new Date(), tax.ratePercent, book ?? undefined);
+  const price = (book ?? UAE_BOOK).extraBranch[sub.billing as Billing];
+  return { currency: (book ?? UAE_BOOK).currency, ratePercent: tax.ratePercent, priceAed: price, period: month, payNowMinor: q.totalMinor, card: (sub.card as { last4?: string } | null)?.last4 ?? null, hasCard: Boolean(sub.stripeCustomerId && sub.stripePaymentMethodId) };
 }
 
 export async function getSettings(userId: string, businessId: string) {

@@ -928,3 +928,21 @@ model TaxAudit {
   @@index([entity, entityId, at])
   @@map("tax_audit")
 }
+
+// The prices Lumia charges in a market (one row per item; "plan:plus:yearly", "branch:monthly", "topup:orders50"), in minor units of the billing currency.
+// The UAE list is approved in code (billing/plans.ts). Other markets have only what a super admin entered here: DRAFT rows are never used, ACTIVE rows from their start date are.
+model MarketPrice {
+  id String @id @default(uuid()) @map("_id")
+  country String
+  item String
+  currency String
+  amountMinor Int
+  status String @default("DRAFT")
+  effectiveFrom DateTime
+  version String
+  providerPriceRef String?
+  createdBy String
+  createdAt DateTime @default(now())
+  @@index([country, item, effectiveFrom])
+  @@map("market_prices")
+}

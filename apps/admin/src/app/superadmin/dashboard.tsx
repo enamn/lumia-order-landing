@@ -99,6 +99,32 @@ function Tax() {
     </section>
   );
 }
+function Prices() {
+  const [d, setD] = React.useState<any>(null), [err, setErr] = React.useState(""), [busy, setBusy] = React.useState(false);
+  const load = () => fetch("/api/superadmin/prices", { cache: "no-store" }).then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error?.message ?? "Could not load."); setD(j.data ?? j); }).catch(e => setErr(e.message));
+  React.useEffect(() => { load(); }, []);
+  const add = async () => {
+    const country = (window.prompt("Country code (SA, OM, BH, QA or KW)") ?? "").toUpperCase(); if (!country) return;
+    const item = window.prompt(`Item, one of:\n${d.items.join("\n")}`) ?? ""; if (!item) return;
+    const amount = Number(window.prompt("Price in the country's currency, before any tax (for example 299 or 24.900)") ?? ""); if (!(amount > 0)) return;
+    const status = (window.prompt("DRAFT (saved, not used) or ACTIVE (used from the start date)", "DRAFT") ?? "").toUpperCase(); if (status !== "DRAFT" && status !== "ACTIVE") return;
+    const from = window.prompt("Start date (YYYY-MM-DD)", new Date().toISOString().slice(0, 10)) ?? ""; if (!from) return;
+    setBusy(true); setErr("");
+    try { const r = await fetch("/api/superadmin/prices", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ country, item, amount, status, effectiveFrom: new Date(from + "T00:00:00+04:00").toISOString(), version: `${from}` }) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error?.message ?? "Could not save."); await load(); } catch (e) { setErr((e as Error).message); }
+    setBusy(false);
+  };
+  return (
+    <section style={{ ...card, marginTop: 12 }}>
+      <h2 style={h2}>Market prices</h2>
+      <div style={{ fontSize: 13, color: muted, marginBottom: 8 }}>The UAE price list is fixed in the product. Every other country needs all {d?.items.length ?? 10} prices (plans, extra branch, extra orders) approved here, and its currency enabled on the payment account (now: {d ? d.enabledCurrencies.join(", ") : "…"}), before paid plans can open.</div>
+      {err && <div role="alert" style={{ color: "#B4233B", fontSize: 14, marginBottom: 8 }}>{err}</div>}
+      <button type="button" disabled={busy || !d} onClick={add} style={{ ...btnSm, background: "#fff", marginBottom: 10 }}>Add a price</button>
+      {d && <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}><thead><tr style={{ textAlign: "left", color: muted }}>{["Country", "Item", "Amount", "Status", "From"].map(h => <th key={h} style={{ padding: "4px 10px 6px 0", fontWeight: 500 }}>{h}</th>)}</tr></thead>
+        <tbody>{d.prices.map((p: any) => <tr key={p.id} style={{ borderTop: `1px solid ${line}` }}><td style={{ padding: "5px 10px 5px 0" }}>{p.country}</td><td style={{ padding: "5px 10px 5px 0" }}>{p.item}</td><td style={{ padding: "5px 10px 5px 0" }}>{p.currency} {(p.amountMinor / (["OMR", "BHD", "KWD"].includes(p.currency) ? 1000 : 100)).toLocaleString("en-US", { minimumFractionDigits: 2 })}</td><td style={{ padding: "5px 10px 5px 0" }}>{p.status}</td><td style={{ padding: "5px 10px 5px 0" }}>{new Date(p.effectiveFrom).toLocaleDateString("en-GB")}</td></tr>)}
+          {!d.prices.length && <tr><td colSpan={5} style={{ padding: "8px 0", color: muted }}>No prices entered yet.</td></tr>}</tbody></table></div>}
+    </section>
+  );
+}
 const btnSm: React.CSSProperties = { height: 34, padding: "0 14px", borderRadius: 10, border: "1px solid #ECD9E0", fontWeight: 600, fontSize: 13, cursor: "pointer" };
 
 export default function SuperAdminDashboard() {
@@ -151,6 +177,7 @@ export default function SuperAdminDashboard() {
       </>}
       <Markets />
       <Tax />
+      <Prices />
     </main>
   );
 }
