@@ -7,6 +7,7 @@
 </head>
 <body>
 <x-dc>
+<!-- LUMIA-TERMINAL -->
 <!-- LUMIA-REGION -->
 <!-- LUMIA-CURRENCY -->
 <!-- LUMIA-EMAIL -->
@@ -592,12 +593,13 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
             </sc-if>
             <sc-if value="{{ noDevicesIdle }}" hint-placeholder-val="{{ true }}">
               <div style="border-radius:20px;background:#FAF6FA;padding:48px 24px;display:flex;flex-direction:column;align-items:center;text-align:center">
-                <span style="width:56px;height:56px;border-radius:16px;background:#FDEAF2;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 20 20" fill="none"><path d="M5 8V3h10v5M5 14H3V8h14v6h-2M6 11h8v6H6z" stroke="#C93DFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+                <img src="/brand/terminal.png" alt="Lumia Order Terminal" width="72" height="126" style="display:block;width:72px;height:126px;object-fit:cover;border-radius:12px;background:#fff">
                 <h2 style="font-size:19px;font-weight:600;letter-spacing:-0.02em;margin-top:16px">No Lumia Order device connected yet.</h2>
                 <p style="font-size:15px;color:#3D1C31;margin-top:6px;max-width:380px;line-height:1.5">Connect a device so orders can appear and print inside the restaurant.</p>
                 <button type="button" onClick="{{ startPair }}" style="margin-top:20px;height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px" style-hover="background:linear-gradient(90deg,#F2446A,#B52EEA)">Connect device</button>
               </div>
             </sc-if>
+            <sc-if value="{{ termShow }}" hint-placeholder-val="{{ false }}"><article style="border:1px solid #F0E4E8;border-radius:16px;padding:18px 20px;display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start"><img src="/brand/terminal.png" alt="Lumia Order Terminal" width="72" height="126" style="flex:none;display:block;width:72px;height:126px;object-fit:cover;border-radius:12px;background:#fff;border:1px solid #F0E4E8"><div style="flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:10px"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px"><h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Lumia Order Terminal</h2><span style="display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:500;background:{{ termPillBg }};color:{{ termPillFg }}">{{ termLabel }}</span></div><p style="font-size:14px;color:#3D1C31;line-height:1.5">{{ termMsg }}</p><dl style="display:flex;flex-direction:column"><sc-for list="{{ termRows }}" as="r" hint-placeholder-count="0"><div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid #F3EEF1;font-size:14px"><dt style="color:#8A5A6E">{{ r.k }}</dt><dd style="font-weight:500;text-align:end">{{ r.v }}</dd></div></sc-for></dl></div></article></sc-if>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:16px">
               <sc-for list="{{ deviceCards }}" as="v" hint-placeholder-count="0">
                 <article style="border:1px solid #F0E4E8;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">

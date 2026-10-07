@@ -1685,11 +1685,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                   {vm.noDevicesIdle && (
                     <>
                     <div style={S("border-radius:20px;background:#FAF6FA;padding:48px 24px;display:flex;flex-direction:column;align-items:center;text-align:center")}>
-                      <span style={S("width:56px;height:56px;border-radius:16px;background:#FDEAF2;display:flex;align-items:center;justify-content:center")}>
-                        <svg width="26" height="26" viewBox="0 0 20 20" fill="none">
-                          <path d="M5 8V3h10v5M5 14H3V8h14v6h-2M6 11h8v6H6z" stroke="#C93DFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </span>
+                      <img src="/brand/terminal.png" alt="Lumia Order Terminal" width="72" height="126" style={S("display:block;width:72px;height:126px;object-fit:cover;border-radius:12px;background:#fff")} />
                       <h2 style={S("font-size:19px;font-weight:600;letter-spacing:-0.02em;margin-top:16px")}>
                         No Lumia Order device connected yet.
                       </h2>
@@ -1700,6 +1696,40 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         Connect device
                       </button>
                     </div>
+                    </>
+                  )}
+                  {vm.termShow && (
+                    <>
+                    <article style={S("border:1px solid #F0E4E8;border-radius:16px;padding:18px 20px;display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start")}>
+                      <img src="/brand/terminal.png" alt="Lumia Order Terminal" width="72" height="126" style={S("flex:none;display:block;width:72px;height:126px;object-fit:cover;border-radius:12px;background:#fff;border:1px solid #F0E4E8")} />
+                      <div style={S("flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:10px")}>
+                        <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px")}>
+                          <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                            Lumia Order Terminal
+                          </h2>
+                          <span style={S(`display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:500;background:${vm.termPillBg};color:${vm.termPillFg}`)}>
+                            {vm.termLabel}
+                          </span>
+                        </div>
+                        <p style={S("font-size:14px;color:#3D1C31;line-height:1.5")}>
+                          {vm.termMsg}
+                        </p>
+                        <dl style={S("display:flex;flex-direction:column")}>
+                          {(vm.termRows as any[]).map((r: any, __i: number) => (
+                            <Fragment key={__i}>
+                              <div style={S("display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid #F3EEF1;font-size:14px")}>
+                                <dt style={S("color:#8A5A6E")}>
+                                  {r.k}
+                                </dt>
+                                <dd style={S("font-weight:500;text-align:end")}>
+                                  {r.v}
+                                </dd>
+                              </div>
+                            </Fragment>
+                          ))}
+                        </dl>
+                      </div>
+                    </article>
                     </>
                   )}
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:16px")}>

@@ -65,6 +65,8 @@ class SettingsApp extends React.Component<Props, any> {
 
   componentDidMount() {
     this.measure(true);
+    // The terminal this restaurant ordered (shown on the Devices page with its delivery status).
+    api(`/api/v1/businesses/${this.props.businessId}/subscription`).then((r: any) => { if (r && (r.terminals ?? 0) > 0) this.setState({ termOrder: r }); }).catch(() => undefined);
     window.addEventListener('resize', this.onResize);
     history.replaceState(null, '', location.pathname + location.search + '#' + this.state.page);
   }
@@ -251,6 +253,10 @@ class SettingsApp extends React.Component<Props, any> {
 
     // devices
     const deviceCards: any[] = [];
+    const term = s.termOrder, STAGE = ['Order placed', 'Preparing', 'Shipped', 'Out for delivery', 'Delivered'], STAGE_MSG = ['We received your order and will start preparing your terminal shortly.', 'Your terminal is being prepared and tested before it ships.', 'Your terminal is on its way.', 'Your terminal is out for delivery today. Someone at the restaurant will need to receive it.', 'Your terminal was delivered. Turn it on and sign in with your Lumia number to start receiving orders.'];
+    const tStage = Math.max(0, Math.min(4, term?.terminal?.stage ?? 0)), tDay = (v?: string) => (v ? new Date(v).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
+    const termVm = { termShow: !!term, termLabel: STAGE[tStage], termMsg: STAGE_MSG[tStage], termPillBg: tStage >= 4 ? '#E4F4EC' : tStage >= 2 ? '#F1E6FF' : '#FFF1DC', termPillFg: tStage >= 4 ? '#16704A' : tStage >= 2 ? '#6A1FA0' : '#8A4B00',
+      termRows: term ? [['Quantity', String(term.terminals)], ['Delivery address', term.terminalAddress || '–'], ['Ordered', tDay(term.startedAt)], ...(tStage >= 4 ? [['Delivered on', tDay(term.terminal?.dates?.[4])]] : []), ...(term.terminal?.tracking && tStage >= 2 && tStage < 4 ? [['Tracking number', term.terminal.tracking]] : [])].map(([k, v]) => ({ k, v })) : [] };
 
     // save bar
     const dirty = this.dirtyOf(s, s.page);
@@ -315,7 +321,7 @@ class SettingsApp extends React.Component<Props, any> {
       hBranchSeg: d.branches.filter(b => H.per[b.id]).map(b => chip(b.name, H.sel === b.id, () => setH(x => { x.sel = b.id; }))),
       hm: { closed: H.mode === 'closed', rows: H.mode !== 'closed' }, hf: bind('hours', ['closedUntil']), dayRows, hoursBubbles,
       menuSteps, menuStats, menuNotApproved: menuLevel < 3, menuPrimary, menuLive: menuLevel === 4,
-      hasDevices: false, pairing: false, noDevicesIdle: true, deviceCards,
+      hasDevices: false, pairing: false, noDevicesIdle: !term, deviceCards, ...termVm,
       startPair: () => this.flash('Order devices are coming soon.'), cancelPair: () => {}, finishPair: () => {},
       dashUrl: `/dashboard${this.props.query}`, menuUrl: `/dashboard?page=menu&businessId=${this.props.businessId}`,
       codSw: sw(PV.cod, () => this.upd('pay', x => { x.cod = !x.cod; })), noCod: !PV.cod,
