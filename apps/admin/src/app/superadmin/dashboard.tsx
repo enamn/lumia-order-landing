@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { authClient } from "@/lib/auth-client";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const ink = "#1A0815", muted = "#8A5A6E", line = "#F0E4E8", grad = "linear-gradient(90deg,#FF5577,#C93DFF)";
@@ -234,13 +235,16 @@ const NAV: [string, string, () => React.ReactElement][] = [
 export default function SuperAdminDashboard() {
   const [tab, setTab] = React.useState("analytics");
   React.useEffect(() => { const read = () => { const h = window.location.hash.slice(1); if (NAV.some(n => n[0] === h)) setTab(h); }; read(); window.addEventListener("hashchange", read); return () => window.removeEventListener("hashchange", read); }, []);
+  const [out, setOut] = React.useState(false);
+  const signOut = async () => { setOut(true); try { await authClient.signOut(); } finally { window.location.assign("/login"); } };
   const go = (id: string) => { setTab(id); try { history.replaceState(null, "", `#${id}`); } catch { /* ignore */ } };
   const Body = (NAV.find(n => n[0] === tab) ?? NAV[0])[2];
   return (
     <div className="sa-shell" style={{ minHeight: "100vh", background: "#FBF7F9", color: ink, fontFamily: "system-ui,-apple-system,Segoe UI,Roboto,sans-serif" }}>
-      <style>{`.sa-shell{display:flex}.sa-side{width:230px;flex:none;background:#fff;border-inline-end:1px solid ${line};padding:22px 14px;position:sticky;top:0;height:100vh;box-sizing:border-box}.sa-main{flex:1;min-width:0;padding:28px clamp(16px,3vw,36px) 60px;max-width:1200px}.sa-nav{display:flex;flex-direction:column;gap:4px;margin-top:18px}.sa-nav button{text-align:start;border:0;background:none;height:40px;padding:0 12px;border-radius:10px;font:inherit;font-size:15px;color:${ink};cursor:pointer}.sa-nav button[aria-current=page]{background:#FBF1FF;font-weight:600;color:#7A1FB0}@media(max-width:760px){.sa-shell{display:block}.sa-side{width:auto;height:auto;position:static;border-inline-end:0;border-bottom:1px solid ${line};padding:14px 12px}.sa-nav{flex-direction:row;overflow-x:auto;margin-top:10px}.sa-nav button{white-space:nowrap}}`}</style>
+      <style>{`.sa-shell{display:flex}.sa-side{width:230px;flex:none;background:#fff;border-inline-end:1px solid ${line};padding:22px 14px;position:sticky;top:0;height:100vh;box-sizing:border-box}.sa-main{flex:1;min-width:0;padding:28px clamp(16px,3vw,36px) 60px;max-width:1200px}.sa-nav{display:flex;flex-direction:column;gap:4px;margin-top:18px;height:calc(100vh - 120px)}.sa-nav button{text-align:start;border:0;background:none;height:40px;padding:0 12px;border-radius:10px;font:inherit;font-size:15px;color:${ink};cursor:pointer}.sa-nav .sa-out{margin-top:auto;color:#B4233B;border-top:1px solid ${line};border-radius:0;padding-top:0}.sa-nav button[aria-current=page]{background:#FBF1FF;font-weight:600;color:#7A1FB0}@media(max-width:760px){.sa-shell{display:block}.sa-side{width:auto;height:auto;position:static;border-inline-end:0;border-bottom:1px solid ${line};padding:14px 12px}.sa-nav{flex-direction:row;overflow-x:auto;margin-top:10px;height:auto}.sa-nav .sa-out{margin-top:0;border-top:0;margin-inline-start:auto}.sa-nav button{white-space:nowrap}}`}</style>
       <aside className="sa-side"><div style={{ fontWeight: 700, fontSize: 17, letterSpacing: "-0.02em" }}>Lumia Order</div><div style={{ fontSize: 13, fontWeight: 600, color: "#C0284F" }}>Super admin</div>
-        <nav className="sa-nav" aria-label="Super admin">{NAV.map(([id, label]) => <button key={id} type="button" aria-current={tab === id ? "page" : undefined} onClick={() => go(id)}>{label}</button>)}</nav></aside>
+        <nav className="sa-nav" aria-label="Super admin">{NAV.map(([id, label]) => <button key={id} type="button" aria-current={tab === id ? "page" : undefined} onClick={() => go(id)}>{label}</button>)}
+          <button type="button" className="sa-out" onClick={signOut} disabled={out}>{out ? "Logging out…" : "Log out"}</button></nav></aside>
       <main className="sa-main"><Body /></main>
     </div>
   );
