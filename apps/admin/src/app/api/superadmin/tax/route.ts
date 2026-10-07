@@ -4,14 +4,14 @@ import { jsonBody } from "@/server/api-body";
 import { AppError } from "@/server/errors";
 import { db } from "@/server/db";
 import { isSuperAdmin } from "@/server/superadmin";
-import { addPolicy, getSupplier, listPolicies, pendingVatReviews, reviewVat, setSupplierRegistration } from "@/modules/tax/service";
+import { turnoverReport, addPolicy, getSupplier, listPolicies, pendingVatReviews, reviewVat, setSupplierRegistration } from "@/modules/tax/service";
 export const dynamic = "force-dynamic";
 const guard = async (userId: string) => { if (!(await isSuperAdmin(userId))) throw new AppError("NOT_FOUND", "Endpoint not found.", 404); };
 export async function GET(request: Request) {
   return api(request, async userId => {
     await guard(userId);
-    const [supplier, policies, pending, audit] = await Promise.all([getSupplier(), listPolicies(), pendingVatReviews(), db.taxAudit.findMany({ orderBy: { at: "desc" }, take: 30 })]);
-    return { supplier, policies, pending, audit: audit.map(a => ({ at: a.at, actorId: a.actorId, entity: a.entity, action: a.action, reason: a.reason })) };
+    const [supplier, policies, pending, audit, turnover] = await Promise.all([getSupplier(), listPolicies(), pendingVatReviews(), db.taxAudit.findMany({ orderBy: { at: "desc" }, take: 30 }), turnoverReport()]);
+    return { supplier, policies, pending, turnover, audit: audit.map(a => ({ at: a.at, actorId: a.actorId, entity: a.entity, action: a.action, reason: a.reason })) };
   });
 }
 // One endpoint for the three things a super admin does with tax: set Afkar's UAE registration, approve a policy, review a customer's VAT number.

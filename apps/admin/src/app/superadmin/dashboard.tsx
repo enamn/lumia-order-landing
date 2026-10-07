@@ -86,6 +86,10 @@ function Tax() {
           <button type="button" disabled={busy} onClick={setRegistration} style={{ marginInlineStart: 10, fontSize: 13, fontWeight: 600, textDecoration: "underline", color: "#C0284F", cursor: "pointer" }}>Change</button>
           <div style={{ fontSize: 12, color: muted, marginTop: 4 }}>Only enter this when the registration really exists. A threshold alert is not a registration.</div>
         </div>
+        <div style={{ fontSize: 14, marginBottom: 14, padding: "10px 12px", borderRadius: 12, background: d.turnover.level === "OK" ? "#F6EEF2" : d.turnover.level === "WARNING" ? "#FFF1DC" : "#FDECEC" }}>
+          <b>UAE VAT threshold (rolling 12 months):</b> AED {(d.turnover.aedRollingMinor / 100).toLocaleString("en-US")} of AED 375,000 ({d.turnover.percentOfThreshold}%) · next-12-months estimate AED {(d.turnover.aedForecastMinor / 100).toLocaleString("en-US")}
+          <div style={{ fontSize: 13, color: muted, marginTop: 4 }}>{d.turnover.note}{d.turnover.byCurrency.filter((c: any) => c.currency !== "AED").map((c: any) => ` Also invoiced: ${c.currency} ${(c.total / (["OMR", "BHD", "KWD"].includes(c.currency) ? 1000 : 100)).toLocaleString("en-US")}.`).join("")}</div>
+        </div>
         <div style={{ fontSize: 14, marginBottom: 14 }}><b>Approved policies</b> (needed for foreign sales once Afkar is registered)
           <button type="button" disabled={busy} onClick={addPolicy} style={{ marginInlineStart: 10, fontSize: 13, fontWeight: 600, textDecoration: "underline", color: "#C0284F", cursor: "pointer" }}>Add</button>
           {d.policies.length ? d.policies.map((p: any) => <div key={p.id} style={{ fontSize: 13, color: muted }}>{p.country} · {p.uaeTreatment} · from {day(p.effectiveFrom)} · {p.version}</div>) : <div style={{ fontSize: 13, color: muted }}>None.</div>}</div>

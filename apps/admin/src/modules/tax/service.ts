@@ -112,3 +112,22 @@ export async function requireTaxEligible(businessId: string, now = new Date()): 
   }
   return d;
 }
+
+// ---- turnover monitoring (for the owner and the accountant) ----
+// Registering for UAE VAT is mandatory once taxable supplies pass AED 375,000 over a rolling 12 months (and expected to within 30 days), whatever the stored registration status says.
+// This is a monitor, never a switch: it does not register anyone and does not start charging tax. Amounts are Lumia invoices before tax, by currency; only AED counts towards the threshold here
+// (other currencies are shown so the accountant can convert them), and food-order volume of restaurants is never part of it.
+export const VAT_THRESHOLD_AED_MINOR = 37_500_000, VAT_WARN_RATIO = 0.8;
+export async function turnoverReport(now = new Date()) {
+  const from = new Date(now.getTime() - 365 * 86_400_000), recent = new Date(now.getTime() - 90 * 86_400_000);
+  const rows = await db.billingInvoice.findMany({ where: { createdAt: { gte: from, lte: now }, status: "PAID" }, select: { subtotalMinor: true, currency: true, createdAt: true, kind: true } });
+  const byCurrency = new Map<string, { total: number; last90: number; invoices: number }>();
+  for (const r of rows) { const e = byCurrency.get(r.currency) ?? { total: 0, last90: 0, invoices: 0 }; e.total += r.subtotalMinor; e.invoices++; if (r.createdAt >= recent) e.last90 += r.subtotalMinor; byCurrency.set(r.currency, e); }
+  const aed = byCurrency.get("AED") ?? { total: 0, last90: 0, invoices: 0 }, forecast = Math.round(aed.last90 * (365 / 90)); // the last three months continued for a year
+  const ratio = aed.total / VAT_THRESHOLD_AED_MINOR, forecastRatio = forecast / VAT_THRESHOLD_AED_MINOR;
+  const level = ratio >= 1 ? "REGISTER_NOW" : ratio >= VAT_WARN_RATIO || forecastRatio >= 1 ? "WARNING" : "OK";
+  const supplier = await getSupplier(), registered = !!uaeRegistrationNow(supplier.registrations.map(toReg), now);
+  return { from: from.toISOString(), to: now.toISOString(), thresholdAedMinor: VAT_THRESHOLD_AED_MINOR, aedRollingMinor: aed.total, aedForecastMinor: forecast, percentOfThreshold: Math.round(ratio * 1000) / 10, level, alreadyRegistered: registered,
+    byCurrency: [...byCurrency.entries()].map(([currency, v]) => ({ currency, ...v })), note: level === "OK" ? "Below the threshold." : registered ? "Over the threshold, and a UAE registration is recorded." : "Close to or over the AED 375,000 registration threshold: speak to your accountant. Registration is a legal obligation even if the stored status here is still inactive." };
+}
+const uaeRegistrationNow = (regs: SupplierRegistration[], now: Date) => regs.find(r => r.country === "AE" && r.state === "ACTIVE" && !!r.number.trim() && r.effectiveFrom !== null && r.effectiveFrom <= now && (!r.effectiveTo || r.effectiveTo >= now)) ?? null;
