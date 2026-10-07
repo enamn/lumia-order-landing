@@ -195,14 +195,18 @@ export async function applySession(businessId: string, session: SessionSummary, 
     return { applied: true, kind: "card" as const };
   }
   if (kind !== "signup") return { applied: false, reason: "UNKNOWN_KIND" as const };
-  const plan = session.metadata.plan as PlanId, billing = session.metadata.billing as Billing, terminals = Number(session.metadata.terminals) || 1;
+  const plan = session.metadata.plan as PlanId, billing = session.metadata.billing as Billing, terminals = session.metadata.terminals === undefined ? 1 : Number(session.metadata.terminals); // sessions opened before terminals could be left out always had one
+  if (!Number.isInteger(terminals) || terminals < 0 || terminals > 10) throw new AppError("VALIDATION_FAILED", "Unknown terminal count.", 400);
   if (!(plan in PLANS) || (billing !== "monthly" && billing !== "yearly")) throw new AppError("VALIDATION_FAILED", "Unknown plan.", 400);
   const paidRate = Number(session.metadata.taxRate ?? "5"); // sessions opened before the tax decision existed were charged 5%
   const paidCurrency = session.metadata.currency || "AED", book: PriceBook = paidCurrency === "AED" ? UAE_BOOK : await priceBookForBusiness(businessId, now);
   const quote = quoteSignup(plan, billing, terminals, Number.isFinite(paidRate) ? paidRate : 5, book), taxSnapshot = await taxDecisionFor(businessId, now);
   if (book.currency !== paidCurrency || session.amountTotalMinor !== quote.totalMinor) { console.error(JSON.stringify({ level: "error", code: "BILLING_AMOUNT_MISMATCH", expected: quote.totalMinor, got: session.amountTotalMinor })); throw new AppError("AMOUNT_MISMATCH", "The payment did not match the plan. Please contact Lumia.", 409); }
   const end = addPeriod(now, billing), card = await cardOf(session.paymentMethodId);
-  const data = { plan, billing, status: "ACTIVE", terminals, terminalAddress: session.metadata.terminalAddress || null, terminal: { stage: 0, dates: [now.toISOString()] } as unknown as Prisma.InputJsonValue,
+  // Buying again without a terminal (a renewal after the plan ended, or software only) never replaces the terminal the restaurant already has.
+  const keepTerminal = terminals === 0 && !!existing && (existing.terminals ?? 0) > 0;
+  const terminalData = keepTerminal ? {} : terminals > 0 ? { terminals, terminalAddress: session.metadata.terminalAddress || null, terminal: { stage: 0, dates: [now.toISOString()] } as unknown as Prisma.InputJsonValue } : { terminals: 0, terminalAddress: null };
+  const data = { plan, billing, status: "ACTIVE", ...terminalData,
     stripeCustomerId: session.customerId ?? null, stripePaymentMethodId: session.paymentMethodId ?? null, ...(card ? { card: card as unknown as Prisma.InputJsonValue } : {}), currentPeriodStart: now, currentPeriodEnd: end, nextChargeAt: end, cancelAtPeriodEnd: false, pendingPlan: null, pendingBilling: null, failedAttempts: 0, lastFailure: null, startedAt: now };
   const sub = existing ? await db.subscription.update({ where: { id: existing.id }, data: { ...data, processedSessions: { push: session.sessionId } } }) : await db.subscription.create({ data: { businessId, ...data, processedSessions: [session.sessionId] } });
   await writeInvoice(sub, "SIGNUP", quote, { start: now, end }, session.paymentIntentId, now, { ...taxSnapshot, ratePercent: quote.subtotalMinor ? Math.round(quote.vatMinor / quote.subtotalMinor * 10000) / 100 : 0 }, book.currency);
