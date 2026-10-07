@@ -19,7 +19,7 @@ Source: `~/Desktop/Lumia_Order_GCC_Implementation_Brief_for_Claude.md`. Built in
 ## Not done yet (brief sections)
 - **Waiting on you / outside code:** confirm with Stripe which of SAR, OMR, BHD, QAR, KWD the UAE account can charge (I need your OK to use the Stripe key), the real prices for each country, Afkar's actual UAE VAT registration status, your accountant's view on withholding/retention and the policies for foreign sales, a new Resend key, and the super admin phone number.
 - **Restaurant food-order VAT: not needed (decision, 7 Oct 2026).** Lumia only shows the prices the restaurant puts in its menu and handles no restaurant VAT or payments. The only VAT Lumia handles is on the restaurant's subscription to Lumia (done in point 5).
-- **Operations:** distance-tier delivery rules with explicit boundaries and `distance_method`, analytics grouped by currency, terminal tickets in 3-decimal currencies/Arabic.
+- **Operations:** analytics grouped by currency, terminal tickets in 3-decimal currencies/Arabic.
 - **Refunds and credit notes** in the original currency, **withholding tax tracking**, private **evidence file upload** (today an evidence reference text).
 - **Existing-data migration check** of the live UAE restaurant (defaults already AE/AED/Asia/Dubai; no data was changed).
 - **Landing page:** still UAE-oriented copy; the GCC landing text and analytics deploy need the `main` merge.
@@ -28,3 +28,4 @@ Source: `~/Desktop/Lumia_Order_GCC_Implementation_Brief_for_Claude.md`. Built in
 - **Time zones: done (decision, 7 Oct 2026).** One time zone per country (UAE/Oman Dubai/Muscat, Saudi/Kuwait/Bahrain/Qatar +3), no per-branch zone. Restaurants take it from their country; reminder emails and offer dates now use it. Platform analytics days stay on Dubai time.
 - **Promo-code currency: not needed (decision, 7 Oct 2026).** A restaurant and all its branches are in one country, so a code always has one currency.
 - **Terminals ship to all GCC countries (decision, 7 Oct 2026).** To do: terminal price per market (today `book.terminal` exists only for the UAE, so terminals are sold only there), shipping is manual for now (no supplier; the subscription already stores the delivery address and tracking stage), and ticket printing in 3-decimal currencies and Arabic when terminal printing is built.
+- **Delivery: already built for all GCC markets (checked 7 Oct 2026).** By area (region/city + area, per-rule fee, minimum, ETA, branch) and by distance from the nearest branch with a pin (straight-line km ranges, `from <= km < to`, overlaps rejected), in the restaurant's currency. Only open question: road distance instead of straight line (needs a maps routing call).
