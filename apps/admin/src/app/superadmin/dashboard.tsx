@@ -229,8 +229,46 @@ function Analytics() {
   );
 }
 
+const STAGES = ["Order placed", "Preparing", "Shipped", "Out for delivery", "Delivered"];
+const STAGE_BG = ["#FFF1DC", "#FFF1DC", "#F1E6FF", "#F1E6FF", "#E4F4EC"];
+function Terminals() {
+  const [rows, setRows] = React.useState<any[] | null>(null), [err, setErr] = React.useState(""), [ok, setOk] = React.useState(""), [busy, setBusy] = React.useState(""), [edit, setEdit] = React.useState<Record<string, { stage: number; tracking: string }>>({}), [filter, setFilter] = React.useState("open");
+  const load = () => fetch("/api/superadmin/terminals", { cache: "no-store" }).then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error?.message ?? "Could not load."); const d = (j.data ?? j).orders as any[]; setRows(d); setEdit({}); }).catch(e => setErr(e.message));
+  React.useEffect(() => { load(); }, []);
+  const save = async (o: any) => {
+    const e = edit[o.id]; if (!e) return; setBusy(o.id); setErr(""); setOk("");
+    try { const r = await fetch("/api/superadmin/terminals", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: o.id, stage: e.stage, tracking: e.tracking }) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error?.message ?? "Could not save."); setOk(`${o.restaurant}: ${STAGES[e.stage]}.`); await load(); }
+    catch (x: any) { setErr(x.message); }
+    setBusy("");
+  };
+  const shown = (rows ?? []).filter(o => filter === "all" || (filter === "open" ? o.stage < 4 : o.stage === 4));
+  const date = (v: string) => new Date(v).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return (
+    <section style={card}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 6 }}><h2 style={{ ...h2, margin: 0 }}>Terminal orders</h2>
+        <div role="tablist" style={{ display: "flex", gap: 6 }}>{[["open", "To deliver"], ["done", "Delivered"], ["all", "All"]].map(([k, l]) => <button key={k} type="button" role="tab" aria-selected={filter === k} onClick={() => setFilter(k!)} style={{ ...btnSm, height: 32, background: filter === k ? "#FBF1FF" : "#fff", borderColor: filter === k ? "#C93DFF" : "#ECD9E0" }}>{l}</button>)}</div></div>
+      <div style={{ fontSize: 13, color: muted, marginBottom: 12 }}>Every subscription that bought a terminal. Changing the status updates what the restaurant sees on its Overview page. Add the courier tracking number when it ships.</div>
+      {err && <div role="alert" style={{ color: "#B4233B", fontSize: 14, marginBottom: 8 }}>{err}</div>}
+      {ok && <div role="status" style={{ color: "#16704A", fontSize: 14, marginBottom: 8 }}>{ok}</div>}
+      {!rows && !err && <div style={{ color: muted }}>Loading…</div>}
+      {rows && <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+        <thead><tr style={{ textAlign: "left", color: muted }}>{["Restaurant", "Qty", "Deliver to", "Ordered", "Status", "Tracking", ""].map(h => <th key={h} style={{ padding: "6px 12px 8px 0", fontWeight: 500, whiteSpace: "nowrap" }}>{h}</th>)}</tr></thead>
+        <tbody>{shown.map(o => { const e = edit[o.id] ?? { stage: o.stage, tracking: o.tracking }, dirty = !!edit[o.id] && (e.stage !== o.stage || e.tracking !== o.tracking); return (
+          <tr key={o.id} style={{ borderTop: `1px solid ${line}`, verticalAlign: "top" }}>
+            <td style={{ padding: "10px 12px 10px 0", minWidth: 150 }}><div style={{ fontWeight: 600 }}>{flag(o.country)} {o.restaurant}</div><div style={{ fontSize: 12, color: muted }}>{o.phone} · {o.plan}{o.status !== "ACTIVE" ? ` · ${o.status.toLowerCase()}` : ""}</div></td>
+            <td style={{ padding: "10px 12px 10px 0" }}>{o.quantity}</td>
+            <td style={{ padding: "10px 12px 10px 0", minWidth: 200, maxWidth: 280 }}>{o.address || <span style={{ color: muted }}>No address</span>}</td>
+            <td style={{ padding: "10px 12px 10px 0", whiteSpace: "nowrap" }}>{date(o.placedAt)}</td>
+            <td style={{ padding: "10px 12px 10px 0" }}><select aria-label={`Status for ${o.restaurant}`} value={e.stage} onChange={x => setEdit(v => ({ ...v, [o.id]: { ...e, stage: Number(x.target.value) } }))} style={{ height: 36, borderRadius: 10, border: "1.5px solid #ECD9E0", padding: "0 8px", background: STAGE_BG[e.stage], fontSize: 14 }}>{STAGES.map((n, i) => <option key={n} value={i}>{n}</option>)}</select></td>
+            <td style={{ padding: "10px 12px 10px 0" }}><input aria-label={`Tracking for ${o.restaurant}`} value={e.tracking} maxLength={80} placeholder={e.stage >= 2 ? "Tracking number" : "–"} onChange={x => setEdit(v => ({ ...v, [o.id]: { ...e, tracking: x.target.value } }))} style={{ width: 150, height: 36, borderRadius: 10, border: "1.5px solid #ECD9E0", padding: "0 10px", fontSize: 14 }} /></td>
+            <td style={{ padding: "10px 0" }}><button type="button" disabled={!dirty || busy === o.id} onClick={() => save(o)} style={{ ...btnSm, border: 0, color: "#fff", background: grad, opacity: dirty ? 1 : 0.4 }}>{busy === o.id ? "Saving…" : "Save"}</button></td>
+          </tr>); })}
+          {!shown.length && <tr><td colSpan={7} style={{ padding: "14px 0", color: muted }}>{rows.length ? "Nothing in this view." : "No terminal orders yet."}</td></tr>}</tbody></table></div>}
+    </section>
+  );
+}
 const NAV: [string, string, () => React.ReactElement][] = [
-  ["analytics", "Analytics", () => <Analytics />], ["prices", "Plan prices", () => <Prices />], ["markets", "Markets", () => <Markets />], ["tax", "Tax and VAT", () => <Tax />],
+  ["analytics", "Analytics", () => <Analytics />], ["prices", "Plan prices", () => <Prices />], ["terminals", "Terminal orders", () => <Terminals />], ["markets", "Markets", () => <Markets />], ["tax", "Tax and VAT", () => <Tax />],
 ];
 export default function SuperAdminDashboard() {
   const [tab, setTab] = React.useState("analytics");
