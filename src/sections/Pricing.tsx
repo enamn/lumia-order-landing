@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Terminal } from '../components/Terminal';
 import { PLANS, SIGNUP_URL, TERMINAL_PRICES, type Billing, type Plan } from '../data';
+import { money, usePriceInfo, type PriceInfo } from '../pricing';
 
 export function Pricing() {
   const [billing, setBilling] = useState<Billing>('yearly');
+  const info = usePriceInfo();
 
   return (
     <section id="pricing" className="section section--soft">
@@ -23,12 +25,12 @@ export function Pricing() {
               </button>
             </div>
             <div className="muted" style={{ fontSize: 14 }}>0% commission on orders · AI ordering included, subject to fair-use terms</div>
-            <div className="muted" style={{ fontSize: 14, marginTop: 6 }}>Prices in UAE dirhams (AED). Saudi Arabia, Oman, Bahrain, Qatar and Kuwait: local-currency plans are coming soon.</div>
+            <div className="muted" style={{ fontSize: 14, marginTop: 6 }}>{priceNote(info)}</div>
           </div>
         </div>
 
         <div className="grid" style={{ ['--min' as string]: '320px', gap: 16, marginTop: 'clamp(32px,4vw,48px)', alignItems: 'stretch' }}>
-          {PLANS.map((p) => <PlanCard key={p.name} plan={p} billing={billing} />)}
+          {PLANS.map((p) => <PlanCard key={p.name} plan={p} billing={billing} info={info} />)}
         </div>
 
         <div className="grid" style={{ ['--min' as string]: '300px', marginTop: 16, background: '#fff', border: '1px solid var(--line)', borderRadius: 24, padding: 'clamp(24px,3vw,32px)', gap: '28px 48px', alignItems: 'start' }}>
@@ -82,8 +84,19 @@ export function Pricing() {
   );
 }
 
-function PlanCard({ plan, billing }: { plan: Plan; billing: Billing }) {
-  const { price } = plan;
+// What the note under the toggle says: where the prices come from, and what is not open yet.
+function priceNote(info: PriceInfo | null) {
+  if (info?.local) return `Prices in ${info.currency} for ${info.countryName}. Terminal prices are in UAE dirhams (AED).${info.paidOpen ? '' : ` Paid plans in ${info.countryName} open soon: you can start your free trial now.`}`;
+  if (info && info.detected && info.detected !== 'AE' && info.countryName !== 'United Arab Emirates') return `Prices in UAE dirhams (AED). Local-currency plans for ${info.countryName} are coming soon.`;
+  return 'Prices in UAE dirhams (AED). Saudi Arabia, Oman, Bahrain, Qatar and Kuwait: local-currency plans are coming soon.';
+}
+
+function PlanCard({ plan, billing, info }: { plan: Plan; billing: Billing; info: PriceInfo | null }) {
+  // Amounts in the visitor's currency when approved prices exist for it; otherwise the AED list price.
+  const key = plan.name.toLowerCase() as 'starter' | 'plus' | 'pro', local = info?.local ? info.plans[key] : null;
+  const cur = local && info ? info.currency : 'AED', dec = local && info ? info.decimals : 2;
+  const m = local ? local.monthly : plan.amounts.month, y = local ? local.yearly : plan.amounts.year;
+  const price = { month: money(m, cur, dec), year: money(y, cur, dec), strike: money(m * 12, cur, dec), perMonth: money(Math.round(y / 12), cur, dec) };
   return (
     <div className={`plan${plan.highlight ? ' gradient-border' : ''}`}>
       <div className="row-between" style={{ alignItems: 'center', gap: 8 }}>

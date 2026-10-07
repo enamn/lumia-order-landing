@@ -32,7 +32,7 @@ export type Plan = {
   features: string[];
   cta: string;
   highlight?: string;
-  price: { month: string; year: string; strike: string; perMonth: string };
+  amounts: { month: number; year: number }; // list price in AED; the pricing section shows the visitor's own currency when it has approved prices
 };
 
 export const PLANS: Plan[] = [
@@ -54,7 +54,7 @@ export const PLANS: Plan[] = [
       '0% commission on orders',
     ],
     cta: 'Start free',
-    price: { month: 'AED 149', year: 'AED 1,490', strike: 'AED 1,788', perMonth: 'AED 124' },
+    amounts: { month: 149, year: 1490 },
   },
   {
     name: 'Plus',
@@ -69,7 +69,7 @@ export const PLANS: Plan[] = [
       '0% commission on orders',
     ],
     cta: 'Start with Plus',
-    price: { month: 'AED 249', year: 'AED 2,490', strike: 'AED 2,988', perMonth: 'AED 208' },
+    amounts: { month: 249, year: 2490 },
   },
   {
     name: 'Pro',
@@ -87,7 +87,7 @@ export const PLANS: Plan[] = [
       '0% commission on orders',
     ],
     cta: 'Start with Pro',
-    price: { month: 'AED 399', year: 'AED 3,990', strike: 'AED 4,788', perMonth: 'AED 333' },
+    amounts: { month: 399, year: 3990 },
   },
 ];
 
