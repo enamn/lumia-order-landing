@@ -15,7 +15,7 @@ export async function pageContext(businessId?: string) {
   const user = await requireUser();
   const businesses = await listBusinesses(user.id);
   const selected = businessId ?? businesses[0]?.id;
-  if (!selected) redirect("/onboarding");
+  if (!selected) redirect("/login"); // signed in without a restaurant: the login page continues at "create your restaurant"
   try { const business = await getBusiness(user.id, selected); return { user, business, businesses }; }
   catch (error) { if (error instanceof AppError && error.status === 404) notFound(); throw error; }
 }
