@@ -104,7 +104,7 @@ function PlanCard({ plan, billing, info }: { plan: Plan; billing: Billing; info:
   const cur = local && info ? info.currency : 'AED', dec = local && info ? info.decimals : 2;
   const m = local ? local.monthly : plan.amounts.month, y = local ? local.yearly : plan.amounts.year;
   // Prices in whole units show as such (KWD 209); only amounts with a fraction show decimals (KWD 12.9). The per-month price keeps the decimals it needs.
-  const frac = !Number.isInteger(m) || !Number.isInteger(y), scale = 10 ** dec, perMonth = frac ? Math.round((y / 12) * scale) / scale : Math.round(y / 12);
+  const frac = !Number.isInteger(m) || !Number.isInteger(y), scale = 100, perMonth = frac ? Math.round((y / 12) * scale) / scale : Math.round(y / 12);
   const M = (n: number) => <Money n={Math.round(n * scale) / scale} cur={cur} dec={dec} />;
   const price = { month: M(m), year: M(y), strike: M(m * 12), perMonth: M(perMonth) };
   return (
