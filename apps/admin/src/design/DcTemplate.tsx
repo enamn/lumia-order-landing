@@ -6,7 +6,7 @@ import { S } from "./style";
 export function DcTemplate({ vm }: { vm: any }) {
   return (
     <>
-      <div style={S(`min-height:100vh;min-height:100dvh;background:${vm.L.pageBg};background-color:#fff;display:flex;align-items:${vm.L.pageAlign};justify-content:center;padding:${vm.L.pagePad};font-family:'Geist','IBM Plex Sans Arabic',system-ui,sans-serif;color:#1A0815`)}>
+      <div style={S(`min-height:100vh;min-height:100dvh;background:${vm.L.pageBg};background-color:#fff;display:flex;align-items:${vm.L.pageAlign};justify-content:center;padding:${vm.L.pagePad};font-family:'Geist','Dirham-Sans','IBM Plex Sans Arabic',system-ui,sans-serif;color:#1A0815`)}>
         <div ref={vm.devRef} style={S(`width:${vm.L.devW};height:${vm.L.devH};min-height:${vm.L.devMinH};border-radius:${vm.L.devRadius};border:${vm.L.devBd};box-shadow:${vm.L.devShadow};overflow:${vm.L.devOv};background:${vm.L.devBg};transform:${vm.L.devTf};display:flex;flex-direction:column`)}>
           {vm.isFlow && (
             <>

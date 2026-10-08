@@ -6,7 +6,7 @@ import { S } from "./style";
 export function SettingsTemplate({ vm }: { vm: any }) {
   return (
     <>
-      <div ref={vm.rootRef} style={S(`height:${vm.rootH};display:flex;overflow:hidden;background:#fff;color:#1A0815;font-family:'Geist','IBM Plex Sans Arabic',system-ui,sans-serif`)}>
+      <div ref={vm.rootRef} style={S(`height:${vm.rootH};display:flex;overflow:hidden;background:#fff;color:#1A0815;font-family:'Geist','Dirham-Sans','IBM Plex Sans Arabic',system-ui,sans-serif`)}>
         {vm.showAside && (
           <>
           <aside style={S("flex:0 0 248px;border-right:1px solid #F0E4E8;display:flex;flex-direction:column;min-height:0")}>

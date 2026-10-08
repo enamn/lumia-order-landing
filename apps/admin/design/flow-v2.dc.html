@@ -7,12 +7,13 @@
 </head>
 <body>
 <x-dc>
+<!-- LUMIA-DIRHAM-FONT -->
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#fff;color:#1A0815;font-family:'Geist','IBM Plex Sans Arabic',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{background:#fff;color:#1A0815;font-family:'Geist','Dirham-Sans','IBM Plex Sans Arabic',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 a{color:#1A0815;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px}a:hover{color:#FF5577}
 button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 button:disabled{cursor:default}
@@ -30,7 +31,7 @@ input::placeholder{color:#B89AA8}
 @keyframes lo-pulse{0%,100%{transform:scale(.7);opacity:.6}50%{transform:scale(1);opacity:1}}
 </style>
 </helmet>
-<div style="min-height:100vh;min-height:100dvh;background:{{ L.pageBg }};background-color:#fff;display:flex;align-items:{{ L.pageAlign }};justify-content:center;padding:{{ L.pagePad }};font-family:'Geist','IBM Plex Sans Arabic',system-ui,sans-serif;color:#1A0815">
+<div style="min-height:100vh;min-height:100dvh;background:{{ L.pageBg }};background-color:#fff;display:flex;align-items:{{ L.pageAlign }};justify-content:center;padding:{{ L.pagePad }};font-family:'Geist','Dirham-Sans','IBM Plex Sans Arabic',system-ui,sans-serif;color:#1A0815">
 <div ref="{{ devRef }}" style="width:{{ L.devW }};height:{{ L.devH }};min-height:{{ L.devMinH }};border-radius:{{ L.devRadius }};border:{{ L.devBd }};box-shadow:{{ L.devShadow }};overflow:{{ L.devOv }};background:{{ L.devBg }};transform:{{ L.devTf }};display:flex;flex-direction:column">
 
 <sc-if value="{{ isFlow }}" hint-placeholder-val="{{ true }}">
