@@ -92,7 +92,7 @@ export function Footer() {
       </div>
       <div className="wrap footer__legal">
         <LegalLinks />
-        <span>A product by Afkar IO</span>
+        <span>Lumia Order is developed and operated by Afkar IO FZE LLC · <a href="mailto:partners@afkario.com">partners@afkario.com</a></span>
       </div>
     </footer>
   );
