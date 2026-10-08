@@ -467,7 +467,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           {it.n}
                                         </span>
                                         <label style={S(`display:flex;align-items:center;gap:4px;height:38px;padding:0 10px;border-radius:10px;border:1.5px solid ${it.bd};background:${it.bg};font-size:14px;color:#8A5A6E;flex:none`)}>
-                                          AED
+                                          {vm.curSign}
                                           <input type="text" inputMode="decimal" value={it.price} onChange={it.onPrice} aria-label={`${it.n} price`} style={S("width:44px;font-size:15px;color:#1A0815;text-align:end;font-variant-numeric:tabular-nums")} />
                                         </label>
                                       </div>

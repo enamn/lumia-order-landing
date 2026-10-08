@@ -12,7 +12,7 @@ import { MenuScope, type Scope } from "./MenuScope";
 import { EmailVerify } from "./EmailVerify";
 import { CountryPick } from "./CountryPick";
 import { StatusBanner } from "./StatusBanner";
-import { formatMoney, fromMinor, parseAmount, scaleOf, toMinor } from "@/modules/market/money";
+import { currencySign, formatMoneyUi, fromMinor, moneyUi, parseAmount, scaleOf, toMinor, withSign } from "@/modules/market/money";
 import { marketOf, isCountryCode, MARKETS } from "@/modules/market/countries";
 import { AccountMenu, PlanBadge } from "./AccountMenu";
 import { BillingPage } from "./BillingPage";
@@ -87,13 +87,13 @@ function toDesignOrder(o: any) {
 const SUB_PLANS = [
   { id: "starter", name: "Starter", desc: "For small restaurants and home kitchens starting with AI-powered WhatsApp ordering.", m: 149, y: 1490, sy: 1788, inc: "", feats: ["1 restaurant / branch", "1 WhatsApp Business number", "AI text ordering", "AI voice ordering", "Menu management", "Order dashboard", "Delivery zones and delivery fees", "Opening hours", "Basic customer history", "1 staff account", "Basic analytics", "0% commission on orders"] },
   { id: "plus", name: "Plus", desc: "For growing restaurants that need more staff access and better customer insights.", m: 249, y: 2490, sy: 2988, inc: "Everything in Starter, plus:", feats: ["Up to 3 branches with one shared menu", "Up to 3 staff accounts", "Full customer history", "Advanced analytics", "Promotions / customer campaigns", "Basic automation", "0% commission on orders"] },
-  { id: "pro", name: "Pro", desc: "For established restaurants and multi-branch operations.", m: 399, y: 3990, sy: 4788, inc: "Everything in Plus, plus:", feats: ["3 branches included (extra branches AED 99/month)", "A menu for all branches or one per branch", "Up to 10 staff accounts", "Advanced automation", "Multi-branch management", "Priority support", "Assisted onboarding", "0% commission on orders"] },
+  { id: "pro", name: "Pro", desc: "For established restaurants and multi-branch operations.", m: 399, y: 3990, sy: 4788, inc: "Everything in Plus, plus:", feats: ["3 branches included (extra branches for a monthly fee)", "A menu for all branches or one per branch", "Up to 10 staff accounts", "Advanced automation", "Multi-branch management", "Priority support", "Assisted onboarding", "0% commission on orders"] },
 ];
 const TERM: Record<string, number> = { starter: 549, plus: 499, pro: 399 };
 const LOCKS: Record<string, { id: string; tag: string; title: string; body: string; feats: string[]; cta: string }> = {
   customers: { id: "plus", tag: "Plus feature", title: "Customers is available on Plus and Pro", body: "See everyone who ordered from you on WhatsApp, what they ordered and how often they come back.", feats: ["Full customer history", "Advanced analytics", "Promotions / customer campaigns"], cta: "Upgrade to Plus" },
   campaigns: { id: "plus", tag: "Plus feature", title: "Campaigns are available on Plus and Pro", body: "Send offers and discount codes to your customers on WhatsApp, to everyone at once or to the customers you pick.", feats: ["Promotions / customer campaigns", "Full customer history", "Advanced analytics"], cta: "Upgrade to Plus" },
-  branches: { id: "pro", tag: "Pro feature", title: "Run more branches with Pro", body: "Starter includes 1 branch and Plus includes 3. Pro includes 3 and lets you add more for AED 99 a month each, with a menu for all branches or one per branch.", feats: ["3 branches included, add more any time", "A menu for all branches or one per branch", "Multi-branch management"], cta: "Upgrade to Pro" },
+  branches: { id: "pro", tag: "Pro feature", title: "Run more branches with Pro", body: "Starter includes 1 branch and Plus includes 3. Pro includes 3 and lets you add more for a monthly fee each, with a menu for all branches or one per branch.", feats: ["3 branches included, add more any time", "A menu for all branches or one per branch", "Multi-branch management"], cta: "Upgrade to Pro" },
 };
 
 declare global { interface Window { FB?: any; fbAsyncInit?: () => void } }
@@ -212,7 +212,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const inTab = (o: any, t: string) => (t === "done" ? o.st === "completed" || o.st === "cancelled" : o.st === t);
     const os: any[] = s.orders ?? [], q = s.ordQ.trim().toLowerCase();
     const match = (o: any) => String(o.id).includes(q.replace("#", "")) || o.name.toLowerCase().includes(q) || o.phone.replace(/\s/g, "").includes(q.replace(/\s/g, ""));
-    const cur0 = this.cur, money = (n: number) => formatMoney(toMinor(n, cur0), cur0);
+    const cur0 = this.cur, money = (n: number) => formatMoneyUi(toMinor(n, cur0), cur0);
     const ago = (o: any) => (o.min < 60 ? A(`${o.min} min ago`, `منذ ${o.min} د`) : A(`${Math.floor(o.min / 60)} h ago`, `منذ ${Math.floor(o.min / 60)} س`));
     const typeL = (o: any) => (o.type === "delivery" ? A("Delivery", "توصيل") : A("Pickup", "استلام"));
     const told = A("Customer notified on WhatsApp.", "تم إبلاغ العميل على واتساب.");
@@ -286,7 +286,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const fd = (x: Date) => x.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
     // What can be bought and in which currency comes from the server: the UAE list, or the prices approved for the restaurant's country (none yet = "coming soon").
     const pr = d?.prices ?? null, cur = pr?.currency ?? "AED", dec = pr?.decimals ?? 2, terminalOn = !d || (d.prices ? !!d.prices.terminal : !d.pricesUnavailable);
-    const money = (n: number) => `${cur} ${n.toLocaleString("en-US", { minimumFractionDigits: n % 1 ? dec : 0, maximumFractionDigits: dec })}`;
+    const money = (n: number) => moneyUi(n, cur);
     const yr = s.bill === "yearly", sel = SUB_PLANS.find(p => p.id === s.plan) || SUB_PLANS[1];
     const priceOf = (p: { id: string; m: number; y: number }, year: boolean): number | null => (pr ? pr.plans?.[p.id]?.[year ? "yearly" : "monthly"] ?? null : d?.pricesUnavailable ? null : year ? p.y : p.m);
     const tb = d?.prices?.terminalBook ?? { yearly: TERM, monthly: 599, extra: 599, regular: 699 }, tPrice = (id: string) => (yr ? tb.yearly[id] : tb.monthly), hasTerm = (d?.terminals ?? 0) > 0, ended = d?.access?.reason === "ended", qty = terminalOn ? (s.termQty ?? (hasTerm ? 0 : 1)) : 0, // a restaurant that already owns a terminal starts without another one
@@ -388,7 +388,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
         sendOffer: () => { this.setState({ page: "Campaigns", campMode: "offer", campErr: "" }); this.loadCampaigns(); history.replaceState(null, "", `/dashboard?page=campaigns&businessId=${this.state.businessId}`); },
         empty: s.custList !== null && !list.length,
         rows: list.map((c: any, i: number) => { const on = isSel(c.id), open = s.custOpen === c.id; return { ...ck(on), name: c.name + (c.optedOut ? " · opted out of offers" : ""), phone: phone(c.phone), ini: ini(c.name), av: AV[i % 4],
-          orders: c.orders, spent: formatMoney(c.spentMinor, this.cur), last: last(c.lastOrderAt), isOpen: open, rot: open ? "180deg" : "0deg", bd: on ? "#F3B8CB" : "#F0E4E8",
+          orders: c.orders, spent: formatMoneyUi(c.spentMinor, this.cur), last: last(c.lastOrderAt), isOpen: open, rot: open ? "180deg" : "0deg", bd: on ? "#F3B8CB" : "#F0E4E8",
           ckLabel: (on ? "Deselect " : "Select ") + c.name, toggle: () => { if (!c.optedOut) toggle(c.id); }, open: () => this.setState({ custOpen: open ? null : c.id }),
           addrs: c.addresses.map((a: any, j: number) => ({ label: a.label, text: a.text, def: a.isDefault || j === 0 && !c.addresses.some((x: any) => x.isDefault), uses: a.uses ? (a.uses === 1 ? "Used for 1 order" : `Used for ${a.uses} orders`) : "Not used yet" })) }; }),
       },
@@ -426,7 +426,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     };
   }
   overviewVm(ar: boolean, narrow: boolean) {
-    const s = this.state, o = s.overview, loc = ar ? "ar" : "en-US", f = (n: number) => n.toLocaleString(loc), cur = o?.currency ?? this.cur, money = (m: number) => `${cur} ${f(Math.round(m / (o?.scale ?? scaleOf(cur))))}`;
+    const s = this.state, o = s.overview, loc = ar ? "ar" : "en-US", f = (n: number) => n.toLocaleString(loc), cur = o?.currency ?? this.cur, money = (m: number) => withSign(cur, f(Math.round(m / (o?.scale ?? scaleOf(cur)))));
     const nm = s.name || "your restaurant", period: string = s.period, cu = o?.current, pv = o?.previous;
     const pct = (a: number, b: number) => b > 0 ? Math.round((a - b) / b * 100) : null;
     const vs = ar ? "عن الفترة السابقة" : period === "today" ? "vs yesterday" : "vs previous period";
@@ -651,7 +651,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const sections = M.filter(g => q || s.cat === "All" || g.id === s.cat).map(g => {
       const its = g.items.filter(i => !q || match(i)); const soldN = its.filter(i => !i.on).length;
       return { name: catName(g), alt: ar ? (g.catAr ? g.cat : "") : g.catAr, meta: its.length + " " + T.items + (soldN ? " · " + soldN + " " + T.soldOut : ""),
-        items: its.map((i, idx) => { const alt = ar ? (i.ar ? i.n : null) : (i.ar || null); return { main: ar ? (i.ar || i.n) : i.n, alt, hasAlt: !!alt, noAlt: !alt && p.canEdit, on: i.on, sold: !i.on, price: formatMoney(toMinor(i.p, this.cur), this.cur), bt: idx ? "1px solid #F3EEF1" : "0", nameFg: i.on ? "#1A0815" : "#8A5A6E", tBg: i.on ? "linear-gradient(90deg,#FF5577,#C93DFF)" : "#EAD9E1", knob: i.on ? (ar ? "-20px" : "20px") : "0px", toggle: () => p.canEdit && this.toggleItem(i), editAr: () => this.editAr(i) }; }) };
+        items: its.map((i, idx) => { const alt = ar ? (i.ar ? i.n : null) : (i.ar || null); return { main: ar ? (i.ar || i.n) : i.n, alt, hasAlt: !!alt, noAlt: !alt && p.canEdit, on: i.on, sold: !i.on, price: formatMoneyUi(toMinor(i.p, this.cur), this.cur), bt: idx ? "1px solid #F3EEF1" : "0", nameFg: i.on ? "#1A0815" : "#8A5A6E", tBg: i.on ? "linear-gradient(90deg,#FF5577,#C93DFF)" : "#EAD9E1", knob: i.on ? (ar ? "-20px" : "20px") : "0px", toggle: () => p.canEdit && this.toggleItem(i), editAr: () => this.editAr(i) }; }) };
     }).filter(g => g.items.length);
     const langFor = (short: boolean) => [["en", "EN"], ["ar", short ? "ع" : "العربية"]].map(([k, label]) => { const on = s.lang === k; return { label, on, fw: on ? 600 : 500, bg: on ? "#fff" : "transparent", fg: on ? "#1A0815" : "#8A5A6E", sh: on ? "0 1px 2px rgba(26,8,21,.12)" : "none", pick: () => this.setLang(k as any) }; });
     const nm = s.name.trim() || "Burger House"; const initials = nm.split(/\s+/).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase();
@@ -672,7 +672,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const NAV: [string, string][] = [["Overview", "M3 10.5 10 4l7 6.5M5 9v7.5h10V9"], ["Orders", "M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0"], ["Menu", "M5 4.5h10M5 10h10M5 15.5h6"], ["WhatsApp", "M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z"], ["Customers", "M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5"], ["Campaigns", "M4 8v4h2.5L12 15.5v-11L6.5 8zM15 7.5a3.5 3.5 0 0 1 0 5"]];
     const noop = (e?: any) => e?.preventDefault?.();
     return {
-      termsUrl: `${p.marketingUrl}/terms`, privacyUrl: `${p.marketingUrl}/privacy`,
+      curSign: currencySign(this.cur), termsUrl: `${p.marketingUrl}/terms`, privacyUrl: `${p.marketingUrl}/privacy`,
       L, isFlow: !isDash, canBack: ["otp", "name", "menu"].includes(s.step),
       is: { phone: s.step === "phone", otp: s.step === "otp", verified: s.step === "verified", name: s.step === "name", menu: s.step === "menu", processing: s.step === "processing", ready: s.step === "ready", dash: isDash },
       back: () => { const prev = ({ otp: "phone", name: "phone", menu: s.businessId && p.initialStep === "dash" ? "dash" : "name" } as any)[s.step]; this.clearTimers(); this.setState({ verifying: false }); this.go(prev); },

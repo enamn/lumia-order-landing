@@ -24,6 +24,21 @@ export const formatMoney = (minor: number, currency: string | null | undefined, 
   return `${cur} ${v.toLocaleString(locale, { minimumFractionDigits: Number.isInteger(v) ? 0 : d, maximumFractionDigits: d })}`;
 };
 
+// ---- what the dashboard shows (screens only: WhatsApp messages, emails and invoices keep the ISO code) ----
+// The UAE dirham sign (U+20C3, drawn by the "Dirham" font) and the Saudi riyal sign (U+20C1); the other Gulf currencies have no sign of their own in English, so their ISO code shows.
+export const currencySign = (currency: string | null | undefined): string => { const c = (currency ?? "AED").toUpperCase(); return c === "AED" ? "\u20C3" : c === "SAR" ? "\u20C1" : c; };
+const isSymbol = (currency: string | null | undefined) => ["AED", "SAR"].includes((currency ?? "AED").toUpperCase());
+/** The sign (or code) in front of an amount that is already formatted. */
+export const withSign = (currency: string | null | undefined, amount: string) => `${currencySign(currency)}${isSymbol(currency) ? "\u2009" : " "}${amount}`;
+/** A number in the currency's own units, as the dashboard shows it: no decimals when whole (209), otherwise at least two and never more than the currency has (12.90, 2.345). */
+export function amountUi(value: number, currency: string | null | undefined, locale = "en-US"): string {
+  const d = decimalsOf(currency), scale = d === 3 ? 1000 : 100, v = Math.round(value * scale) / scale;
+  return v.toLocaleString(locale, Number.isInteger(v) ? { maximumFractionDigits: 0 } : { minimumFractionDigits: 2, maximumFractionDigits: d });
+}
+/** "⃁149", "OMR 12.90": the sign (or code) and the amount. */
+export const moneyUi = (value: number, currency: string | null | undefined, locale = "en-US") => withSign(currency, amountUi(value, currency, locale));
+export const formatMoneyUi = (minor: number, currency: string | null | undefined, locale = "en-US") => moneyUi(fromMinor(minor, currency), currency, locale);
+
 // Reads a typed price, including Arabic-Indic digits and the Arabic decimal and thousands separators. Returns null when it is ambiguous or not a price.
 export function parseAmount(input: string): number | null {
   let t = input.trim().replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x660)).replace(/[۰-۹]/g, d => String(d.charCodeAt(0) - 0x6f0));

@@ -73,3 +73,13 @@ describe.skipIf(process.env.RUN_DB_TESTS !== "true")("amounts typed in the setti
     await expect(saveSettingsSection(o, b, "delivery", { ...cur.delivery, minOrder: "12.505" }, "t")).rejects.toMatchObject({ code: "INVALID_AMOUNT" });
   });
 });
+
+describe("what the dashboard shows", () => {
+  it("uses the dirham and riyal signs, the code for the other Gulf currencies, and no decimals on whole amounts", async () => {
+    const { moneyUi, formatMoneyUi, currencySign } = await import("../src/modules/market/money");
+    expect(currencySign("AED")).toBe("⃃"); expect(currencySign("SAR")).toBe("⃁"); expect(currencySign("OMR")).toBe("OMR"); expect(currencySign(null)).toBe("⃃");
+    expect(moneyUi(149, "AED")).toBe("⃃ 149"); expect(moneyUi(12.5, "SAR")).toBe("⃁ 12.50");
+    expect(moneyUi(209, "KWD")).toBe("KWD 209"); expect(moneyUi(12.9, "KWD")).toBe("KWD 12.90"); expect(moneyUi(2.345, "OMR")).toBe("OMR 2.345"); // a third decimal is never hidden
+    expect(formatMoneyUi(1250000, "AED")).toBe("⃃ 12,500"); expect(formatMoneyUi(2450, "BHD")).toBe("BHD 2.45");
+  });
+});

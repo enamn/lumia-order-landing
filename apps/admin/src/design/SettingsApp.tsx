@@ -12,6 +12,7 @@ import { isCountryCode, marketOf } from "@/modules/market/countries";
 import { regionNames } from "@/modules/market/regions";
 import { logoToDataUrl } from "@/lib/logo";
 import { ContentLoader } from "@/components/lumia-loader";
+import { currencySign, withSign } from '@/modules/market/money';
 
 export interface SettingsProps {
   businessId: string;
@@ -87,7 +88,7 @@ class SettingsApp extends React.Component<Props, any> {
   async buyBranch(then: () => void) {
     const bb = this.props.initial.branchBuy; if (!bb) return;
     if (!bb.hasCard) { this.setState({ error: 'Add a card in Billing first to add a branch.' }); return; }
-    if (!window.confirm(`Add a branch for AED ${bb.priceAed} a ${bb.period}${bb.ratePercent > 0 ? ' (+ VAT)' : ''}? You pay AED ${(bb.payNowMinor / 100).toFixed(2)} now for the rest of this period, charged to your card ending ${bb.card ?? ''}.`)) return;
+    if (!window.confirm(`Add a branch for ${withSign('AED', String(bb.priceAed))} a ${bb.period}${bb.ratePercent > 0 ? ' (+ VAT)' : ''}? You pay ${withSign('AED', (bb.payNowMinor / 100).toFixed(2))} now for the rest of this period, charged to your card ending ${bb.card ?? ''}.`)) return;
     try { await api(`/api/v1/businesses/${this.props.businessId}/subscription/branch`, 'POST', { requestId: crypto.randomUUID() }); this.props.initial.branchLimit = (this.props.initial.branchLimit ?? 1) + 1; cache.delete(this.props.businessId); this.flash('Branch added to your plan.'); then(); }
     catch (e: any) { this.setState({ error: e.message }); }
   }
@@ -209,7 +210,7 @@ class SettingsApp extends React.Component<Props, any> {
       sw: sw(r.on, () => this.upd('delivery', x => { x.ranges[i].on = !x.ranges[i].on; })), remove: () => this.upd('delivery', x => { x.ranges.splice(i, 1); }) }));
     const C = s.calc, setC = (k) => (e) => { const v = e.target.value; this.setState(st => ({ calc: { ...st.calc, [k]: v } })); };
     const calc = { ...C, setArea: setC('area'), setDist: setC('dist'), setSub: setC('sub'), brSel: sel(C.branch, brOpts, setC('branch'), true, 'Branch'), emSel: sel(C.emirate, emOpts, setC('emirate'), true, this.REGION_LABEL) };
-    const CUR = this.props.initial.currency ?? 'AED';
+    const CUR = this.props.initial.currency ?? 'AED', S = (a: unknown) => withSign(CUR, String(a));
     const res = (() => {
       const sub = +C.sub || 0, dist = +C.dist || 0, bad = (head, msg) => ({ ok: false, head, msg, rows: [], fg: '#B42318' });
       const nope = `Sorry, we don't deliver to ${C.emirate} yet. You can order for pickup from ${bName(C.branch)}.`;
@@ -219,10 +220,10 @@ class SettingsApp extends React.Component<Props, any> {
       else if (D.method === 'distance') { const r = D.ranges.find(r => r.on && dist >= +r.from && (r.to === '' || dist < +r.to)); if (!r) return bad(`No delivery at ${dist} km`, `Sorry, you're outside our delivery range. You can order for pickup from ${bName(C.branch)}.`); fee = +r.fee || 0; eta = r.eta || D.eta; br = C.branch; min = +(r.min || D.minOrder) || 0; }
       else if (D.method === 'free') { if (!D.freeEm.includes(C.emirate)) return bad(`No delivery to ${C.emirate}`, nope); fee = 0; eta = D.eta; br = D.freeBranch; min = +D.minOrder || 0; }
       else return { ok: true, head: 'Delivery available', fg: '#16704A', rows: [{ k: 'Fee', v: 'Confirmed by restaurant' }, { k: 'Branch', v: bName(C.branch) }], msg: D.manualMsg };
-      if (sub < min) return bad(`Below minimum order (${CUR} ${min})`, `The minimum order for delivery is ${CUR} ${min}. Add ${CUR} ${min - sub} more to continue.`);
+      if (sub < min) return bad(`Below minimum order (${S(min)})`, `The minimum order for delivery is ${S(min)}. Add ${S(min - sub)} more to continue.`);
       if (D.freeAbove && sub >= +D.freeAbove) fee = 0;
-      return { ok: true, head: 'Delivery available', fg: '#16704A', rows: [{ k: 'Fee', v: fee ? `${CUR} ${fee}` : 'Free' }, { k: 'ETA', v: `${eta} minutes` }, { k: 'Branch', v: bName(br) }],
-        msg: `${fee ? `Delivery to ${C.emirate} is ${CUR} ${fee}.` : `Delivery to ${C.emirate} is free.`}\nEstimated delivery time: ${eta} minutes.\nMinimum order: ${CUR} ${min}.` };
+      return { ok: true, head: 'Delivery available', fg: '#16704A', rows: [{ k: 'Fee', v: fee ? `${S(fee)}` : 'Free' }, { k: 'ETA', v: `${eta} minutes` }, { k: 'Branch', v: bName(br) }],
+        msg: `${fee ? `Delivery to ${C.emirate} is ${S(fee)}.` : `Delivery to ${C.emirate} is free.`}\nEstimated delivery time: ${eta} minutes.\nMinimum order: ${S(min)}.` };
     })();
     const distLock = D.method === 'distance';
 
@@ -280,7 +281,7 @@ class SettingsApp extends React.Component<Props, any> {
       pg: Object.fromEntries(PAGES.map(([k]) => [k, s.page === k])),
       nav, navGroups, steps, ready, todoSteps, doneSteps, hasDone: doneSteps.length > 0, setupOpen: todo.length > 0, setupDone: todo.length === 0,
       warnings, hasWarnings: warnings.length > 0, progressLabel: `${doneN} of ${steps.length} steps completed`,
-      cur: this.props.initial.currency ?? 'AED', regionLabel: this.REGION_LABEL, regionLabelPlural: this.REGION_LABEL.endsWith('y') ? this.REGION_LABEL.slice(0, -1) + 'ies' : this.REGION_LABEL + 's',
+      cur: currencySign(this.props.initial.currency ?? 'AED'), regionLabel: this.REGION_LABEL, regionLabelPlural: this.REGION_LABEL.endsWith('y') ? this.REGION_LABEL.slice(0, -1) + 'ies' : this.REGION_LABEL + 's',
       brand, initials, markDirty: () => {},
       emailVerifyNode: React.createElement(EmailVerify, { key: String(this.props.initial.emailVerified), businessId: this.props.businessId, email: this.props.initial.sections.profile?.email ?? '', verified: !!this.props.initial.emailVerified, variant: 'settings', draft: pr.email, onVerified: (e: string) => { this.props.initial.emailVerified = true; this.props.initial.sections.profile = { ...this.props.initial.sections.profile, email: e }; this.props.onSaved?.(); } }),
       logoNode: pr.logo ? React.createElement('img', { src: pr.logo, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }) : initials,
@@ -326,7 +327,7 @@ class SettingsApp extends React.Component<Props, any> {
       dashUrl: `/dashboard${this.props.query}`, menuUrl: `/dashboard?page=menu&businessId=${this.props.businessId}`,
       codSw: sw(PV.cod, () => this.upd('pay', x => { x.cod = !x.cod; })), noCod: !PV.cod,
       verifySw: sw(PV.verify, () => this.upd('pay', x => { x.verify = !x.verify; })),
-      verifyHint: `Require phone verification for orders above ${CUR} ${PV.threshold || '…'}.`,
+      verifyHint: `Require phone verification for orders above ${S(PV.threshold || '…')}.`,
       payf: bind('pay', ['threshold']),
       bar,
     };

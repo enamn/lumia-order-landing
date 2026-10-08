@@ -247,7 +247,7 @@ input::placeholder{color:#B89AA8}
                 <div style="display:flex;flex-direction:column;gap:6px;padding:8px 0;border-top:1px solid #F3EEF1">
                   <div style="display:flex;align-items:center;gap:12px">
                     <span style="flex:1;min-width:0;font-size:15px">{{ it.n }}</span>
-                    <label style="display:flex;align-items:center;gap:4px;height:38px;padding:0 10px;border-radius:10px;border:1.5px solid {{ it.bd }};background:{{ it.bg }};font-size:14px;color:#8A5A6E;flex:none">AED<input type="text" inputMode="decimal" value="{{ it.price }}" onChange="{{ it.onPrice }}" aria-label="{{ it.n }} price" style="width:44px;font-size:15px;color:#1A0815;text-align:end;font-variant-numeric:tabular-nums"></input></label>
+                    <label style="display:flex;align-items:center;gap:4px;height:38px;padding:0 10px;border-radius:10px;border:1.5px solid {{ it.bd }};background:{{ it.bg }};font-size:14px;color:#8A5A6E;flex:none">{{ curSign }}<input type="text" inputMode="decimal" value="{{ it.price }}" onChange="{{ it.onPrice }}" aria-label="{{ it.n }} price" style="width:44px;font-size:15px;color:#1A0815;text-align:end;font-variant-numeric:tabular-nums"></input></label>
                   </div>
                   <sc-if value="{{ it.flag }}" hint-placeholder-val="{{ false }}">
                     <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:13px;color:#8A4B00">
@@ -2053,6 +2053,6 @@ class Component extends DCLogic {
   }
 }
 </script>
-<!-- LUMIA-LOCK --><!-- LUMIA-EMAIL --><!-- LUMIA-COUNTRY --><!-- LUMIA-TAX --><!-- LUMIA-PRICES --><!-- LUMIA-TERMINAL --><!-- LUMIA-TERMINAL-PRICE --><!-- LUMIA-TERMINAL-DASH -->
+<!-- LUMIA-LOCK --><!-- LUMIA-EMAIL --><!-- LUMIA-COUNTRY --><!-- LUMIA-TAX --><!-- LUMIA-PRICES --><!-- LUMIA-TERMINAL --><!-- LUMIA-CURSIGN --><!-- LUMIA-TERMINAL-PRICE --><!-- LUMIA-TERMINAL-DASH -->
 </body>
 </html>

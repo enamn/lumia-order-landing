@@ -1,7 +1,7 @@
 /* Base styles from the design's <helmet>, scoped to .dc so the rest of the app is unaffected. */
 .dc,.dc *{box-sizing:border-box}
 .dc *{margin:0;padding:0}
-.dc{background:#fff;color:#1A0815;font-family:'Geist','IBM Plex Sans Arabic',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.dc{background:#fff;color:#1A0815;font-family:'Geist','Dirham-Sans','IBM Plex Sans Arabic',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .dc a{color:#1A0815;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px}.dc a:hover{color:#FF5577}
 .dc button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 .dc button:disabled{cursor:default}
