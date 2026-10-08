@@ -47,7 +47,7 @@ function LegalLayout({ title, eyebrow = 'Legal', children }: { title: string; ey
       <footer className="legal-footer">
         <div className="wrap footer__legal">
           <LegalLinks />
-          <span>A product by Afkar IO</span>
+          <span>Lumia Order is developed and operated by Afkar IO FZE LLC · <a href="mailto:partners@afkario.com">partners@afkario.com</a></span>
         </div>
       </footer>
     </div>
@@ -59,7 +59,7 @@ export function PrivacyPage() {
     <LegalLayout title="Privacy Policy">
       <p className="legal__date">Last updated: {LAST_UPDATED}</p>
       <p className="legal__intro">
-        This policy explains how Lumia Order processes personal information when restaurants use the service and when their customers order through WhatsApp. It covers the Lumia Order platform, the web dashboard, the Lumia Order Terminal and this website.
+        Lumia Order is a restaurant ordering platform developed and operated by Afkar IO FZE LLC. This policy explains how Lumia Order processes personal information when restaurants use the service and when their customers order through WhatsApp. It covers the Lumia Order platform, the web dashboard, the Lumia Order Terminal and this website.
       </p>
       <div className="legal__body">
         <Section title="1. Restaurant information">
@@ -148,7 +148,7 @@ export function TermsPage() {
     <LegalLayout title="Terms of Service">
       <p className="legal__date">Last updated: {LAST_UPDATED}</p>
       <p className="legal__intro">
-        These terms govern the use of Lumia Order, including the platform, the web dashboard, the Lumia Order Terminal and this website. Lumia Order is a product by Afkar IO. By creating an account or using the service, the restaurant ("you") agrees to these terms.
+        These terms govern the use of Lumia Order, including the platform, the web dashboard, the Lumia Order Terminal and this website. Lumia Order is a restaurant ordering platform developed and operated by Afkar IO FZE LLC. By creating an account or using the service, the restaurant ("you") agrees to these terms.
       </p>
       <div className="legal__body">
         <Section title="1. The service">
