@@ -615,6 +615,24 @@ model WhatsAppAccount {
   @@index([businessId])
   @@map("whatsapp_accounts")
 }
+
+// Review and account-status decisions sent by Meta's WhatsApp webhooks. These are app-wide
+// operational events shown only to Lumia super admins; raw customer messages never go here.
+model MetaWebhookEvent {
+  id String @id @default(uuid()) @map("_id")
+  field String
+  wabaId String?
+  phoneNumberId String?
+  subject String?
+  status String?
+  reason String?
+  payload Json
+  occurredAt DateTime?
+  receivedAt DateTime @default(now())
+  @@index([field, receivedAt])
+  @@index([phoneNumberId, receivedAt])
+  @@map("meta_webhook_events")
+}
 model OrderSettings {
   id String @id @default(uuid()) @map("_id")
   businessId String @unique

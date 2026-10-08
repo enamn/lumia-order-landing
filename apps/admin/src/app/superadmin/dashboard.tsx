@@ -324,8 +324,22 @@ function Customers() {
     </div>
   );
 }
+function MetaEvents() {
+  const [data, setData] = React.useState<any>(null), [err, setErr] = React.useState("");
+  React.useEffect(() => { fetch("/api/superadmin/meta-events", { cache: "no-store" }).then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error?.message ?? "Could not load Meta events."); setData(j.data ?? j); }).catch(e => setErr(e.message)); }, []);
+  const when = (v: string) => new Date(v).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
+  return <div style={{ display: "grid", gap: 12 }}>
+    <section style={card}><h2 style={h2}>Meta review and WhatsApp status</h2><div style={{ color: muted, fontSize: 14 }}>Decisions sent directly by Meta. The rejection reason appears here when Meta includes one in the webhook.</div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 12 }}>{(data?.subscribedFields ?? []).map((field: string) => <code key={field} style={{ background: "#F7EFF3", borderRadius: 7, padding: "4px 7px", fontSize: 12 }}>{field}</code>)}</div></section>
+    <section style={card}>{err && <div role="alert" style={{ color: "#B4233B" }}>{err}</div>}{!data && !err && <span style={{ color: muted }}>Loading…</span>}
+      {data && <div style={{ overflowX: "auto" }}><table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}><thead><tr style={{ textAlign: "left", color: muted }}>{["Received", "Event", "Restaurant / number", "Status", "Meta reason"].map(x => <th key={x} style={{ padding: "6px 12px 8px 0", fontWeight: 500, whiteSpace: "nowrap" }}>{x}</th>)}</tr></thead>
+        <tbody>{data.events.map((event: any) => <tr key={event.id} style={{ borderTop: `1px solid ${line}`, verticalAlign: "top" }}><td style={{ padding: "10px 12px 10px 0", whiteSpace: "nowrap" }}>{when(event.receivedAt)}</td><td style={{ padding: "10px 12px 10px 0" }}><code>{event.field}</code>{event.subject && <div style={{ color: muted, fontSize: 12 }}>{event.subject}</div>}</td><td style={{ padding: "10px 12px 10px 0" }}>{event.account?.business?.name ?? "Lumia app"}<div style={{ color: muted, fontSize: 12 }}>{event.account?.displayPhoneNumber ?? event.phoneNumberId ?? event.wabaId ?? "–"}</div></td><td style={{ padding: "10px 12px 10px 0", fontWeight: 600 }}>{event.status ?? "Update"}</td><td style={{ padding: "10px 0", maxWidth: 420 }}>{event.reason ?? <span style={{ color: muted }}>No reason supplied</span>}</td></tr>)}
+          {!data.events.length && <tr><td colSpan={5} style={{ padding: "14px 0", color: muted }}>No review events received yet. New Meta decisions will appear here.</td></tr>}</tbody></table></div>}
+    </section>
+  </div>;
+}
 const NAV: [string, string, () => React.ReactElement][] = [
-  ["customers", "Restaurants and users", () => <Customers />], ["analytics", "Analytics", () => <Analytics />], ["prices", "Plan prices", () => <Prices />], ["terminals", "Terminal orders", () => <Terminals />], ["markets", "Markets", () => <Markets />], ["tax", "Tax and VAT", () => <Tax />],
+  ["customers", "Restaurants and users", () => <Customers />], ["meta", "Meta review", () => <MetaEvents />], ["analytics", "Analytics", () => <Analytics />], ["prices", "Plan prices", () => <Prices />], ["terminals", "Terminal orders", () => <Terminals />], ["markets", "Markets", () => <Markets />], ["tax", "Tax and VAT", () => <Tax />],
 ];
 export default function SuperAdminDashboard() {
   const [tab, setTab] = React.useState("customers");
