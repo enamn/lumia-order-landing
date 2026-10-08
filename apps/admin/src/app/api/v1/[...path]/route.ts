@@ -17,7 +17,7 @@ import { startEmailVerification, confirmEmailVerification } from "@/modules/busi
 import { getBillingTax, saveBillingTax } from "@/modules/tax/service";
 import { listMarkets } from "@/modules/market/service";
 import { requireAccess } from "@/modules/billing/service";
-import { createBusiness, changeCountry, getBusiness, listBusinesses, updateBusiness, updateLocation, readiness, completeOnboarding, members, setMember } from "@/modules/business/service";
+import { createBusiness, getBusiness, listBusinesses, updateBusiness, updateLocation, readiness, completeOnboarding, members, setMember } from "@/modules/business/service";
 export const dynamic = "force-dynamic";
 type Context = { params: Promise<{ path: string[] }> };
 async function handle(request: Request, context: Context) {
@@ -39,7 +39,6 @@ async function handle(request: Request, context: Context) {
     // Trial over or plan ended: only the plan and billing pages keep working until the restaurant subscribes.
     if (section && section !== "subscription" && section !== "contact-email" && section !== "billing-tax") await requireAccess(userId, businessId!);
     if (section === "billing-tax" && path.length === 3) { if (method === "GET") return getBillingTax(userId, businessId!); if (method === "PUT") return saveBillingTax(userId, businessId!, await jsonBody(request)); }
-    if (section === "country" && method === "POST" && path.length === 3) return changeCountry(userId, businessId!, await jsonBody(request), requestId);
     if (section === "contact-email" && method === "POST") {
       if (path.length === 3) return startEmailVerification(userId, businessId!, await jsonBody(request));
       if (subId === "verify" && path.length === 4) return confirmEmailVerification(userId, businessId!, await jsonBody(request));

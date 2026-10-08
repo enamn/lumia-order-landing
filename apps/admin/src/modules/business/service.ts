@@ -17,14 +17,14 @@ export async function createBusiness(userId: string, input: unknown, requestId: 
     const owner = await tx.user.findFirst({ where: { id: userId, status: "ACTIVE", phoneNumberVerified: true } });
     if (!owner) throw new AppError("UNAUTHENTICATED", "Verify your phone number to continue.", 401);
     await tx.user.update({ where: { id: userId }, data: { workspaceInitialized: true } });
-    // The restaurant's country: the one chosen, otherwise the country of the owner's phone number.
-    const chosen = data.countryCode ?? marketFromDial(owner.phoneNumber)?.code ?? "AE";
-    if (!isCountryCode(chosen)) throw new AppError("COUNTRY_NOT_SUPPORTED", "Lumia Order is available in the UAE, Saudi Arabia, Oman, Bahrain, Qatar and Kuwait.", 422);
-    const market = MARKETS[chosen];
-    // One restaurant account per country: a brand in two countries has two accounts. Asking again for a country you already have returns that account.
-    const mine = await tx.business.findMany({ where: { organization: { members: { some: { userId, status: "ACTIVE" } } } }, orderBy: { createdAt: "asc" } });
-    const same = mine.find(b => b.countryCode === chosen) ?? (!data.countryCode ? mine[0] : undefined);
-    if (same) return same;
+    // The restaurant's country is the country of the owner's phone number at the first sign-in (+971 UAE, +966 Saudi Arabia, ...) and never changes: its currency, time zone and tax follow from it.
+    // A brand in a second country opens a second account with a phone number of that country.
+    const own = marketFromDial(owner.phoneNumber)?.code;
+    if (!own) throw new AppError("COUNTRY_NOT_SUPPORTED", "Lumia Order is available with phone numbers from the UAE, Saudi Arabia, Oman, Bahrain, Qatar and Kuwait.", 422);
+    if (data.countryCode && data.countryCode !== own) throw new AppError("COUNTRY_MISMATCH", `The country of your restaurant follows your phone number: ${owner.phoneNumber} is ${MARKETS[own].nameEn}.`, 422);
+    const chosen = own, market = MARKETS[chosen];
+    const existing = await tx.business.findFirst({ where: { organization: { members: { some: { userId, status: "ACTIVE" } } } }, orderBy: { createdAt: "asc" } });
+    if (existing) return existing;
     await requireRegistration(chosen);
     // Saudi Arabia, Oman and Bahrain: only VAT-registered restaurants can open an account. The number is saved for review; the restaurant goes live once the review verifies it.
     const vatNumber = (data.vatNumber ?? "").toUpperCase().replace(/[\s.-]/g, "");
@@ -43,27 +43,6 @@ export async function createBusiness(userId: string, input: unknown, requestId: 
   });
 }
 
-// A restaurant's country is fixed once it has real records. Until then (a draft account) it can still be corrected; after that the restaurant needs a new account in the right country.
-export async function changeCountry(userId: string, businessId: string, input: unknown, requestId: string) {
-  const { countryCode } = z.object({ countryCode: z.string().length(2).toUpperCase() }).strict().parse(input);
-  const { member } = await authorize(userId, businessId, "business.manage");
-  if (!isCountryCode(countryCode)) throw new AppError("COUNTRY_NOT_SUPPORTED", "This country is not supported.", 422);
-  const b = await db.business.findFirstOrThrow({ where: { id: businessId, organizationId: member.organizationId }, select: { countryCode: true } });
-  if (b.countryCode === countryCode) return { countryCode, changed: false };
-  const [orders, sub, invoices, wa, priced, branches] = await Promise.all([
-    db.order.count({ where: { businessId } }), db.subscription.count({ where: { businessId } }), db.billingInvoice.count({ where: { businessId } }),
-    db.whatsAppAccount.count({ where: { businessId, status: "CONNECTED" } }), db.catalogItem.count({ where: { catalog: { businessId }, basePriceMinor: { gt: 0 } } }), db.location.count({ where: { businessId } }),
-  ]);
-  if (orders || sub || invoices || wa || priced || branches > 1) throw new AppError("COUNTRY_CHANGE_NOT_ALLOWED", "This restaurant already has a menu with prices, branches, orders or billing, so its country can no longer be changed. Create a new restaurant account in the other country.", 409);
-  await requireRegistration(countryCode);
-  const m = MARKETS[countryCode];
-  await db.$transaction([
-    db.business.update({ where: { id: businessId }, data: { countryCode: m.code, currencyCode: m.currency, timezone: m.timezone } }),
-    db.location.updateMany({ where: { businessId }, data: { countryCode: m.code, timezone: m.timezone, emirate: "" } }),
-    db.auditLog.create({ data: { organizationId: member.organizationId, businessId, userId, entityType: "Business", entityId: businessId, action: "business.country_changed", beforeData: { countryCode: b.countryCode }, afterData: { countryCode: m.code }, requestId } }),
-  ]);
-  return { countryCode: m.code, changed: true };
-}
 export async function getBusiness(userId: string, id: string) {
   const { member } = await authorize(userId, id);
   const business = await db.business.findFirstOrThrow({ where: { id, organizationId: member.organizationId }, include: profileInclude });
