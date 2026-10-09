@@ -1643,42 +1643,65 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                   </div>
                   {vm.pairing && (
                     <>
-                    <section style={S("border:1.5px solid #E3CBD4;border-radius:16px;padding:22px;display:flex;flex-wrap:wrap;gap:0;align-items:center")}>
-                      <div role="button" tabIndex={0} onClick={vm.acc.s13.toggle} aria-expanded={vm.acc.s13.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
-                        <div style={S("flex:1;min-width:0")}>
-                          <div style={S("flex:1 1 260px;display:flex;flex-direction:column;gap:6px")}>
-                            <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                              Connect a device
-                            </h2>
-                            <p style={S("font-size:14px;color:#3D1C31;line-height:1.5")}>
-                              Open the Lumia Order app on the device and enter this code.
-                            </p>
-                            <span style={S("font-size:13px;color:#8A5A6E")}>
-                              Code expires in 10 minutes.
-                            </span>
-                          </div>
-                        </div>
-                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s13.chev})`)}>
-                          <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
+                    <section style={S("border:1.5px solid #E3CBD4;border-radius:16px;padding:22px;display:flex;flex-wrap:wrap;gap:28px;align-items:center")}>
+                      <div style={S("position:relative;width:236px;height:236px;flex:none;border-radius:20px;background:#fff;border:1px solid #ECD9E0;box-shadow:0 22px 44px -26px rgba(138,32,64,.45);display:flex;align-items:center;justify-content:center;overflow:hidden")}>
+                        {vm.pairQr}
                       </div>
-                      {vm.acc.s13.open && (
-                        <>
-                        <div style={S("display:flex;flex-direction:column;gap:20px;padding-top:20px")}>
-                          <span style={S("font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:500;letter-spacing:.12em;padding:12px 18px;border-radius:12px;background:#FAF6FA")}>
-                            482 913
+                      <div style={S("width:180px;height:380px;flex:none;display:flex;align-items:center;justify-content:center")}>
+                        {vm.pairTerm}
+                      </div>
+                      <div style={S("flex:1 1 260px;display:flex;flex-direction:column;gap:14px")}>
+                        <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                          {vm.pairTitle}
+                        </h2>
+                        <p style={S("font-size:14px;color:#3D1C31;line-height:1.5;text-wrap:pretty")}>
+                          {vm.pairSub}
+                        </p>
+                        <ol style={S("list-style:none;display:flex;flex-direction:column;gap:10px")}>
+                          {(vm.pairSteps as any[]).map((st: any, __i: number) => (
+                            <Fragment key={__i}>
+                              <li style={S("display:flex;align-items:center;gap:12px;font-size:14px")}>
+                                <span style={S("width:26px;height:26px;border-radius:50%;background:#FAF6FA;color:#8A5A6E;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none")}>
+                                  {st.n}
+                                </span>
+                                <span>
+                                  {st.label}
+                                </span>
+                              </li>
+                            </Fragment>
+                          ))}
+                        </ol>
+                        <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:13px;color:#8A5A6E")}>
+                          <span>
+                            Can't scan? Enter code
                           </span>
-                          <div style={S("display:flex;gap:10px;flex-basis:100%;justify-content:flex-end")}>
-                            <button type="button" onClick={vm.cancelPair} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dcs1">
-                              Cancel
-                            </button>
-                            <button type="button" onClick={vm.finishPair} style={S("height:44px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")}>
-                              Simulate: device connected
-                            </button>
-                          </div>
+                          <span style={S("font-size:15px;font-weight:600;color:#1A0815;font-variant-numeric:tabular-nums;padding:4px 10px;border-radius:8px;background:#FAF6FA")}>
+                            {vm.pairCode}
+                          </span>
+                          <span>
+                            {"\u00b7 "}{vm.pairNote}
+                          </span>
                         </div>
-                        </>
-                      )}
+                        {vm.pairError && (
+                          <>
+                          <div role="alert" style={S("font-size:14px;color:#B42318")}>
+                            {vm.pairError}
+                          </div>
+                          </>
+                        )}
+                        <div style={S("display:flex;gap:10px;flex-wrap:wrap")}>
+                          {vm.pairExpired && (
+                            <>
+                            <button type="button" onClick={vm.newPairCode} style={S("height:44px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")}>
+                              New code
+                            </button>
+                            </>
+                          )}
+                          <button type="button" onClick={vm.cancelPair} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dcs1">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
                     </section>
                     </>
                   )}
@@ -1743,9 +1766,9 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         <article style={S("border:1px solid #F0E4E8;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px")}>
                           <div style={S("display:flex;align-items:center;gap:12px")}>
                             <input value={v.name} onChange={v.rename} aria-label="Device name" style={S("flex:1;min-width:0;height:36px;padding:0 8px;margin-left:-8px;border-radius:8px;border:1.5px solid transparent;font-size:17px;font-weight:600;background:transparent")} className="dcs7 dcs8" />
-                            <span style={S("display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:500;background:#E6F4EC;color:#16704A")}>
+                            <span style={S(`display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:500;background:${v.badgeBg};color:${v.badgeFg}`)}>
                               <span style={S("width:7px;height:7px;border-radius:50%;background:currentColor")} />
-                              Online
+                              {v.badge}
                             </span>
                           </div>
                           <label style={S("display:flex;flex-direction:column;gap:6px")}>

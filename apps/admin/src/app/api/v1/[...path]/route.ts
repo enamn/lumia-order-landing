@@ -17,6 +17,7 @@ import { startEmailVerification, confirmEmailVerification } from "@/modules/busi
 import { getBillingTax, saveBillingTax } from "@/modules/tax/service";
 import { listMarkets } from "@/modules/market/service";
 import { requireAccess } from "@/modules/billing/service";
+import { cancelPairing, disconnectDevice, getPairing, listDevices, realtimeTicket, startPairing, testPrint, updateDevice } from "@/modules/devices/service";
 import { createBusiness, getBusiness, listBusinesses, updateBusiness, updateLocation, readiness, completeOnboarding, members, setMember } from "@/modules/business/service";
 export const dynamic = "force-dynamic";
 type Context = { params: Promise<{ path: string[] }> };
@@ -55,6 +56,18 @@ async function handle(request: Request, context: Context) {
     if (section === "members" && path.length === 3) {
       if (method === "GET") return members(userId, businessId);
       if (method === "POST") return setMember(userId, businessId, await jsonBody(request), requestId);
+    }
+    if (section === "realtime-ticket" && method === "POST" && path.length === 3) return realtimeTicket(userId, businessId!);
+    if (section === "devices") {
+      if (path.length === 3 && method === "GET") return listDevices(userId, businessId!);
+      if (subId === "pairing") {
+        if (path.length === 4 && method === "POST") return startPairing(userId, businessId!, await jsonBody(request).catch(() => ({})));
+        if (path.length === 5 && method === "GET") return getPairing(userId, businessId!, subId2!);
+        if (path.length === 5 && method === "DELETE") return cancelPairing(userId, businessId!, subId2!);
+      }
+      if (path.length === 4 && method === "PATCH") return updateDevice(userId, businessId!, subId!, await jsonBody(request));
+      if (path.length === 4 && method === "DELETE") return disconnectDevice(userId, businessId!, subId!);
+      if (path.length === 5 && subId2 === "test-print" && method === "POST") return testPrint(userId, businessId!, subId!);
     }
     if (section === "subscription") {
       if (method === "GET" && path.length === 3) return getSubscription(userId, businessId);

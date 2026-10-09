@@ -156,3 +156,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 .content-loader{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .content-loader::before,.page-loader::before{content:"";position:absolute;left:50%;top:50%;width:240px;height:240px;margin:-120px 0 0 -120px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,85,119,.22),rgba(201,61,255,.14) 55%,transparent 75%);filter:blur(6px);animation:lo-breathe 2.4s ease-in-out infinite;pointer-events:none}
 .content-loader .lumia-loader,.page-loader .lumia-loader{position:relative}
+
+/* Animations of the terminal pairing panel (from the settings design). */
+@keyframes lo-tscan{0%{transform:translateY(-34px)}50%{transform:translateY(210px)}100%{transform:translateY(-34px)}}
+@keyframes lo-tbob{0%,100%{transform:translateX(0) rotate(-4deg)}50%{transform:translateX(-10px) rotate(-1deg)}}
+@keyframes lo-pop{0%{opacity:0;transform:scale(.6)}70%{transform:scale(1.06)}100%{opacity:1;transform:scale(1)}}
+@keyframes lo-breathe{0%,100%{transform:scale(.85);opacity:.55}50%{transform:scale(1.08);opacity:1}}

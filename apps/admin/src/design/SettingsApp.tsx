@@ -13,6 +13,7 @@ import { regionNames } from "@/modules/market/regions";
 import { logoToDataUrl } from "@/lib/logo";
 import { ContentLoader } from "@/components/lumia-loader";
 import { currencySign, withSign } from '@/modules/market/money';
+import { QrCode, TerminalArt } from './PairingArt';
 
 export interface SettingsProps {
   businessId: string;
@@ -68,6 +69,8 @@ class SettingsApp extends React.Component<Props, any> {
     this.measure(true);
     // The terminal this restaurant ordered (shown on the Devices page with its delivery status).
     api(`/api/v1/businesses/${this.props.businessId}/subscription`).then((r: any) => { if (r && (r.terminals ?? 0) > 0) this.setState({ termOrder: r }); }).catch(() => undefined);
+    this.gone = false; // React's development mode mounts, unmounts and mounts again: the second mount must start clean
+    this.loadDevices();
     window.addEventListener('resize', this.onResize);
     history.replaceState(null, '', location.pathname + location.search + '#' + this.state.page);
   }
@@ -79,7 +82,56 @@ class SettingsApp extends React.Component<Props, any> {
   measure = (first = false) => { const w = this.wrap.current?.clientWidth || window.innerWidth; if (first || w !== this.state.w) this.setState({ w, ...(first ? { mounted: true } : {}) }); };
   onResize = () => this.measure();
   componentWillUnmount() {
-    window.removeEventListener('resize', this.onResize); this.ro && this.ro.disconnect(); clearTimeout(this.tt); }
+    window.removeEventListener('resize', this.onResize); this.ro && this.ro.disconnect(); clearTimeout(this.tt);
+    this.gone = true; clearInterval(this.tick); clearInterval(this.poll); clearTimeout(this.liveTimer); try { this.live?.close(); } catch { /* closing */ }
+  }
+
+  // ---- terminals: the list, connecting a new one (QR code and typed code), and the live connection that tells this page when one connects
+  gone = false; live: WebSocket | null = null; liveTimer: any; tick: any; poll: any; renameTimers: Record<string, any> = {};
+  base = () => `/api/v1/businesses/${this.props.businessId}/devices`;
+  async loadDevices() { try { const r = await api(this.base()); if (!this.gone) { this.setState({ devData: r }); if (r.devices.length) this.openLive(); } } catch { /* the list stays as it was */ } }
+  async openLive() {
+    if (this.live && this.live.readyState <= 1) return;
+    try {
+      const t = await api(`/api/v1/businesses/${this.props.businessId}/realtime-ticket`, 'POST', {});
+      if (this.gone) return;
+      const ws = new WebSocket(`${t.url}?ticket=${encodeURIComponent(t.ticket)}`); this.live = ws;
+      ws.onmessage = (m) => {
+        let e: any; try { e = JSON.parse(m.data); } catch { return; }
+        if (e.type !== 'event') return;
+        const pr = this.state.pair;
+        if (e.event === 'device.paired' && pr && e.payload.sessionId === pr.sessionId) this.onPaired();
+        else if (e.event === 'device.status' || e.event === 'device.removed' || e.event === 'device.paired') this.loadDevices();
+        else if (e.event === 'print.result') this.flash(e.payload.ok ? 'Test receipt printed.' : `The terminal could not print${e.payload.reason ? ` (${String(e.payload.reason).replace(/_/g, ' ').toLowerCase()})` : ''}.`);
+      };
+      ws.onclose = () => { if (!this.gone) { clearTimeout(this.liveTimer); this.liveTimer = setTimeout(() => this.openLive(), 5000); } }; // reconnects by itself
+    } catch { if (!this.gone) { clearTimeout(this.liveTimer); this.liveTimer = setTimeout(() => this.openLive(), 8000); } }
+  }
+  async startPair() {
+    clearInterval(this.tick); clearInterval(this.poll);
+    try {
+      const r = await api(`${this.base()}/pairing`, 'POST', {});
+      this.setState({ pair: { ...r, status: 'open', error: '' }, now: Date.now() });
+      this.tick = setInterval(() => this.setState({ now: Date.now() }), 1000);
+      // The live connection reports the moment the terminal connects; checking every few seconds is the safety net if it is not available.
+      this.poll = setInterval(async () => { const pr = this.state.pair; if (!pr || pr.status !== 'open') return; try { const g = await api(`${this.base()}/pairing/${pr.sessionId}`); if (g.status === 'USED') this.onPaired(); } catch { /* try again */ } }, 2500);
+      this.openLive();
+    } catch (e: any) { this.flash(e?.message ?? 'Could not start connecting a terminal.'); }
+  }
+  onPaired() {
+    if (this.state.pair?.status === 'scanned') return;
+    clearInterval(this.poll); this.setState((st: any) => ({ pair: { ...st.pair, status: 'scanned' } }));
+    setTimeout(() => { if (this.gone) return; clearInterval(this.tick); this.setState({ pair: null }); this.loadDevices(); this.flash('Device connected.'); }, 1800);
+  }
+  async cancelPair() { const pr = this.state.pair; clearInterval(this.tick); clearInterval(this.poll); this.setState({ pair: null }); if (pr && pr.status === 'open') { try { await api(`${this.base()}/pairing/${pr.sessionId}`, 'DELETE'); } catch { /* it expires by itself */ } } }
+  renameDevice(id: string, name: string) {
+    this.setState((st: any) => ({ devData: { ...st.devData, devices: st.devData.devices.map((d: any) => (d.id === id ? { ...d, name } : d)) } }));
+    clearTimeout(this.renameTimers[id]);
+    this.renameTimers[id] = setTimeout(async () => { if (!name.trim()) return; try { await api(`${this.base()}/${id}`, 'PATCH', { name: name.trim() }); } catch (e: any) { this.flash(e?.message ?? 'Could not rename the device.'); this.loadDevices(); } }, 700);
+  }
+  async moveDevice(id: string, locationId: string) { try { await api(`${this.base()}/${id}`, 'PATCH', { locationId }); this.loadDevices(); } catch (e: any) { this.flash(e?.message ?? 'Could not change the branch.'); } }
+  async printTest(id: string) { try { await api(`${this.base()}/${id}/test-print`, 'POST', {}); this.flash('Test receipt sent to the terminal.'); } catch (e: any) { this.flash(e?.message ?? 'Could not reach the terminal.'); } }
+  async removeDevice(id: string, name: string) { if (!window.confirm(`Disconnect ${name}? It will stop receiving orders until it is connected again.`)) return; try { await api(`${this.base()}/${id}`, 'DELETE'); this.loadDevices(); this.flash('Device disconnected.'); } catch (e: any) { this.flash(e?.message ?? 'Could not disconnect the device.'); } }
 
   upd(k, fn) { this.setState(s => { const v = clone(s.draft[k]); fn(v); return { draft: { ...s.draft, [k]: v }, toast: '', error: '' }; }); }
   dirtyOf(s, page) { const k = KEY[page]; return !!k && JSON.stringify(s.draft[k]) !== JSON.stringify(s.saved[k]); }
@@ -253,7 +305,25 @@ class SettingsApp extends React.Component<Props, any> {
     const menuPrimary = { show: false, label: '', go: () => {} };
 
     // devices
-    const deviceCards: any[] = [];
+    const dev = s.devData?.devices ?? [], branchOpts = (s.devData?.branches ?? []).map((b: any) => ({ v: b.id, l: b.name })), ps = s.pair;
+    const seen = (t: string | null) => { if (!t) return 'Never'; const sec = Math.max(0, Math.round((Date.now() - new Date(t).getTime()) / 1000)); return sec < 60 ? 'Just now' : sec < 3600 ? `${Math.round(sec / 60)} min ago` : sec < 86400 ? `${Math.round(sec / 3600)} h ago` : new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); };
+    const deviceCards: any[] = dev.map((d: any) => ({
+      name: d.name, rename: (e: any) => this.renameDevice(d.id, e.target.value),
+      badge: d.online ? 'Online' : 'Offline', badgeBg: d.online ? '#E6F4EC' : '#F3EEF1', badgeFg: d.online ? '#16704A' : '#8A5A6E',
+      brSel: sel(d.locationId, branchOpts, (e: any) => this.moveDevice(d.id, e.target.value), false, 'Assigned branch'),
+      rows: [{ k: 'Last seen', v: seen(d.lastSeenAt) }, { k: 'Serial number', v: d.serial }, { k: 'Model', v: d.model || '–' }, { k: 'App version', v: d.appVersion || '–' }],
+      testPrint: () => this.printTest(d.id), disconnect: () => this.removeDevice(d.id, d.name),
+    }));
+    const left = ps ? Math.max(0, Math.round((new Date(ps.expiresAt).getTime() - (s.now ?? Date.now())) / 1000)) : 0, expired = !!ps && ps.status === 'open' && left <= 0, scanned = ps?.status === 'scanned';
+    const pairVm = {
+      pairing: !!ps, hasDevices: dev.length > 0 && !ps, noDevicesIdle: !dev.length && !ps && !s.termOrder,
+      pairQr: ps ? <div style={{ opacity: expired ? 0.25 : 1, transition: 'opacity .2s' }}><QrCode text={ps.qr} /></div> : null, pairTerm: ps ? <TerminalArt scanned={scanned} /> : null,
+      pairTitle: scanned ? 'Terminal linked' : expired ? 'This code has expired' : 'Scan to connect your terminal',
+      pairSub: scanned ? 'Finishing setup. Keep this page open.' : expired ? 'For safety a code only works for 10 minutes. Get a new one to continue.' : 'Use the camera on the Lumia Order terminal to scan this code.',
+      pairSteps: ['Turn on the terminal and open the Lumia Order app', 'Tap Connect to restaurant', 'Point the camera at this code'].map((label, i) => ({ n: i + 1, label })),
+      pairCode: ps ? `${ps.code.slice(0, 3)} ${ps.code.slice(3)}` : '', pairNote: expired ? 'Expired' : `Expires in ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`,
+      pairError: '', pairExpired: expired, newPairCode: () => this.startPair(), startPair: () => this.startPair(), cancelPair: () => this.cancelPair(), finishPair: () => {},
+    };
     const term = s.termOrder, STAGE = ['Order placed', 'Preparing', 'Shipped', 'Out for delivery', 'Delivered'], STAGE_MSG = ['We received your order and will start preparing your terminal shortly.', 'Your terminal is being prepared and tested before it ships.', 'Your terminal is on its way.', 'Your terminal is out for delivery today. Someone at the restaurant will need to receive it.', 'Your terminal was delivered. Turn it on and sign in with your Lumia number to start receiving orders.'];
     const tStage = Math.max(0, Math.min(4, term?.terminal?.stage ?? 0)), tDay = (v?: string) => (v ? new Date(v).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
     const termVm = { termShow: !!term, termLabel: STAGE[tStage], termMsg: STAGE_MSG[tStage], termPillBg: tStage >= 4 ? '#E4F4EC' : tStage >= 2 ? '#F1E6FF' : '#FFF1DC', termPillFg: tStage >= 4 ? '#16704A' : tStage >= 2 ? '#6A1FA0' : '#8A4B00',
@@ -322,8 +392,7 @@ class SettingsApp extends React.Component<Props, any> {
       hBranchSeg: d.branches.filter(b => H.per[b.id]).map(b => chip(b.name, H.sel === b.id, () => setH(x => { x.sel = b.id; }))),
       hm: { closed: H.mode === 'closed', rows: H.mode !== 'closed' }, hf: bind('hours', ['closedUntil']), dayRows, hoursBubbles,
       menuSteps, menuStats, menuNotApproved: menuLevel < 3, menuPrimary, menuLive: menuLevel === 4,
-      hasDevices: false, pairing: false, noDevicesIdle: !term, deviceCards, ...termVm,
-      startPair: () => this.flash('Connecting a terminal with a QR code is coming soon.'), cancelPair: () => {}, finishPair: () => {},
+      deviceCards, ...termVm, ...pairVm,
       dashUrl: `/dashboard${this.props.query}`, menuUrl: `/dashboard?page=menu&businessId=${this.props.businessId}`,
       codSw: sw(PV.cod, () => this.upd('pay', x => { x.cod = !x.cod; })), noCod: !PV.cod,
       verifySw: sw(PV.verify, () => this.upd('pay', x => { x.verify = !x.verify; })),

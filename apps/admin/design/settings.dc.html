@@ -8,7 +8,7 @@
 <body>
 <x-dc>
 <!-- LUMIA-DIRHAM-FONT -->
-<!-- LUMIA-TERMINAL --><!-- LUMIA-TERMINAL-CONNECT -->
+<!-- LUMIA-TERMINAL --><!-- LUMIA-PAIRING --><!-- LUMIA-TERMINAL-CONNECT -->
 <!-- LUMIA-REGION -->
 <!-- LUMIA-CURRENCY -->
 <!-- LUMIA-EMAIL -->
@@ -577,19 +577,28 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
               <sc-if value="{{ hasDevices }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ startPair }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">+ Connect device</button></sc-if>
             </div>
             <sc-if value="{{ pairing }}" hint-placeholder-val="{{ false }}">
-              <section style="border:1.5px solid #E3CBD4;border-radius:16px;padding:22px;display:flex;flex-wrap:wrap;gap:0;align-items:center">
-                <div role="button" tabindex="0" onClick="{{ acc.s13.toggle }}" aria-expanded="{{ acc.s13.open }}" style="display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0"><div style="flex:1;min-width:0"><div style="flex:1 1 260px;display:flex;flex-direction:column;gap:6px">
-                  <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">Connect a device</h2>
-                  <p style="font-size:14px;color:#3D1C31;line-height:1.5">Open the Lumia Order app on the device and enter this code.</p>
-                  <span style="font-size:13px;color:#8A5A6E">Code expires in 10 minutes.</span>
-                </div></div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate({{ acc.s13.chev }})"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
-                <sc-if value="{{ acc.s13.open }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:20px;padding-top:20px">
-                <span style="font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:500;letter-spacing:.12em;padding:12px 18px;border-radius:12px;background:#FAF6FA">482 913</span>
-                <div style="display:flex;gap:10px;flex-basis:100%;justify-content:flex-end">
-                  <button type="button" onClick="{{ cancelPair }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Cancel</button>
-                  <button type="button" onClick="{{ finishPair }}" style="height:44px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px">Simulate: device connected</button>
+              <section style="border:1.5px solid #E3CBD4;border-radius:16px;padding:22px;display:flex;flex-wrap:wrap;gap:28px;align-items:center">
+                <div style="position:relative;width:236px;height:236px;flex:none;border-radius:20px;background:#fff;border:1px solid #ECD9E0;box-shadow:0 22px 44px -26px rgba(138,32,64,.45);display:flex;align-items:center;justify-content:center;overflow:hidden">
+                  {{ pairQr }}
                 </div>
-              </div></sc-if>
+                <div style="width:180px;height:380px;flex:none;display:flex;align-items:center;justify-content:center">
+                  {{ pairTerm }}
+                </div>
+                <div style="flex:1 1 260px;display:flex;flex-direction:column;gap:14px">
+                  <h2 style="font-size:17px;font-weight:600;letter-spacing:-0.015em">{{ pairTitle }}</h2>
+                  <p style="font-size:14px;color:#3D1C31;line-height:1.5;text-wrap:pretty">{{ pairSub }}</p>
+                  <ol style="list-style:none;display:flex;flex-direction:column;gap:10px">
+                    <sc-for list="{{ pairSteps }}" as="st" hint-placeholder-count="3">
+                      <li style="display:flex;align-items:center;gap:12px;font-size:14px"><span style="width:26px;height:26px;border-radius:50%;background:#FAF6FA;color:#8A5A6E;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none">{{ st.n }}</span><span>{{ st.label }}</span></li>
+                    </sc-for>
+                  </ol>
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:13px;color:#8A5A6E"><span>Can't scan? Enter code</span><span style="font-size:15px;font-weight:600;color:#1A0815;font-variant-numeric:tabular-nums;padding:4px 10px;border-radius:8px;background:#FAF6FA">{{ pairCode }}</span><span>· {{ pairNote }}</span></div>
+                  <sc-if value="{{ pairError }}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size:14px;color:#B42318">{{ pairError }}</div></sc-if>
+                  <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <sc-if value="{{ pairExpired }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ newPairCode }}" style="height:44px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px">New code</button></sc-if>
+                    <button type="button" onClick="{{ cancelPair }}" style="height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px" style-hover="background:#FBF3F8">Cancel</button>
+                  </div>
+                </div>
               </section>
             </sc-if>
             <sc-if value="{{ noDevicesIdle }}" hint-placeholder-val="{{ true }}">
@@ -606,7 +615,7 @@ input::placeholder,textarea::placeholder{color:#B89AA8}
                 <article style="border:1px solid #F0E4E8;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
                   <div style="display:flex;align-items:center;gap:12px">
                     <input value="{{ v.name }}" onChange="{{ v.rename }}" aria-label="Device name" style="flex:1;min-width:0;height:36px;padding:0 8px;margin-left:-8px;border-radius:8px;border:1.5px solid transparent;font-size:17px;font-weight:600;background:transparent" style-hover="border-color:#ECD9E0" style-focus="border-color:#C93DFF;background:#fff"></input>
-                    <span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:500;background:#E6F4EC;color:#16704A"><span style="width:7px;height:7px;border-radius:50%;background:currentColor"></span>Online</span>
+                    <span style="display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:500;background:{{ v.badgeBg }};color:{{ v.badgeFg }}"><span style="width:7px;height:7px;border-radius:50%;background:currentColor"></span>{{ v.badge }}</span>
                   </div>
                   <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;color:#8A5A6E">Assigned branch</span>{{ v.brSel }}</label>
                   <dl style="display:flex;flex-direction:column">

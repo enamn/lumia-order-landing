@@ -591,10 +591,40 @@ model Device {
   credentialHash String?
   status String @default("INACTIVE")
   lastSeenAt DateTime?
+  model String?
+  appVersion String?
+  revokedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  @@index([credentialHash])
   @@index([locationId, status])
   @@map("devices")
+}
+// A terminal being connected: the restaurant presses Connect, the dashboard shows a QR code and a 6-digit code (stored only as a hash), the terminal sends the code and gets its own key.
+model PairingSession {
+  id String @id @default(uuid()) @map("_id")
+  businessId String
+  locationId String
+  createdBy String
+  codeHash String
+  status String @default("OPEN")
+  expiresAt DateTime
+  deviceId String?
+  createdAt DateTime @default(now())
+  @@index([codeHash])
+  @@index([businessId, status])
+  @@map("pairing_sessions")
+}
+// Messages for the live connections (terminals and open dashboards). The web app writes them, the realtime service reads them and sends them on; a device that was offline asks for what it missed.
+model DeviceEvent {
+  id String @id @default(uuid()) @map("_id")
+  channel String
+  type String
+  payload Json
+  createdAt DateTime @default(now())
+  @@index([createdAt])
+  @@index([channel, createdAt])
+  @@map("device_events")
 }
 model WhatsAppAccount {
   id String @id @default(uuid()) @map("_id")

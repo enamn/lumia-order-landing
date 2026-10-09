@@ -13,7 +13,8 @@
     "test:e2e": "playwright test",
     "db:setup": "prisma db push && node --env-file=.env --import tsx scripts/mongo-indexes.ts",
     "test:db": "RUN_DB_TESTS=true vitest run tests/database.test.ts tests/auth.integration.test.ts",
-    "db:local": "tsx scripts/local-mongo.ts"
+    "db:local": "tsx scripts/local-mongo.ts",
+    "realtime": "node --import tsx src/realtime/main.ts"
   },
   "dependencies": {
     "@prisma/client": "6.19.3",
@@ -24,17 +25,21 @@
     "libphonenumber-js": "^1.13.14",
     "lucide-react": "0.468.0",
     "next": "16.3.6",
+    "qrcode": "^1.5.4",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "tailwind-merge": "3.5.0",
+    "ws": "^8.22.0",
     "zod": "4.3.6"
   },
   "devDependencies": {
     "@playwright/test": "1.58.2",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.15",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
+    "@types/ws": "^8.18.2",
     "mongodb-memory-server": "10.2.3",
     "prisma": "6.19.3",
     "tailwindcss": "4.2.1",
