@@ -6,8 +6,20 @@ import { createBusiness, setMember } from "../src/modules/business/service";
 import { recordInbound, getMessageStats, getOverview } from "../src/modules/messages/inbound";
 import { setAiSettings } from "../src/modules/messages/ai";
 import { listOrders, setOrderStatus } from "../src/modules/orders/service";
+import { greetingText, isGreeting } from "../src/modules/messages/greeting";
 import { draftKey, orderItemLines, resolveDraft, summaryText, type MenuEntry } from "../src/modules/orders/draft";
 const enabled = process.env.RUN_DB_TESTS === "true";
+
+describe("plain greetings", () => {
+  it("recognises a message that is only a greeting, in English and Arabic", () => {
+    for (const t of ["hi", "Hi!", "hello", "Hellooo", "hey 👋", "good morning", "Salam", "السلام عليكم", "السلام عليكم ورحمة الله", "مرحبا", "مرحباً!", "أهلاً وسهلاً", "هلا", "  hi  "]) expect(isGreeting(t), t).toBe(true);
+    for (const t of ["hi, 2 burgers please", "hello I want to order", "2 classic", "yes", "pickup", "مرحبا أريد برجر", "", "hi there how much is delivery to Al Majaz"]) expect(isGreeting(t), t).toBe(false);
+  });
+  it("welcomes in the customer's language with the restaurant name and first name", () => {
+    expect(greetingText("en", "Order Test Burgers", "Sara Ali")).toBe("Hi Sara! 👋 Welcome to Order Test Burgers. What would you like to order today?");
+    expect(greetingText("ar", "برجر", "")).toBe("أهلاً 👋 مرحباً بك في برجر. ماذا تحب أن تطلب اليوم؟");
+  });
+});
 
 describe("order draft rules", () => {
   const menu: MenuEntry[] = [{ index: "1", itemId: "a", name: "Classic", nameAr: "كلاسيك", priceMinor: 2800, available: true }, { index: "2", itemId: "b", name: "Spicy", nameAr: "", priceMinor: 3200, available: false }];
@@ -144,5 +156,11 @@ describe.skipIf(!enabled)("taking orders over WhatsApp", () => {
     calls = []; await setOrderStatus(owner, biz, o.id, { status: "ACCEPTED", prepMinutes: 25 }, "t");
     expect(sent().at(-1)).toContain("ready in about 25 minutes");
     await expect(setOrderStatus(owner, biz, o.id, { status: "PREPARING", prepMinutes: 2 }, "t")).rejects.toBeDefined();
+  });
+  it("answers a plain greeting at once with a fixed welcome and no AI call", async () => {
+    let r = await turn("hi", () => { throw new Error("the AI must not be called for a greeting"); }, "971501112233");
+    expect(r).toContain("Welcome to Order Test Burgers"); expect(calls.some(c => c.path === "/internal/ai/reply")).toBe(false);
+    r = await turn("السلام عليكم", () => { throw new Error("no AI"); }, "971501112233"); // again right away: still answered
+    expect(r).toContain("مرحباً بك في Order Test Burgers"); expect(calls.some(c => c.path === "/internal/ai/reply")).toBe(false);
   });
 });

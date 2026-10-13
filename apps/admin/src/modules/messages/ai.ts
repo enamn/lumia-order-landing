@@ -16,6 +16,8 @@ import { canPersonalize, entitlementsFor } from "@/modules/billing/service";
 import { canStartOrder, consume, refund } from "@/modules/billing/usage";
 import { checkCode } from "@/modules/campaigns/codes";
 import { confirmPendingOrder, createOrderFromDraft, discardPendingOrders, findPendingOrder } from "@/modules/orders/service";
+import { showTyping } from "@/modules/whatsapp/typing";
+import { greetingText, isGreeting } from "./greeting";
 
 // The AI assistant answers customers' WhatsApp messages from the restaurant's own menu. It only replies when the owner turned it on,
 // never keeps talking once a person has taken over, and hands anything it cannot answer (orders, complaints, unknown facts) to staff.
@@ -118,9 +120,12 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   if (burst > RATE_BURST) { if (burst === RATE_BURST + 1) await sendNotice(t, SLOW_DOWN).catch(() => undefined); return "skipped"; }
   // The plan's monthly orders (then bought ones). Someone halfway through an order may finish it; everyone else gets a plain notice and the owner sees the message in the inbox.
   if (!stored && !await canStartOrder(t.businessId)) return sendNotice(t, BUSY, 3600000);
+  // A plain greeting with no order in progress: answer at once with a fixed welcome (no AI call, so no cold start, no wait, nothing counted against the AI allowance).
+  if (!stored && isGreeting(latestInbound.textContent)) return sendNotice(t, greetingText(langOf(latestInbound.textContent), conversation.business.name, useName ? conversation.customer.displayName ?? "" : ""), 0);
   // Behind that, a fair-use pool of AI replies so endless chatting cannot run up costs.
   const taken = await consume(t.businessId, "ai", { inProgress: Boolean(stored) });
   if (!taken.ok) return sendNotice(t, BUSY, 3600000);
+  void showTyping(account, t.externalMessageId); // "typing…" while the answer is prepared; we are definitely going to reply
   // No pin: an address the customer typed is looked up on the map, and they are asked once to confirm the place that was found.
   type Candidate = { query: string; latitude: number; longitude: number; emirate: string | null; area: string; street: string; place: string; formatted: string; at: string };
   let candidate = conversation.candidateLocation as Candidate | null;
