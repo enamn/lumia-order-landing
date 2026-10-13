@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Terminal simulator (dev only)</title>
+<style>
+  body{font:16px -apple-system,system-ui,sans-serif;margin:0;padding:16px;background:#fff;color:#2a1020}
+  h1{font-size:18px;margin:0 0 4px} p{margin:0 0 12px;color:#6b4a5c;font-size:14px}
+  input{font:inherit;padding:12px;border:1.5px solid #E3CBD4;border-radius:10px;width:100%;box-sizing:border-box;margin-bottom:8px;letter-spacing:.15em}
+  .row{display:flex;gap:8px} button{font:inherit;font-weight:600;padding:12px 16px;border:0;border-radius:10px;background:#8A2040;color:#fff;flex:1}
+  button.alt{background:#fff;color:#8A2040;border:1.5px solid #8A2040}
+  #st{display:inline-block;padding:3px 10px;border-radius:99px;background:#eee;font-size:13px;margin:8px 0}
+  #st.on{background:#d6f5df;color:#14602b}
+  #log{font:12px ui-monospace,monospace;white-space:pre-wrap;background:#f7f0f3;border-radius:10px;padding:10px;min-height:200px;margin-top:8px}
+  label{font-size:13px;color:#6b4a5c}
+</style>
+</head>
+<body>
+<h1>Terminal simulator</h1>
+<p>Dev only. Acts like the Android terminal: pairs with a code, stays online, answers test prints.</p>
+<label>6-digit code from Settings → Devices → Connect device</label>
+<input id="code" inputmode="numeric" maxlength="7" placeholder="482 913">
+<div class="row" style="margin-bottom:8px"><button id="scan">Scan QR</button></div>
+<video id="cam" playsinline muted style="display:none;width:100%;border-radius:12px;margin-bottom:8px"></video>
+<div class="row"><button id="pair">Pair</button><button id="conn" class="alt">Reconnect</button></div>
+<div class="row" style="margin-top:8px"><button id="forget" class="alt">Forget key</button><button id="drop" class="alt">Drop connection</button></div>
+<div id="st">Not connected</div>
+<div id="log"></div>
+<script src="jsQR.js"></script>
+<script>
+const $ = id => document.getElementById(id), K = "lumia-sim";
+let ws, pingT, retry = 1000, lastAt = 0, stopped = false, seen = new Set();
+const log = (...a) => { $("log").textContent = new Date().toLocaleTimeString() + "  " + a.join(" ") + "\n" + $("log").textContent; };
+const state = () => { try { return JSON.parse(localStorage.getItem(K) || "null"); } catch { return null; } };
+const save = s => localStorage.setItem(K, JSON.stringify(s));
+const status = (t, on) => { $("st").textContent = t; $("st").className = on ? "on" : ""; };
+const serial = () => { let s = localStorage.getItem(K + "-serial"); if (!s) { s = "SIM-" + Math.random().toString(36).slice(2, 10).toUpperCase(); localStorage.setItem(K + "-serial", s); } return s; };
+
+let camStream = null;
+const stopScan = () => { camStream?.getTracks().forEach(t => t.stop()); camStream = null; $("cam").style.display = "none"; $("scan").textContent = "Scan QR"; };
+$("scan").onclick = async () => {
+  if (camStream) return stopScan();
+  if (!window.jsQR) return log("QR decoder not loaded (jsQR.js)");
+  if (!navigator.mediaDevices?.getUserMedia) return log("Camera blocked: browsers only allow it on HTTPS or localhost. On Android Chrome open chrome://flags/#unsafe-treat-insecure-origin-as-secure, add " + location.origin + ", enable, relaunch.");
+  try { camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false }); }
+  catch (e) { return log("Camera not available:", e.name); }
+  const v = $("cam"); v.srcObject = camStream; v.style.display = "block"; await v.play(); $("scan").textContent = "Stop scanning";
+  const c = document.createElement("canvas"), g = c.getContext("2d", { willReadFrequently: true });
+  const tick = () => {
+    if (!camStream) return;
+    if (v.videoWidth) {
+      const k = Math.min(1, 640 / v.videoWidth); c.width = v.videoWidth * k; c.height = v.videoHeight * k;
+      g.drawImage(v, 0, 0, c.width, c.height);
+      const r = jsQR(g.getImageData(0, 0, c.width, c.height).data, c.width, c.height);
+      if (r && r.data.startsWith("lumia-pair:")) {
+        const code = new URL(r.data.replace("lumia-pair:", "http:")).searchParams.get("c");
+        if (code) { log("QR read:", r.data); stopScan(); $("code").value = code; return pair(); }
+      }
+    }
+    requestAnimationFrame(tick);
+  };
+  tick();
+};
+$("pair").onclick = pair;
+async function pair() {
+  const code = $("code").value.replace(/\D/g, "");
+  if (code.length !== 6) return log("Type the 6 digits first");
+  log("Pairing with code", code, "serial", serial());
+  const r = await fetch("/api/public/devices/pair", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code, serial: serial(), model: "Phone simulator", appVersion: "0.0.1" }) });
+  const j = await r.json();
+  if (!r.ok) return log("Pairing failed", r.status, j.error?.code, j.error?.message);
+  // The server hands out ws://localhost:3001 unless REALTIME_URL is set; on a phone that must be this Mac.
+  const rt = new URLSearchParams(location.search).get("rt"); // ?rt=<https address of the realtime service> when both run behind https tunnels
+  const realtime = rt ? rt.replace(/^http/, "ws").replace(/\/$/, "") + "/ws/device" : j.data.realtime.replace(/\/\/(localhost|127\.0\.0\.1)/, "//" + location.hostname);
+  save({ key: j.data.key, realtime }); log("Paired:", j.data.business.name, "/", j.data.branch.name); lastAt = 0; connect();
+}
+$("conn").onclick = () => { stopped = false; connect(); };
+$("forget").onclick = () => { localStorage.removeItem(K); stopped = true; ws?.close(); status("Not connected", false); log("Key forgotten"); };
+$("drop").onclick = () => { log("Dropping the socket on purpose"); ws?.close(); };
+
+function connect() {
+  const s = state(); if (!s) return log("Not paired yet");
+  clearTimeout(pingT); ws?.close(); stopped = false;
+  ws = new WebSocket(`${s.realtime}?key=${encodeURIComponent(s.key)}&since=${lastAt}`);
+  status("Connecting…", false);
+  ws.onopen = () => { retry = 1000; status("Online", true); log("Socket open"); const ping = () => { if (ws.readyState === 1) ws.send(JSON.stringify({ type: "ping", appVersion: "0.0.1" })); pingT = setTimeout(ping, 30000); }; ping(); };
+  ws.onmessage = ev => {
+    const m = JSON.parse(ev.data);
+    if (m.type === "pong") return;
+    if (m.type === "hello") return log("hello:", m.name, "·", m.business?.name, "/", m.branch?.name);
+    if (m.type !== "event") return log(ev.data);
+    if (seen.has(m.id)) return; seen.add(m.id); lastAt = Date.parse(m.at);
+    log("event", m.event, JSON.stringify(m.payload));
+    ws.send(JSON.stringify({ type: "ack", id: m.id }));
+    if (m.event === "order.new") log("*** ALARM *** new order #" + m.payload.number + " " + m.payload.items.map(i => i.quantity + "x " + i.name).join(", ") + " (" + (m.payload.totalMinor / 100) + " " + m.payload.currency + ")");
+    if (m.event === "order.updated") log("order #" + m.payload.number + " is now " + m.payload.status + (m.payload.prepMinutes ? " (" + m.payload.prepMinutes + " min)" : ""));
+    if (m.event === "print.order") { log("*** printing receipt #" + m.payload.number + " ***"); ws.send(JSON.stringify({ type: "print.result", ok: true, jobId: m.payload.jobId, orderId: m.payload.orderId })); }
+    if (m.event === "print.test") { log("*** printing test receipt ***"); ws.send(JSON.stringify({ type: "print.result", ok: true })); }
+    if (m.event === "device.revoked") { localStorage.removeItem(K); stopped = true; log("Disconnected from the dashboard: key forgotten"); }
+  };
+  ws.onclose = e => {
+    clearTimeout(pingT); status("Offline", false); log("Socket closed", e.code);
+    if (e.code === 4403) { localStorage.removeItem(K); stopped = true; return log("Revoked (4403): forget the key, show the connect screen"); }
+    if (stopped) return;
+    setTimeout(connect, retry); retry = Math.min(retry * 2, 30000);
+  };
+  ws.onerror = () => log("Socket error (wrong key, or realtime not reachable)");
+}
+if (state()) connect();
+</script>
+</body>
+</html>

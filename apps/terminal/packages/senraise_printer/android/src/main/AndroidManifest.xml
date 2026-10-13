@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Android 11+ hides other apps' services unless they are declared here: without this the printer service cannot be found. -->
+    <queries>
+        <package android:name="recieptservice.com.recieptservice" />
+    </queries>
+</manifest>

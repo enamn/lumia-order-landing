@@ -1,0 +1,19 @@
+name: senraise_printer
+description: Senraise built-in thermal printer (AIDL service recieptservice.com.recieptservice). Forked from github.com/Mrkrabss/flutter_senraise_printer_sdk (BSD-3) and made safe for production use.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.5.0
+  flutter: ">=3.29.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.senraise.senraise_printer
+        pluginClass: SenraisePrinterPlugin

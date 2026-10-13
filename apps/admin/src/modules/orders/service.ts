@@ -9,6 +9,7 @@ import { authorize } from "@/server/authorization";
 import { AppError } from "@/server/errors";
 import { deliverText } from "@/modules/messages/reply";
 import { langOf, type Lang, type Resolved } from "./draft";
+import { emitOrder } from "@/modules/devices/orders";
 
 type Tx = Parameters<Parameters<typeof transaction>[0]>[0];
 
@@ -22,7 +23,7 @@ export async function createOrderFromDraft(input: { businessId: string; conversa
   const { businessId, resolved: r } = input;
   for (let attempt = 0; ; attempt++) {
     try {
-      return await transaction(async tx => {
+      const created = await transaction(async tx => {
         // The branch that serves this customer (nearest, or the one the delivery rule names); otherwise the first active branch.
         // Pro with a menu per branch: the order goes to the branch whose menu it was taken from.
         const wanted = input.branchId ?? (r.delivery?.status === "ok" ? r.delivery.branchId : null);
@@ -53,6 +54,8 @@ export async function createOrderFromDraft(input: { businessId: string; conversa
         }
         return order;
       });
+      if (!input.pending) await emitOrder(created.id, "order.new"); // after the commit, so the terminal never sees an order that could roll back
+      return created;
     } catch (error) {
       // Two orders at the same moment can pick the same number; the unique index rejects one, so try the next number.
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002" && attempt < 4) continue;
@@ -74,7 +77,7 @@ export async function discardPendingOrders(conversationId: string) {
 }
 // The customer confirmed: the order goes to the restaurant, the chat's draft is done, and the delivery address is remembered under its name.
 export async function confirmPendingOrder(input: { businessId: string; orderId: string }) {
-  return transaction(async tx => {
+  const confirmed = await transaction(async tx => {
     const o = await tx.order.findFirst({ where: { id: input.orderId, businessId: input.businessId, status: "AWAITING_CUSTOMER_CONFIRMATION" }, include: { deliveryDetails: true } });
     if (!o) return null;
     const settings = await tx.orderSettings.findUnique({ where: { businessId: input.businessId } });
@@ -93,6 +96,8 @@ export async function confirmPendingOrder(input: { businessId: string; orderId: 
     }
     return order;
   });
+  if (confirmed) await emitOrder(confirmed.id, "order.new");
+  return confirmed;
 }
 
 export async function listOrders(userId: string, businessId: string) {
@@ -115,20 +120,32 @@ const NOTICE: Partial<Record<OrderStatus, Record<Lang, (n: string, pickup: boole
   OUT_FOR_DELIVERY: { en: n => `🛵 Your order #${n} is on its way.`, ar: n => `🛵 طلبك رقم ${n} في الطريق إليك.` },
 };
 
-export async function setOrderStatus(userId: string, businessId: string, orderId: string, input: unknown, requestId: string) {
+type Actor = { type: "USER"; userId: string } | { type: "DEVICE"; deviceId: string };
+// The dashboard (a signed-in user) and the terminal (its own key) change an order's status through the same rules: the first one to decide wins, the other gets 409 INVALID_TRANSITION.
+async function applyStatus(actor: Actor, businessId: string, orderId: string, input: unknown, requestId: string) {
   const { status, reason, prepMinutes } = statusSchema.parse(input);
   const updated = await transaction(async tx => {
-    const { business } = await authorize(userId, businessId, "operations.manage", tx);
+    const { business } = actor.type === "USER" ? await authorize(actor.userId, businessId, "operations.manage", tx) : { business: await tx.business.findUniqueOrThrow({ where: { id: businessId }, select: { organizationId: true } }) };
     const order = await tx.order.findFirst({ where: { id: orderId, businessId }, include: { customer: { select: { phone: true } } } });
     if (!order) throw new AppError("NOT_FOUND", "Order not found.", 404);
     if (!(NEXT[order.status] ?? []).includes(status) || (status === "OUT_FOR_DELIVERY" && order.fulfillmentType !== "DELIVERY")) throw new AppError("INVALID_TRANSITION", "That change isn't possible for this order's current status.", 409);
-    const result = await tx.order.update({ where: { id: orderId }, data: { status, history: { create: { previousStatus: order.status, newStatus: status, changedByType: "USER", changedByUserId: userId, reason: reason || null } } } });
-    await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "Order", entityId: orderId, action: `order.${status.toLowerCase()}`, requestId } });
+    const now = new Date();
+    const timing = status === "ACCEPTED" && prepMinutes ? { prepMinutes, promisedAt: new Date(now.getTime() + prepMinutes * 60_000) } : {};
+    const by = actor.type === "USER" ? { changedByType: "USER", changedByUserId: actor.userId } : { changedByType: "DEVICE", changedByUserId: actor.deviceId };
+    const result = await tx.order.update({ where: { id: orderId }, data: { status, ...timing, ...(actor.type === "DEVICE" && status === "ACCEPTED" ? { acceptedByDeviceId: actor.deviceId } : {}), history: { create: { previousStatus: order.status, newStatus: status, ...by, reason: reason || null } } } });
+    await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId: actor.type === "USER" ? actor.userId : null, entityType: "Order", entityId: orderId, action: `order.${status.toLowerCase()}`, ...(actor.type === "DEVICE" ? { afterData: { deviceId: actor.deviceId } } : {}), requestId } });
     return { order: result, phone: order.customer.phone };
   });
   await notifyCustomer(businessId, updated.order.conversationId, updated.phone, status, updated.order.orderNumber, updated.order.fulfillmentType === "PICKUP", prepMinutes);
+  await emitOrder(orderId, "order.updated", { by: actor.type === "DEVICE" ? { type: "DEVICE", deviceId: actor.deviceId } : { type: "USER" }, ...(reason ? { reason } : {}) });
   return { id: updated.order.id, status: updated.order.status };
 }
+export const setOrderStatus = (userId: string, businessId: string, orderId: string, input: unknown, requestId: string) => applyStatus({ type: "USER", userId }, businessId, orderId, input, requestId);
+export const setOrderStatusByDevice = (device: { id: string; businessId: string; locationId: string }, orderId: string, input: unknown, requestId: string) =>
+  db.order.findFirst({ where: { id: orderId, businessId: device.businessId, locationId: device.locationId }, select: { id: true } }).then(o => {
+    if (!o) throw new AppError("NOT_FOUND", "Order not found.", 404); // a terminal only handles the orders of its own branch
+    return applyStatus({ type: "DEVICE", deviceId: device.id }, device.businessId, orderId, input, requestId);
+  });
 
 // Best effort: WhatsApp only lets us message within 24 hours of the customer's last message, and a failed notice must not undo the status change.
 async function notifyCustomer(businessId: string, conversationId: string | null, phone: string, status: OrderStatus, number: string, pickup: boolean, prep?: number) {

@@ -269,7 +269,11 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       closed, closedFg: o.st === "cancelled" ? "#B42318" : "#16704A",
       closedText: o.st === "cancelled" ? A("Rejected", "مرفوض") + (o.reason ? " · " + o.reason : "") : A("Completed at ", "اكتمل في ") + (o.t.completed || ""),
       hasFlash: !!(s.ordFlash && s.ordFlash.id === o.id), flash: s.ordFlash && s.ordFlash.id === o.id ? s.ordFlash.text : "",
-      print: () => this.setState({ ordFlash: { id: o.id, text: A("Connect an order device in Settings to print receipts.", "اربط جهاز طلبات من الإعدادات لطباعة الإيصالات.") } }),
+      print: async () => { // sent to the branch's online terminal(s), which print it
+        const flash = (text: string) => this.setState({ ordFlash: { id: o.id, text } });
+        try { await api(`/api/v1/businesses/${this.state.businessId}/orders/${o.uuid}/print`, "POST", {}); flash(A("Sent to the terminal to print.", "تم إرسال الإيصال إلى الجهاز للطباعة.")); }
+        catch (e: any) { flash(e?.code === "DEVICE_OFFLINE" ? A("No terminal is online for this branch. Connect one in Settings, or turn it on.", "لا يوجد جهاز متصل لهذا الفرع. اربط جهازاً من الإعدادات أو شغّله.") : (e?.message ?? A("We couldn’t send it to the terminal.", "تعذّر الإرسال إلى الجهاز."))); }
+      },
       message: () => window.open("https://wa.me/" + o.phone.replace(/\D/g, ""), "_blank"), tel: "tel:" + o.phone.replace(/\s/g, ""),
       name: o.name, phone: o.phone, addr: o.addr, isDelivery: o.type === "delivery",
       hasNote: !!o.note, note: o.note,

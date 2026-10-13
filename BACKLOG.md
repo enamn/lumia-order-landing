@@ -46,5 +46,5 @@
 - Pro branch choice: pin = nearest branch with a location pin, pickup = the customer names the branch. Delivery by area (no pin) does not pick a branch yet; the assistant asks for the pin. Area rules that name a branch could pick it.
 - The `wa` routing setting (one number for all branches / selected branches) is still saved but not used.
 - Removing a branch menu archives it (not deleted); there is no restore button.
-- Terminal: orders are handled from the dashboard. Printing / receiving orders needs pairing (the unused `Device` model has `locationId` for one terminal per branch). Marketing copy no longer promises it.
+- Terminal: backend for orders is built (events, device REST, print); Flutter app in `apps/terminal` is next. Marketing copy may promise it again once a real unit is tested. Dashboard orders page still refreshes by 15 s polling: could use the dashboard socket (`order.new/updated/ack`, `print.result`).
 - Check the Pro extra-branch price (AED 99/month, AED 990/year) and +80 orders per branch after real usage.

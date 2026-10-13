@@ -17,6 +17,7 @@ import { startEmailVerification, confirmEmailVerification } from "@/modules/busi
 import { getBillingTax, saveBillingTax } from "@/modules/tax/service";
 import { listMarkets } from "@/modules/market/service";
 import { requireAccess } from "@/modules/billing/service";
+import { printOrder } from "@/modules/devices/orders";
 import { cancelPairing, disconnectDevice, getPairing, listDevices, realtimeTicket, startPairing, testPrint, updateDevice } from "@/modules/devices/service";
 import { createBusiness, getBusiness, listBusinesses, updateBusiness, updateLocation, readiness, completeOnboarding, members, setMember } from "@/modules/business/service";
 export const dynamic = "force-dynamic";
@@ -103,6 +104,7 @@ async function handle(request: Request, context: Context) {
     if (section === "orders") {
       if (method === "GET" && path.length === 3) return listOrders(userId, businessId);
       if (method === "POST" && subId2 === "status" && path.length === 5) return setOrderStatus(userId, businessId, subId, await jsonBody(request), requestId);
+      if (method === "POST" && subId2 === "print" && path.length === 5) return printOrder(userId, businessId, subId);
     }
     if (section === "ai" && path.length === 3) {
       if (method === "GET") return getAiSettings(userId, businessId);
