@@ -1,3 +1,8 @@
+/* The UAE dirham sign (U+20C3), served from this site so it never depends on a CDN being reachable. */
+@font-face { font-family: "Dirham-Sans"; src: url(/fonts/dirham-sans.woff2) format("woff2"); font-weight: 100 900; font-style: normal; font-display: block; unicode-range: U+20C3; }
+.dirham-symbol-sans { font-family: "Dirham-Sans" !important; font-style: normal; font-weight: inherit; line-height: 1; text-transform: none; }
+.dirham-symbol-sans::before { content: "\20C3"; }
+
 :root {
   --ink: #1a0815;
   --ink-2: #3d1c31;

@@ -1,5 +1,5 @@
 import { usePriceInfo } from '../pricing';
-// A price with its currency sign: the UAE dirham sign (drawn by the "Dirham" font loaded in index.html) for AED, the Saudi riyal sign (U+20C1) for SAR,
+// A price with its currency sign: the UAE dirham sign (drawn by the Dirham-Sans font in styles.css) for AED, the Saudi riyal sign (U+20C1) for SAR,
 // and the ISO code (OMR, BHD, QAR, KWD) for the other Gulf currencies: they have no sign of their own in English. Whole amounts show without decimals, others with the currency's own.
 // Whole amounts show no decimals (209, not 209.000). Anything else shows exactly two (12.90, 17.42), in every currency.
 export const amountText = (n: number, _decimals?: number) => (Number.isInteger(n) ? n.toLocaleString('en-US') : n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
