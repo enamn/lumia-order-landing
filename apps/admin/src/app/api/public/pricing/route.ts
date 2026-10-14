@@ -1,5 +1,5 @@
 import { db } from "@/server/db";
-import { countryOfIp } from "@/server/geoip";
+import { visitorCountry } from "@/server/visitor-country";
 import { GCC_CODES, MARKETS, isCountryCode } from "@/modules/market/countries";
 import { PLAN_IDS, UAE_BOOK } from "@/modules/billing/plans";
 import { TERMINAL_REQUIRED } from "@/modules/billing/pricing";
@@ -8,7 +8,6 @@ export const dynamic = "force-dynamic";
 
 // The plan prices the landing page shows for a visitor: their country's approved prices when the visitor is in the Gulf and the prices exist, otherwise the UAE prices in AED.
 // Only the country is looked up (from the IP, in memory); nothing is stored.
-const GEO_HEADERS = ["x-client-geo-location", "x-appengine-country", "cf-ipcountry", "x-vercel-ip-country", "x-country-code"];
 const allowed = () => new Set([(process.env.NEXT_PUBLIC_MARKETING_URL ?? "").replace(/\/$/, ""), ...(process.env.NODE_ENV === "production" ? [] : ["http://localhost:5173", "http://localhost:3000"])].filter(Boolean));
 const cors = (origin: string | null) => ({ "Access-Control-Allow-Origin": origin ?? "", "Access-Control-Allow-Methods": "GET, OPTIONS", "Access-Control-Allow-Headers": "Content-Type", Vary: "Origin" });
 
@@ -17,10 +16,7 @@ export function OPTIONS(request: Request) { const origin = request.headers.get("
 export async function GET(request: Request) {
   const origin = request.headers.get("origin");
   if (!origin || !allowed().has(origin)) return new Response(null, { status: 403 });
-  const ip = (request.headers.get("x-forwarded-for") ?? "").split(",")[0]?.trim() ?? "";
-  let detected = "";
-  for (const h of GEO_HEADERS) { const v = request.headers.get(h)?.trim().toUpperCase(); if (v && /^[A-Z]{2}$/.test(v)) { detected = v; break; } }
-  if (!detected) detected = (ip && countryOfIp(ip)) || "";
+  const detected = visitorCountry(request.headers);
   const asked = new URL(request.url).searchParams.get("country")?.toUpperCase() ?? "";
   const country = (GCC_CODES as readonly string[]).includes(asked) ? asked : detected;
   const uae = { detected: country, country: "AE", countryName: MARKETS.AE.nameEn, currency: "AED", decimals: 2, local: false, paidOpen: true, plans: UAE_BOOK.plans, terminal: { currency: "AED", decimals: 2, ...UAE_BOOK.terminal! } };

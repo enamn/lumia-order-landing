@@ -28,6 +28,8 @@ export interface FlowProps {
   devLink: boolean;
   linkMode: "existing" | "new";
   userPhone?: string;
+  /** ISO country code of the visitor (from the request); the phone field starts on that country's dial code when it is one of the six supported. */
+  initialCountry?: string;
   superAdmin?: boolean;
   /** The restaurant's order currency (ISO code). */
   currency?: string;
@@ -106,7 +108,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     super(props);
     const business = props.business;
     this.state = {
-      step: props.initialStep, num: "", cc: 0, focused: false, invalid: false, srvErr: "", sending: false, ccOpen: false, e164: "",
+      step: props.initialStep, num: "", cc: Math.max(0, COUNTRIES.findIndex(c => c.code === props.initialCountry)), focused: false, invalid: false, srvErr: "", sending: false, ccOpen: false, e164: "",
       currency: "", opCountry: "", opVat: "", digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu, props.currency)) > 0, cat: "All", menu: toCats(props.menu, props.currency), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",

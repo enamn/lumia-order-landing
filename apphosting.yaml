@@ -1,0 +1,12 @@
+# Firebase App Hosting config for the landing page (order.lumia.ae).
+# The landing page asks the restaurant app (app.order.lumia.ae) which country the visitor is in, to show local prices and the
+# riyal sign for Saudi Arabia. Without this address at build time it never asks and always shows UAE dirham prices.
+runConfig:
+  cpu: 1
+  memoryMiB: 512
+  minInstances: 0
+  maxInstances: 100
+env:
+  - variable: VITE_ADMIN_URL
+    value: https://app.order.lumia.ae
+    availability: [BUILD]
