@@ -36,3 +36,6 @@ Raise the version in `pubspec.yaml` (`version: 0.1.0+1`: the number after `+` mu
 * **Network change**: switch Wi-Fi off/on, or SIM data: the app shows "Offline: reconnecting", then catches up and rings for what it missed.
 * **Disconnect from the dashboard**: the terminal returns to the connect screen.
 * **Paper out / cover open**: the printing service gives no status, so the dashboard cannot know; a receipt that does not come out must be reprinted from the order (the Print button).
+
+## 6. Fonts
+Geist and IBM Plex Sans Arabic are bundled in `assets/fonts` (SIL Open Font License, see the OFL files there), so nothing is downloaded at run time.

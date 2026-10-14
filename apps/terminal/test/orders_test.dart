@@ -12,7 +12,7 @@ void main() {
     final o = Order.fromJson(snap(fulfillment: 'DELIVERY'));
     expect(o.number, '1002'); expect(o.isNew, true); expect(o.stage, Stage.fresh); expect(o.isDelivery, true);
     expect(o.items.single.modifiers, ['Cheese']); expect(o.address, 'Home: Al Majaz');
-    expect(money(5000, 'AED'), '50 AED'); expect(money(5050, 'AED'), '50.50 AED'); expect(money(12345, 'OMR'), '12.345 OMR');
+    expect(money(5000, 'AED'), 'AED 50'); expect(money(5050, 'AED'), 'AED 50.50'); expect(money(12345, 'OMR'), 'OMR 12.345');
     expect(Order.fromJson(snap(status: 'PREPARING')).stage, Stage.kitchen); expect(Order.fromJson(snap(status: 'COMPLETED')).stage, Stage.done);
   });
 
@@ -53,7 +53,7 @@ void main() {
     test('too late (the dashboard decided first): shows it and refreshes', () async {
       await c.load(); failNext = 1;
       expect(await c.accept(c.fresh.single, 15), false);
-      expect(c.error, contains('already changed')); expect(c.open, isEmpty); expect(alarm.ringing, false); expect(printer.printed, isEmpty);
+      expect(c.handled, '1002'); expect(c.error, isNull); expect(c.open, isEmpty); expect(alarm.ringing, false); expect(printer.printed, isEmpty);
     });
 
     test('next steps follow the kitchen: pickup ends at completed, delivery goes out first', () {

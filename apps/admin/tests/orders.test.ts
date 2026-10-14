@@ -157,6 +157,12 @@ describe.skipIf(!enabled)("taking orders over WhatsApp", () => {
     expect(sent().at(-1)).toContain("ready in about 25 minutes");
     await expect(setOrderStatus(owner, biz, o.id, { status: "PREPARING", prepMinutes: 2 }, "t")).rejects.toBeDefined();
   });
+  it("tells the customer why an order was rejected, in their language", async () => {
+    const o = await db.order.findFirstOrThrow({ where: { businessId: biz, orderNumber: "1001" } });
+    await db.order.update({ where: { id: o.id }, data: { status: "AWAITING_BUSINESS_CONFIRMATION" } });
+    calls = []; await setOrderStatus(owner, biz, o.id, { status: "REJECTED", reason: "Sold out" }, "t");
+    expect(sent().at(-1)).toContain("can't prepare order #1001 right now (sold out)");
+  });
   it("answers a plain greeting at once with a fixed welcome and no AI call", async () => {
     let r = await turn("hi", () => { throw new Error("the AI must not be called for a greeting"); }, "971501112233");
     expect(r).toContain("Welcome to Order Test Burgers"); expect(calls.some(c => c.path === "/internal/ai/reply")).toBe(false);

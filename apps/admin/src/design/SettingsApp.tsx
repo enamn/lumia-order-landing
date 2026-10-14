@@ -67,8 +67,6 @@ class SettingsApp extends React.Component<Props, any> {
 
   componentDidMount() {
     this.measure(true);
-    // The terminal this restaurant ordered (shown on the Devices page with its delivery status).
-    api(`/api/v1/businesses/${this.props.businessId}/subscription`).then((r: any) => { if (r && (r.terminals ?? 0) > 0) this.setState({ termOrder: r }); }).catch(() => undefined);
     this.gone = false; // React's development mode mounts, unmounts and mounts again: the second mount must start clean
     this.loadDevices();
     window.addEventListener('resize', this.onResize);
@@ -316,7 +314,7 @@ class SettingsApp extends React.Component<Props, any> {
     }));
     const left = ps ? Math.max(0, Math.round((new Date(ps.expiresAt).getTime() - (s.now ?? Date.now())) / 1000)) : 0, expired = !!ps && ps.status === 'open' && left <= 0, scanned = ps?.status === 'scanned';
     const pairVm = {
-      pairing: !!ps, hasDevices: dev.length > 0 && !ps, noDevicesIdle: !dev.length && !ps && !s.termOrder,
+      pairing: !!ps, hasDevices: dev.length > 0 && !ps, noDevicesIdle: !dev.length && !ps,
       pairQr: ps ? <div style={{ opacity: expired ? 0.25 : 1, transition: 'opacity .2s' }}><QrCode text={ps.qr} /></div> : null, pairTerm: ps ? <TerminalArt scanned={scanned} /> : null,
       pairTitle: scanned ? 'Terminal linked' : expired ? 'This code has expired' : 'Scan to connect your terminal',
       pairSub: scanned ? 'Finishing setup. Keep this page open.' : expired ? 'For safety a code only works for 10 minutes. Get a new one to continue.' : 'Use the camera on the Lumia Order terminal to scan this code.',
@@ -324,11 +322,6 @@ class SettingsApp extends React.Component<Props, any> {
       pairCode: ps ? `${ps.code.slice(0, 3)} ${ps.code.slice(3)}` : '', pairNote: expired ? 'Expired' : `Expires in ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`,
       pairError: '', pairExpired: expired, newPairCode: () => this.startPair(), startPair: () => this.startPair(), cancelPair: () => this.cancelPair(), finishPair: () => {},
     };
-    const term = s.termOrder, STAGE = ['Order placed', 'Preparing', 'Shipped', 'Out for delivery', 'Delivered'], STAGE_MSG = ['We received your order and will start preparing your terminal shortly.', 'Your terminal is being prepared and tested before it ships.', 'Your terminal is on its way.', 'Your terminal is out for delivery today. Someone at the restaurant will need to receive it.', 'Your terminal was delivered. Turn it on and sign in with your Lumia number to start receiving orders.'];
-    const tStage = Math.max(0, Math.min(4, term?.terminal?.stage ?? 0)), tDay = (v?: string) => (v ? new Date(v).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
-    const termVm = { termShow: !!term, termLabel: STAGE[tStage], termMsg: STAGE_MSG[tStage], termPillBg: tStage >= 4 ? '#E4F4EC' : tStage >= 2 ? '#F1E6FF' : '#FFF1DC', termPillFg: tStage >= 4 ? '#16704A' : tStage >= 2 ? '#6A1FA0' : '#8A4B00',
-      termRows: term ? [['Quantity', String(term.terminals)], ['Delivery address', term.terminalAddress || '–'], ['Ordered', tDay(term.startedAt)], ...(tStage >= 4 ? [['Delivered on', tDay(term.terminal?.dates?.[4])]] : []), ...(term.terminal?.tracking && tStage >= 2 && tStage < 4 ? [['Tracking number', term.terminal.tracking]] : [])].map(([k, v]) => ({ k, v })) : [] };
-
     // save bar
     const dirty = this.dirtyOf(s, s.page);
     const pageLabel = (PAGES.find(p => p[0] === s.page) || [])[1];
@@ -392,7 +385,7 @@ class SettingsApp extends React.Component<Props, any> {
       hBranchSeg: d.branches.filter(b => H.per[b.id]).map(b => chip(b.name, H.sel === b.id, () => setH(x => { x.sel = b.id; }))),
       hm: { closed: H.mode === 'closed', rows: H.mode !== 'closed' }, hf: bind('hours', ['closedUntil']), dayRows, hoursBubbles,
       menuSteps, menuStats, menuNotApproved: menuLevel < 3, menuPrimary, menuLive: menuLevel === 4,
-      deviceCards, ...termVm, ...pairVm,
+      deviceCards, ...pairVm,
       dashUrl: `/dashboard${this.props.query}`, menuUrl: `/dashboard?page=menu&businessId=${this.props.businessId}`,
       codSw: sw(PV.cod, () => this.upd('pay', x => { x.cod = !x.cod; })), noCod: !PV.cod,
       verifySw: sw(PV.verify, () => this.upd('pay', x => { x.verify = !x.verify; })),

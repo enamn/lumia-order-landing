@@ -16,7 +16,9 @@ class OrdersController extends ChangeNotifier {
   final Map<String, Order> _orders = {};
   final List<Order> recent = []; // finished orders, newest first, this session only
   String? error;
-  bool busy = false;
+  bool busy = false, loaded = false; // loaded: the first list has arrived (until then the screen shows a skeleton)
+  String? handled; // number of an order that was already decided on the dashboard: the screen tells staff once
+  void clearHandled() { handled = null; notifyListeners(); }
 
   List<Order> get open => _orders.values.toList()..sort((a, b) => a.createdAt.compareTo(b.createdAt));
   List<Order> inStage(Stage s) => open.where((o) => o.stage == s).toList();
@@ -49,16 +51,17 @@ class OrdersController extends ChangeNotifier {
       for (final s in list) { _upsert(s); }
       error = null;
     } on ApiError catch (e) { error = e.message; }
+    loaded = true;
     _sync();
   }
 
-  Future<bool> _run(Future<void> Function() action) async {
+  Future<bool> _run(Future<void> Function() action, Order order) async {
     busy = true; error = null; notifyListeners();
     try { await action(); return true; }
     on ApiError catch (e) {
-      final message = e.code == 'INVALID_TRANSITION' ? 'This order was already changed (maybe from the dashboard).' : e.message;
+      final tooLate = e.code == 'INVALID_TRANSITION';
       await load(); // show how it really is now
-      error = message; // (load clears the error, so set it after)
+      if (tooLate) { handled = order.number; } else { error = e.message; } // (load clears the error, so set it after)
       return false;
     } finally { busy = false; _sync(); }
   }
@@ -68,12 +71,12 @@ class OrdersController extends ChangeNotifier {
     final ok = await _run(() async {
       await api.setStatus(o.id, 'ACCEPTED', prepMinutes: minutes);
       await api.setStatus(o.id, 'PREPARING');
-    });
+    }, o);
     if (ok && autoPrint()) { printer.printOrder(o, lang: lang()); }
     return ok;
   }
 
-  Future<bool> reject(Order o, String reason) => _run(() => api.setStatus(o.id, 'REJECTED', reason: reason));
+  Future<bool> reject(Order o, String reason) => _run(() => api.setStatus(o.id, 'REJECTED', reason: reason), o);
 
   // The next step for an order that is being prepared / is ready / is out.
   String? nextStatus(Order o) => switch (o.status) {
@@ -89,7 +92,7 @@ class OrdersController extends ChangeNotifier {
     return _run(() async {
       if (o.status == 'ACCEPTED') await api.setStatus(o.id, 'PREPARING');
       await api.setStatus(o.id, next);
-    });
+    }, o);
   }
 
   Future<bool> reprint(Order o) async => (await printer.printOrder(o, lang: lang())).ok;

@@ -95,7 +95,7 @@ Future<Uint8List> renderReceipt(Order o, {required String lang}) {
   if (o.isDelivery && (o.address ?? '').isNotEmpty) sh.line(o.address!, _s(20));
   sh.divider();
   for (final i in o.items) {
-    sh.pair('${i.quantity}×  ${i.name}${i.variant != null ? ' (${i.variant})' : ''}', money(i.totalMinor, cur).replaceAll(' $cur', ''), _s(22, bold: true));
+    sh.pair('${i.quantity}×  ${i.name}${i.variant != null ? ' (${i.variant})' : ''}', money(i.totalMinor, cur).replaceFirst('$cur ', ''), _s(22, bold: true));
     for (final m in i.modifiers) { sh.line('+ $m', _s(18), indent: 24); }
     if (i.notes.isNotEmpty) sh.line(i.notes, _s(18, italic: true), indent: 24);
     sh.gap(4);

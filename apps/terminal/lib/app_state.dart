@@ -13,6 +13,7 @@ import 'core/store.dart';
 import 'orders/order.dart';
 import 'orders/orders_controller.dart';
 import 'printing/printer.dart';
+import 'ui/strings.dart';
 
 // Ties the pieces together: the saved pairing, the live connection, the orders, the alarm and the printer.
 class AppState extends ChangeNotifier with WidgetsBindingObserver {
@@ -26,6 +27,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   Realtime? _rt;
   bool online = false, ready = false;
   String lang = 'en';
+  String model = 'H10S'; // shown in Settings
   String? pairError;
   bool pairing = false;
 
@@ -34,6 +36,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> init() async {
     lang = store.lang;
+    _model().then((m) { model = m; notifyListeners(); });
     WidgetsBinding.instance.addObserver(this);
     WakelockPlus.enable(); // the screen stays on: this is the order screen
     session = await store.loadSession();
@@ -110,7 +113,7 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     var code = input.replaceAll(RegExp(r'\D'), ''), base = defaultApp;
     final uri = Uri.tryParse(input.trim());
     if (uri != null && uri.scheme == 'lumia-pair') { code = uri.queryParameters['c'] ?? ''; base = uri.queryParameters['h'] ?? defaultApp; }
-    if (code.length != 6) { pairError = ar ? 'أدخل الرمز المكوّن من 6 أرقام.' : 'Enter the 6-digit code.'; notifyListeners(); return; }
+    if (code.length != 6) { pairError = tr(lang, 'sixDigits'); notifyListeners(); return; }
     pairing = true; pairError = null; notifyListeners();
     try {
       final p = await Api(base: base).pair(code: code, serial: await _serial(), model: await _model());
@@ -119,9 +122,9 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       session = s; _connect(s);
     } on ApiError catch (e) {
       pairError = switch (e.code) {
-        'INVALID_CODE' => ar ? 'الرمز غير صحيح أو منتهي. أنشئ رمزاً جديداً من لوحة التحكم.' : 'That code is wrong or expired. Create a new one in the dashboard.',
-        'DEVICE_IN_USE' => ar ? 'هذا الجهاز متصل بمطعم آخر.' : 'This terminal is connected to another restaurant.',
-        'TOO_MANY_ATTEMPTS' => ar ? 'محاولات كثيرة. انتظر قليلاً.' : 'Too many tries. Wait a few minutes.',
+        'INVALID_CODE' => tr(lang, 'codeErr'),
+        'DEVICE_IN_USE' => tr(lang, 'inUse'),
+        'TOO_MANY_ATTEMPTS' => tr(lang, 'tooMany'),
         _ => e.message,
       };
     }
@@ -133,6 +136,9 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> setAlarmOn(bool v) async { await store.setAlarmOn(v); orders?.refreshAlarm(); notifyListeners(); }
 
   Future<void> unpair() async => _revoked();
+
+  // The offline banner's Retry: do not wait for the next automatic attempt.
+  void retry() { _rt?.reconnectNow(); orders?.load(); }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {

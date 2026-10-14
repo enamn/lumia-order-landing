@@ -112,9 +112,16 @@ const NEXT: Record<string, OrderStatus[]> = {
 };
 export const statusSchema = z.object({ status: z.enum(["ACCEPTED", "REJECTED", "PREPARING", "READY", "OUT_FOR_DELIVERY", "COMPLETED", "CANCELLED"]), reason: z.string().trim().max(300).optional(), prepMinutes: z.number().int().min(5).max(180).optional() }).strict();
 
-const NOTICE: Partial<Record<OrderStatus, Record<Lang, (n: string, pickup: boolean, prep?: number) => string>>> = {
+// The terminal sends one of four reasons as its English label; the customer reads it in their own language (anything else is passed on as typed).
+const REASONS: Record<string, Record<Lang, string>> = {
+  "Sold out": { en: "sold out", ar: "نفدت الكمية" }, "Too busy": { en: "we are too busy", ar: "المطعم مشغول جداً" },
+  "Closing soon": { en: "we are closing soon", ar: "سنغلق قريباً" }, "Outside delivery area": { en: "outside our delivery area", ar: "خارج منطقة التوصيل" },
+};
+const reasonFor = (reason: string | undefined, lang: Lang) => (reason ? REASONS[reason]?.[lang] ?? reason : "");
+
+const NOTICE: Partial<Record<OrderStatus, Record<Lang, (n: string, pickup: boolean, prep?: number, reason?: string) => string>>> = {
   ACCEPTED: { en: (n, _p, m) => `✅ Your order #${n} was accepted. ${m ? `It will be ready in about ${m} minutes.` : "We're getting it ready."}`, ar: (n, _p, m) => `✅ تم قبول طلبك رقم ${n}. ${m ? `سيكون جاهزاً خلال ${m} دقيقة تقريباً.` : "نقوم بتجهيزه الآن."}` },
-  REJECTED: { en: n => `Sorry, we can't prepare order #${n} right now. Please contact us if you'd like to try again.`, ar: n => `عذراً، لا يمكننا تجهيز طلبك رقم ${n} حالياً. تواصل معنا إن أردت المحاولة مجدداً.` },
+  REJECTED: { en: (n, _p, _m, r) => `Sorry, we can't prepare order #${n} right now${r ? ` (${r})` : ""}. Please contact us if you'd like to try again.`, ar: (n, _p, _m, r) => `عذراً، لا يمكننا تجهيز طلبك رقم ${n} حالياً${r ? ` (${r})` : ""}. تواصل معنا إن أردت المحاولة مجدداً.` },
   CANCELLED: { en: n => `Your order #${n} was cancelled. Sorry for the trouble.`, ar: n => `تم إلغاء طلبك رقم ${n}. نعتذر عن الإزعاج.` },
   READY: { en: (n, p) => (p ? `🛍️ Your order #${n} is ready for pickup.` : `Your order #${n} is ready and will be on its way shortly.`), ar: (n, p) => (p ? `🛍️ طلبك رقم ${n} جاهز للاستلام.` : `طلبك رقم ${n} جاهز وسيكون في الطريق قريباً.`) },
   OUT_FOR_DELIVERY: { en: n => `🛵 Your order #${n} is on its way.`, ar: n => `🛵 طلبك رقم ${n} في الطريق إليك.` },
@@ -136,7 +143,7 @@ async function applyStatus(actor: Actor, businessId: string, orderId: string, in
     await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId: actor.type === "USER" ? actor.userId : null, entityType: "Order", entityId: orderId, action: `order.${status.toLowerCase()}`, ...(actor.type === "DEVICE" ? { afterData: { deviceId: actor.deviceId } } : {}), requestId } });
     return { order: result, phone: order.customer.phone };
   });
-  await notifyCustomer(businessId, updated.order.conversationId, updated.phone, status, updated.order.orderNumber, updated.order.fulfillmentType === "PICKUP", prepMinutes);
+  await notifyCustomer(businessId, updated.order.conversationId, updated.phone, status, updated.order.orderNumber, updated.order.fulfillmentType === "PICKUP", prepMinutes, reason);
   await emitOrder(orderId, "order.updated", { by: actor.type === "DEVICE" ? { type: "DEVICE", deviceId: actor.deviceId } : { type: "USER" }, ...(reason ? { reason } : {}) });
   return { id: updated.order.id, status: updated.order.status };
 }
@@ -148,13 +155,13 @@ export const setOrderStatusByDevice = (device: { id: string; businessId: string;
   });
 
 // Best effort: WhatsApp only lets us message within 24 hours of the customer's last message, and a failed notice must not undo the status change.
-async function notifyCustomer(businessId: string, conversationId: string | null, phone: string, status: OrderStatus, number: string, pickup: boolean, prep?: number) {
+async function notifyCustomer(businessId: string, conversationId: string | null, phone: string, status: OrderStatus, number: string, pickup: boolean, prep?: number, reason?: string) {
   const notice = NOTICE[status]; if (!notice || !conversationId) return;
   try {
     const account = await db.whatsAppAccount.findFirst({ where: { businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
     const lastInbound = await db.message.findFirst({ where: { conversationId, direction: "INBOUND" }, orderBy: { createdAt: "desc" }, select: { textContent: true, createdAt: true } });
     if (!account || !lastInbound || Date.now() - lastInbound.createdAt.getTime() > 24 * 3600 * 1000) return;
-    const text = notice[langOf(lastInbound.textContent ?? "")](number, pickup, prep);
+    const lang = langOf(lastInbound.textContent ?? ""); const text = notice[lang](number, pickup, prep, reasonFor(reason, lang));
     const messageId = await deliverText(account, phone, text); const now = new Date();
     await db.$transaction([
       db.message.create({ data: { conversationId, externalMessageId: messageId, direction: "OUTBOUND", senderType: "SYSTEM", messageType: "TEXT", textContent: text, status: "SENT", createdAt: now } }),

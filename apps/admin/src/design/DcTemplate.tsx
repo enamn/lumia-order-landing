@@ -2090,7 +2090,11 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           <section style={S("border:2px solid #FF5577;background:#FFF7FA;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px")}>
                                             <div style={S("display:flex;gap:14px;align-items:flex-start")}>
                                               <div style={S("flex:none;width:64px;height:112px;position:relative;overflow:hidden;border-radius:10px;background:#fff")}>
-                                                <img src="/brand/terminal.png" alt="Lumia Order Terminal" width="64" height="112" style={S("display:block;width:100%;height:100%;object-fit:cover")} />
+                                                <div style={S("width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C0284F")}>
+                                                  <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
+                                                    <path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                  </svg>
+                                                </div>
                                               </div>
                                               <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:4px")}>
                                                 <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px")}>

@@ -28,6 +28,11 @@ class Order {
   final Map<String, dynamic> raw; // the whole snapshot, kept for printing
 
   bool get isDelivery => fulfillment == 'DELIVERY';
+  // When it was accepted: the promised time minus the preparation time the staff chose.
+  DateTime? get acceptedAt => promisedAt != null && prepMinutes != null ? promisedAt!.subtract(Duration(minutes: prepMinutes!)) : null;
+  String? get discountCode => raw['discountCode'] as String?;
+  // Variant, options and the customer's note for an item, as one line ("No onion · Extra cheese").
+  static String optionsOf(OrderItem i) => [if (i.variant != null) i.variant!, ...i.modifiers, if (i.notes.isNotEmpty) i.notes].join(' · ');
   bool get isNew => status == 'AWAITING_BUSINESS_CONFIRMATION';
   Stage get stage => switch (status) {
         'AWAITING_BUSINESS_CONFIRMATION' => Stage.fresh,
@@ -57,5 +62,5 @@ String money(int minor, String currency) {
   final d = const {'OMR', 'BHD', 'KWD'}.contains(currency) ? 3 : 2;
   var p = 1; for (var i = 0; i < d; i++) { p *= 10; }
   final v = minor / p;
-  return '${v.toStringAsFixed(v == v.roundToDouble() ? 0 : d)} $currency';
+  return '$currency ${v.toStringAsFixed(v == v.roundToDouble() ? 0 : d)}';
 }

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart' show Color;
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 // Keeps the terminal alive all day (Android 13): a foreground service with its notification keeps the app's process, the live connection and the
@@ -33,6 +34,8 @@ class KeepAliveHandler extends TaskHandler {
 
 class Background {
   static bool _ready = false;
+  // The small icon in the status bar: the Lumia mark (res/drawable/ic_notification.xml, named in the manifest).
+  static const _icon = NotificationIcon(metaDataName: 'ae.lumia.terminal.NOTIFICATION_ICON', backgroundColor: Color(0xFFFF5577));
 
   // Call once at start-up (before runApp).
   static void init() {
@@ -63,10 +66,10 @@ class Background {
   static Future<void> start({required String title, required String text}) async {
     if (!_ready || !Platform.isAndroid) return;
     if (await FlutterForegroundTask.isRunningService) {
-      await FlutterForegroundTask.updateService(notificationTitle: title, notificationText: text);
+      await FlutterForegroundTask.updateService(notificationTitle: title, notificationText: text, notificationIcon: _icon);
     } else {
       await FlutterForegroundTask.startService(
-        serviceId: 256, serviceTypes: [ForegroundServiceTypes.remoteMessaging], notificationTitle: title, notificationText: text, callback: backgroundCallback);
+        serviceId: 256, serviceTypes: [ForegroundServiceTypes.remoteMessaging], notificationTitle: title, notificationText: text, notificationIcon: _icon, callback: backgroundCallback);
     }
   }
 
