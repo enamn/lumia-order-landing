@@ -9,6 +9,7 @@ export async function recordStatuses(input: unknown) {
   const { statuses } = statusSchema.parse(input);
   const campaigns = new Set<string>(); let updated = 0;
   for (const st of statuses) {
+    console.info(JSON.stringify({ event: "whatsapp.delivery.status", status: st.status, ...(st.errorCode ? { errorCode: st.errorCode } : {}) }));
     const rec = await db.campaignRecipient.findFirst({ where: { messageId: st.messageId } });
     if (!rec) continue; // an ordinary chat message, not a campaign
     const at = new Date(Number(st.timestamp) * 1000);
