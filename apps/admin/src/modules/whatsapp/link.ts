@@ -12,7 +12,7 @@ import { saveMenu, type SaveCategory } from "@/modules/menu/import";
 // Links the owner's own WhatsApp Business account (Meta Embedded Signup). Meta calls run in lumia-order-api;
 // this module authorizes, stores the encrypted token and applies imports. Nothing here sends or stores customer messages.
 const id = z.string().regex(/^\d{5,30}$/);
-export const connectSchema = z.object({ code: z.string().min(1).max(2048), wabaId: id.optional(), phoneNumberId: id.optional(), mode: z.enum(["existing", "new"]).default("existing") }).strict();
+export const connectSchema = z.object({ code: z.string().min(1).max(2048), wabaId: id.optional(), phoneNumberId: id.optional(), businessPortfolioId: id.optional(), mode: z.enum(["existing", "new"]).default("existing") }).strict();
 export const applySchema = z.object({ name: z.enum(["lumia", "wa"]).optional(), logo: z.enum(["lumia", "wa"]).optional(), address: z.enum(["lumia", "wa"]).optional() }).strict();
 export const catalogUseSchema = z.object({ mode: z.enum(["use", "replace"]) }).strict();
 
@@ -32,7 +32,7 @@ export async function getWhatsAppStatus(userId: string, businessId: string) {
   await authorize(userId, businessId);
   const a = await currentAccount(businessId);
   if (!a) return { status: "none" as const };
-  return { status: a.status === "CONNECTED" ? "connected" as const : "disconnected" as const, displayPhoneNumber: a.displayPhoneNumber ?? "", verifiedName: a.verifiedName ?? "", connectedAt: a.connectedAt };
+  return { status: a.status === "CONNECTED" ? "connected" as const : "disconnected" as const, displayPhoneNumber: a.displayPhoneNumber ?? "", verifiedName: a.verifiedName ?? "", businessPortfolioName: a.businessPortfolioName ?? "", connectedAt: a.connectedAt };
 }
 
 async function fetchCatalog(a: { phoneNumberId: string | null; wabaId: string | null; accessTokenEncrypted: string | null }) {
@@ -55,11 +55,11 @@ export async function connectWhatsApp(userId: string, businessId: string, input:
   const data = connectSchema.parse(input);
   await authorize(userId, businessId, "business.manage");
   if ((data.code === "dev" && !devLinkMode()) || (data.code === "test" && !linkTestMode())) throw new AppError("WHATSAPP_LINK_INVALID_CODE", "Permission was cancelled before setup finished.", 400); // simulated codes only exist in local development modes
-  let link: { accessToken: string; wabaId: string; phoneNumberId: string; displayPhoneNumber: string; verifiedName: string; permissions: string[] };
+  let link: { accessToken: string; wabaId: string; phoneNumberId: string; displayPhoneNumber: string; verifiedName: string; businessPortfolioId?: string; businessPortfolioName?: string; permissions: string[] };
   if (data.code === "test" && linkTestMode()) {
-    link = { accessToken: "test-token", wabaId: "100000000000001", phoneNumberId: `test-${businessId}`, displayPhoneNumber: TEST_PROFILE.phone, verifiedName: TEST_PROFILE.name, permissions: ["whatsapp_business_management", "whatsapp_business_messaging"] };
+    link = { accessToken: "test-token", wabaId: "100000000000001", phoneNumberId: `test-${businessId}`, displayPhoneNumber: TEST_PROFILE.phone, verifiedName: TEST_PROFILE.name, businessPortfolioId: "100000000000002", businessPortfolioName: "Test Restaurant Portfolio", permissions: ["business_management", "whatsapp_business_management", "whatsapp_business_messaging"] };
   } else {
-    const r = await lumiaApi<typeof link>("/internal/whatsapp/connect", { code: data.code, ...(data.wabaId ? { wabaId: data.wabaId } : {}), ...(data.phoneNumberId ? { phoneNumberId: data.phoneNumberId } : {}), mode: data.mode }, 60000);
+    const r = await lumiaApi<typeof link>("/internal/whatsapp/connect", { code: data.code, ...(data.wabaId ? { wabaId: data.wabaId } : {}), ...(data.phoneNumberId ? { phoneNumberId: data.phoneNumberId } : {}), ...(data.businessPortfolioId ? { businessPortfolioId: data.businessPortfolioId } : {}), mode: data.mode }, 60000);
     if (!r.ok) { const e = r.code ? linkErrors[r.code] : undefined; throw new AppError(e?.[0] ?? "WHATSAPP_LINK_FAILED", e?.[1] ?? "We couldn't connect WhatsApp. Please try again.", e?.[2] ?? 502); }
     link = r.data;
   }
@@ -71,16 +71,16 @@ export async function connectWhatsApp(userId: string, businessId: string, input:
       if (owner.status === "CONNECTED") throw new AppError("WHATSAPP_NUMBER_IN_USE", "This WhatsApp number is already connected to another restaurant.", 409);
       await tx.whatsAppAccount.delete({ where: { id: owner.id } }); // released by a previous owner
     }
-    const fields = { provider: "META_CLOUD_API", phoneNumberId: link.phoneNumberId, wabaId: link.wabaId, displayPhoneNumber: link.displayPhoneNumber, verifiedName: link.verifiedName, permissions: link.permissions, status: "CONNECTED", accessTokenEncrypted: encrypted, connectedAt: new Date(), disconnectedAt: null };
+    const fields = { provider: "META_CLOUD_API", phoneNumberId: link.phoneNumberId, wabaId: link.wabaId, displayPhoneNumber: link.displayPhoneNumber, verifiedName: link.verifiedName, businessPortfolioId: link.businessPortfolioId ?? null, businessPortfolioName: link.businessPortfolioName ?? null, permissions: link.permissions, status: "CONNECTED", accessTokenEncrypted: encrypted, connectedAt: new Date(), disconnectedAt: null };
     const mine = await tx.whatsAppAccount.findFirst({ where: { businessId }, orderBy: { createdAt: "desc" } });
     if (mine) await tx.whatsAppAccount.update({ where: { id: mine.id }, data: fields }); else await tx.whatsAppAccount.create({ data: { businessId, ...fields } });
     await tx.onboardingSession.updateMany({ where: { businessId }, data: { lastActivityAt: new Date() } });
     const session = await tx.onboardingSession.findUnique({ where: { businessId } });
     if (session) await tx.onboardingStep.updateMany({ where: { onboardingSessionId: session.id, stepKey: "WHATSAPP" }, data: { status: "COMPLETED", completedAt: new Date() } });
-    await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "WhatsAppAccount", entityId: link.phoneNumberId, action: "whatsapp.connected", requestId, afterData: { wabaId: link.wabaId, permissions: link.permissions } } });
+    await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "WhatsAppAccount", entityId: link.phoneNumberId, action: "whatsapp.connected", requestId, afterData: { wabaId: link.wabaId, businessPortfolioId: link.businessPortfolioId ?? null, permissions: link.permissions } } });
   });
   const catalog = await fetchCatalog({ phoneNumberId: link.phoneNumberId, wabaId: link.wabaId, accessTokenEncrypted: encrypted }).catch(() => ({ categories: [] }));
-  return { status: "connected" as const, displayPhoneNumber: link.displayPhoneNumber, verifiedName: link.verifiedName, catalogItems: catalog.categories.reduce((n, c) => n + c.items.length, 0) };
+  return { status: "connected" as const, displayPhoneNumber: link.displayPhoneNumber, verifiedName: link.verifiedName, businessPortfolioName: link.businessPortfolioName ?? "", catalogItems: catalog.categories.reduce((n, c) => n + c.items.length, 0) };
 }
 
 export async function getImportInfo(userId: string, businessId: string) {

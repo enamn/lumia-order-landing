@@ -2307,10 +2307,10 @@ export function DcTemplate({ vm }: { vm: any }) {
                                   </div>
                                   <div style={S("display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EFE3E9;font-size:14px")}>
                                     <span style={S("color:#8A5A6E")}>
-                                      Business account
+                                      Business portfolio
                                     </span>
                                     <span>
-                                      Active
+                                      {vm.waPortfolio || "Connected"}
                                     </span>
                                   </div>
                                   </>
@@ -2608,10 +2608,10 @@ export function DcTemplate({ vm }: { vm: any }) {
                                       </div>
                                       <div style={S("display:flex;flex-direction:column;gap:4px")}>
                                         <span style={S("font-size:12px;color:#8A5A6E")}>
-                                          Business account
+                                          Business portfolio
                                         </span>
                                         <span style={S("font-size:14px;font-weight:500")}>
-                                          Active
+                                          {vm.waPortfolio || "Connected"}
                                         </span>
                                       </div>
                                     </div>

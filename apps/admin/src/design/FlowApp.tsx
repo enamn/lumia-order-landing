@@ -37,7 +37,7 @@ export interface FlowProps {
   business?: { id: string; name: string; logoUrl: string | null; address: string };
   menu: MenuCat[];
   canEdit: boolean;
-  wa: { status: "none" | "connected" | "disconnected"; displayPhoneNumber: string; verifiedName: string };
+  wa: { status: "none" | "connected" | "disconnected"; displayPhoneNumber: string; verifiedName: string; businessPortfolioName?: string };
   meta: { appId: string; configId: string; graphVersion: string };
   marketingUrl: string;
   initialPage?: "Overview" | "Orders" | "Menu" | "WhatsApp" | "Settings" | "Billing" | "Customers" | "Campaigns";
@@ -112,7 +112,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       currency: "", opCountry: "", opVat: "", digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu, props.currency)) > 0, cat: "All", menu: toCats(props.menu, props.currency), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
-      page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", embedId: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
+      page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", embedId: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waPortfolio: props.wa.businessPortfolioName ?? "", waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
       custList: null as any, custErr: "", custSel: [] as string[], custOpen: null as any, custQ: "", campMode: "all", campCode: true, campPct: 20, campDays: 7, campMsgAll: `Hi {name}, this weekend only: 20% off all burgers at ${business?.name ?? "our restaurant"}. Reply here to order.`, campMsgOffer: `Hi {name}, thanks for ordering with us. Here’s a discount on your next order from ${business?.name ?? "us"}.`, campCodeTxt: "WEEKEND20", campImg: "", campImgFile: null as any, campImgName: "", campSending: false, campToast: "", campErr: "", campHist: null as any,
       menuScope: null as Scope | null, menuBranch: "", scopeBusy: false, scopeErr: "", lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
     };
@@ -564,14 +564,14 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   }
   // Opens Meta's popup (Facebook Login for Business with the Embedded Signup configuration). The one-time code is all we need:
   // the API reads which WhatsApp account and number the owner shared from the token itself. If Meta also posts the ids we pass them along.
-  embeddedSignup(): Promise<{ code: string; wabaId?: string; phoneNumberId?: string }> {
+  embeddedSignup(): Promise<{ code: string; wabaId?: string; phoneNumberId?: string; businessPortfolioId?: string }> {
     const { appId, configId } = this.props.meta;
     if (!appId || !configId) return Promise.reject(Object.assign(Error("WhatsApp linking is not available yet. Please try again later."), { code: "WHATSAPP_LINK_NOT_CONFIGURED" }));
     return this.loadFb().then(FB => new Promise((resolve, reject) => {
-      let ids: { wabaId?: string; phoneNumberId?: string } = {};
+      let ids: { wabaId?: string; phoneNumberId?: string; businessPortfolioId?: string } = {};
       const onMessage = (ev: MessageEvent) => {
         if (!/^https:\/\/(www|web)\.facebook\.com$/.test(ev.origin)) return;
-        try { const d = JSON.parse(ev.data); if (d.type === "WA_EMBEDDED_SIGNUP" && d.data?.waba_id && d.data?.phone_number_id) ids = { wabaId: String(d.data.waba_id), phoneNumberId: String(d.data.phone_number_id) }; } catch { /* not ours */ }
+        try { const d = JSON.parse(ev.data); if (d.type === "WA_EMBEDDED_SIGNUP" && d.data) ids = { ...(d.data.waba_id ? { wabaId: String(d.data.waba_id) } : {}), ...(d.data.phone_number_id ? { phoneNumberId: String(d.data.phone_number_id) } : {}), ...(d.data.business_id ? { businessPortfolioId: String(d.data.business_id) } : {}) }; } catch { /* not ours */ }
       };
       window.addEventListener("message", onMessage);
       FB.login((resp: any) => {
@@ -587,7 +587,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       const input = this.props.linkTestMode ? { code: "test" } : this.props.devLink ? { code: "dev" } : { ...(await this.embeddedSignup()), mode: this.props.linkMode };
       const r = await api(`/api/v1/businesses/${this.state.businessId}/whatsapp/connect`, "POST", input);
       if (token !== this.connectToken) return;
-      this.setState({ wa: "success", waStatus: "connected", waName: r.verifiedName, waPhone: r.displayPhoneNumber, waCatalog: r.catalogItems > 0, waInfo: null });
+      this.setState({ wa: "success", waStatus: "connected", waName: r.verifiedName, waPhone: r.displayPhoneNumber, waPortfolio: r.businessPortfolioName || "", waCatalog: r.catalogItems > 0, waInfo: null });
       api(`/api/v1/businesses/${this.state.businessId}/whatsapp/import`).then(info => token === this.connectToken && this.setState({ waInfo: info })).catch(() => undefined);
     } catch (err: any) {
       if (token !== this.connectToken) return;
@@ -729,7 +729,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       cancelConnect: () => { this.connectToken++; this.setState({ wa: "intro" }); },
       waRing: ce("div", { key: "war", style: { position: "absolute", inset: 0, borderRadius: "50%", background: "conic-gradient(from 0deg,rgba(255,85,119,0),#FF5577 40%,#C93DFF 70%,rgba(201,61,255,0) 72%)", WebkitMask: "radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px))", mask: "radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px))", animation: "lo-rot 1.4s linear infinite" } }),
       waSteps: ["Sign in with Meta", "Select your business", "Choose your WhatsApp number", "Approve Lumia access"].map((label, i) => ({ n: i + 1, label })),
-      waCatalog: s.waCatalog, waNoCatalog: !s.waCatalog, waName: s.waName, waPhone: s.waPhone, waInitials,
+      waCatalog: s.waCatalog, waNoCatalog: !s.waCatalog, waName: s.waName, waPhone: s.waPhone, waPortfolio: s.waPortfolio, waInitials,
       successContinue: () => this.setState({ wa: s.waCatalog ? "import" : null }), manageConnection: () => { this.setState({ wa: null, page: "WhatsApp" }); this.loadStats(); },
       waImport, useAll: () => this.applyChoices({ name: "wa", logo: waProfile.hasLogo ? "wa" : "lumia", address: waProfile.address ? "wa" : "lumia" }), toReview: () => this.setState({ wa: "review" }), toImport: () => this.setState({ wa: "import" }),
       waDiffs: diffs.map(([k, label, lv, wv]) => ({ label, opts: [["lumia", "Keep Lumia version", lv], ["wa", "Use WhatsApp version", wv]].map(([v, src, value]) => { const on = ch[k] === v; return { src, value, on, bd: on ? "#FF5577" : "#ECD9E0", bg: on ? "#FFF5F8" : "#fff", dotBd: on ? "5px solid #FF5577" : "1.5px solid #D9BFCB", fg: value === "Not set" || value === "No logo" ? "#8A5A6E" : "#1A0815", pick: () => pickC(k, v as string) }; }) })),

@@ -638,6 +638,8 @@ model WhatsAppAccount {
   wabaId String?
   displayPhoneNumber String?
   verifiedName String?
+  businessPortfolioId String?
+  businessPortfolioName String?
   permissions String[]
   status String @default("PENDING")
   accessTokenEncrypted String?
