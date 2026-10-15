@@ -2,7 +2,7 @@ import { z } from "zod";
 import { db } from "@/server/db";
 
 // WhatsApp tells us when a message we sent was delivered, read or could not be delivered. Only campaign messages are tracked.
-export const statusSchema = z.object({ statuses: z.array(z.object({ messageId: z.string().min(5).max(200), status: z.enum(["delivered", "read", "failed"]), timestamp: z.string().regex(/^\d{1,12}$/), phoneNumberId: z.string().max(40).optional(), errorCode: z.number().int().optional() }).strict()).max(200) }).strict();
+export const statusSchema = z.object({ statuses: z.array(z.object({ messageId: z.string().min(5).max(200), status: z.enum(["delivered", "read", "failed"]), timestamp: z.string().regex(/^\d{1,12}$/), phoneNumberId: z.string().max(40).optional(), recipientId: z.string().max(40).optional(), errorCode: z.number().int().optional() }).strict()).max(200) }).strict();
 const RANK: Record<string, number> = { PENDING: 0, SENT: 1, DELIVERED: 2, READ: 3 };
 
 export async function recordStatuses(input: unknown) {
