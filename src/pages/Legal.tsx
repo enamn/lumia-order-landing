@@ -47,7 +47,10 @@ function LegalLayout({ title, eyebrow = 'Legal', children }: { title: string; ey
       <footer className="legal-footer">
         <div className="wrap footer__legal">
           <LegalLinks />
-          <span>Lumia Order is developed and operated by Afkar IO FZE LLC · <a href="mailto:partners@afkario.com">partners@afkario.com</a></span>
+          <span style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span>Built for bold ideas. Lumia is a product of <a href="https://afkario.com/" target="_blank" rel="noopener">Afkar IO FZE LLC</a>. · <a href="mailto:partners@afkario.com">partners@afkario.com</a></span>
+            <span>© 2026 Lumia. All rights reserved.</span>
+          </span>
         </div>
       </footer>
     </div>
@@ -81,6 +84,7 @@ export function PrivacyPage() {
         <Section title="5. Technical data">
           <p>We may collect technical data such as:</p>
           <List items={['IP address', 'Browser / device type', 'Terminal identifiers', 'Application version', 'Diagnostic logs', 'Authentication and security events']} />
+          <p>On our public website we count visits, the pricing section being viewed and clicks on sign-up buttons. We do this without cookies and do not keep your IP address: we keep only your country and an anonymous code that changes every day. We do not count visitors whose browser sends Do Not Track or Global Privacy Control.</p>
         </Section>
         <Section title="6. Purpose of processing">
           <p>We use this information to:</p>

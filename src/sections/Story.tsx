@@ -1,22 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
 import { fade } from '../components/hooks';
 import { WAVE } from '../data';
+import { Aed } from '../components/Money';
+import { useT } from '../i18n';
 
 export function Stats() {
+  const t = useT();
   const stats = [
-    ['0%', 'Commission'],
-    ['24/7', 'AI ordering'],
-    ['Text + Voice', 'Ordering'],
-    ['Your WhatsApp', 'Your customers'],
+    ['0%', t('Commission', 'عمولة')],
+    ['24/7', t('AI ordering', 'طلبات بالذكاء الاصطناعي')],
+    [t('Text + Voice', 'نص + صوت'), t('Ordering', 'للطلبات')],
+    [t('Your WhatsApp', 'واتساب الخاص بك'), t('Your customers', 'عملاؤك')],
   ];
   return (
     <section style={{ padding: 'clamp(56px,7vw,96px) 0 0' }}>
       <div className="wrap split" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,440px),1fr))', gap: '20px 64px' }}>
         <h2 className="h2" style={{ fontSize: 'clamp(30px,3.8vw,48px)', letterSpacing: '-0.035em', lineHeight: 1.05 }}>
-          Nothing reaches your restaurant until the customer confirms.
+          {t('Nothing reaches your restaurant until the customer confirms.', 'لا يصل أي طلب إلى مطعمك قبل أن يؤكده العميل.')}
         </h2>
         <p className="lead" style={{ maxWidth: 520 }}>
-          Lumia structures the order, checks it against your menu and shows the final order to the customer before sending it to your restaurant.
+          {t('Lumia structures the order, checks it against your menu and shows the final order to the customer before sending it to your restaurant.', 'ينظّم لوميا الطلب ويطابقه مع قائمتك ويعرض الطلب النهائي على العميل قبل إرساله إلى مطعمك.')}
         </p>
       </div>
       <div className="wrap" style={{ marginTop: 'clamp(40px,5vw,64px)' }}>
@@ -31,14 +34,15 @@ export function Stats() {
 }
 
 export function WhatsAppChaos() {
-  const msgs = ['Menu?', 'Do you have chicken?', 'How much delivery?', '2 burgers', 'one without cheese', 'actually add fries', 'location?', 'how long?'];
+  const t = useT();
+  const msgs = t(['Menu?', 'Do you have chicken?', 'How much delivery?', '2 burgers', 'one without cheese', 'actually add fries', 'location?', 'how long?'], ['القائمة؟', 'عندكم دجاج؟', 'كم التوصيل؟', '2 برجر', 'واحد بدون جبنة', 'وزيدوا بطاطس', 'الموقع؟', 'كم تأخذ؟']);
   return (
     <section className="section">
       <div className="wrap grid" style={{ ['--min' as string]: '460px', gap: 'clamp(40px,6vw,88px)', alignItems: 'center' }}>
         <div>
-          <h2 className="h2">Your customers already order on WhatsApp.</h2>
+          <h2 className="h2">{t('Your customers already order on WhatsApp.', 'عملاؤك يطلبون عبر واتساب أصلاً.')}</h2>
           <p style={{ fontSize: 'clamp(22px,2.2vw,28px)', lineHeight: 1.3, fontWeight: 600, letterSpacing: '-0.02em', marginTop: 24, maxWidth: 480, textWrap: 'pretty' }}>
-            Lumia handles the conversation. Your team handles the food.
+            {t('Lumia handles the conversation. Your team handles the food.', 'لوميا يتولى المحادثة، وفريقك يتولى الطعام.')}
           </p>
         </div>
         <div className="grid" style={{ ['--min' as string]: '230px', gap: 16, alignItems: 'center' }}>
@@ -49,15 +53,15 @@ export function WhatsAppChaos() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div className="eyebrow" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span className="eyebrow-bar" />Organized by Lumia
+              <span className="eyebrow-bar" />{t('Organized by Lumia', 'نظّمه لوميا')}
             </div>
             <div className="card tabnum" style={{ padding: 20 }}>
-              <div className="item" style={{ fontSize: 15 }}><span className="item__qty" style={{ width: 26 }}>2×</span><span>Chicken Burger</span></div>
-              <div className="item__mod" style={{ paddingInlineStart: 36 }}>– 1 × No cheese</div>
-              <div className="item" style={{ fontSize: 15, marginTop: 10 }}><span className="item__qty" style={{ width: 26 }}>1×</span><span>Fries</span></div>
+              <div className="item" style={{ fontSize: 15 }}><span className="item__qty" style={{ width: 26 }}>2×</span><span>{t('Chicken Burger', 'برجر دجاج')}</span></div>
+              <div className="item__mod" style={{ paddingInlineStart: 36 }}>{t('– 1 × No cheese', '– 1 × بدون جبنة')}</div>
+              <div className="item" style={{ fontSize: 15, marginTop: 10 }}><span className="item__qty" style={{ width: 26 }}>1×</span><span>{t('Fries', 'بطاطس')}</span></div>
               <div className="dashed" style={{ margin: '14px 0 10px' }} />
-              <div className="row-between" style={{ fontSize: 15 }}><span className="muted">Delivery</span><span>AED 8</span></div>
-              <div className="note note--ok" style={{ marginTop: 14, padding: '9px 12px' }}>Customer confirmed ✓</div>
+              <div className="row-between" style={{ fontSize: 15 }}><span className="muted">{t('Delivery', 'التوصيل')}</span><span><Aed n={8} /></span></div>
+              <div className="note note--ok" style={{ marginTop: 14, padding: '9px 12px' }}>{t('Customer confirmed ✓', 'أكّد العميل ✓')}</div>
             </div>
           </div>
         </div>
@@ -67,27 +71,28 @@ export function WhatsAppChaos() {
 }
 
 export function Ownership() {
-  const perks = ['Your WhatsApp', 'Your customer relationship', 'Your menu', 'Your delivery rules', 'Your brand', '0% Lumia commission per order'];
+  const t = useT();
+  const perks = t(['Your WhatsApp', 'Your customer relationship', 'Your menu', 'Your delivery rules', 'Your brand', '0% Lumia commission per order'], ['واتساب الخاص بك', 'علاقتك بعملائك', 'قائمتك', 'قواعد التوصيل لديك', 'علامتك التجارية', '0% عمولة من لوميا على كل طلب']);
   return (
     <section className="section section--soft">
       <div className="wrap">
-        <h2 className="h2" style={{ maxWidth: 820 }}>Your customers stay your customers.</h2>
+        <h2 className="h2" style={{ maxWidth: 820 }}>{t('Your customers stay your customers.', 'عملاؤك يبقون عملاءك.')}</h2>
         <div className="grid" style={{ gap: 'clamp(24px,3vw,40px)', marginTop: 'clamp(40px,5vw,60px)', alignItems: 'start' }}>
           <div className="flow">
-            <div className="eyebrow" style={{ marginBottom: 18 }}>Traditional marketplace</div>
-            <div className="flow__node">Customer</div>
+            <div className="eyebrow" style={{ marginBottom: 18 }}>{t('Traditional marketplace', 'التطبيقات التقليدية')}</div>
+            <div className="flow__node">{t('Customer', 'العميل')}</div>
             <div className="flow__link" />
-            <div className="flow__node flow__node--mid">Marketplace</div>
+            <div className="flow__node flow__node--mid">{t('Marketplace', 'التطبيق الوسيط')}</div>
             <div className="flow__link" />
-            <div className="flow__node">Restaurant</div>
+            <div className="flow__node">{t('Restaurant', 'المطعم')}</div>
           </div>
           <div className="flow">
             <div className="eyebrow" style={{ marginBottom: 18, color: 'var(--ink)' }}>Lumia Order</div>
-            <div className="flow__node flow__node--brand">Customer</div>
+            <div className="flow__node flow__node--brand">{t('Customer', 'العميل')}</div>
             <div className="flow__link flow__link--brand" style={{ background: 'linear-gradient(#FF5577,#E449B8)' }} />
-            <div className="flow__node flow__node--brand">Your WhatsApp</div>
+            <div className="flow__node flow__node--brand">{t('Your WhatsApp', 'واتساب الخاص بك')}</div>
             <div className="flow__link flow__link--brand" style={{ background: 'linear-gradient(#E449B8,#C93DFF)' }} />
-            <div className="flow__node flow__node--brand">Your Restaurant</div>
+            <div className="flow__node flow__node--brand">{t('Your Restaurant', 'مطعمك')}</div>
           </div>
           <div className="checklist">
             {perks.map((p) => (
@@ -100,70 +105,21 @@ export function Ownership() {
   );
 }
 
-export function HowItWorks() {
-  return (
-    <section id="how" className="section">
-      <div className="wrap">
-        <div className="eyebrow eyebrow--lg">How it works</div>
-        <h2 className="h2" style={{ marginTop: 14, maxWidth: 760 }}>From message to kitchen in four steps.</h2>
-        <div className="how__bar" />
-        <div className="grid">
-          <Step n="01" color="#FF5577" title="Customer messages" text="Text or voice through WhatsApp.">
-            <div className="how__demo">
-              <div className="bubble">2 chicken burgers please</div>
-              <div className="bubble" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                <span className="tri" style={{ borderColor: 'transparent transparent transparent var(--ink)', marginInlineStart: 0 }} />
-                <span style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                  {[8, 14, 10, 16, 7, 12].map((h, i) => <span key={i} style={{ width: 2, height: h, background: '#5E7A58' }} />)}
-                </span>
-                <span className="mono" style={{ fontSize: 11 }}>0:13</span>
-              </div>
-            </div>
-          </Step>
-          <Step n="02" color="#EE4F97" title="Lumia understands" text="Lumia identifies every part of the order.">
-            <div className="tags" style={{ marginTop: 20 }}>
-              {['Products', 'Quantities', 'Variants', 'Modifiers', 'Delivery information'].map((t) => <span key={t} className="tag">{t}</span>)}
-            </div>
-          </Step>
-          <Step n="03" color="#DC46C6" title="Customer confirms" text="Lumia sends the complete order and total. The customer confirms before submission.">
-            <div className="how__demo">
-              <div className="bubble bubble--in" style={{ border: '1px solid var(--line)' }}>Total AED 82. Confirm?</div>
-              <div className="bubble">Yes ✓</div>
-            </div>
-          </Step>
-          <Step n="04" color="#C93DFF" title="Restaurant receives it" text="The confirmed order appears instantly. Accept or reject and select the ETA." last>
-            <div className="how__demo" style={{ gap: 6 }}>
-              <span className="tag" style={{ background: 'var(--grad)', color: '#fff', fontWeight: 500, padding: '7px 12px' }}>Lumia Order Terminal · recommended</span>
-              <span className="tag" style={{ background: 'none', border: '1px solid var(--line-2)', padding: '7px 12px' }}>Web Dashboard</span>
-            </div>
-          </Step>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Step({ n, color, title, text, last, children }: { n: string; color: string; title: string; text: string; last?: boolean; children: React.ReactNode }) {
-  return (
-    <div className="how__step" style={last ? { paddingInlineEnd: 0 } : undefined}>
-      <div className="how__node" style={{ background: color }} />
-      <div className="how__num">{n}</div>
-      <h3 className="h3" style={{ marginTop: 8 }}>{title}</h3>
-      <p>{text}</p>
-      {children}
-    </div>
-  );
-}
-
 export function Voice() {
+  const t = useT();
   // 0 = idle, 1 = transcribed, 2 = structured (3 = resting state, everything shown)
   const [stage, setStage] = useState(3);
   const [pos, setPos] = useState<number | null>(null);
   const timer = useRef<number | undefined>(undefined);
+  const loop = useRef<number | undefined>(undefined);
+  const played = useRef(false);
+  const ref = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
 
-  useEffect(() => () => window.clearInterval(timer.current), []);
+  useEffect(() => () => { window.clearInterval(timer.current); window.clearTimeout(loop.current); }, []);
 
   const play = () => {
+    window.clearTimeout(loop.current);
     window.clearInterval(timer.current);
     let p = 0;
     setStage(0);
@@ -181,22 +137,38 @@ export function Voice() {
       }
     }, 90);
   };
+  const auto = useRef(false);
+  auto.current = visible && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !('IntersectionObserver' in window)) { setVisible(true); return; }
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.4 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!auto.current || played.current) return;
+    played.current = true;
+    play();
+  }, [visible]);
 
   return (
-    <section className="section section--soft">
+    <section className="section section--soft" ref={ref}>
       <div className="wrap">
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24 }}>
           <h2 className="h2" style={{ fontSize: 'clamp(40px,6vw,80px)', letterSpacing: '-0.045em', lineHeight: 1 }}>
-            They can say it.<br /><span className="grad-text">Lumia</span> can order it.
+            {t(<>They can say it.<br /><span className="grad-text">Lumia</span> can order it.</>, <>هم يقولونها.<br /><span className="grad-text">لوميا</span> يطلبها.</>)}
           </h2>
           <button className="btn btn--ghost" style={{ height: 48, padding: '0 20px', fontSize: 15 }} onClick={play}>
-            ▶ Play voice message
+            {t('↻ Replay voice message', '↻ أعد تشغيل الرسالة الصوتية')}
           </button>
         </div>
 
         <div className="grid" style={{ ['--min' as string]: '300px', gap: 'clamp(16px,2vw,28px)', marginTop: 'clamp(40px,5vw,60px)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div className="eyebrow">01 · WhatsApp voice message</div>
+            <div className="eyebrow">{t('01 · WhatsApp voice message', '01 · رسالة صوتية على واتساب')}</div>
             <div className="card vplayer">
               <div className="vplayer__btn"><span className="tri" /></div>
               <div className="vplayer__wave">
@@ -207,33 +179,37 @@ export function Voice() {
               <span className="mono muted" style={{ fontSize: 13 }}>🎙 0:13</span>
             </div>
           </div>
-          <div className={fade(stage >= 1)} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div className="eyebrow">02 · Transcription</div>
+          <div className={`${fade(stage >= 1)} vsay${stage >= 1 && stage < 3 ? ' is-run' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="eyebrow">{t('02 · Transcription', '02 · تحويل الصوت إلى نص')}</div>
             <p style={{ fontSize: 'clamp(20px,2vw,24px)', lineHeight: 1.45, letterSpacing: '-0.01em', textWrap: 'pretty' }}>
-              "Give me <span className="hl" style={{ background: 'rgba(255,85,119,.22)' }}>two spicy chicken burgers</span>,{' '}
+              {t(<>"Give me <span className="hl" style={{ background: 'rgba(255,85,119,.22)' }}>two spicy chicken burgers</span>,{' '}
               <span className="hl" style={{ background: 'rgba(228,73,184,.25)' }}>one without cheese</span>,{' '}
               <span className="hl" style={{ background: 'rgba(255,85,119,.22)' }}>fries</span> and{' '}
-              <span className="hl" style={{ background: 'rgba(201,61,255,.25)' }}>three Pepsi</span>."
+              <span className="hl" style={{ background: 'rgba(201,61,255,.25)' }}>three Pepsi</span>."</>, <>"أعطني <span className="hl" style={{ background: 'rgba(255,85,119,.22)' }}>اثنين برجر دجاج حار</span>،{' '}
+              <span className="hl" style={{ background: 'rgba(228,73,184,.25)' }}>واحد بدون جبنة</span>،{' '}
+              <span className="hl" style={{ background: 'rgba(255,85,119,.22)' }}>بطاطس</span> و{' '}
+              <span className="hl" style={{ background: 'rgba(201,61,255,.25)' }}>ثلاث بيبسي</span>."</>)}
             </p>
           </div>
-          <div className={fade(stage >= 2)} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div className="eyebrow">03 · Structured Lumia Order</div>
+          <div className={`${fade(stage >= 2)} vorder${stage >= 2 && stage < 3 ? ' is-run' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="eyebrow">{t('03 · Structured Lumia Order', '03 · طلب لوميا منظّم')}</div>
             <div className="card" style={{ borderRadius: 18, padding: 20, fontSize: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div>
-                <div className="item"><span className="item__qty">2×</span><span>Spicy Chicken Burger</span></div>
-                <div className="item__mod" style={{ fontSize: 14 }}>– 1 × No cheese</div>
+                <div className="item"><span className="item__qty">2×</span><span>{t('Spicy Chicken Burger', 'برجر دجاج حار')}</span></div>
+                <div className="item__mod" style={{ fontSize: 14 }}>{t('– 1 × No cheese', '– 1 × بدون جبنة')}</div>
               </div>
-              <div className="item"><span className="item__qty">1×</span><span>Fries</span></div>
-              <div className="item"><span className="item__qty">3×</span><span>Pepsi</span></div>
+              <div className="item"><span className="item__qty">1×</span><span>{t('Fries', 'بطاطس')}</span></div>
+              <div className="item"><span className="item__qty">3×</span><span>{t('Pepsi', 'بيبسي')}</span></div>
             </div>
           </div>
         </div>
 
+
         <div className="grid" style={{ ['--min' as string]: '300px', marginTop: 'clamp(40px,5vw,56px)', paddingTop: 'clamp(28px,3vw,36px)', borderTop: '1px solid var(--line-2)', gap: 'clamp(16px,2vw,28px)', alignItems: 'center' }}>
           <div>
-            <div className="eyebrow">Built for the UAE</div>
+            <div className="eyebrow">{t('Built for the Gulf', 'مصمم للخليج')}</div>
             <p style={{ fontSize: 18, lineHeight: 1.5, marginTop: 10, maxWidth: 360, textWrap: 'pretty' }}>
-              Customers mix Arabic and English in one message. The order comes out the same.
+              {t('Customers mix Arabic and English in one message. The order comes out the same.', 'يخلط العملاء العربية والإنجليزية في رسالة واحدة، ويخرج الطلب منظّماً بالدقة نفسها.')}
             </p>
           </div>
           <div dir="rtl" lang="ar" style={{ justifySelf: 'start', background: 'var(--wa)', borderRadius: '14px 14px 14px 4px', padding: '12px 16px', fontFamily: "'Cairo',sans-serif", fontSize: 18, lineHeight: 1.6, maxWidth: 380 }}>
@@ -241,10 +217,10 @@ export function Voice() {
           </div>
           <div className="card" style={{ borderRadius: 18, padding: '18px 20px', fontSize: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div>
-              <div className="item"><span className="item__qty">2×</span><span>Chicken Burger</span></div>
-              <div className="item__mod" style={{ fontSize: 14 }}>– 1 × No pickles</div>
+              <div className="item"><span className="item__qty">2×</span><span>{t('Chicken Burger', 'برجر دجاج')}</span></div>
+              <div className="item__mod" style={{ fontSize: 14 }}>{t('– 1 × No pickles', '– 1 × بدون مخلل')}</div>
             </div>
-            <div className="item"><span className="item__qty">1×</span><span>Large Fries</span></div>
+            <div className="item"><span className="item__qty">1×</span><span>{t('Large Fries', 'بطاطس كبيرة')}</span></div>
           </div>
         </div>
       </div>
@@ -252,65 +228,3 @@ export function Voice() {
   );
 }
 
-export function Menu() {
-  const [approved, setApproved] = useState(true);
-  return (
-    <section className="section">
-      <div className="wrap">
-        <div className="split">
-          <h2 className="h2">Your menu. Your prices. Your rules.</h2>
-          <div>
-            <p style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em' }}>AI doesn't invent your menu.</p>
-            <p className="lead" style={{ fontSize: 17, marginTop: 10 }}>
-              Lumia works from the restaurant's approved products, prices, options and availability.
-            </p>
-          </div>
-        </div>
-        <div className="grid menu-card">
-          <div>
-            <div className="eyebrow">01 · UPLOAD</div>
-            <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span className="mono" style={{ fontSize: 11, padding: 8, borderRadius: 6, background: 'var(--chip)', color: '#8A2040' }}>PDF</span>
-              <span className="mono" style={{ fontSize: 15, fontWeight: 500 }}>MENU.PDF</span>
-            </div>
-            <small>PDF, Excel or a photo of your menu.</small>
-          </div>
-          <div>
-            <div className="eyebrow">02 · LUMIA EXTRACTS CATEGORIES</div>
-            <div className="tags" style={{ marginTop: 18 }}>
-              {['Burgers', 'Pizza', 'Drinks', 'Sides'].map((t) => <span key={t} className="tag tag--soft">{t}</span>)}
-            </div>
-          </div>
-          <div>
-            <div className="eyebrow">03 · PRODUCTS · PRICES · MODIFIERS</div>
-            <div className="tabnum" style={{ display: 'flex', flexDirection: 'column', marginTop: 12, fontSize: 14 }}>
-              <div className="price-row"><span>Chicken Burger</span><span>AED 25</span></div>
-              <div className="price-row"><span>Beef Burger</span><span>AED 29</span></div>
-              <div className="price-row"><span>Fries</span><span>AED 12</span></div>
-            </div>
-            <div className="tags" style={{ gap: 5, marginTop: 10 }}>
-              {['No pickles', 'Spicy', 'Large'].map((t) => (
-                <span key={t} className="tag tag--soft" style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6 }}>{t}</span>
-              ))}
-            </div>
-          </div>
-          <div>
-            <div className="eyebrow">04 · RESTAURANT REVIEWS</div>
-            <button
-              onClick={() => setApproved((a) => !a)}
-              aria-pressed={approved}
-              style={{
-                marginTop: 18, height: 48, borderRadius: 12, fontWeight: 600, fontSize: 15,
-                background: approved ? 'var(--ok-bg)' : 'var(--grad)', color: approved ? 'var(--ok)' : '#fff',
-                transition: 'background .25s, color .25s',
-              }}
-            >
-              {approved ? 'APPROVED ✓' : 'Approve menu'}
-            </button>
-            <small style={{ marginTop: 10 }}>Lumia goes live only after you approve.</small>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
