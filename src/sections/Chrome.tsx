@@ -101,7 +101,7 @@ export function Footer() {
       <div className="wrap footer__legal">
         <LegalLinks />
         <span style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <span>{t(<>Built for bold ideas. Lumia is a product of <a href="https://afkario.com/" target="_blank" rel="noopener">Afkar IO FZE LLC</a>.</>, <>صُنع للأفكار الجريئة. لوميا منتج من <a href="https://afkario.com/" target="_blank" rel="noopener">Afkar IO FZE LLC</a>.</>)} · <a href="mailto:partners@afkario.com">partners@afkario.com</a></span>
+          <span>{t(<>Built for bold ideas. Lumia is a product of <a href="https://afkario.com/" target="_blank" rel="noopener">Afkar IO FZE LLC</a>.</>, <>صُنع للأفكار الجريئة. لوميا منتج من <a href="https://afkario.com/" target="_blank" rel="noopener">Afkar IO FZE LLC</a>.</>)}</span>
           <span>{t('© 2026 Lumia. All rights reserved.', '© 2026 لوميا. جميع الحقوق محفوظة.')}</span>
         </span>
       </div>
