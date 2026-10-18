@@ -9,8 +9,8 @@ export function SettingsTemplate({ vm }: { vm: any }) {
       <div ref={vm.rootRef} style={S(`height:${vm.rootH};display:flex;overflow:hidden;background:#fff;color:#1A0815;font-family:'Geist','Dirham-Sans','IBM Plex Sans Arabic',system-ui,sans-serif`)}>
         {vm.showAside && (
           <>
-          <aside style={S("flex:0 0 248px;border-right:1px solid #E3CBD6;display:flex;flex-direction:column;min-height:0")}>
-            <div style={S("height:64px;flex:none;padding:0 20px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #E3CBD6")}>
+          <aside style={S("flex:0 0 248px;border-right:1px solid #F0E4E8;display:flex;flex-direction:column;min-height:0")}>
+            <div style={S("height:64px;flex:none;padding:0 20px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #F0E4E8")}>
               <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style={S("display:block;flex:none")}>
                 <defs>
                   <linearGradient id="gRS" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
@@ -36,7 +36,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                 <Fragment key={__i}>
                   {g.hasLabel && (
                     <>
-                    <div style={S("padding:16px 12px 6px;font-size:14px;font-weight:600;color:#583246;display:flex;justify-content:space-between;gap:8px")}>
+                    <div style={S("padding:16px 12px 6px;font-size:14px;font-weight:600;color:#8A5A6E;display:flex;justify-content:space-between;gap:8px")}>
                       <span>
                         {g.label}
                       </span>
@@ -66,8 +66,8 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                 </Fragment>
               ))}
             </nav>
-            <div style={S("padding:12px;border-top:1px solid #E3CBD6;display:flex;flex-direction:column;gap:6px")}>
-              <a href={vm.dashUrl} style={S("height:36px;padding:0 12px;border-radius:10px;display:flex;align-items:center;gap:10px;font-size:14px;color:#583246;text-decoration:none")} className="dcs0">
+            <div style={S("padding:12px;border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:6px")}>
+              <a href={vm.dashUrl} style={S("height:36px;padding:0 12px;border-radius:10px;display:flex;align-items:center;gap:10px;font-size:14px;color:#8A5A6E;text-decoration:none")} className="dcs0">
                 <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
                   <path d="M12 5l-5 5 5 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -88,7 +88,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
         <div style={S("flex:1;min-width:0;min-height:0;display:flex;flex-direction:column")}>
           {vm.showTop && (
             <>
-            <header style={S("flex:none;background:#fff;border-bottom:1px solid #E3CBD6")}>
+            <header style={S("flex:none;background:#fff;border-bottom:1px solid #F0E4E8")}>
               <div style={S("height:56px;padding:0 16px;display:flex;align-items:center;gap:10px")}>
                 {vm.standalone && (
                   <>
@@ -124,7 +124,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
             </header>
             </>
           )}
-          <main ref={vm.mainRef} style={S("flex:1;min-height:0;overflow-y:auto;background:#fff")}>
+          <main ref={vm.mainRef} style={S("flex:1;min-height:0;overflow-y:auto")}>
             <div style={S(`max-width:1240px;margin:0;padding:${vm.L.pad};display:flex;flex-direction:column;gap:20px`)}>
               {vm.pg.profile && (
                 <>
@@ -133,20 +133,20 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                     <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                       Restaurant profile
                     </h1>
-                    <p style={S("font-size:14px;color:#583246;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
+                    <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
                       How your restaurant appears to customers on WhatsApp and on receipts.
                     </p>
                   </div>
                   <div style={S(`display:grid;grid-template-columns:${vm.L.split};gap:20px;align-items:start`)}>
                     <div style={S("display:flex;flex-direction:column;gap:20px;min-width:0")}>
-                      <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
                         <div role="button" tabIndex={0} onClick={vm.acc.s0.toggle} aria-expanded={vm.acc.s0.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
                           <div style={S("flex:1;min-width:0")}>
                             <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
                               Basics
                             </h2>
                           </div>
-                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#583246;transition:transform .18s;transform:rotate(${vm.acc.s0.chev})`)}>
+                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s0.chev})`)}>
                             <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </div>
@@ -158,55 +158,55 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                 {vm.logoNode}
                               </span>
                               <div style={S("display:flex;flex-direction:column;gap:6px")}>
-                                <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                   Logo
                                 </span>
-                                <button type="button" onClick={vm.pickLogo} style={S("align-self:flex-start;height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
+                                <button type="button" onClick={vm.pickLogo} style={S("align-self:flex-start;height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
                                   Upload logo
                                 </button>
-                                <span style={S("font-size:13px;color:#583246")}>
+                                <span style={S("font-size:13px;color:#8A5A6E")}>
                                   Square PNG or JPG, at least 400 px.
                                 </span>
                               </div>
                             </div>
                             <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px 16px")}>
                               <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                   Restaurant name
                                 </span>
-                                <input value={vm.prof.name.v} onChange={vm.prof.name.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px")} className="dcs2" />
-                                <span style={S("font-size:13px;color:#583246")}>
+                                <input value={vm.prof.name.v} onChange={vm.prof.name.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
+                                <span style={S("font-size:13px;color:#8A5A6E")}>
                                   Legal or registered name.
                                 </span>
                               </label>
                               <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                   Brand name shown to customers
                                 </span>
-                                <input value={vm.prof.brand.v} onChange={vm.prof.brand.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px")} className="dcs2" />
-                                <span style={S("font-size:13px;color:#583246")}>
+                                <input value={vm.prof.brand.v} onChange={vm.prof.brand.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
+                                <span style={S("font-size:13px;color:#8A5A6E")}>
                                   Used in greetings and order summaries.
                                 </span>
                               </label>
                               <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                   Cuisine type
                                 </span>
-                                <input value={vm.prof.cuisine.v} onChange={vm.prof.cuisine.set} placeholder="e.g. Burgers, Lebanese, Pizza" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px")} className="dcs2" />
+                                <input value={vm.prof.cuisine.v} onChange={vm.prof.cuisine.set} placeholder="e.g. Burgers, Lebanese, Pizza" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
                               </label>
                             </div>
                           </div>
                           </>
                         )}
                       </section>
-                      <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
                         <div role="button" tabIndex={0} onClick={vm.acc.s1.toggle} aria-expanded={vm.acc.s1.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
                           <div style={S("flex:1;min-width:0")}>
                             <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
                               Contact
                             </h2>
                           </div>
-                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#583246;transition:transform .18s;transform:rotate(${vm.acc.s1.chev})`)}>
+                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s1.chev})`)}>
                             <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </div>
@@ -215,25 +215,25 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           <div style={S("display:flex;flex-direction:column;gap:18px;padding-top:18px")}>
                             <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px 16px")}>
                               <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                   Business phone
                                 </span>
-                                <input value={vm.prof.phone.v} onChange={vm.prof.phone.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                <input value={vm.prof.phone.v} onChange={vm.prof.phone.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
                               </label>
                               <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                   Support WhatsApp number
                                 </span>
-                                <input value={vm.prof.support.v} onChange={vm.prof.support.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
-                                <span style={S("font-size:13px;color:#583246")}>
+                                <input value={vm.prof.support.v} onChange={vm.prof.support.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                <span style={S("font-size:13px;color:#8A5A6E")}>
                                   Customers are sent here if they ask for a person.
                                 </span>
                               </label>
                               <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                   Email
                                 </span>
-                                <input type="email" value={vm.prof.email.v} onChange={vm.prof.email.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px")} className="dcs2" />
+                                <input type="email" value={vm.prof.email.v} onChange={vm.prof.email.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
                                 {vm.emailVerifyNode}
                               </label>
                             </div>
@@ -241,7 +241,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           </>
                         )}
                       </section>
-                      <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
                         <div role="button" tabIndex={0} onClick={vm.acc.s2.toggle} aria-expanded={vm.acc.s2.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
                           <div style={S("flex:1;min-width:0")}>
                             <div style={S("display:flex;align-items:center;justify-content:space-between;gap:16px")}>
@@ -249,7 +249,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                 <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
                                   VAT registered
                                 </h2>
-                                <p style={S("font-size:14px;color:#583246;margin-top:2px;line-height:1.5")}>
+                                <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px;line-height:1.5")}>
                                   Lumia adds 5% VAT to order totals and shows your TRN on receipts.
                                 </p>
                               </div>
@@ -258,7 +258,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                               </button>
                             </div>
                           </div>
-                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#583246;transition:transform .18s;transform:rotate(${vm.acc.s2.chev})`)}>
+                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s2.chev})`)}>
                             <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </div>
@@ -268,7 +268,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                             {vm.vatSw.on && (
                               <>
                               <label style={S("display:flex;flex-direction:column;gap:6px;max-width:360px")}>
-                                <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                   TRN number
                                 </span>
                                 <input value={vm.prof.trn.v} onChange={vm.prof.trn.set} inputMode="numeric" style={S(`height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid ${vm.trnBd};background:#fff;font-size:15px;font-variant-numeric:tabular-nums;letter-spacing:.02em`)} className="dcs2" />
@@ -282,14 +282,14 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           </>
                         )}
                       </section>
-                      <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
                         <div role="button" tabIndex={0} onClick={vm.acc.s3.toggle} aria-expanded={vm.acc.s3.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
                           <div style={S("flex:1;min-width:0")}>
                             <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
                               Customer messages
                             </h2>
                           </div>
-                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#583246;transition:transform .18s;transform:rotate(${vm.acc.s3.chev})`)}>
+                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s3.chev})`)}>
                             <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </div>
@@ -297,7 +297,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           <>
                           <div style={S("display:flex;flex-direction:column;gap:18px;padding-top:18px")}>
                             <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                              <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                              <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                 Default language
                               </span>
                               <div role="radiogroup" aria-label="Default language" style={S("display:flex;flex-wrap:wrap;max-width:100%;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;align-self:flex-start")}>
@@ -309,12 +309,12 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                   </Fragment>
                                 ))}
                               </div>
-                              <span style={S("font-size:13px;color:#583246")}>
+                              <span style={S("font-size:13px;color:#8A5A6E")}>
                                 With Both, Lumia replies in the language the customer writes in.
                               </span>
                             </div>
                             <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                              <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                              <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                 Greeting style
                               </span>
                               <div role="radiogroup" aria-label="Greeting style" style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px")}>
@@ -328,7 +328,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                         <span style={S("font-size:15px;font-weight:500")}>
                                           {o.label}
                                         </span>
-                                        <span style={S("font-size:13px;color:#583246;line-height:1.4")}>
+                                        <span style={S("font-size:13px;color:#8A5A6E;line-height:1.4")}>
                                           {o.desc}
                                         </span>
                                       </span>
@@ -366,13 +366,13 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                       <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                         Branches & locations
                       </h1>
-                      <p style={S("font-size:14px;color:#583246;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
+                      <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
                         Lumia uses each branch's location to pick the nearest branch and calculate delivery.
                       </p>
                     </div>
                     {vm.notAdding && (
                       <>
-                      <button type="button" onClick={vm.startAdd} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:15px")} className="dcs1">
+                      <button type="button" onClick={vm.startAdd} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dcs1">
                         + Add branch
                       </button>
                       </>
@@ -392,49 +392,49 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                   )}
                   {vm.adding && (
                     <>
-                    <section style={S("border:1.5px solid #CBA5B6;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px")}>
+                    <section style={S("border:1.5px solid #E3CBD4;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px")}>
                       <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
                         New branch
                       </h2>
                       <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px 16px")}>
                         <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                          <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                             Branch name
                           </span>
-                          <input value={vm.nb.name.v} onChange={vm.nb.name.set} placeholder="e.g. Dubai Marina Branch" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px")} className="dcs2" />
+                          <input value={vm.nb.name.v} onChange={vm.nb.name.set} placeholder="e.g. Dubai Marina Branch" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
                         </label>
                         <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                          <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                             {vm.regionLabel}
                           </span>
                           {vm.nb.emSel}
                         </label>
                         <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                          <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                             Area
                           </span>
-                          <input value={vm.nb.area.v} onChange={vm.nb.area.set} placeholder="e.g. Dubai Marina" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px")} className="dcs2" />
+                          <input value={vm.nb.area.v} onChange={vm.nb.area.set} placeholder="e.g. Dubai Marina" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
                         </label>
                         <label style={S("display:flex;flex-direction:column;gap:6px;grid-column:1/-1")}>
-                          <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                             Full address
                           </span>
-                          <input value={vm.nb.address.v} onChange={vm.nb.address.set} placeholder="Street, building, shop number" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px")} className="dcs2" />
+                          <input value={vm.nb.address.v} onChange={vm.nb.address.set} placeholder="Street, building, shop number" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
                         </label>
                         <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                          <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                             Phone number
                           </span>
-                          <input value={vm.nb.phone.v} onChange={vm.nb.phone.set} placeholder="+971 4 000 0000" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px")} className="dcs2" />
+                          <input value={vm.nb.phone.v} onChange={vm.nb.phone.set} placeholder="+971 4 000 0000" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
                         </label>
                         <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                          <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                             Default ETA (minutes)
                           </span>
-                          <input inputMode="numeric" value={vm.nb.eta.v} onChange={vm.nb.eta.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px")} className="dcs2" />
+                          <input inputMode="numeric" value={vm.nb.eta.v} onChange={vm.nb.eta.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
                         </label>
                         <div style={S("display:flex;flex-direction:column;gap:6px")}>
-                          <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                             Branch status
                           </span>
                           <div role="radiogroup" aria-label="Branch status" style={S("display:flex;flex-wrap:wrap;max-width:100%;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px;align-self:flex-start")}>
@@ -450,10 +450,10 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                       </div>
                       <div style={S("display:flex;flex-direction:column;gap:10px")}>
                         <div>
-                          <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                             Location pin
                           </span>
-                          <p style={S("font-size:13px;color:#583246;margin-top:2px")}>
+                          <p style={S("font-size:13px;color:#8A5A6E;margin-top:2px")}>
                             Required for distance-based delivery pricing.
                           </p>
                         </div>
@@ -469,8 +469,8 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         {vm.pm.search && (
                           <>
                           <div style={S("display:flex;gap:8px;flex-wrap:wrap")}>
-                            <input value={vm.pinQ} onChange={vm.onPinQ} placeholder="Search address or building" style={S("flex:1 1 240px;height:44px;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px")} className="dcs2" />
-                            <button type="button" onClick={vm.setPin} style={S("height:44px;padding:0 16px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
+                            <input value={vm.pinQ} onChange={vm.onPinQ} placeholder="Search address or building" style={S("flex:1 1 240px;height:44px;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
+                            <button type="button" onClick={vm.setPin} style={S("height:44px;padding:0 16px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
                               Use this address
                             </button>
                           </div>
@@ -479,8 +479,8 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         {vm.pm.paste && (
                           <>
                           <div style={S("display:flex;gap:8px;flex-wrap:wrap")}>
-                            <input value={vm.pinQ} onChange={vm.onPinQ} placeholder="https://maps.app.goo.gl/\u2026" style={S("flex:1 1 240px;height:44px;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px")} className="dcs2" />
-                            <button type="button" onClick={vm.setPin} style={S("height:44px;padding:0 16px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
+                            <input value={vm.pinQ} onChange={vm.onPinQ} placeholder="https://maps.app.goo.gl/\u2026" style={S("flex:1 1 240px;height:44px;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
+                            <button type="button" onClick={vm.setPin} style={S("height:44px;padding:0 16px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
                               Use link
                             </button>
                           </div>
@@ -488,10 +488,10 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         )}
                         {vm.pm.current && (
                           <>
-                          <button type="button" onClick={vm.setPin} style={S("align-self:flex-start;height:44px;padding:0 16px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
+                          <button type="button" onClick={vm.setPin} style={S("align-self:flex-start;height:44px;padding:0 16px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
                             Use my current location
                           </button>
-                          <span style={S("font-size:13px;color:#583246")}>
+                          <span style={S("font-size:13px;color:#8A5A6E")}>
                             Do this from inside the branch for the most accurate pin.
                           </span>
                           </>
@@ -522,7 +522,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         )}
                       </div>
                       <div style={S("display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;border-top:1px solid #F3EEF1;padding-top:16px")}>
-                        <button type="button" onClick={vm.cancelAdd} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:15px")} className="dcs1">
+                        <button type="button" onClick={vm.cancelAdd} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dcs1">
                           Cancel
                         </button>
                         <button type="button" onClick={vm.confirmAdd} disabled={!!vm.nbInvalid} style={S(`height:44px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;opacity:${vm.nbOp}`)}>
@@ -535,13 +535,13 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:16px")}>
                     {(vm.branchCards as any[]).map((b: any, __i: number) => (
                       <Fragment key={__i}>
-                        <article style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px")}>
+                        <article style={S("border:1px solid #F0E4E8;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px")}>
                           <div style={S("display:flex;justify-content:space-between;align-items:flex-start;gap:12px")}>
                             <div style={S("min-width:0")}>
                               <h3 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
                                 {b.name}
                               </h3>
-                              <span style={S("font-size:14px;color:#583246")}>
+                              <span style={S("font-size:14px;color:#8A5A6E")}>
                                 {b.addr}
                               </span>
                             </div>
@@ -553,7 +553,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                             {(b.rows as any[]).map((r: any, __i: number) => (
                               <Fragment key={__i}>
                                 <div style={S("display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid #F3EEF1;font-size:14px")}>
-                                  <dt style={S("color:#583246")}>
+                                  <dt style={S("color:#8A5A6E")}>
                                     {r.k}
                                   </dt>
                                   <dd style={S(`font-weight:500;text-align:right;color:${r.fg};font-variant-numeric:tabular-nums`)}>
@@ -584,13 +584,13 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                     <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                       WhatsApp connection
                     </h1>
-                    <p style={S("font-size:14px;color:#583246;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
+                    <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
                       The WhatsApp Business number your customers message to order.
                     </p>
                   </div>
-                  <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:14px")}>
+                  <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:14px")}>
                     <div style={S("display:flex;align-items:center;gap:14px;flex-wrap:wrap")}>
-                      <span style={S("width:48px;height:48px;border-radius:14px;background:#fff;border:1px solid #DDC3CF;display:flex;align-items:center;justify-content:center;flex:none")}>
+                      <span style={S("width:48px;height:48px;border-radius:14px;background:#fff;border:1px solid #ECD9E0;display:flex;align-items:center;justify-content:center;flex:none")}>
                         <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
                           <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
                           <path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff" />
@@ -600,7 +600,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         <div style={S("font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.01em")}>
                           +971 50 123 4567
                         </div>
-                        <div style={S("font-size:14px;color:#583246")}>
+                        <div style={S("font-size:14px;color:#8A5A6E")}>
                           {vm.brand}
                         </div>
                       </div>
@@ -611,7 +611,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                     </div>
                     <dl style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px 20px;border-top:1px solid #F3EEF1;padding-top:14px")}>
                       <div>
-                        <dt style={S("font-size:13px;color:#583246")}>
+                        <dt style={S("font-size:13px;color:#8A5A6E")}>
                           Display name
                         </dt>
                         <dd style={S("font-size:15px;font-weight:500;margin-top:2px")}>
@@ -619,7 +619,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         </dd>
                       </div>
                       <div>
-                        <dt style={S("font-size:13px;color:#583246")}>
+                        <dt style={S("font-size:13px;color:#8A5A6E")}>
                           Takes orders for
                         </dt>
                         <dd style={S("font-size:15px;font-weight:500;margin-top:2px")}>
@@ -627,7 +627,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         </dd>
                       </div>
                       <div>
-                        <dt style={S("font-size:13px;color:#583246")}>
+                        <dt style={S("font-size:13px;color:#8A5A6E")}>
                           Last message received
                         </dt>
                         <dd style={S("font-size:15px;font-weight:500;margin-top:2px")}>
@@ -636,19 +636,19 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                       </div>
                     </dl>
                   </section>
-                  <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                  <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
                     <div role="button" tabIndex={0} onClick={vm.acc.s4.toggle} aria-expanded={vm.acc.s4.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
                       <div style={S("flex:1;min-width:0")}>
                         <div>
                           <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
                             Which branches does this number take orders for?
                           </h2>
-                          <p style={S("font-size:14px;color:#583246;margin-top:2px;line-height:1.5")}>
+                          <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px;line-height:1.5")}>
                             Matters when you have more than one branch.
                           </p>
                         </div>
                       </div>
-                      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#583246;transition:transform .18s;transform:rotate(${vm.acc.s4.chev})`)}>
+                      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s4.chev})`)}>
                         <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </div>
@@ -666,7 +666,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                   <span style={S("font-size:15px;font-weight:500")}>
                                     {o.label}
                                   </span>
-                                  <span style={S("font-size:13px;color:#583246;line-height:1.4")}>
+                                  <span style={S("font-size:13px;color:#8A5A6E;line-height:1.4")}>
                                     {o.desc}
                                   </span>
                                 </span>
@@ -677,7 +677,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         {vm.route.pickBranches && (
                           <>
                           <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                            <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                            <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                               {vm.route.pickLabel}
                             </span>
                             <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
@@ -692,14 +692,14 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           </div>
                           </>
                         )}
-                        <div style={S("border-radius:12px;background:#F7E7EF;padding:14px 16px;display:flex;flex-direction:column;gap:6px")}>
+                        <div style={S("border-radius:12px;background:#FAF6FA;padding:14px 16px;display:flex;flex-direction:column;gap:6px")}>
                           {(vm.waMap as any[]).map((m: any, __i: number) => (
                             <Fragment key={__i}>
                               <div style={S("font-size:15px;font-variant-numeric:tabular-nums;display:flex;flex-wrap:wrap;gap:4px 10px")}>
                                 <span style={S("font-weight:500")}>
                                   +971 50 123 4567
                                 </span>
-                                <span style={S("color:#583246")}>
+                                <span style={S("color:#8A5A6E")}>
                                   →
                                 </span>
                                 <span style={S("font-weight:500")}>
@@ -708,11 +708,11 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                               </div>
                             </Fragment>
                           ))}
-                          <span style={S("font-size:14px;color:#583246")}>
+                          <span style={S("font-size:14px;color:#8A5A6E")}>
                             {vm.route.note}
                           </span>
                         </div>
-                        <button type="button" onClick={vm.markDirty} style={S("align-self:flex-start;font-size:14px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#CBA5B6;text-underline-offset:3px")} className="dcs3">
+                        <button type="button" onClick={vm.markDirty} style={S("align-self:flex-start;font-size:14px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px")} className="dcs3">
                           + Add another WhatsApp number for a different branch
                         </button>
                       </div>
@@ -729,20 +729,20 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                     <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                       Delivery settings
                     </h1>
-                    <p style={S("font-size:14px;color:#583246;margin-top:4px;max-width:640px;line-height:1.5;text-wrap:pretty")}>
+                    <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:640px;line-height:1.5;text-wrap:pretty")}>
                       Where you deliver and what customers pay. Your restaurant does the delivery. Lumia calculates the fee and includes it in the order summary.
                     </p>
                   </div>
                   <div style={S(`display:grid;grid-template-columns:${vm.L.split};gap:20px;align-items:start`)}>
                     <div style={S("display:flex;flex-direction:column;gap:20px;min-width:0")}>
-                      <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
                         <div role="button" tabIndex={0} onClick={vm.acc.s5.toggle} aria-expanded={vm.acc.s5.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
                           <div style={S("flex:1;min-width:0")}>
                             <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
                               Delivery status
                             </h2>
                           </div>
-                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#583246;transition:transform .18s;transform:rotate(${vm.acc.s5.chev})`)}>
+                          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s5.chev})`)}>
                             <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </div>
@@ -760,7 +760,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                       <span style={S("font-size:15px;font-weight:500")}>
                                         {o.label}
                                       </span>
-                                      <span style={S("font-size:13px;color:#583246;line-height:1.4")}>
+                                      <span style={S("font-size:13px;color:#8A5A6E;line-height:1.4")}>
                                         {o.desc}
                                       </span>
                                     </span>
@@ -769,13 +769,13 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                               ))}
                             </div>
                             <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;border-top:1px solid #F3EEF1;padding-top:14px;font-size:14px")}>
-                              <span style={S("color:#583246")}>
+                              <span style={S("color:#8A5A6E")}>
                                 Delivery handled by
                               </span>
                               <span style={S("font-weight:600")}>
                                 Your restaurant
                               </span>
-                              <span style={S("color:#583246")}>
+                              <span style={S("color:#8A5A6E")}>
                                 · Lumia doesn't provide drivers yet.
                               </span>
                             </div>
@@ -785,7 +785,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                       </section>
                       {vm.dl.pickup && (
                         <>
-                        <div style={S("border-radius:12px;background:#F7E7EF;padding:14px 16px;font-size:14px;color:#2A1020;line-height:1.5")}>
+                        <div style={S("border-radius:12px;background:#FAF6FA;padding:14px 16px;font-size:14px;color:#3D1C31;line-height:1.5")}>
                           Customers can only order for pickup. Lumia will share the branch address in the order summary.
                         </div>
                         </>
@@ -804,7 +804,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                       )}
                       {vm.dl.on && (
                         <>
-                        <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                        <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
                           <div role="button" tabIndex={0} onClick={vm.acc.s6.toggle} aria-expanded={vm.acc.s6.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
                             <div style={S("flex:1;min-width:0")}>
                               <div>
@@ -813,7 +813,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                 </h2>
                               </div>
                             </div>
-                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#583246;transition:transform .18s;transform:rotate(${vm.acc.s6.chev})`)}>
+                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s6.chev})`)}>
                               <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                           </div>
@@ -831,7 +831,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                         <span style={S("font-size:15px;font-weight:500")}>
                                           {o.label}
                                         </span>
-                                        <span style={S("font-size:13px;color:#583246;line-height:1.4")}>
+                                        <span style={S("font-size:13px;color:#8A5A6E;line-height:1.4")}>
                                           {o.desc}
                                         </span>
                                       </span>
@@ -857,7 +857,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         </section>
                         {vm.dl.area && (
                           <>
-                          <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                          <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
                             <div role="button" tabIndex={0} onClick={vm.acc.s7.toggle} aria-expanded={vm.acc.s7.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
                               <div style={S("flex:1;min-width:0")}>
                                 <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px")}>
@@ -865,16 +865,16 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                     <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
                                       Delivery areas
                                     </h2>
-                                    <p style={S("font-size:14px;color:#583246;margin-top:2px")}>
+                                    <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px")}>
                                       Turn an area off to stop delivering there.
                                     </p>
                                   </div>
-                                  <button type="button" onClick={vm.addArea} style={S("height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
+                                  <button type="button" onClick={vm.addArea} style={S("height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
                                     + Add area
                                   </button>
                                 </div>
                               </div>
-                              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#583246;transition:transform .18s;transform:rotate(${vm.acc.s7.chev})`)}>
+                              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s7.chev})`)}>
                                 <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                               </svg>
                             </div>
@@ -884,7 +884,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                 <div style={S("display:flex;flex-direction:column")}>
                                   {vm.tblWide && (
                                     <>
-                                    <div style={S(`display:grid;grid-template-columns:${vm.L.areaCols};gap:10px;padding-bottom:8px;font-size:13px;font-weight:500;color:#583246`)}>
+                                    <div style={S(`display:grid;grid-template-columns:${vm.L.areaCols};gap:10px;padding-bottom:8px;font-size:13px;font-weight:500;color:#8A5A6E`)}>
                                       <span>
                                         {vm.regionLabel}
                                       </span>
@@ -914,37 +914,37 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                     <Fragment key={__i}>
                                       <div style={S(`display:grid;grid-template-columns:${vm.L.areaCols};gap:10px;align-items:end;padding:${vm.L.rowPad};border-top:1px solid #F3EEF1`)}>
                                         <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#583246`)}>
+                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
                                             {vm.regionLabel}
                                           </span>
                                           {r.emSel}
                                         </label>
                                         <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#583246`)}>
+                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
                                             Area
                                           </span>
-                                          <input value={r.area} onChange={r.set.area} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #DDC3CF;background:#fff;font-size:14px")} className="dcs2" />
+                                          <input value={r.area} onChange={r.set.area} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px")} className="dcs2" />
                                         </label>
                                         <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#583246`)}>
+                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
                                             Fee ({vm.cur})
                                           </span>
-                                          <input inputMode="decimal" value={r.fee} placeholder={r.feePh} onChange={r.set.fee} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #DDC3CF;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                          <input inputMode="decimal" value={r.fee} placeholder={r.feePh} onChange={r.set.fee} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
                                         </label>
                                         <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#583246`)}>
+                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
                                             Min. order
                                           </span>
-                                          <input inputMode="decimal" value={r.min} onChange={r.set.min} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #DDC3CF;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                          <input inputMode="decimal" value={r.min} onChange={r.set.min} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
                                         </label>
                                         <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#583246`)}>
+                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
                                             ETA (min)
                                           </span>
-                                          <input inputMode="numeric" value={r.eta} onChange={r.set.eta} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #DDC3CF;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                          <input inputMode="numeric" value={r.eta} onChange={r.set.eta} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
                                         </label>
                                         <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#583246`)}>
+                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
                                             Branch
                                           </span>
                                           {r.brSel}
@@ -953,11 +953,11 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                           <button type="button" role="switch" aria-checked={r.sw.on} aria-label="Area active" onClick={r.sw.toggle} style={S(`width:48px;height:28px;border-radius:999px;flex:none;background:${r.sw.tBg};position:relative;transition:background .15s`)}>
                                             <span style={S(`position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX(${r.sw.knob});transition:transform .18s`)} />
                                           </button>
-                                          <span style={S(`display:${vm.L.cellLbl};font-size:13px;color:#583246`)}>
+                                          <span style={S(`display:${vm.L.cellLbl};font-size:13px;color:#8A5A6E`)}>
                                             {r.onLabel}
                                           </span>
                                         </div>
-                                        <button type="button" onClick={r.remove} aria-label="Remove area" style={S("width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;justify-self:end;color:#583246")} className="dcs4">
+                                        <button type="button" onClick={r.remove} aria-label="Remove area" style={S("width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;justify-self:end;color:#8A5A6E")} className="dcs4">
                                           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                                             <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                                           </svg>
@@ -974,7 +974,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         )}
                         {vm.dl.distance && (
                           <>
-                          <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                          <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
                             <div role="button" tabIndex={0} onClick={vm.acc.s8.toggle} aria-expanded={vm.acc.s8.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
                               <div style={S("flex:1;min-width:0")}>
                                 <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px")}>
@@ -982,16 +982,16 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                     <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
                                       Distance ranges
                                     </h2>
-                                    <p style={S("font-size:14px;color:#583246;margin-top:2px")}>
+                                    <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px")}>
                                       Measured from the branch to the customer. Leave "To" empty for no limit.
                                     </p>
                                   </div>
-                                  <button type="button" onClick={vm.addRange} style={S("height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
+                                  <button type="button" onClick={vm.addRange} style={S("height:38px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
                                     + Add range
                                   </button>
                                 </div>
                               </div>
-                              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#583246;transition:transform .18s;transform:rotate(${vm.acc.s8.chev})`)}>
+                              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s8.chev})`)}>
                                 <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                               </svg>
                             </div>
@@ -1009,7 +1009,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                 <div style={S("display:flex;flex-direction:column")}>
                                   {vm.tblWide && (
                                     <>
-                                    <div style={S(`display:grid;grid-template-columns:${vm.L.rangeCols};gap:10px;padding-bottom:8px;font-size:13px;font-weight:500;color:#583246`)}>
+                                    <div style={S(`display:grid;grid-template-columns:${vm.L.rangeCols};gap:10px;padding-bottom:8px;font-size:13px;font-weight:500;color:#8A5A6E`)}>
                                       <span>
                                         From (km)
                                       </span>
@@ -1036,44 +1036,44 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                     <Fragment key={__i}>
                                       <div style={S(`display:grid;grid-template-columns:${vm.L.rangeCols};gap:10px;align-items:end;padding:${vm.L.rowPad};border-top:1px solid #F3EEF1`)}>
                                         <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#583246`)}>
+                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
                                             From (km)
                                           </span>
                                           <input inputMode="decimal" value={r.from} onChange={r.set.from} style={S(`height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid ${r.bd};background:#fff;font-size:14px;font-variant-numeric:tabular-nums`)} className="dcs2" />
                                         </label>
                                         <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#583246`)}>
+                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
                                             To (km)
                                           </span>
                                           <input inputMode="decimal" value={r.to} placeholder="No limit" onChange={r.set.to} style={S(`height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid ${r.bd};background:#fff;font-size:14px;font-variant-numeric:tabular-nums`)} className="dcs2" />
                                         </label>
                                         <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#583246`)}>
+                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
                                             Fee ({vm.cur})
                                           </span>
-                                          <input inputMode="decimal" value={r.fee} onChange={r.set.fee} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #DDC3CF;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                          <input inputMode="decimal" value={r.fee} onChange={r.set.fee} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
                                         </label>
                                         <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#583246`)}>
+                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
                                             Min. order
                                           </span>
-                                          <input inputMode="decimal" value={r.min} onChange={r.set.min} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #DDC3CF;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                          <input inputMode="decimal" value={r.min} onChange={r.set.min} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
                                         </label>
                                         <label style={S(`display:flex;flex-direction:column;gap:4px;min-width:0;opacity:${r.op}`)}>
-                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#583246`)}>
+                                          <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
                                             ETA (min)
                                           </span>
-                                          <input inputMode="numeric" value={r.eta} onChange={r.set.eta} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #DDC3CF;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                          <input inputMode="numeric" value={r.eta} onChange={r.set.eta} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
                                         </label>
                                         <div style={S("height:40px;display:flex;align-items:center;gap:8px")}>
                                           <button type="button" role="switch" aria-checked={r.sw.on} aria-label="Range active" onClick={r.sw.toggle} style={S(`width:48px;height:28px;border-radius:999px;flex:none;background:${r.sw.tBg};position:relative;transition:background .15s`)}>
                                             <span style={S(`position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(26,8,21,.2);transform:translateX(${r.sw.knob});transition:transform .18s`)} />
                                           </button>
-                                          <span style={S(`display:${vm.L.cellLbl};font-size:13px;color:#583246`)}>
+                                          <span style={S(`display:${vm.L.cellLbl};font-size:13px;color:#8A5A6E`)}>
                                             {r.onLabel}
                                           </span>
                                         </div>
-                                        <button type="button" onClick={r.remove} aria-label="Remove range" style={S("width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;justify-self:end;color:#583246")} className="dcs4">
+                                        <button type="button" onClick={r.remove} aria-label="Remove range" style={S("width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;justify-self:end;color:#8A5A6E")} className="dcs4">
                                           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                                             <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                                           </svg>
@@ -1090,14 +1090,14 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         )}
                         {vm.dl.free && (
                           <>
-                          <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                          <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
                             <div role="button" tabIndex={0} onClick={vm.acc.s9.toggle} aria-expanded={vm.acc.s9.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
                               <div style={S("flex:1;min-width:0")}>
                                 <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
                                   Where you deliver for free
                                 </h2>
                               </div>
-                              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#583246;transition:transform .18s;transform:rotate(${vm.acc.s9.chev})`)}>
+                              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s9.chev})`)}>
                                 <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                               </svg>
                             </div>
@@ -1105,7 +1105,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                               <>
                               <div style={S("display:flex;flex-direction:column;gap:16px;padding-top:16px")}>
                                 <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                                  <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                                  <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                     {"Served "}{vm.regionLabelPlural}
                                   </span>
                                   <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
@@ -1120,16 +1120,16 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                 </div>
                                 <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px 16px")}>
                                   <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                    <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                                    <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                       Served areas
                                     </span>
-                                    <input value={vm.dlf.freeAreas.v} onChange={vm.dlf.freeAreas.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px")} className="dcs2" />
-                                    <span style={S("font-size:13px;color:#583246")}>
+                                    <input value={vm.dlf.freeAreas.v} onChange={vm.dlf.freeAreas.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
+                                    <span style={S("font-size:13px;color:#8A5A6E")}>
                                       e.g. All areas, or Al Majaz, Al Nahda
                                     </span>
                                   </label>
                                   <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                    <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                                    <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                       Branch
                                     </span>
                                     {vm.freeBrSel}
@@ -1143,14 +1143,14 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         )}
                         {vm.dl.manual && (
                           <>
-                          <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                          <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
                             <div role="button" tabIndex={0} onClick={vm.acc.s10.toggle} aria-expanded={vm.acc.s10.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
                               <div style={S("flex:1;min-width:0")}>
                                 <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
                                   Manual confirmation
                                 </h2>
                               </div>
-                              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#583246;transition:transform .18s;transform:rotate(${vm.acc.s10.chev})`)}>
+                              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s10.chev})`)}>
                                 <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                               </svg>
                             </div>
@@ -1158,17 +1158,17 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                               <>
                               <div style={S("display:flex;flex-direction:column;gap:16px;padding-top:16px")}>
                                 <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                  <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                                  <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                     Message shown to customer
                                   </span>
-                                  <textarea value={vm.dlf.manualMsg.v} onChange={vm.dlf.manualMsg.set} rows={3} style={S("width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px;line-height:1.45;resize:vertical")} className="dcs2" />
+                                  <textarea value={vm.dlf.manualMsg.v} onChange={vm.dlf.manualMsg.set} rows={3} style={S("width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;line-height:1.45;resize:vertical")} className="dcs2" />
                                 </label>
                                 <div style={S("display:flex;align-items:center;justify-content:space-between;gap:16px")}>
                                   <div>
                                     <span style={S("font-size:15px;font-weight:500")}>
                                       Send order to restaurant before final confirmation
                                     </span>
-                                    <p style={S("font-size:13px;color:#583246;margin-top:2px")}>
+                                    <p style={S("font-size:13px;color:#8A5A6E;margin-top:2px")}>
                                       You set the fee on the device, then Lumia sends the customer the final total.
                                     </p>
                                   </div>
@@ -1182,19 +1182,19 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           </section>
                           </>
                         )}
-                        <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
+                        <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0")}>
                           <div role="button" tabIndex={0} onClick={vm.acc.s11.toggle} aria-expanded={vm.acc.s11.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
                             <div style={S("flex:1;min-width:0")}>
                               <div>
                                 <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
                                   Order rules
                                 </h2>
-                                <p style={S("font-size:14px;color:#583246;margin-top:2px")}>
+                                <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px")}>
                                   Defaults used when an area or range doesn't set its own.
                                 </p>
                               </div>
                             </div>
-                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#583246;transition:transform .18s;transform:rotate(${vm.acc.s11.chev})`)}>
+                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s11.chev})`)}>
                               <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                           </div>
@@ -1203,22 +1203,22 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                             <div style={S("display:flex;flex-direction:column;gap:16px;padding-top:16px")}>
                               <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:16px 20px")}>
                                 <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                  <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                                  <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                     Minimum order ({vm.cur})
                                   </span>
-                                  <input inputMode="decimal" value={vm.dlf.minOrder.v} onChange={vm.dlf.minOrder.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                  <input inputMode="decimal" value={vm.dlf.minOrder.v} onChange={vm.dlf.minOrder.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
                                 </label>
                                 <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                  <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                                  <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                     Free delivery above ({vm.cur})
                                   </span>
-                                  <input inputMode="decimal" value={vm.dlf.freeAbove.v} onChange={vm.dlf.freeAbove.set} placeholder="Off" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                  <input inputMode="decimal" value={vm.dlf.freeAbove.v} onChange={vm.dlf.freeAbove.set} placeholder="Off" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
                                 </label>
                                 <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                  <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                                  <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                     Default ETA (minutes)
                                   </span>
-                                  <input inputMode="numeric" value={vm.dlf.eta.v} onChange={vm.dlf.eta.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                  <input inputMode="numeric" value={vm.dlf.eta.v} onChange={vm.dlf.eta.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
                                 </label>
                               </div>
                               <div style={S("display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid #F3EEF1;padding-top:14px")}>
@@ -1238,19 +1238,19 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                             </>
                           )}
                         </section>
-                        <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0;min-width:0")}>
+                        <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:0;min-width:0")}>
                           <div role="button" tabIndex={0} onClick={vm.acc.s12.toggle} aria-expanded={vm.acc.s12.open} style={S("display:flex;align-items:center;gap:12px;cursor:pointer;margin:-4px 0")}>
                             <div style={S("flex:1;min-width:0")}>
                               <div>
                                 <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
                                   Test delivery fee
                                 </h2>
-                                <p style={S("font-size:14px;color:#583246;margin-top:2px")}>
+                                <p style={S("font-size:14px;color:#8A5A6E;margin-top:2px")}>
                                   Uses your unsaved changes.
                                 </p>
                               </div>
                             </div>
-                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#583246;transition:transform .18s;transform:rotate(${vm.acc.s12.chev})`)}>
+                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${vm.acc.s12.chev})`)}>
                               <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                           </div>
@@ -1259,37 +1259,37 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                             <div style={S("display:flex;flex-direction:column;gap:16px;padding-top:16px")}>
                               <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px 14px")}>
                                 <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                  <span style={S("font-size:13px;font-weight:500;color:#2A1020")}>
+                                  <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
                                     Branch
                                   </span>
                                   {vm.calc.brSel}
                                 </label>
                                 <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                  <span style={S("font-size:13px;font-weight:500;color:#2A1020")}>
+                                  <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
                                     {vm.regionLabel}
                                   </span>
                                   {vm.calc.emSel}
                                 </label>
                                 <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                  <span style={S("font-size:13px;font-weight:500;color:#2A1020")}>
+                                  <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
                                     Area
                                   </span>
-                                  <input value={vm.calc.area} onChange={vm.calc.setArea} placeholder="Any" style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #DDC3CF;background:#fff;font-size:14px")} className="dcs2" />
+                                  <input value={vm.calc.area} onChange={vm.calc.setArea} placeholder="Any" style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px")} className="dcs2" />
                                 </label>
                                 <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                  <span style={S("font-size:13px;font-weight:500;color:#2A1020")}>
+                                  <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
                                     Distance (km)
                                   </span>
-                                  <input inputMode="decimal" value={vm.calc.dist} onChange={vm.calc.setDist} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #DDC3CF;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                  <input inputMode="decimal" value={vm.calc.dist} onChange={vm.calc.setDist} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
                                 </label>
                                 <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                  <span style={S("font-size:13px;font-weight:500;color:#2A1020")}>
+                                  <span style={S("font-size:13px;font-weight:500;color:#3D1C31")}>
                                     Order subtotal ({vm.cur})
                                   </span>
-                                  <input inputMode="decimal" value={vm.calc.sub} onChange={vm.calc.setSub} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #DDC3CF;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                  <input inputMode="decimal" value={vm.calc.sub} onChange={vm.calc.setSub} style={S("height:40px;width:100%;min-width:0;padding:0 10px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px;font-variant-numeric:tabular-nums")} className="dcs2" />
                                 </label>
                               </div>
-                              <div style={S("border-radius:12px;background:#F7E7EF;padding:14px 16px;display:flex;flex-direction:column;gap:8px")}>
+                              <div style={S("border-radius:12px;background:#FAF6FA;padding:14px 16px;display:flex;flex-direction:column;gap:8px")}>
                                 <span style={S(`display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:${vm.res.fg}`)}>
                                   <span style={S("width:8px;height:8px;border-radius:50%;background:currentColor")} />
                                   {vm.res.head}
@@ -1297,7 +1297,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                 {(vm.res.rows as any[]).map((r: any, __i: number) => (
                                   <Fragment key={__i}>
                                     <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:14px")}>
-                                      <span style={S("color:#583246")}>
+                                      <span style={S("color:#8A5A6E")}>
                                         {r.k}
                                       </span>
                                       <span style={S("font-weight:500;font-variant-numeric:tabular-nums")}>
@@ -1333,13 +1333,13 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                     <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                       Working hours
                     </h1>
-                    <p style={S("font-size:14px;color:#583246;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
+                    <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
                       Lumia AI only takes orders while you're open. Outside these hours it tells customers when you open next.
                     </p>
                   </div>
                   <div style={S(`display:grid;grid-template-columns:${vm.L.split};gap:20px;align-items:start`)}>
                     <div style={S("display:flex;flex-direction:column;gap:20px;min-width:0")}>
-                      <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px")}>
+                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:16px")}>
                         <div role="radiogroup" aria-label="Hours mode" style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px")}>
                           {(vm.hModeOpts as any[]).map((o: any, __i: number) => (
                             <Fragment key={__i}>
@@ -1351,7 +1351,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                   <span style={S("font-size:15px;font-weight:500")}>
                                     {o.label}
                                   </span>
-                                  <span style={S("font-size:13px;color:#583246;line-height:1.4")}>
+                                  <span style={S("font-size:13px;color:#8A5A6E;line-height:1.4")}>
                                     {o.desc}
                                   </span>
                                 </span>
@@ -1360,7 +1360,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           ))}
                         </div>
                         <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;border-top:1px solid #F3EEF1;padding-top:14px")}>
-                          <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                             Branches
                           </span>
                           <div role="radiogroup" aria-label="Branch hours" style={S("display:flex;flex-wrap:wrap;max-width:100%;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px")}>
@@ -1387,7 +1387,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           )}
                         </div>
                       </section>
-                      <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:8px 22px;display:flex;flex-direction:column;min-width:0")}>
+                      <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:8px 22px;display:flex;flex-direction:column;min-width:0")}>
                         {vm.hm.closed && (
                           <>
                           <div style={S("padding:12px 0 14px;display:flex;flex-direction:column;gap:14px")}>
@@ -1395,11 +1395,11 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                               Temporarily closed
                             </h2>
                             <label style={S("display:flex;flex-direction:column;gap:6px;max-width:260px")}>
-                              <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                              <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                 Reopen on
                               </span>
-                              <input type="date" value={vm.hf.closedUntil.v} onChange={vm.hf.closedUntil.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px")} className="dcs2" />
-                              <span style={S("font-size:13px;color:#583246")}>
+                              <input type="date" value={vm.hf.closedUntil.v} onChange={vm.hf.closedUntil.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
+                              <span style={S("font-size:13px;color:#8A5A6E")}>
                                 Leave empty to stay closed until you switch it back.
                               </span>
                             </label>
@@ -1410,7 +1410,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           <>
                           {vm.tblWide && (
                             <>
-                            <div style={S(`display:grid;grid-template-columns:${vm.L.dayCols};gap:14px;padding:10px 0 6px;font-size:13px;font-weight:500;color:#583246`)}>
+                            <div style={S(`display:grid;grid-template-columns:${vm.L.dayCols};gap:14px;padding:10px 0 6px;font-size:13px;font-weight:500;color:#8A5A6E`)}>
                               <span>
                                 Day
                               </span>
@@ -1449,22 +1449,22 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                   <div style={S("display:flex;flex-direction:column;gap:8px;min-width:0")}>
                                     <div style={S(`display:grid;grid-template-columns:${vm.L.dayInner};gap:10px;align-items:end`)}>
                                       <label style={S("display:flex;flex-direction:column;gap:4px;min-width:0")}>
-                                        <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#583246`)}>
+                                        <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
                                           Opens
                                         </span>
-                                        <input type="time" value={d.from} onChange={d.set.from} style={S("height:40px;width:100%;min-width:0;padding:0 8px;border-radius:9px;border:1.5px solid #DDC3CF;background:#fff;font-size:14px")} className="dcs2" />
+                                        <input type="time" value={d.from} onChange={d.set.from} style={S("height:40px;width:100%;min-width:0;padding:0 8px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px")} className="dcs2" />
                                       </label>
                                       <label style={S("display:flex;flex-direction:column;gap:4px;min-width:0")}>
-                                        <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#583246`)}>
+                                        <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
                                           Closes
                                         </span>
-                                        <input type="time" value={d.to} onChange={d.set.to} style={S("height:40px;width:100%;min-width:0;padding:0 8px;border-radius:9px;border:1.5px solid #DDC3CF;background:#fff;font-size:14px")} className="dcs2" />
+                                        <input type="time" value={d.to} onChange={d.set.to} style={S("height:40px;width:100%;min-width:0;padding:0 8px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px")} className="dcs2" />
                                       </label>
                                       <label style={S("display:flex;flex-direction:column;gap:4px;min-width:0")}>
-                                        <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#583246`)}>
+                                        <span style={S(`display:${vm.L.cellLbl};font-size:12px;color:#8A5A6E`)}>
                                           Last order
                                         </span>
-                                        <input type="time" value={d.last} onChange={d.set.last} style={S("height:40px;width:100%;min-width:0;padding:0 8px;border-radius:9px;border:1.5px solid #DDC3CF;background:#fff;font-size:14px")} className="dcs2" />
+                                        <input type="time" value={d.last} onChange={d.set.last} style={S("height:40px;width:100%;min-width:0;padding:0 8px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px")} className="dcs2" />
                                       </label>
                                       {d.noBreak && (
                                         <>
@@ -1481,16 +1481,16 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                     </div>
                                     {d.hasBreak && (
                                       <>
-                                      <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px;color:#2A1020")}>
-                                        <span style={S("color:#583246")}>
+                                      <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px;color:#3D1C31")}>
+                                        <span style={S("color:#8A5A6E")}>
                                           Break
                                         </span>
-                                        <input type="time" value={d.bFrom} onChange={d.set.bFrom} aria-label="Break starts" style={S("height:36px;width:120px;padding:0 8px;border-radius:9px;border:1.5px solid #DDC3CF;background:#fff;font-size:14px")} />
+                                        <input type="time" value={d.bFrom} onChange={d.set.bFrom} aria-label="Break starts" style={S("height:36px;width:120px;padding:0 8px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px")} />
                                         <span>
                                           to
                                         </span>
-                                        <input type="time" value={d.bTo} onChange={d.set.bTo} aria-label="Break ends" style={S("height:36px;width:120px;padding:0 8px;border-radius:9px;border:1.5px solid #DDC3CF;background:#fff;font-size:14px")} />
-                                        <button type="button" onClick={d.toggleBreak} style={S("font-size:13px;color:#583246;text-decoration:underline;text-underline-offset:3px")} className="dcs5">
+                                        <input type="time" value={d.bTo} onChange={d.set.bTo} aria-label="Break ends" style={S("height:36px;width:120px;padding:0 8px;border-radius:9px;border:1.5px solid #ECD9E0;background:#fff;font-size:14px")} />
+                                        <button type="button" onClick={d.toggleBreak} style={S("font-size:13px;color:#8A5A6E;text-decoration:underline;text-underline-offset:3px")} className="dcs5">
                                           Remove
                                         </button>
                                       </div>
@@ -1501,7 +1501,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                 )}
                                 {d.closed && (
                                   <>
-                                  <span style={S("font-size:14px;color:#583246")}>
+                                  <span style={S("font-size:14px;color:#8A5A6E")}>
                                     Closed all day
                                   </span>
                                   </>
@@ -1541,12 +1541,12 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                     <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                       Menu setup
                     </h1>
-                    <p style={S("font-size:14px;color:#583246;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
+                    <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
                       Lumia AI answers from your approved menu: items, prices and what's available.
                     </p>
                   </div>
                   <div style={S(`display:grid;grid-template-columns:${vm.L.split};gap:20px;align-items:start`)}>
-                    <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px;min-width:0")}>
+                    <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px;min-width:0")}>
                       <ol style={S(`list-style:none;display:grid;grid-template-columns:${vm.L.stepCols};gap:10px`)}>
                         {(vm.menuSteps as any[]).map((m: any, __i: number) => (
                           <Fragment key={__i}>
@@ -1601,7 +1601,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           </span>
                           </>
                         )}
-                        <a href={vm.menuUrl} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:15px;display:inline-flex;align-items:center;text-decoration:none")} className="dcs0">
+                        <a href={vm.menuUrl} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px;display:inline-flex;align-items:center;text-decoration:none")} className="dcs0">
                           Edit items
                         </a>
                       </div>
@@ -1629,13 +1629,13 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                       <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                         Lumia Order devices
                       </h1>
-                      <p style={S("font-size:14px;color:#583246;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
+                      <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
                         Devices inside the restaurant that receive and print orders.
                       </p>
                     </div>
                     {vm.hasDevices && (
                       <>
-                      <button type="button" onClick={vm.startPair} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:15px")} className="dcs1">
+                      <button type="button" onClick={vm.startPair} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dcs1">
                         + Connect device
                       </button>
                       </>
@@ -1643,8 +1643,8 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                   </div>
                   {vm.pairing && (
                     <>
-                    <section style={S("border:1.5px solid #CBA5B6;border-radius:16px;padding:22px;display:flex;flex-wrap:wrap;gap:28px;align-items:center")}>
-                      <div style={S("position:relative;width:236px;height:236px;flex:none;border-radius:20px;background:#fff;border:1px solid #DDC3CF;box-shadow:0 22px 44px -26px rgba(138,32,64,.45);display:flex;align-items:center;justify-content:center;overflow:hidden")}>
+                    <section style={S("border:1.5px solid #E3CBD4;border-radius:16px;padding:22px;display:flex;flex-wrap:wrap;gap:28px;align-items:center")}>
+                      <div style={S("position:relative;width:236px;height:236px;flex:none;border-radius:20px;background:#fff;border:1px solid #ECD9E0;box-shadow:0 22px 44px -26px rgba(138,32,64,.45);display:flex;align-items:center;justify-content:center;overflow:hidden")}>
                         {vm.pairQr}
                       </div>
                       <div style={S("width:180px;height:380px;flex:none;display:flex;align-items:center;justify-content:center")}>
@@ -1654,14 +1654,14 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
                           {vm.pairTitle}
                         </h2>
-                        <p style={S("font-size:14px;color:#2A1020;line-height:1.5;text-wrap:pretty")}>
+                        <p style={S("font-size:14px;color:#3D1C31;line-height:1.5;text-wrap:pretty")}>
                           {vm.pairSub}
                         </p>
                         <ol style={S("list-style:none;display:flex;flex-direction:column;gap:10px")}>
                           {(vm.pairSteps as any[]).map((st: any, __i: number) => (
                             <Fragment key={__i}>
                               <li style={S("display:flex;align-items:center;gap:12px;font-size:14px")}>
-                                <span style={S("width:26px;height:26px;border-radius:50%;background:#F7E7EF;color:#583246;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none")}>
+                                <span style={S("width:26px;height:26px;border-radius:50%;background:#FAF6FA;color:#8A5A6E;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none")}>
                                   {st.n}
                                 </span>
                                 <span>
@@ -1671,11 +1671,11 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                             </Fragment>
                           ))}
                         </ol>
-                        <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:13px;color:#583246")}>
+                        <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:13px;color:#8A5A6E")}>
                           <span>
                             Can't scan? Enter code
                           </span>
-                          <span style={S("font-size:15px;font-weight:600;color:#1A0815;font-variant-numeric:tabular-nums;padding:4px 10px;border-radius:8px;background:#F7E7EF")}>
+                          <span style={S("font-size:15px;font-weight:600;color:#1A0815;font-variant-numeric:tabular-nums;padding:4px 10px;border-radius:8px;background:#FAF6FA")}>
                             {vm.pairCode}
                           </span>
                           <span>
@@ -1697,7 +1697,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                             </button>
                             </>
                           )}
-                          <button type="button" onClick={vm.cancelPair} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:15px")} className="dcs1">
+                          <button type="button" onClick={vm.cancelPair} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dcs1">
                             Cancel
                           </button>
                         </div>
@@ -1707,12 +1707,12 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                   )}
                   {vm.noDevicesIdle && (
                     <>
-                    <div style={S("border-radius:20px;background:#F7E7EF;padding:48px 24px;display:flex;flex-direction:column;align-items:center;text-align:center")}>
+                    <div style={S("border-radius:20px;background:#FAF6FA;padding:48px 24px;display:flex;flex-direction:column;align-items:center;text-align:center")}>
                       <img src="/brand/terminal-order.png" alt="Lumia Order Terminal" width="110" height="261" style={S("display:block;width:110px;height:auto")} />
                       <h2 style={S("font-size:19px;font-weight:600;letter-spacing:-0.02em;margin-top:16px")}>
                         No Lumia Order device connected yet.
                       </h2>
-                      <p style={S("font-size:15px;color:#2A1020;margin-top:6px;max-width:380px;line-height:1.5")}>
+                      <p style={S("font-size:15px;color:#3D1C31;margin-top:6px;max-width:380px;line-height:1.5")}>
                         Connect a device so orders can appear and print inside the restaurant.
                       </p>
                       <button type="button" onClick={vm.startPair} style={S("margin-top:20px;height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")} className="dcs6">
@@ -1724,7 +1724,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                   <div style={S("display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:16px")}>
                     {(vm.deviceCards as any[]).map((v: any, __i: number) => (
                       <Fragment key={__i}>
-                        <article style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px")}>
+                        <article style={S("border:1px solid #F0E4E8;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px")}>
                           <div style={S("display:flex;align-items:center;gap:12px")}>
                             <input value={v.name} onChange={v.rename} aria-label="Device name" style={S("flex:1;min-width:0;height:36px;padding:0 8px;margin-left:-8px;border-radius:8px;border:1.5px solid transparent;font-size:17px;font-weight:600;background:transparent")} className="dcs7 dcs8" />
                             <span style={S(`display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:500;background:${v.badgeBg};color:${v.badgeFg}`)}>
@@ -1733,7 +1733,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                             </span>
                           </div>
                           <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                            <span style={S("font-size:13px;color:#583246")}>
+                            <span style={S("font-size:13px;color:#8A5A6E")}>
                               Assigned branch
                             </span>
                             {v.brSel}
@@ -1742,7 +1742,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                             {(v.rows as any[]).map((r: any, __i: number) => (
                               <Fragment key={__i}>
                                 <div style={S("display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid #F3EEF1;font-size:14px")}>
-                                  <dt style={S("color:#583246")}>
+                                  <dt style={S("color:#8A5A6E")}>
                                     {r.k}
                                   </dt>
                                   <dd style={S("font-weight:500;font-variant-numeric:tabular-nums")}>
@@ -1753,7 +1753,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                             ))}
                           </dl>
                           <div style={S("display:flex;gap:10px;flex-wrap:wrap")}>
-                            <button type="button" onClick={v.testPrint} style={S("height:40px;padding:0 14px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
+                            <button type="button" onClick={v.testPrint} style={S("height:40px;padding:0 14px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
                               Test print
                             </button>
                             <button type="button" onClick={v.disconnect} style={S("height:40px;padding:0 14px;border-radius:10px;font-weight:500;font-size:14px;color:#B42318")} className="dcs9">
@@ -1774,17 +1774,17 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                     <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
                       Payment settings
                     </h1>
-                    <p style={S("font-size:14px;color:#583246;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
+                    <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
                       How customers pay for WhatsApp orders.
                     </p>
                   </div>
-                  <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:6px 22px;display:flex;flex-direction:column")}>
+                  <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:6px 22px;display:flex;flex-direction:column")}>
                     <div style={S("display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0")}>
                       <div>
                         <span style={S("font-size:15px;font-weight:500")}>
                           Cash on delivery
                         </span>
-                        <p style={S("font-size:13px;color:#583246;margin-top:2px")}>
+                        <p style={S("font-size:13px;color:#8A5A6E;margin-top:2px")}>
                           Customers pay the driver in cash or by card on arrival.
                         </p>
                       </div>
@@ -1794,14 +1794,14 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                     </div>
                     <div style={S("display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-top:1px solid #F3EEF1")}>
                       <div>
-                        <span style={S("font-size:15px;font-weight:500;color:#583246")}>
+                        <span style={S("font-size:15px;font-weight:500;color:#8A5A6E")}>
                           Payment link
                         </span>
-                        <p style={S("font-size:13px;color:#583246;margin-top:2px")}>
+                        <p style={S("font-size:13px;color:#8A5A6E;margin-top:2px")}>
                           Online payment by link, sent in the order summary.
                         </p>
                       </div>
-                      <span style={S("display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:500;white-space:nowrap;background:#F6EEF2;color:#2A1020")}>
+                      <span style={S("display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:500;white-space:nowrap;background:#F6EEF2;color:#3D1C31")}>
                         Coming later
                       </span>
                     </div>
@@ -1811,7 +1811,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           <span style={S("font-size:15px;font-weight:500")}>
                             Verify phone for high-value orders
                           </span>
-                          <p style={S("font-size:13px;color:#583246;margin-top:2px")}>
+                          <p style={S("font-size:13px;color:#8A5A6E;margin-top:2px")}>
                             {vm.verifyHint}
                           </p>
                         </div>
@@ -1822,10 +1822,10 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                       {vm.verifySw.on && (
                         <>
                         <label style={S("display:flex;flex-direction:column;gap:6px;max-width:240px")}>
-                          <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
+                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                             Orders above ({vm.cur})
                           </span>
-                          <input inputMode="decimal" value={vm.payf.threshold.v} onChange={vm.payf.threshold.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                          <input inputMode="decimal" value={vm.payf.threshold.v} onChange={vm.payf.threshold.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
                         </label>
                         </>
                       )}
@@ -1850,7 +1850,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
           </main>
           {vm.bar.show && (
             <>
-            <div style={S("flex:none;border-top:1px solid #E3CBD6;background:#fff;padding:12px 16px;box-shadow:0 -10px 24px -18px rgba(26,8,21,.3)")}>
+            <div style={S("flex:none;border-top:1px solid #F0E4E8;background:#fff;padding:12px 16px;box-shadow:0 -10px 24px -18px rgba(26,8,21,.3)")}>
               <div style={S("max-width:880px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px")}>
                 {vm.bar.err && (
                   <>
@@ -1879,7 +1879,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                   <span style={S(`flex:1 1 220px;font-size:15px;font-weight:500;color:${vm.bar.fg}`)}>
                     {vm.bar.dirtyText}
                   </span>
-                  <button type="button" onClick={vm.bar.discard} style={S("height:44px;padding:0 16px;border-radius:12px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:15px")} className="dcs1">
+                  <button type="button" onClick={vm.bar.discard} style={S("height:44px;padding:0 16px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dcs1">
                     {vm.bar.discardLabel}
                   </button>
                   <button type="button" onClick={vm.bar.save} style={S("height:44px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")} className="dcs6">

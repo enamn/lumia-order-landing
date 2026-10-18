@@ -8,7 +8,7 @@ async function post(path: string, body: unknown) {
   if (!res.ok) throw new Error(json.error?.message ?? "Something went wrong. Please try again.");
   return json.data ?? json;
 }
-const input: React.CSSProperties = { height: 44, flex: "1 1 220px", minWidth: 0, padding: "0 12px", borderRadius: 10, border: "1.5px solid #DDC3CF", background: "#fff", fontSize: 15 };
+const input: React.CSSProperties = { height: 44, flex: "1 1 220px", minWidth: 0, padding: "0 12px", borderRadius: 10, border: "1.5px solid #ECD9E0", background: "#fff", fontSize: 15 };
 const btn: React.CSSProperties = { height: 44, padding: "0 18px", borderRadius: 12, border: 0, background: "linear-gradient(90deg,#FF5577,#C93DFF)", color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer", flex: "none" };
 const T = {
   en: { title: "Add your email to get plan reminders", why: "We email you before your trial or plan ends, and if a payment fails. Phone sign-in has no email, so add one here.", ph: "name@restaurant.com", send: "Send code", sending: "Sending…", code: "6-digit code", verify: "Verify", verifying: "Verifying…", sentTo: (e: string) => `We sent a code to ${e}.`, resend: "Send a new code", wait: (n: number) => `Send a new code in ${n}s`, change: "Use a different email", verified: "Verified", done: (e: string) => `${e} is verified. Reminders will go there.`, notVerified: "Not verified yet", settingsLabel: "Verify this email" },
@@ -37,12 +37,12 @@ export function EmailVerify({ businessId, email: initial, verified: initialVerif
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <span style={{ fontSize: 13, color: "#2A1020" }}>{t.sentTo(target)}</span>
+            <span style={{ fontSize: 13, color: "#3D1C31" }}>{t.sentTo(target)}</span>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <input inputMode="numeric" maxLength={6} value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ""))} placeholder={t.code} style={input} />
-              <button type="button" disabled={busy || code.length !== 6} onClick={confirm} style={{ ...btn, background: busy || code.length !== 6 ? "#CDA6BA" : btn.background }}>{busy ? t.verifying : t.verify}</button>
+              <button type="button" disabled={busy || code.length !== 6} onClick={confirm} style={{ ...btn, opacity: busy || code.length !== 6 ? 0.6 : 1 }}>{busy ? t.verifying : t.verify}</button>
             </div>
-            <button type="button" disabled={left > 0 || busy} onClick={start} style={{ alignSelf: "flex-start", fontSize: 13, fontWeight: 600, textDecoration: "underline", color: left > 0 ? "#583246" : "#C0284F" }}>{left > 0 ? t.wait(left) : t.resend}</button>
+            <button type="button" disabled={left > 0 || busy} onClick={start} style={{ alignSelf: "flex-start", fontSize: 13, fontWeight: 600, textDecoration: "underline", color: left > 0 ? "#8A5A6E" : "#C0284F" }}>{left > 0 ? t.wait(left) : t.resend}</button>
           </div>
         )}
         {err && <div role="alert" style={{ fontSize: 13, color: "#B4233B" }}>{err}</div>}
@@ -52,24 +52,24 @@ export function EmailVerify({ businessId, email: initial, verified: initialVerif
 
   if (verified) return null;
   return (
-    <div dir={dir} style={{ flex: "none", borderRadius: 20, background: "#fff", border: "1.5px solid #DDC3CF", boxShadow: "0 1px 2px rgba(60,20,40,.06), 0 14px 30px -20px rgba(60,20,40,.28)", padding: "22px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
+    <div dir={dir} style={{ flex: "none", borderRadius: 20, background: "linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%)", padding: "22px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
       <h2 style={{ fontSize: 19, fontWeight: 600, letterSpacing: "-0.02em", margin: 0, color: "#1A0815" }}>{t.title}</h2>
-      <div style={{ fontSize: 14, color: "#2A1020", lineHeight: 1.5, maxWidth: 620 }}>{t.why}</div>
+      <div style={{ fontSize: 14, color: "#3D1C31", lineHeight: 1.5, maxWidth: 620 }}>{t.why}</div>
       {step === "email" ? (
         <form onSubmit={e => { e.preventDefault(); if (!busy && email.trim()) start(); }} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t.ph} autoComplete="email" style={input} />
-          <button type="submit" disabled={busy || !email.trim()} style={{ ...btn, background: busy || !email.trim() ? "#CDA6BA" : btn.background }}>{busy ? t.sending : t.send}</button>
+          <button type="submit" disabled={busy || !email.trim()} style={{ ...btn, opacity: busy || !email.trim() ? 0.6 : 1 }}>{busy ? t.sending : t.send}</button>
         </form>
       ) : (
         <form onSubmit={e => { e.preventDefault(); if (!busy && code.length === 6) confirm(); }} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <span style={{ fontSize: 13, color: "#2A1020" }}>{t.sentTo(target)}</span>
+          <span style={{ fontSize: 13, color: "#3D1C31" }}>{t.sentTo(target)}</span>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <input inputMode="numeric" maxLength={6} value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ""))} placeholder={t.code} autoFocus style={input} />
-            <button type="submit" disabled={busy || code.length !== 6} style={{ ...btn, background: busy || code.length !== 6 ? "#CDA6BA" : btn.background }}>{busy ? t.verifying : t.verify}</button>
+            <button type="submit" disabled={busy || code.length !== 6} style={{ ...btn, opacity: busy || code.length !== 6 ? 0.6 : 1 }}>{busy ? t.verifying : t.verify}</button>
           </div>
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <button type="button" disabled={left > 0 || busy} onClick={start} style={{ fontSize: 13, fontWeight: 600, textDecoration: "underline", color: left > 0 ? "#583246" : "#C0284F" }}>{left > 0 ? t.wait(left) : t.resend}</button>
-            <button type="button" onClick={() => { setStep("email"); setErr(""); }} style={{ fontSize: 13, fontWeight: 600, textDecoration: "underline", color: "#583246" }}>{t.change}</button>
+            <button type="button" disabled={left > 0 || busy} onClick={start} style={{ fontSize: 13, fontWeight: 600, textDecoration: "underline", color: left > 0 ? "#8A5A6E" : "#C0284F" }}>{left > 0 ? t.wait(left) : t.resend}</button>
+            <button type="button" onClick={() => { setStep("email"); setErr(""); }} style={{ fontSize: 13, fontWeight: 600, textDecoration: "underline", color: "#8A5A6E" }}>{t.change}</button>
           </div>
         </form>
       )}

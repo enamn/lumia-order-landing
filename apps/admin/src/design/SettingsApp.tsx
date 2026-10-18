@@ -51,7 +51,7 @@ const PAGES = [
 ];
 const KEY: Record<string, string> = { profile: 'profile', branches: 'branches', whatsapp: 'wa', delivery: 'delivery', hours: 'hours', payments: 'pay' };
 const OK: Record<string, string> = { profile: 'Restaurant profile saved.', branches: 'Branches saved.', whatsapp: 'WhatsApp settings saved.', delivery: 'Delivery settings saved.', hours: 'Working hours saved.', payments: 'Payment settings saved.' };
-const TONE: Record<string, string[]> = { ok: ['#E6F4EC', '#16704A'], warn: ['#FFF1DC', '#8A4B00'], bad: ['#FDECEC', '#B42318'], neutral: ['#F6EEF2', '#2A1020'] };
+const TONE: Record<string, string[]> = { ok: ['#E6F4EC', '#16704A'], warn: ['#FFF1DC', '#8A4B00'], bad: ['#FDECEC', '#B42318'], neutral: ['#F6EEF2', '#3D1C31'] };
 const clone = (o: any) => JSON.parse(JSON.stringify(o));
 const fmt12 = (t: string) => { if (!t) return ''; let [h, m] = t.split(':').map(Number); const ap = h >= 12 && h < 24 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${String(m).padStart(2, '0')} ${ap}`; };
 const newBranch = (region = ''): any => ({ name: '', emirate: region, area: '', address: '', phone: '', eta: '45', active: true, pin: false, coords: '' });
@@ -169,15 +169,15 @@ class SettingsApp extends React.Component<Props, any> {
   renderVals() {
     const s = this.state, d = s.draft, sv = s.saved, wide = s.w >= 900, tw = s.w >= 560 ? s.w - (s.w >= 1000 ? 340 : 260) - 48 : s.w, tblWide = tw >= 700, M = s.menu, menuLevel = M.items === 0 ? 0 : M.missingPrices > 0 ? 2 : 4;
     const ce = React.createElement;
-    const selStyle = (sm) => ({ height: sm ? 40 : 44, width: '100%', minWidth: 0, padding: '0 10px', borderRadius: sm ? 9 : 10, border: '1.5px solid #DDC3CF', background: '#fff', fontSize: sm ? 14 : 15 });
+    const selStyle = (sm) => ({ height: sm ? 40 : 44, width: '100%', minWidth: 0, padding: '0 10px', borderRadius: sm ? 9 : 10, border: '1.5px solid #ECD9E0', background: '#fff', fontSize: sm ? 14 : 15 });
     const sel = (value, opts, onChange, sm = true, label) => ce('select', { value, onChange, style: selStyle(sm), 'aria-label': label }, opts.map(o => ce('option', { key: o.v, value: o.v }, o.l)));
     const emOpts = this.EMR.map(e => ({ v: e, l: e }));
     const brOpts = d.branches.map(b => ({ v: b.id, l: b.name }));
     const bName = (id) => (d.branches.find(b => b.id === id) || {}).name || '—';
     const sw = (on, toggle, extra = {}) => ({ on, toggle, tBg: on ? 'linear-gradient(90deg,#FF5577,#C93DFF)' : '#EAD9E1', knob: on ? '20px' : '0px', ...extra });
-    const radio = (list, cur, set) => list.map(([v, label, desc]) => { const on = cur === v; return { label, desc, on, bd: on ? '#C93DFF' : '#DDC3CF', bg: on ? '#FCF5FD' : '#fff', ring: on ? '#C93DFF' : '#D9BFCB', dotBg: on ? '#C93DFF' : 'transparent', pick: () => set(v) }; });
-    const seg = (list, cur, set) => list.map(([v, label]) => { const on = cur === v; return { label, on, fw: on ? 600 : 500, bg: on ? '#fff' : 'transparent', fg: on ? '#1A0815' : '#583246', sh: on ? '0 1px 3px rgba(26,8,21,.12)' : 'none', pick: () => set(v) }; });
-    const chip = (label, on, pick) => ({ label, on, pick, bg: on ? '#FDEAF2' : '#fff', fg: on ? '#8A2040' : '#2A1020', bd: on ? '#F3B8CC' : '#DDC3CF' });
+    const radio = (list, cur, set) => list.map(([v, label, desc]) => { const on = cur === v; return { label, desc, on, bd: on ? '#C93DFF' : '#ECD9E0', bg: on ? '#FCF5FD' : '#fff', ring: on ? '#C93DFF' : '#D9BFCB', dotBg: on ? '#C93DFF' : 'transparent', pick: () => set(v) }; });
+    const seg = (list, cur, set) => list.map(([v, label]) => { const on = cur === v; return { label, on, fw: on ? 600 : 500, bg: on ? '#fff' : 'transparent', fg: on ? '#1A0815' : '#8A5A6E', sh: on ? '0 1px 3px rgba(26,8,21,.12)' : 'none', pick: () => set(v) }; });
+    const chip = (label, on, pick) => ({ label, on, pick, bg: on ? '#FDEAF2' : '#fff', fg: on ? '#8A2040' : '#3D1C31', bd: on ? '#F3B8CC' : '#ECD9E0' });
     const bind = (k, keys) => Object.fromEntries(keys.map(key => [key, { v: d[k][key] ?? '', set: (e) => { const v = e.target.value; this.upd(k, x => { x[key] = v; }); } }]));
 
     // completion (saved state)
@@ -196,7 +196,7 @@ class SettingsApp extends React.Component<Props, any> {
       ['Payment method', payDone, payDone ? ['Complete', 'ok', 'Edit'] : ['Missing', 'bad', 'Turn on'], 'payments'],
     ];
     const steps = stepDefs.map(([label, done, [status, tone, action], page]) => ({ label, done, todo: !done, status, action, tbg: TONE[tone][0], tfg: TONE[tone][1], ring: tone === 'bad' ? '#E8A0A0' : '#E5B97A',
-      bar: done ? '#16704A' : 'rgba(26,8,21,.12)', abd: done ? '#DDC3CF' : 'transparent', abg: done ? '#fff' : '#1A0815', afg: done ? '#1A0815' : '#fff', go: () => this.go(page) }));
+      bar: done ? '#16704A' : 'rgba(26,8,21,.12)', abd: done ? '#ECD9E0' : 'transparent', abg: done ? '#fff' : '#1A0815', afg: done ? '#1A0815' : '#fff', go: () => this.go(page) }));
     const doneN = steps.filter(x => x.done).length;
     const NOTE = { 'Branch location': 'Needed to calculate delivery distance and fees.', 'Delivery settings': 'Lumia AI cannot calculate delivery fees yet.', 'Menu': 'Lumia AI answers only from an approved menu.', 'Order device': 'Orders still appear in the dashboard, but they will not print.', 'Restaurant profile': 'Name, phone and VAT details.', 'Payment method': 'Customers need a way to pay.' };
     const todo = steps.filter(x => !x.done), todoSteps = todo.map((x, i) => ({ ...x, note: NOTE[x.label] || '', hasNote: !!NOTE[x.label], bt: i ? '1px solid #F3EEF1' : '0' }));
@@ -209,7 +209,7 @@ class SettingsApp extends React.Component<Props, any> {
       !menuDone && ['Menu must be approved before Lumia AI can take orders.', 'Review menu', 'menu'],
     ].filter(Boolean).map(([text, action, p]) => ({ text, action, go: () => this.go(p) }));
     const flagOf: Record<string, boolean> = { profile: !profDone, branches: !locDone, delivery: !delDone, menu: !menuDone, payments: !payDone };
-    const navAll = PAGES.map(([k, label, icon]) => { const on = s.page === k; const f = flagOf[k]; return { label, icon, flag: !!f, dot: k === 'devices' || k === 'menu' ? '#E39A2B' : '#E5484D', fw: on ? 600 : 500, fg: on ? '#1A0815' : '#2A1020', bg: on ? '#FDEAF2' : 'transparent', bd: on ? '#FF5577' : 'transparent', pick: (e) => { e && e.preventDefault && e.preventDefault(); this.go(k); } }; });
+    const navAll = PAGES.map(([k, label, icon]) => { const on = s.page === k; const f = flagOf[k]; return { label, icon, flag: !!f, dot: k === 'devices' || k === 'menu' ? '#E39A2B' : '#E5484D', fw: on ? 600 : 500, fg: on ? '#1A0815' : '#3D1C31', bg: on ? '#FDEAF2' : 'transparent', bd: on ? '#FF5577' : 'transparent', pick: (e) => { e && e.preventDefault && e.preventDefault(); this.go(k); } }; });
 
     const nav = navAll;
     const navGroups = [{ hasLabel: true, label: 'Settings', count: '', items: navAll }];
@@ -256,7 +256,7 @@ class SettingsApp extends React.Component<Props, any> {
       sw: sw(r.on, () => this.upd('delivery', x => { x.areas[i].on = !x.areas[i].on; })),
       remove: () => this.upd('delivery', x => { x.areas.splice(i, 1); }) }));
     const badRange = new Set(); { const r = D.ranges, hi = (x) => x.to === '' ? Infinity : +x.to; for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++) if (r[i].on && r[j].on && +r[i].from < hi(r[j]) && +r[j].from < hi(r[i])) { badRange.add(i); badRange.add(j); } }
-    const ranges = D.ranges.map((r, i) => ({ ...r, op: r.on ? 1 : 0.5, bd: badRange.has(i) ? '#E5484D' : '#DDC3CF', onLabel: r.on ? 'Active' : 'Inactive', set: rowSet('ranges', i, ['from', 'to', 'fee', 'min', 'eta']),
+    const ranges = D.ranges.map((r, i) => ({ ...r, op: r.on ? 1 : 0.5, bd: badRange.has(i) ? '#E5484D' : '#ECD9E0', onLabel: r.on ? 'Active' : 'Inactive', set: rowSet('ranges', i, ['from', 'to', 'fee', 'min', 'eta']),
       sw: sw(r.on, () => this.upd('delivery', x => { x.ranges[i].on = !x.ranges[i].on; })), remove: () => this.upd('delivery', x => { x.ranges.splice(i, 1); }) }));
     const C = s.calc, setC = (k) => (e) => { const v = e.target.value; this.setState(st => ({ calc: { ...st.calc, [k]: v } })); };
     const calc = { ...C, setArea: setC('area'), setDist: setC('dist'), setSub: setC('sub'), brSel: sel(C.branch, brOpts, setC('branch'), true, 'Branch'), emSel: sel(C.emirate, emOpts, setC('emirate'), true, this.REGION_LABEL) };
@@ -296,10 +296,10 @@ class SettingsApp extends React.Component<Props, any> {
       ].filter(Boolean);
 
     // menu
-    const menuSteps = ['No menu', 'Extracting', 'Needs review', 'Approved', 'Live'].map((label, i) => ({ label, bar: i <= menuLevel ? 'linear-gradient(90deg,#FF5577,#C93DFF)' : '#E3CBD6', fw: i === menuLevel ? 600 : 500, fg: i === menuLevel ? '#1A0815' : '#583246' }));
+    const menuSteps = ['No menu', 'Extracting', 'Needs review', 'Approved', 'Live'].map((label, i) => ({ label, bar: i <= menuLevel ? 'linear-gradient(90deg,#FF5577,#C93DFF)' : '#F0E4E8', fw: i === menuLevel ? 600 : 500, fg: i === menuLevel ? '#1A0815' : '#8A5A6E' }));
     const miss = M.missingPrices;
     const updated = M.updatedAt ? new Date(M.updatedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
-    const menuStats = [['Categories', String(M.categories)], ['Items', String(M.items)], ['Missing prices', String(miss)], ['Out of stock', String(M.soldOut)], ['Last updated', updated]].map(([k, v]) => { const hot = k === 'Missing prices' && miss; return { k, v, bg: hot ? '#FFF1DC' : '#FAF6FA', fg: hot ? '#8A4B00' : '#1A0815', lfg: hot ? '#8A4B00' : '#583246' }; });
+    const menuStats = [['Categories', String(M.categories)], ['Items', String(M.items)], ['Missing prices', String(miss)], ['Out of stock', String(M.soldOut)], ['Last updated', updated]].map(([k, v]) => { const hot = k === 'Missing prices' && miss; return { k, v, bg: hot ? '#FFF1DC' : '#FAF6FA', fg: hot ? '#8A4B00' : '#1A0815', lfg: hot ? '#8A4B00' : '#8A5A6E' }; });
     const menuPrimary = { show: false, label: '', go: () => {} };
 
     // devices
@@ -307,7 +307,7 @@ class SettingsApp extends React.Component<Props, any> {
     const seen = (t: string | null) => { if (!t) return 'Never'; const sec = Math.max(0, Math.round((Date.now() - new Date(t).getTime()) / 1000)); return sec < 60 ? 'Just now' : sec < 3600 ? `${Math.round(sec / 60)} min ago` : sec < 86400 ? `${Math.round(sec / 3600)} h ago` : new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); };
     const deviceCards: any[] = dev.map((d: any) => ({
       name: d.name, rename: (e: any) => this.renameDevice(d.id, e.target.value),
-      badge: d.online ? 'Online' : 'Offline', badgeBg: d.online ? '#E6F4EC' : '#F3EEF1', badgeFg: d.online ? '#16704A' : '#583246',
+      badge: d.online ? 'Online' : 'Offline', badgeBg: d.online ? '#E6F4EC' : '#F3EEF1', badgeFg: d.online ? '#16704A' : '#8A5A6E',
       brSel: sel(d.locationId, branchOpts, (e: any) => this.moveDevice(d.id, e.target.value), false, 'Assigned branch'),
       rows: [{ k: 'Last seen', v: seen(d.lastSeenAt) }, { k: 'Serial number', v: d.serial }, { k: 'Model', v: d.model || '–' }, { k: 'App version', v: d.appVersion || '–' }],
       testPrint: () => this.printTest(d.id), disconnect: () => this.removeDevice(d.id, d.name),
@@ -326,7 +326,7 @@ class SettingsApp extends React.Component<Props, any> {
     const dirty = this.dirtyOf(s, s.page);
     const pageLabel = (PAGES.find(p => p[0] === s.page) || [])[1];
     const bar = { show: dirty || !!s.toast || !!s.error || s.saving, dirty, ok: !!s.toast && !dirty, okText: s.toast, err: !!s.error, errText: s.error,
-      fg: s.blocked ? '#8A4B00' : '#2A1020',
+      fg: s.blocked ? '#8A4B00' : '#3D1C31',
       dirtyText: s.blocked ? `Save or discard your ${pageLabel.toLowerCase()} changes before leaving.` : 'You have unsaved changes.',
       discardLabel: s.blocked ? 'Leave without saving' : 'Discard', save: () => this.save(), discard: () => this.discard() };
 
@@ -351,7 +351,7 @@ class SettingsApp extends React.Component<Props, any> {
       pickLogo: () => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/png,image/jpeg'; i.onchange = async () => { const f = i.files?.[0]; if (!f) return; try { const url = await logoToDataUrl(f); this.upd('profile', (x: any) => { x.logo = url; }); } catch (e: any) { this.setState({ error: e?.message ?? 'We couldn’t read that image.' }); } }; i.click(); },
       prof: bind('profile', ['name', 'brand', 'cuisine', 'phone', 'support', 'email', 'trn']),
       vatSw: sw(pr.vat, () => this.upd('profile', x => { x.vat = !x.vat; })),
-      trnBd: trnOk ? '#DDC3CF' : '#E5484D', trnHint: trnOk ? 'Shown on receipts.' : 'TRN must be 15 digits.', trnHintFg: trnOk ? '#583246' : '#B42318',
+      trnBd: trnOk ? '#ECD9E0' : '#E5484D', trnHint: trnOk ? 'Shown on receipts.' : 'TRN must be 15 digits.', trnHintFg: trnOk ? '#8A5A6E' : '#B42318',
       langSeg: seg([['ar', 'Arabic'], ['en', 'English'], ['both', 'Both']], pr.lang, (v) => this.upd('profile', x => { x.lang = v; })),
       greetOpts: radio([['friendly', 'Friendly', 'Warm and casual'], ['formal', 'Formal', 'Polite and professional'], ['short', 'Short', 'Straight to the order']], pr.greet, (v) => this.upd('profile', x => { x.greet = v; })),
       greetBubbles,
@@ -377,7 +377,7 @@ class SettingsApp extends React.Component<Props, any> {
       dlf: bind('delivery', ['freeAreas', 'manualMsg', 'minOrder', 'freeAbove', 'eta']),
       confirmSw: sw(D.confirmFirst, () => setD('confirmFirst', !D.confirmFirst)),
       pinSw: sw(D.pinReq || distLock, () => !distLock && setD('pinReq', !D.pinReq), { locked: distLock, op: distLock ? 0.6 : 1 }),
-      pinReqHint: distLock ? 'Required for distance pricing.' : 'Lumia asks for a WhatsApp location before confirming the address.', pinReqHintFg: '#583246',
+      pinReqHint: distLock ? 'Required for distance pricing.' : 'Lumia asks for a WhatsApp location before confirming the address.', pinReqHintFg: '#8A5A6E',
       calc, res,
       hModeOpts: radio([['every', 'Same hours every day', 'One set of hours for the whole week.'], ['custom', 'Custom hours per day', 'Different hours or days off.'], ['closed', 'Temporarily closed', 'Lumia stops taking orders.']], H.mode, (v) => setH(x => { x.mode = v; })),
       scopeSeg: seg([['same', 'Same for all branches'], ['per', 'Different per branch']], H.scope, (v) => setH(x => { x.scope = v; })),
