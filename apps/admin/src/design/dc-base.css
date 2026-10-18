@@ -19,3 +19,6 @@
 @keyframes lo-pulse{0%,100%{transform:scale(.7);opacity:.6}50%{transform:scale(1);opacity:1}}
 .dc select,.dc textarea{font:inherit;color:inherit;outline:none}
 .dc textarea::placeholder{color:#B89AA8}
+
+/* Sign-in card: the layout is identical in English and Arabic. Arabic text reads right-to-left inside the same left-aligned blocks. */
+.dc--bidi h1, .dc--bidi p, .dc--bidi label, .dc--bidi [role='alert'] > span:last-child { unicode-bidi: plaintext; text-align: left; }
