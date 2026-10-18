@@ -15,8 +15,8 @@ export function DcTemplate({ vm }: { vm: any }) {
                 <div style={S("display:flex;align-items:center;gap:12px;min-height:40px")}>
                   {vm.canBack && (
                     <>
-                    <button type="button" onClick={vm.back} aria-label="Back" style={S("width:40px;height:40px;border-radius:12px;border:1.5px solid #ECD9E0;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <button type="button" onClick={vm.back} aria-label={vm.X.back} style={S("width:40px;height:40px;border-radius:12px;border:1.5px solid #ECD9E0;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={S(vm.rtl ? "transform:scaleX(-1)" : "")}>
                         <path d="M10 3 5 8l5 5" stroke="#1A0815" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </button>
@@ -43,22 +43,29 @@ export function DcTemplate({ vm }: { vm: any }) {
                       </span>
                     </span>
                   </div>
+                  {vm.showLang && (
+                    <>
+                    <button type="button" onClick={vm.toggleLang} aria-label={vm.X.langAria} style={S("margin-inline-start:auto;height:36px;padding:0 14px;border-radius:999px;border:1.5px solid #ECD9E0;font-size:14px;font-weight:600;color:#3D1C31;background:#fff")} className="dch0">
+                      {vm.X.langBtn}
+                    </button>
+                    </>
+                  )}
                 </div>
                 {vm.is.phone && (
                   <>
                   <form data-screen-label="01 Mobile number" onSubmit={vm.sendCode} noValidate={true} style={S("flex:1;display:flex;flex-direction:column")}>
                     <h1 style={S(`font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:${vm.L.headTop};text-wrap:balance`)}>
-                      Get started with Lumia Order
+                      {vm.X.title}
                     </h1>
                     <p style={S("font-size:16px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
-                      Enter your mobile number to create your account or sign in.
+                      {vm.X.sub}
                     </p>
                     <label htmlFor="pd-phone" style={S("display:block;font-size:14px;font-weight:500;color:#3D1C31;margin-top:28px")}>
-                      Mobile number
+                      {vm.X.mobile}
                     </label>
                     <div style={S("position:relative;margin-top:8px")}>
-                      <div style={S(`display:flex;align-items:stretch;height:56px;border-radius:14px;border:1.5px solid ${vm.pf.bd};box-shadow:${vm.pf.ring};background:${vm.pf.bg};opacity:${vm.pf.op};transition:border-color .15s,box-shadow .15s`)}>
-                        <button type="button" onClick={vm.toggleCC} disabled={!!vm.sending} aria-label="Country code" style={S("display:flex;align-items:center;gap:8px;padding:0 12px 0 14px;flex:none;border-radius:12px 0 0 12px")} className="dch0">
+                      <div dir="ltr" style={S(`display:flex;align-items:stretch;height:56px;border-radius:14px;border:1.5px solid ${vm.pf.bd};box-shadow:${vm.pf.ring};background:${vm.pf.bg};opacity:${vm.pf.op};transition:border-color .15s,box-shadow .15s`)}>
+                        <button type="button" onClick={vm.toggleCC} disabled={!!vm.sending} aria-label={vm.X.ccAria} style={S("display:flex;align-items:center;gap:8px;padding:0 12px 0 14px;flex:none;border-radius:12px 0 0 12px")} className="dch0">
                           <span style={S("font-size:20px;line-height:1")}>
                             {vm.cc.flag}
                           </span>
@@ -121,7 +128,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                     {vm.phoneHint && (
                       <>
                       <div style={S("margin-top:10px;font-size:14px;line-height:1.45;color:#8A5A6E")}>
-                        We'll send a verification code on WhatsApp. No password needed.
+                        {vm.X.hint}
                       </div>
                       </>
                     )}
@@ -135,13 +142,13 @@ export function DcTemplate({ vm }: { vm: any }) {
                       </button>
                     </div>
                     <p style={S("margin-top:20px;font-size:13px;line-height:1.5;color:#8A5A6E;text-align:center;text-wrap:pretty")}>
-                      {"By continuing, you agree to Lumia's "}
-                      <a href={vm.termsUrl} style={S("color:#3D1C31")}>
-                        Terms of Service
+                      {vm.X.terms1}
+                      <a href={vm.termsUrl} target="_blank" rel="noopener" style={S("color:#3D1C31")}>
+                        {vm.X.terms}
                       </a>
-                      {" and "}
-                      <a href="Lumia Order Privacy.dc.html" style={S("color:#3D1C31")}>
-                        Privacy Policy
+                      {vm.X.and}
+                      <a href={vm.privacyUrl} target="_blank" rel="noopener" style={S("color:#3D1C31")}>
+                        {vm.X.privacy}
                       </a>
                       .
                     </p>
@@ -152,20 +159,20 @@ export function DcTemplate({ vm }: { vm: any }) {
                   <>
                   <div data-screen-label="02 WhatsApp OTP" style={S("flex:1;display:flex;flex-direction:column")}>
                     <h1 style={S(`font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:${vm.L.headTop}`)}>
-                      Check your WhatsApp
+                      {vm.X.otpTitle}
                     </h1>
                     <p style={S("font-size:16px;line-height:1.5;color:#3D1C31;margin-top:10px")}>
-                      We sent a 6-digit verification code to
+                      {vm.X.otpSent}
                     </p>
                     <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:4px")}>
                       <span style={S("font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.01em")}>
                         {vm.masked}
                       </span>
                       <button type="button" onClick={vm.changeNumber} style={S("font-size:14px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px")} className="dch2">
-                        Change phone number
+                        {vm.X.change}
                       </button>
                     </div>
-                    <div onClick={vm.focusOtp} style={S(`position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:28px;max-width:360px;opacity:${vm.otpOp}`)}>
+                    <div dir="ltr" onClick={vm.focusOtp} style={S(`position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:28px;max-width:360px;opacity:${vm.otpOp}`)}>
                       {(vm.boxes as any[]).map((b: any, __i: number) => (
                         <Fragment key={__i}>
                           <div style={S(`height:60px;border-radius:12px;border:1.5px solid ${b.bd};box-shadow:${b.ring};background:${b.bg};display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;transition:border-color .12s,box-shadow .12s`)}>
@@ -178,7 +185,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                           </div>
                         </Fragment>
                       ))}
-                      <input ref={vm.otpRef} aria-label="Verification code" type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={vm.digits} onChange={vm.onOtp} onFocus={vm.otpFocus} onBlur={vm.otpBlur} disabled={!!vm.verifying} style={S("position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;color:transparent;caret-color:transparent")} />
+                      <input ref={vm.otpRef} aria-label={vm.X.codeAria} type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={vm.digits} onChange={vm.onOtp} onFocus={vm.otpFocus} onBlur={vm.otpBlur} disabled={!!vm.verifying} style={S("position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;color:transparent;caret-color:transparent")} />
                     </div>
                     {vm.otpMsg.show && (
                       <>
@@ -202,7 +209,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                         {vm.resendLabel}
                       </button>
                       <button type="button" onClick={vm.sms} style={S("height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
-                        Send code by SMS
+                        {vm.X.sms}
                       </button>
                     </div>
                   </div>
@@ -217,7 +224,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                       </svg>
                     </span>
                     <h1 style={S("font-size:26px;font-weight:600;letter-spacing:-0.03em")}>
-                      Number verified
+                      {vm.X.verified}
                     </h1>
                   </div>
                   </>
@@ -226,12 +233,12 @@ export function DcTemplate({ vm }: { vm: any }) {
                   <>
                   <form data-screen-label="03 Restaurant name" onSubmit={vm.submitName} noValidate={true} style={S("flex:1;display:flex;flex-direction:column")}>
                     <h1 style={S(`font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:${vm.L.headTop};text-wrap:balance`)}>
-                      Tell us about your restaurant
+                      {vm.X.nameTitle}
                     </h1>
                     <label htmlFor="pd-name" style={S("display:block;font-size:14px;font-weight:500;color:#3D1C31;margin-top:28px")}>
-                      Restaurant name
+                      {vm.X.nameLabel}
                     </label>
-                    <input id="pd-name" ref={vm.nameRef} type="text" autoComplete="organization" placeholder="Burger House" value={vm.name} onChange={vm.onName} onFocus={vm.nameFocus} onBlur={vm.nameBlur} style={S(`margin-top:8px;height:56px;border-radius:14px;border:1.5px solid ${vm.nf.bd};box-shadow:${vm.nf.ring};padding:0 16px;font-size:17px;background:#fff;transition:border-color .15s,box-shadow .15s`)} />
+                    <input id="pd-name" ref={vm.nameRef} type="text" autoComplete="organization" placeholder={vm.X.namePh} value={vm.name} onChange={vm.onName} onFocus={vm.nameFocus} onBlur={vm.nameBlur} style={S(`margin-top:8px;height:56px;border-radius:14px;border:1.5px solid ${vm.nf.bd};box-shadow:${vm.nf.ring};padding:0 16px;font-size:17px;background:#fff;transition:border-color .15s,box-shadow .15s`)} />
                     {vm.nameErr && (
                       <>
                       <div role="alert" style={S("margin-top:10px;font-size:14px;color:#B4233B")}>
@@ -242,10 +249,10 @@ export function DcTemplate({ vm }: { vm: any }) {
                     {vm.countryNode}
                     <div style={S("display:flex;align-items:center;gap:8px;margin-top:26px")}>
                       <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                        Logo
+                        {vm.X.logo}
                       </span>
                       <span style={S("font-size:12px;font-weight:500;padding:2px 8px;border-radius:999px;background:#F3EEF1;color:#8A5A6E")}>
-                        Optional
+                        {vm.X.optional}
                       </span>
                     </div>
                     <div style={S("display:flex;align-items:center;gap:14px;margin-top:10px")}>
@@ -271,13 +278,13 @@ export function DcTemplate({ vm }: { vm: any }) {
                           <input type="file" accept="image/png,image/jpeg,image/svg+xml" onChange={vm.onLogo} style={S("display:none")} />
                         </label>
                         <span style={S("font-size:13px;color:#8A5A6E")}>
-                          PNG or JPG, square works best
+                          {vm.X.logoHint}
                         </span>
                       </div>
                     </div>
                     <div style={S(`flex:${vm.L.spacer};min-height:32px`)} />
                     <button type="submit" style={S("height:56px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:17px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
-                      Continue
+                      {vm.X.cont}
                     </button>
                   </form>
                   </>

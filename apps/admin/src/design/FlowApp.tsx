@@ -121,6 +121,11 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   clearTimers() { this.timers.forEach(clearTimeout); this.timers = []; }
   onResize = () => { const w = document.documentElement.clientWidth || window.innerWidth; if (w !== this.state.w) this.setState({ w }); };
   componentDidMount() {
+    if (this.props.initialStep !== "dash") { // sign-in: the visitor's own choice (or their browser language) until a saved profile language exists
+      let saved: string | null = null; try { saved = localStorage.getItem("lumia_lang"); } catch { /* optional */ }
+      const want = saved === "ar" || saved === "en" ? saved : /^ar\b/i.test(navigator.language || "") ? "ar" : "en";
+      if (want !== this.state.lang) this.setState({ lang: want as "en" | "ar" });
+    }
     window.addEventListener("resize", this.onResize); this.setState({ w: document.documentElement.clientWidth || window.innerWidth, mounted: true }); requestAnimationFrame(this.onResize);
     if (window.ResizeObserver) { this.ro = new ResizeObserver(this.onResize); this.ro.observe(document.documentElement); }
     this.tick = setInterval(() => { if (this.state.step === "otp") this.setState({ now: Date.now() }); }, 1000);
@@ -550,7 +555,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   editAr = (item: Item) => this.openDialog({ title: "Add Arabic name", hint: item.n, saveLabel: "Save", fields: [{ key: "nameAr", label: "الاسم (عربي)", placeholder: "الاسم بالعربية", dir: "rtl", value: item.ar }],
     save: async v => { await api(`/api/v1/businesses/${this.state.businessId}/menu/items/${item.id}`, "PATCH", { nameAr: (v.nameAr ?? "").trim() }); await this.refreshMenu(); } });
   signOut = async () => { try { await authClient.signOut(); } finally { window.location.assign("/login"); } };
-  setLang(lang: "en" | "ar") { this.setState({ lang }); api("/api/v1/me", "PATCH", { language: lang }).catch(() => undefined); }
+  setLang(lang: "en" | "ar") { this.setState({ lang }); try { localStorage.setItem("lumia_lang", lang); } catch { /* optional */ } api("/api/v1/me", "PATCH", { language: lang }).catch(() => undefined); }
   // ---- WhatsApp
   openWA = (e?: any) => { e?.preventDefault?.(); if (this.devRef.current) this.devRef.current.scrollTop = 0; this.setState({ wa: "intro", catOpen: false, confirmReplace: false, waErrText: "" }); };
   loadFb(): Promise<any> {
@@ -623,10 +628,22 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     Object.assign(L, stickL); L.devTf = "none"; L.drawerW = narrow ? "100%" : "460px"; L.secTop = "0px"; L.split2 = narrow ? "minmax(0,1fr)" : "minmax(0,1.6fr) minmax(0,1fr)"; L.dashH = "100dvh"; // v2: the dashboard fills the screen and only its content area scrolls
     const ring = (err: boolean, foc: boolean, busy: boolean) => err ? { bd: "#B4233B", ring: "0 0 0 4px rgba(180,35,59,.12)", bg: "#fff", op: 1 } : foc && !busy ? { bd: "#FF5577", ring: "0 0 0 4px rgba(255,85,119,.14)", bg: "#fff", op: 1 } : { bd: "#E3CBD4", ring: "none", bg: busy ? "#FBF3F8" : "#fff", op: busy ? 0.7 : 1 };
     const opCountry = s.opCountry || countryOf(s.e164 || p.userPhone || "")?.code || c.code;
+    const la = s.lang === "ar";
+    const X = la ? {
+      back: "رجوع", langBtn: "EN", langAria: "Switch to English", title: "ابدأ مع لوميا أوردر", sub: "أدخل رقم جوالك لإنشاء حسابك أو تسجيل الدخول.", mobile: "رقم الجوال", ccAria: "رمز الدولة", hint: "سنرسل رمز تحقق عبر واتساب. لا حاجة لكلمة مرور.",
+      terms1: "بمتابعتك، فإنك توافق على ", terms: "شروط الخدمة", and: " و", privacy: "سياسة الخصوصية",
+      otpTitle: "تحقق من واتساب", otpSent: "أرسلنا رمز تحقق من 6 أرقام إلى", change: "تغيير رقم الهاتف", codeAria: "رمز التحقق", sms: "إرسال الرمز برسالة نصية", verified: "تم التحقق من الرقم",
+      nameTitle: "أخبرنا عن مطعمك", nameLabel: "اسم المطعم", namePh: "بيت البرجر", logo: "الشعار", optional: "اختياري", logoHint: "PNG أو JPG، والمربع هو الأفضل", cont: "متابعة",
+    } : {
+      back: "Back", langBtn: "عربي", langAria: "التبديل إلى العربية", title: "Get started with Lumia Order", sub: "Enter your mobile number to create your account or sign in.", mobile: "Mobile number", ccAria: "Country code", hint: "We'll send a verification code on WhatsApp. No password needed.",
+      terms1: "By continuing, you agree to Lumia's ", terms: "Terms of Service", and: " and ", privacy: "Privacy Policy",
+      otpTitle: "Check your WhatsApp", otpSent: "We sent a 6-digit verification code to", change: "Change phone number", codeAria: "Verification code", sms: "Send code by SMS", verified: "Number verified",
+      nameTitle: "Tell us about your restaurant", nameLabel: "Restaurant name", namePh: "Burger House", logo: "Logo", optional: "Optional", logoHint: "PNG or JPG, square works best", cont: "Continue",
+    };
     const masked = maskPhone(s.e164 || p.userPhone || c.dial + " " + fmt("501234567", c.groups));
     const remain = Math.max(0, Math.ceil((s.resendAt - s.now) / 1000)); const expired = s.otpErr === "expired"; const activeIdx = Math.min(s.digits.length, 5);
     const boxes = Array.from({ length: 6 }, (_, i) => { const ch = s.digits[i] || ""; const active = s.otpFocused && !s.verifying && i === activeIdx && !expired; const err = s.otpErr === "incorrect"; return { ch, caret: active && !ch, bd: err ? "#B4233B" : active ? "#FF5577" : ch ? "#D9BFCB" : "#E3CBD4", ring: err ? "0 0 0 3px rgba(180,35,59,.10)" : active ? "0 0 0 4px rgba(255,85,119,.14)" : "none", bg: err ? "#FFF7F8" : expired ? "#FBF3F8" : "#fff" }; });
-    const otpMsg = s.otpErr === "incorrect" ? { show: true, fg: "#B4233B", text: "That code isn't correct. Check the latest WhatsApp message and try again." } : expired ? { show: true, fg: "#B4233B", text: "This code has expired. Request a new one." } : s.otpFail ? { show: true, fg: "#B4233B", text: s.otpFail } : s.note ? { show: true, fg: "#16704A", text: s.note } : { show: false, fg: "", text: "" };
+    const otpMsg = s.otpErr === "incorrect" ? { show: true, fg: "#B4233B", text: la ? "الرمز غير صحيح. تحقق من آخر رسالة واتساب وحاول مرة أخرى." : "That code isn't correct. Check the latest WhatsApp message and try again." } : expired ? { show: true, fg: "#B4233B", text: la ? "انتهت صلاحية هذا الرمز. اطلب رمزاً جديداً." : "This code has expired. Request a new one." } : s.otpFail ? { show: true, fg: "#B4233B", text: s.otpFail } : s.note ? { show: true, fg: "#16704A", text: s.note } : { show: false, fg: "", text: "" };
     const ce = React.createElement;
     const star = (k: string, sz: number, st: any) => ce("svg", { key: k, width: sz, height: sz, viewBox: "0 0 16 16", style: { position: "absolute", ...st } }, ce("path", { d: "M8 0c.6 4.2 3.8 7.4 8 8-4.2.6-7.4 3.8-8 8-.6-4.2-3.8-7.4-8-8 4.2-.6 7.4-3.8 8-8z", fill: "url(#gAI)" }));
     const face = "M32 10H68a22 22 0 0 1 22 22v36a22 22 0 0 1-22 22H36L17 95l4-13a22 22 0 0 1-11-14V32a22 22 0 0 1 22-22z";
@@ -678,6 +695,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const NAV: [string, string][] = [["Overview", "M3 10.5 10 4l7 6.5M5 9v7.5h10V9"], ["Orders", "M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0"], ["Menu", "M5 4.5h10M5 10h10M5 15.5h6"], ["WhatsApp", "M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z"], ["Customers", "M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5"], ["Campaigns", "M4 8v4h2.5L12 15.5v-11L6.5 8zM15 7.5a3.5 3.5 0 0 1 0 5"]];
     const noop = (e?: any) => e?.preventDefault?.();
     return {
+      X, rtl: la && ["phone", "otp", "verified", "name"].includes(s.step), showLang: ["phone", "otp", "verified", "name"].includes(s.step), toggleLang: () => this.setLang(la ? "en" : "ar"),
       curSign: currencySign(this.cur), termsUrl: `${p.marketingUrl}/terms`, privacyUrl: `${p.marketingUrl}/privacy`,
       L, isFlow: !isDash, canBack: ["otp", "name", "menu"].includes(s.step),
       is: { phone: s.step === "phone", otp: s.step === "otp", verified: s.step === "verified", name: s.step === "name", menu: s.step === "menu", processing: s.step === "processing", ready: s.step === "ready", dash: isDash },
@@ -685,23 +703,23 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       devRef: this.devRef, noop,
       // phone
       cc: c, phoneRef: this.phoneRef, sending: s.sending, ccOpen: s.ccOpen, pf: ring(s.invalid, s.focused, s.sending), phoneDisplay: fmt(s.num, c.groups), phoneValid: !!countryOf(c.dial + s.num) && !s.sending, phoneInvalid: s.invalid, phoneHint: !s.invalid,
-      phoneInvalidMsg: s.srvErr || (s.num ? `Enter a valid ${c.label} mobile number, e.g. ${c.ex}` : "Enter your mobile number to continue"), spinnerSend: null, sendLabel: s.sending ? "Sending code…" : "Continue",
-      countries: COUNTRIES.map((x, i) => ({ ...x, bg: i === s.cc ? "#FDEAF2" : "transparent", pick: () => { this.setState({ cc: i, ccOpen: false, num: s.num.slice(0, x.len), invalid: false, srvErr: "" }); this.focus(this.phoneRef); } })), toggleCC: () => this.setState({ ccOpen: !s.ccOpen }),
+      phoneInvalidMsg: s.srvErr || (s.num ? (la ? `أدخل رقم جوال صحيحاً في ${c.nameAr}، مثل ${c.ex}` : `Enter a valid ${c.label} mobile number, e.g. ${c.ex}`) : la ? "أدخل رقم جوالك للمتابعة" : "Enter your mobile number to continue"), spinnerSend: null, sendLabel: s.sending ? (la ? "جارٍ إرسال الرمز…" : "Sending code…") : la ? "متابعة" : "Continue",
+      countries: COUNTRIES.map((x, i) => ({ ...x, name: la ? x.nameAr : x.name, bg: i === s.cc ? "#FDEAF2" : "transparent", pick: () => { this.setState({ cc: i, ccOpen: false, num: s.num.slice(0, x.len), invalid: false, srvErr: "" }); this.focus(this.phoneRef); } })), toggleCC: () => this.setState({ ccOpen: !s.ccOpen }),
       onPhone: (e: any) => { let d = e.target.value.replace(/\D/g, ""); const dial = c.dial.slice(1); if (d.startsWith("00" + dial)) d = d.slice(2 + dial.length); else if (d.startsWith(dial) && d.length > c.len) d = d.slice(dial.length); if (d.startsWith("0")) d = d.slice(1); this.setState({ num: d.slice(0, c.len), invalid: false, srvErr: "" }); },
       phoneFocus: () => this.setState({ focused: true, ccOpen: false }), phoneBlur: () => this.setState({ focused: false }), sendCode: (e: any) => this.sendCode(e),
       // otp
       masked, boxes, otpRef: this.otpRef, digits: s.digits, verifying: s.verifying, otpMsg, otpOp: s.verifying || expired ? 0.55 : 1, focusOtp: () => this.otpRef.current?.focus(),
       onOtp: (e: any) => { const d = e.target.value.replace(/\D/g, "").slice(0, 6); this.setState({ digits: d, otpErr: expired ? "expired" : null, otpFail: "", note: null }); if (d.length === 6 && !expired) this.verify(d); },
       otpFocus: () => this.setState({ otpFocused: true }), otpBlur: () => this.setState({ otpFocused: false }), verifyNow: () => this.verify(s.digits),
-      verifyDisabled: s.digits.length < 6 || s.verifying || expired, verifyOp: (s.digits.length < 6 || expired) && !s.verifying ? 0.45 : 1, spinnerVerify: null, verifyLabel: s.verifying ? "Verifying…" : "Verify",
-      resendDisabled: remain > 0 && !expired, resendFg: remain > 0 && !expired ? "#8A5A6E" : "#1A0815", resendLabel: remain > 0 && !expired ? `Resend code in 0:${String(remain).padStart(2, "0")}` : "Resend code",
+      verifyDisabled: s.digits.length < 6 || s.verifying || expired, verifyOp: (s.digits.length < 6 || expired) && !s.verifying ? 0.45 : 1, spinnerVerify: null, verifyLabel: s.verifying ? (la ? "جارٍ التحقق…" : "Verifying…") : la ? "تحقق" : "Verify",
+      resendDisabled: remain > 0 && !expired, resendFg: remain > 0 && !expired ? "#8A5A6E" : "#1A0815", resendLabel: remain > 0 && !expired ? (la ? `إعادة إرسال الرمز خلال 0:${String(remain).padStart(2, "0")}` : `Resend code in 0:${String(remain).padStart(2, "0")}`) : la ? "إعادة إرسال الرمز" : "Resend code",
       resend: () => this.resend("whatsapp"), sms: () => this.resend("sms"), changeNumber: () => { this.clearTimers(); this.setState({ verifying: false }); this.go("phone"); },
       // name
-      nameRef: this.nameRef, name: s.name, nameErr: s.nameErr, nameErrText: s.nameFail || "Enter your restaurant name to continue", nf: ring(s.nameErr, s.nameFocused, false), onName: (e: any) => this.setState({ name: e.target.value, nameErr: false, nameFail: "" }),
+      nameRef: this.nameRef, name: s.name, nameErr: s.nameErr, nameErrText: s.nameFail || (la ? "أدخل اسم مطعمك للمتابعة" : "Enter your restaurant name to continue"), nf: ring(s.nameErr, s.nameFocused, false), onName: (e: any) => this.setState({ name: e.target.value, nameErr: false, nameFail: "" }),
       countryNode: <CountryPick value={opCountry} ar={ar} vat={s.opVat} onVat={v => this.setState({ opVat: v })}/>,
       nameFocus: () => this.setState({ nameFocused: true }), nameBlur: () => this.setState({ nameFocused: false }), submitName: this.submitName,
       planBadge: this.planBadge(s, ar), accountNode: this.accountMenu("sidebar", s, nm, initials, ar), accountNodeMobile: this.accountMenu("header", s, nm, initials, ar),
-      logo: s.logo, noLogo: !s.logo, logoImg: s.logo ? ce("img", { key: "lg", src: s.logo, alt: "", style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } }) : null, logoBtn: s.logo ? "Change logo" : "Upload logo", logoTile: { bd: s.logo ? "transparent" : "#E3CBD4" }, onLogo: this.onLogo, initials, nameOrDefault: nm,
+      logo: s.logo, noLogo: !s.logo, logoImg: s.logo ? ce("img", { key: "lg", src: s.logo, alt: "", style: { width: "100%", height: "100%", objectFit: "cover", display: "block" } }) : null, logoBtn: s.logo ? (la ? "تغيير الشعار" : "Change logo") : la ? "رفع الشعار" : "Upload logo", logoTile: { bd: s.logo ? "transparent" : "#E3CBD4" }, onLogo: this.onLogo, initials, nameOrDefault: nm,
       // menu upload / processing
       dz: s.drag ? { bd: "#FF5577", bg: "#FFF5F8" } : { bd: "#E3CBD4", bg: "#FFFBFC" }, menuErr: s.menuErr,
       dragOver: (e: any) => { e.preventDefault(); if (!s.drag) this.setState({ drag: true }); }, dragLeave: () => this.setState({ drag: false }), drop: (e: any) => { e.preventDefault(); this.takeFile(e.dataTransfer.files?.[0]); }, onMenuFile: (e: any) => { const f = e.target.files?.[0]; e.target.value = ""; this.takeFile(f); },
@@ -749,6 +767,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     // The layout depends on the viewport width, so render only once it is known (avoids a flash of the wide layout on phones).
     if (!this.state.mounted) return <div className="dc" style={{ minHeight: "100vh" }}/>;
     const vm = this.renderVals();
-    return <div className="dc" lang={this.state.step === "dash" ? this.state.lang : "en"}><DcTemplate vm={vm}/><PageLoader show={this.state.sending || this.state.verifying || this.state.busy || this.state.sub === "confirming" || this.state.sub === "paying"} label={this.state.sending ? "Sending code…" : this.state.verifying ? "Verifying…" : this.state.sub === "confirming" ? "Confirming your payment…" : this.state.sub === "paying" ? "Opening secure payment…" : "Saving…"}/></div>;
+    const signIn = ["phone", "otp", "verified", "name"].includes(this.state.step); // the other set-up screens are still English
+    return <div className="dc" lang={this.state.step === "dash" || signIn ? this.state.lang : "en"} dir={signIn && this.state.lang === "ar" ? "rtl" : undefined}><DcTemplate vm={vm}/><PageLoader show={this.state.sending || this.state.verifying || this.state.busy || this.state.sub === "confirming" || this.state.sub === "paying"} label={this.state.sending ? (this.state.lang === "ar" && signIn ? "جارٍ إرسال الرمز…" : "Sending code…") : this.state.verifying ? (this.state.lang === "ar" && signIn ? "جارٍ التحقق…" : "Verifying…") : this.state.sub === "confirming" ? "Confirming your payment…" : this.state.sub === "paying" ? "Opening secure payment…" : "Saving…"}/></div>;
   }
 }
