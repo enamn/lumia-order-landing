@@ -452,7 +452,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       ov: ar ? { title: "نظرة عامة", sub: "أداء مطعمك على واتساب.", orders: "الطلبات", top: "الأكثر طلباً" } : { title: "Overview", sub: `How ${nm} is doing on WhatsApp.`, orders: "Orders", top: "Top items" },
       periodSeg: seg,
       stats: K.map((k, i) => ({ k, v: vals[i], d: ds[i].d ? `${ds[i].d} ${vs}` : "", dfg: ds[i].c })),
-      bars: buckets.map((b, i) => ({ l: label(b.start), h: Math.max(4, Math.round(b.orders / mx * 128)) + "px", bg: i === buckets.length - 1 ? "linear-gradient(180deg,#FF5577,#C93DFF)" : "#E9A9C6", tip: `${b.orders} ${ar ? "طلب" : "orders"}` })),
+      bars: buckets.map((b, i) => ({ l: label(b.start), h: Math.max(4, Math.round(b.orders / mx * 128)) + "px", bg: b.orders > 0 ? "linear-gradient(180deg,#FF5577,#C93DFF)" : "#E6D3DD", tip: `${b.orders} ${ar ? "طلب" : "orders"}` })),
       topItems: (o?.top ?? []).map((t: any, i: number) => ({ n: i + 1, name: t.name, q: f(t.sold) + (ar ? " مباع" : " sold"), bt: i ? "1px solid #F3EEF1" : "0" })),
     };
   }

@@ -525,7 +525,7 @@ export function DcTemplate({ vm }: { vm: any }) {
           )}
           {vm.is.dash && (
             <>
-            <div data-screen-label="06 Dashboard \u00b7 Menu" dir={vm.dir} style={S(`flex:none;width:100%;display:flex;height:${vm.L.dashH};overflow:hidden;background:#F4EAF0`)}>
+            <div data-screen-label="06 Dashboard \u00b7 Menu" dir={vm.dir} style={S(`flex:none;width:100%;display:flex;height:${vm.L.dashH};overflow:hidden;background:#fff`)}>
               {vm.dashWide && (
                 <>
                 <aside style={S("flex:0 0 232px;border-inline-end:1px solid #E3CBD6;background:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh")}>
@@ -629,7 +629,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                 </aside>
                 </>
               )}
-              <div style={S("flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:#F4EAF0")}>
+              <div style={S("flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:#fff")}>
                 {vm.dashNarrow && (
                   <>
                   <header style={S("position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #E3CBD6")}>

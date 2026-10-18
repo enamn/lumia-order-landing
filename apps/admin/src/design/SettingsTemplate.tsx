@@ -124,7 +124,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
             </header>
             </>
           )}
-          <main ref={vm.mainRef} style={S("flex:1;min-height:0;overflow-y:auto;background:#F4EAF0")}>
+          <main ref={vm.mainRef} style={S("flex:1;min-height:0;overflow-y:auto;background:#fff")}>
             <div style={S(`max-width:1240px;margin:0;padding:${vm.L.pad};display:flex;flex-direction:column;gap:20px`)}>
               {vm.pg.profile && (
                 <>
