@@ -4,16 +4,16 @@
 import React from "react";
 
 export type Scope = { menuPerBranch: boolean; branches: { id: string; name: string; active: boolean; hasOwnMenu: boolean; items: number }[] };
-const box: React.CSSProperties = { display: "flex", flexDirection: "column", gap: 10, padding: "14px 16px", border: "1px solid #F0E4E8", borderRadius: 14, background: "#FFF9FB", marginBottom: 16, maxWidth: 640 };
-const btn: React.CSSProperties = { height: 38, padding: "0 14px", borderRadius: 10, border: "1.5px solid #ECD9E0", background: "#fff", fontWeight: 500, fontSize: 14, cursor: "pointer" };
+const box: React.CSSProperties = { display: "flex", flexDirection: "column", gap: 10, padding: "14px 16px", border: "1px solid #E3CBD6", borderRadius: 14, background: "#FFF9FB", marginBottom: 16, maxWidth: 640 };
+const btn: React.CSSProperties = { height: 38, padding: "0 14px", borderRadius: 10, border: "1.5px solid #DDC3CF", background: "#fff", fontWeight: 500, fontSize: 14, cursor: "pointer" };
 const note: React.CSSProperties = { fontSize: 14, color: "#6B4A5C", margin: 0, lineHeight: 1.45 };
 
 export function MenuScope({ scope, branchId, busy, error, onPick, onCreate, onRemove }: { scope: Scope | null; branchId: string; busy: boolean; error: string; onPick: (id: string) => void; onCreate: (copy: boolean) => void; onRemove: () => void }) {
   if (!scope?.menuPerBranch || !scope.branches.length) return null;
   const sel = scope.branches.find(b => b.id === branchId);
   return <div style={box}>
-    <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13, fontWeight: 600, color: "#3D1C31" }}>Menu for
-      <select value={branchId} disabled={busy} onChange={e => onPick(e.target.value)} style={{ height: 40, borderRadius: 10, border: "1.5px solid #ECD9E0", background: "#fff", padding: "0 10px", fontSize: 15 }}>
+    <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13, fontWeight: 600, color: "#2A1020" }}>Menu for
+      <select value={branchId} disabled={busy} onChange={e => onPick(e.target.value)} style={{ height: 40, borderRadius: 10, border: "1.5px solid #DDC3CF", background: "#fff", padding: "0 10px", fontSize: 15 }}>
         <option value="">All branches (shared menu)</option>
         {scope.branches.map(b => <option key={b.id} value={b.id}>{b.name}{b.hasOwnMenu ? " · own menu" : ""}{b.active ? "" : " (off)"}</option>)}
       </select>

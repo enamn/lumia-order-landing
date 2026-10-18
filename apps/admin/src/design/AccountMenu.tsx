@@ -9,7 +9,7 @@ const ICON: Record<string, string> = {
   logout: "M8 4.5H5.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H8M12.5 7l3 3-3 3M15.5 10H8.5",
 };
 const BADGE: Record<string, React.CSSProperties> = {
-  starter: { background: "#F6EEF2", color: "#3D1C31" },
+  starter: { background: "#F6EEF2", color: "#2A1020" },
   plus: { background: "#F1E6FF", color: "#6A1FA0" },
   pro: { background: "linear-gradient(90deg,#FF5577,#C93DFF)", color: "#fff" },
   due: { background: "#FFF1DC", color: "#8A4B00" },
@@ -32,9 +32,9 @@ export function AccountMenu({ variant, name, avatar, active, ar, items }: { vari
       style={side ? { width: "100%", display: "flex", alignItems: "center", gap: 10, padding: 8, borderRadius: 10, textAlign: "start", background: open || active ? "#FBF3F8" : "transparent" } : { display: "flex", alignItems: "center", gap: 4, padding: 0, borderRadius: 9, outlineOffset: 2 }}>
       {avatarBox}
       {side && <span style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>{name}</span></span>}
-      {side && <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flex: "none", transform: open ? "rotate(0)" : "rotate(180deg)", transition: "transform .15s" }}><path d="m4 10 4-4 4 4" stroke="#8A5A6E" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+      {side && <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flex: "none", transform: open ? "rotate(0)" : "rotate(180deg)", transition: "transform .15s" }}><path d="m4 10 4-4 4 4" stroke="#583246" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>}
     </button>
-    {open && <div role="menu" style={{ position: "absolute", zIndex: 30, minWidth: side ? undefined : 220, ...(side ? { bottom: "calc(100% + 6px)", insetInlineStart: 0, insetInlineEnd: 0 } : { top: "calc(100% + 8px)", insetInlineEnd: 0 }), background: "#fff", border: "1px solid #F0E4E8", borderRadius: 14, boxShadow: "0 18px 40px -16px rgba(26,8,21,.35)", padding: 6, display: "flex", flexDirection: "column" }}>
+    {open && <div role="menu" style={{ position: "absolute", zIndex: 30, minWidth: side ? undefined : 220, ...(side ? { bottom: "calc(100% + 6px)", insetInlineStart: 0, insetInlineEnd: 0 } : { top: "calc(100% + 8px)", insetInlineEnd: 0 }), background: "#fff", border: "1px solid #E3CBD6", borderRadius: 14, boxShadow: "0 18px 40px -16px rgba(26,8,21,.35)", padding: 6, display: "flex", flexDirection: "column" }}>
       {!side && <div style={{ padding: "8px 10px 10px", display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid #F6EEF2", marginBottom: 4 }}><span style={{ fontSize: 14, fontWeight: 600, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span></div>}
       {items.map((it, i) => <React.Fragment key={it.key}>
         {it.danger && i > 0 && <div style={{ height: 1, background: "#F6EEF2", margin: "4px 6px" }} />}

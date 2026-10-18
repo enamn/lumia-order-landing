@@ -525,11 +525,11 @@ export function DcTemplate({ vm }: { vm: any }) {
           )}
           {vm.is.dash && (
             <>
-            <div data-screen-label="06 Dashboard \u00b7 Menu" dir={vm.dir} style={S(`flex:none;width:100%;display:flex;height:${vm.L.dashH};overflow:hidden;background:#fff`)}>
+            <div data-screen-label="06 Dashboard \u00b7 Menu" dir={vm.dir} style={S(`flex:none;width:100%;display:flex;height:${vm.L.dashH};overflow:hidden;background:#F4EAF0`)}>
               {vm.dashWide && (
                 <>
-                <aside style={S("flex:0 0 232px;border-inline-end:1px solid #F0E4E8;background:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh")}>
-                  <div style={S("height:64px;padding:0 20px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #F0E4E8")}>
+                <aside style={S("flex:0 0 232px;border-inline-end:1px solid #E3CBD6;background:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh")}>
+                  <div style={S("height:64px;padding:0 20px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #E3CBD6")}>
                     <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style={S("display:block;flex:none")}>
                       <defs>
                         <linearGradient id="gPD2" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
@@ -574,10 +574,10 @@ export function DcTemplate({ vm }: { vm: any }) {
                       </Fragment>
                     ))}
                   </nav>
-                  <div style={S("padding:12px;border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:8px")}>
+                  <div style={S("padding:12px;border-top:1px solid #E3CBD6;display:flex;flex-direction:column;gap:8px")}>
                     {vm.sub.onTrial && (
                       <>
-                      <button type="button" onClick={vm.subOpenPlans} style={S("text-align:start;padding:12px;border-radius:12px;background:#FBF3F8;display:flex;flex-direction:column;gap:9px")} className="dch7">
+                      <button type="button" onClick={vm.subOpenPlans} style={S("text-align:start;padding:12px;border-radius:12px;background:#F8E1EC;display:flex;flex-direction:column;gap:9px")} className="dch7">
                         <span style={S("display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px;font-weight:600")}>
                           {vm.sub.tag}
                           <span style={S("font-size:13px;font-weight:500;color:#8A2040;font-variant-numeric:tabular-nums")}>
@@ -629,10 +629,10 @@ export function DcTemplate({ vm }: { vm: any }) {
                 </aside>
                 </>
               )}
-              <div style={S("flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:#fff")}>
+              <div style={S("flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:#F4EAF0")}>
                 {vm.dashNarrow && (
                   <>
-                  <header style={S("position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #F0E4E8")}>
+                  <header style={S("position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #E3CBD6")}>
                     <div style={S("height:56px;padding:0 16px;display:flex;align-items:center;gap:10px")}>
                       <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style={S("display:block;flex:none")}>
                         <defs>
@@ -671,7 +671,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                     </nav>
                     {vm.sub.onTrial && (
                       <>
-                      <div style={S("padding:8px 16px;background:#FBF3F8;border-top:1px solid #F0E4E8;display:flex;align-items:center;gap:10px;font-size:14px")}>
+                      <div style={S("padding:8px 16px;background:#F7E7EF;border-top:1px solid #E3CBD6;display:flex;align-items:center;gap:10px;font-size:14px")}>
                         <span style={S("font-weight:600")}>
                           {vm.sub.tag}
                         </span>
@@ -708,7 +708,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                             <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
                               {vm.ov.title}
                             </h1>
-                            <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5")}>
+                            <p style={S("font-size:15px;color:#583246;margin-top:6px;line-height:1.5")}>
                               {vm.ov.sub}
                             </p>
                           </div>
@@ -724,29 +724,29 @@ export function DcTemplate({ vm }: { vm: any }) {
                         </div>
                         {vm.term.show && (
                           <>
-                          <section data-screen-label="06d Terminal shipment" dir="ltr" style={S("border:1px solid #F0E4E8;border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:20px")}>
+                          <section data-screen-label="06d Terminal shipment" dir="ltr" style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:20px")}>
                             <div style={S("display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px 20px")}>
                               <div style={S("flex:none;width:44px;height:78px;position:relative;overflow:hidden;border-radius:8px;background:#fff")}>
                                 <img src="/brand/terminal.png" alt="Lumia Order Terminal" width="44" height="78" style={S("display:block;width:100%;height:100%;object-fit:cover")} />
                               </div>
                               <div style={S("flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:6px")}>
                                 <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px")}>
-                                  <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                                  <h2 style={S("font-size:17px;font-weight:700;letter-spacing:-0.015em")}>
                                     Lumia Order Terminal
                                   </h2>
                                   <span style={S(`font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px;background:${vm.term.pillBg};color:${vm.term.pillFg}`)}>
                                     {vm.term.label}
                                   </span>
                                 </div>
-                                <p style={S("font-size:14px;line-height:1.5;color:#3D1C31;text-wrap:pretty")}>
+                                <p style={S("font-size:14px;line-height:1.5;color:#2A1020;text-wrap:pretty")}>
                                   {vm.term.msg}
                                 </p>
-                                <p style={S("font-size:13px;color:#8A5A6E")}>
+                                <p style={S("font-size:13px;color:#583246")}>
                                   {"Order "}{vm.term.no}{" \u00b7 "}{vm.term.qtyLabel}{" \u00b7 "}{vm.term.addr}
                                 </p>
                               </div>
                               <div style={S("flex:none;display:flex;flex-direction:column;gap:2px")}>
-                                <span style={S("font-size:13px;color:#8A5A6E")}>
+                                <span style={S("font-size:13px;color:#583246")}>
                                   {vm.term.etaLabel}
                                 </span>
                                 <span style={S("font-size:18px;font-weight:600;letter-spacing:-0.02em;font-variant-numeric:tabular-nums")}>
@@ -778,7 +778,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     <span style={S(`font-size:13px;line-height:1.3;padding-inline-end:8px;font-weight:${st.fw};color:${st.fg}`)}>
                                       {st.label}
                                     </span>
-                                    <span style={S("font-size:12px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                                    <span style={S("font-size:12px;color:#583246;font-variant-numeric:tabular-nums")}>
                                       {st.date}
                                     </span>
                                   </li>
@@ -787,8 +787,8 @@ export function DcTemplate({ vm }: { vm: any }) {
                             </ol>
                             {vm.term.hasCourier && (
                               <>
-                              <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:12px 14px;border-radius:12px;background:#FBF3F8;font-size:14px")}>
-                                <span style={S("color:#3D1C31")}>
+                              <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:12px 14px;border-radius:12px;background:#F7E7EF;font-size:14px")}>
+                                <span style={S("color:#2A1020")}>
                                   {"Tracking no. "}
                                   <span style={S("font-weight:600;color:#1A0815;font-variant-numeric:tabular-nums")}>
                                     {vm.term.tracking}
@@ -802,13 +802,13 @@ export function DcTemplate({ vm }: { vm: any }) {
                         )}
                         {vm.setupShow && (
                           <>
-                          <section style={S("border-radius:20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);padding:22px 24px;display:flex;flex-wrap:wrap;gap:18px 32px;align-items:center")}>
+                          <section style={S("border-radius:20px;background:linear-gradient(120deg,#FF5577 0%,#D93F96 45%,#A833EE 100%);box-shadow:0 18px 40px -22px rgba(168,51,238,.6);color:#fff;padding:24px 26px;display:flex;flex-wrap:wrap;gap:18px 32px;align-items:center")}>
                             <div style={S("flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:12px")}>
                               <div style={S("display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px")}>
-                                <h2 style={S("font-size:19px;font-weight:600;letter-spacing:-0.02em")}>
+                                <h2 style={S("font-size:20px;font-weight:700;letter-spacing:-0.02em;color:#fff")}>
                                   {vm.t.setupTitle}
                                 </h2>
-                                <span style={S("font-size:14px;font-weight:500;color:#8A2040;font-variant-numeric:tabular-nums")}>
+                                <span style={S("font-size:14px;font-weight:600;color:#FFE3EE;font-variant-numeric:tabular-nums")}>
                                   {vm.setupLabel}
                                 </span>
                               </div>
@@ -822,18 +822,18 @@ export function DcTemplate({ vm }: { vm: any }) {
                               <div style={S("display:flex;flex-wrap:wrap;gap:8px 18px")}>
                                 {(vm.setup as any[]).map((s: any, __i: number) => (
                                   <Fragment key={__i}>
-                                    <button type="button" onClick={s.pick} disabled={!!s.done} style={S(`display:flex;align-items:center;gap:7px;font-size:14px;color:${s.fg};text-decoration:${s.ul};text-decoration-color:#D9BFCB;text-underline-offset:3px`)} className="dch8">
+                                    <button type="button" onClick={s.pick} disabled={!!s.done} style={S(`display:flex;align-items:center;gap:7px;font-size:14px;color:${s.fg};text-decoration:${s.ul};text-decoration-color:rgba(255,255,255,.6);text-underline-offset:3px`)} className="dch8">
                                       {s.done && (
                                         <>
                                         <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                                          <circle cx="10" cy="10" r="9" fill="#16704A" />
-                                          <path d="M6 10.2 8.6 12.8 14 7.4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                          <circle cx="10" cy="10" r="9" fill="#fff" />
+                                          <path d="M6 10.2 8.6 12.8 14 7.4" stroke="#B02FD6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                         </svg>
                                         </>
                                       )}
                                       {s.todo && (
                                         <>
-                                        <span style={S("width:14px;height:14px;border-radius:50%;border:1.5px solid #B79AA6;margin:1px")} />
+                                        <span style={S("width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(255,255,255,.75);margin:1px")} />
                                         </>
                                       )}
                                       {s.label}
@@ -842,7 +842,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                 ))}
                               </div>
                             </div>
-                            <button type="button" onClick={vm.continueSetup} style={S("height:48px;padding:0 22px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;flex:none;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
+                            <button type="button" onClick={vm.continueSetup} style={S("height:48px;padding:0 24px;border-radius:12px;background:#fff;color:#A52BD0;font-weight:700;font-size:15px;flex:none;box-shadow:0 10px 24px -12px rgba(40,0,60,.5)")} className="dch1">
                               {vm.t.continueSetup}
                             </button>
                           </section>
@@ -858,11 +858,11 @@ export function DcTemplate({ vm }: { vm: any }) {
                           <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px")}>
                             {(vm.stats as any[]).map((m: any, __i: number) => (
                               <Fragment key={__i}>
-                                <div style={S("border:1px solid #F0E4E8;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:6px")}>
-                                  <span style={S("font-size:14px;color:#8A5A6E")}>
+                                <div style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:6px")}>
+                                  <span style={S("font-size:14px;color:#583246")}>
                                     {m.k}
                                   </span>
-                                  <span dir="ltr" style={S("font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;text-align:start")}>
+                                  <span dir="ltr" style={S("font-size:32px;font-weight:700;letter-spacing:-0.035em;font-variant-numeric:tabular-nums;text-align:start")}>
                                     {m.v}
                                   </span>
                                   <span style={S(`font-size:13px;font-weight:500;color:${m.dfg};font-variant-numeric:tabular-nums`)}>
@@ -873,8 +873,8 @@ export function DcTemplate({ vm }: { vm: any }) {
                             ))}
                           </div>
                           <div style={S(`display:grid;grid-template-columns:${vm.L.split2};gap:20px;align-items:start`)}>
-                            <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:14px;min-width:0")}>
-                              <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
+                            <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:14px;min-width:0")}>
+                              <h2 style={S("font-size:17px;font-weight:700;letter-spacing:-0.015em")}>
                                 {vm.ov.orders}
                               </h2>
                               <div style={S("height:160px;display:flex;align-items:flex-end;gap:10px")}>
@@ -882,7 +882,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                   <Fragment key={__i}>
                                     <div title={b.tip} style={S("flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px")}>
                                       <span style={S(`width:100%;max-width:36px;border-radius:6px 6px 2px 2px;height:${b.h};background:${b.bg}`)} />
-                                      <span style={S("font-size:12px;color:#8A5A6E;white-space:nowrap")}>
+                                      <span style={S("font-size:12px;color:#583246;white-space:nowrap")}>
                                         {b.l}
                                       </span>
                                     </div>
@@ -890,20 +890,20 @@ export function DcTemplate({ vm }: { vm: any }) {
                                 ))}
                               </div>
                             </section>
-                            <section style={S("border:1px solid #F0E4E8;border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:6px;min-width:0")}>
-                              <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em;margin-bottom:6px")}>
+                            <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:6px;min-width:0")}>
+                              <h2 style={S("font-size:17px;font-weight:700;letter-spacing:-0.015em;margin-bottom:6px")}>
                                 {vm.ov.top}
                               </h2>
                               {(vm.topItems as any[]).map((t: any, __i: number) => (
                                 <Fragment key={__i}>
                                   <div style={S(`display:flex;align-items:center;gap:12px;padding:8px 0;border-top:${t.bt};font-size:15px`)}>
-                                    <span style={S("width:20px;font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                                    <span style={S("width:20px;font-size:13px;color:#583246;font-variant-numeric:tabular-nums")}>
                                       {t.n}
                                     </span>
                                     <span style={S("flex:1;min-width:0;font-weight:500")}>
                                       {t.name}
                                     </span>
-                                    <span style={S("color:#3D1C31;font-variant-numeric:tabular-nums")}>
+                                    <span style={S("color:#2A1020;font-variant-numeric:tabular-nums")}>
                                       {t.q}
                                     </span>
                                   </div>
@@ -932,7 +932,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                             </h1>
                             {vm.menuDone && (
                               <>
-                              <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:6px;font-size:14px;color:#8A5A6E")}>
+                              <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:6px;font-size:14px;color:#583246")}>
                                 <span style={S("font-variant-numeric:tabular-nums")}>
                                   {vm.menuMeta}
                                 </span>
@@ -946,7 +946,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                           </div>
                           {vm.menuDone && (
                             <>
-                            <button type="button" onClick={vm.openAddItem} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
+                            <button type="button" onClick={vm.openAddItem} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:15px")} className="dch0">
                               {vm.t.addItem}
                             </button>
                             </>
@@ -955,17 +955,17 @@ export function DcTemplate({ vm }: { vm: any }) {
                         {vm.menuDone && (
                           <>
                           <div style={S("flex:1;min-height:240px;display:flex;flex-direction:column;gap:16px;margin-top:-8px")}>
-                            <label style={S("display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;max-width:520px")}>
+                            <label style={S("display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;border-radius:12px;border:1.5px solid #DDC3CF;background:#fff;max-width:520px")}>
                               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={S("flex:none")}>
-                                <circle cx="7" cy="7" r="4.8" stroke="#8A5A6E" strokeWidth="1.5" />
-                                <path d="m10.6 10.6 3.4 3.4" stroke="#8A5A6E" strokeWidth="1.5" strokeLinecap="round" />
+                                <circle cx="7" cy="7" r="4.8" stroke="#583246" strokeWidth="1.5" />
+                                <path d="m10.6 10.6 3.4 3.4" stroke="#583246" strokeWidth="1.5" strokeLinecap="round" />
                               </svg>
                               <input type="search" value={vm.q} onChange={vm.onSearch} placeholder={vm.t.search} aria-label={vm.t.search} style={S("flex:1;min-width:0;font-size:15px")} />
                               {vm.hasQ && (
                                 <>
                                 <button type="button" onClick={vm.clearSearch} aria-label="Clear" style={S("width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
                                   <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                                    <path d="M4 4l8 8M12 4l-8 8" stroke="#8A5A6E" strokeWidth="1.8" strokeLinecap="round" />
+                                    <path d="M4 4l8 8M12 4l-8 8" stroke="#583246" strokeWidth="1.8" strokeLinecap="round" />
                                   </svg>
                                 </button>
                                 </>
@@ -986,16 +986,16 @@ export function DcTemplate({ vm }: { vm: any }) {
                             <div style={S("flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:16px;border-radius:16px")}>
                               {(vm.sections as any[]).map((g: any, __i: number) => (
                                 <Fragment key={__i}>
-                                  <section style={S("border:1px solid #F0E4E8;border-radius:16px;overflow:clip")}>
+                                  <section style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:16px;overflow:clip")}>
                                     <header style={S(`position:sticky;top:${vm.L.secTop};z-index:2;background:#F5F4F4;padding:12px 18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;border-bottom:1px solid #E8E6E7`)}>
                                       <span style={S("font-size:16px;font-weight:600")}>
                                         {g.name}
                                       </span>
-                                      <span style={S("font-size:14px;color:#8A5A6E")}>
+                                      <span style={S("font-size:14px;color:#583246")}>
                                         {g.alt}
                                       </span>
                                       <span style={S("flex:1")} />
-                                      <span style={S("font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                                      <span style={S("font-size:13px;color:#583246;font-variant-numeric:tabular-nums")}>
                                         {g.meta}
                                       </span>
                                     </header>
@@ -1008,14 +1008,14 @@ export function DcTemplate({ vm }: { vm: any }) {
                                             </span>
                                             {it.hasAlt && (
                                               <>
-                                              <span style={S("font-size:13px;color:#8A5A6E")}>
+                                              <span style={S("font-size:13px;color:#583246")}>
                                                 {it.alt}
                                               </span>
                                               </>
                                             )}
                                             {it.noAlt && (
                                               <>
-                                              <button type="button" onClick={it.editAr} style={S("font-size:13px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px")} className="dch2">
+                                              <button type="button" onClick={it.editAr} style={S("font-size:13px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#CBA5B6;text-underline-offset:3px")} className="dch2">
                                                 {"+ "}{vm.t.addAr}
                                               </button>
                                               </>
@@ -1027,7 +1027,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                             </span>
                                             {it.sold && (
                                               <>
-                                              <span style={S("font-size:12px;font-weight:600;color:#8A5A6E")}>
+                                              <span style={S("font-size:12px;font-weight:600;color:#583246")}>
                                                 {vm.t.soldOut}
                                               </span>
                                               </>
@@ -1044,7 +1044,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                               ))}
                               {vm.noResults && (
                                 <>
-                                <div style={S("border-radius:16px;background:#FAF6FA;padding:40px 20px;text-align:center;font-size:15px;color:#3D1C31")}>
+                                <div style={S("border-radius:16px;background:#fff;border:1px solid #DDC3CF;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);padding:40px 20px;text-align:center;font-size:15px;color:#2A1020")}>
                                   {vm.t.noResults}
                                 </div>
                                 </>
@@ -1055,7 +1055,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                         )}
                         {vm.menuEmpty && (
                           <>
-                          <div style={S("margin-top:-6px;border-radius:20px;background:#FAF6FA;padding:56px 24px;display:flex;flex-direction:column;align-items:center;text-align:center")}>
+                          <div style={S("margin-top:-6px;border-radius:20px;background:#fff;border:1px solid #DDC3CF;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);padding:56px 24px;display:flex;flex-direction:column;align-items:center;text-align:center")}>
                             <span style={S("width:56px;height:56px;border-radius:16px;background:#FDEAF2;display:flex;align-items:center;justify-content:center")}>
                               <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
                                 <path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9" stroke="#FF5577" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -1065,14 +1065,14 @@ export function DcTemplate({ vm }: { vm: any }) {
                             <h2 style={S("font-size:19px;font-weight:600;letter-spacing:-0.02em;margin-top:16px")}>
                               Your menu is empty
                             </h2>
-                            <p style={S("font-size:15px;color:#3D1C31;margin-top:6px;max-width:360px;line-height:1.5")}>
+                            <p style={S("font-size:15px;color:#2A1020;margin-top:6px;max-width:360px;line-height:1.5")}>
                               Upload your existing menu and Lumia AI will create it for you.
                             </p>
                             <div style={S("display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px")}>
                               <button type="button" onClick={vm.toMenuUpload} style={S("height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")} className="dch1">
                                 Upload menu
                               </button>
-                              <button type="button" onClick={vm.openAddItem} style={S("height:46px;padding:0 20px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
+                              <button type="button" onClick={vm.openAddItem} style={S("height:46px;padding:0 20px;border-radius:12px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:15px")} className="dch0">
                                 Add item manually
                               </button>
                             </div>
@@ -1094,16 +1094,16 @@ export function DcTemplate({ vm }: { vm: any }) {
                               <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
                                 {vm.ord.t.title}
                               </h1>
-                              <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5")}>
+                              <p style={S("font-size:15px;color:#583246;margin-top:6px;line-height:1.5")}>
                                 {vm.ord.t.sub}
                               </p>
                             </div>
                             {vm.ord.hasAny && (
                               <>
-                              <label style={S("flex:0 1 300px;min-width:200px;height:44px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px")}>
+                              <label style={S("flex:0 1 300px;min-width:200px;height:44px;border-radius:12px;border:1.5px solid #DDC3CF;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px")}>
                                 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
-                                  <circle cx="9" cy="9" r="5.5" stroke="#8A5A6E" strokeWidth="1.7" />
-                                  <path d="m13.2 13.2 3.3 3.3" stroke="#8A5A6E" strokeWidth="1.7" strokeLinecap="round" />
+                                  <circle cx="9" cy="9" r="5.5" stroke="#583246" strokeWidth="1.7" />
+                                  <path d="m13.2 13.2 3.3 3.3" stroke="#583246" strokeWidth="1.7" strokeLinecap="round" />
                                 </svg>
                                 <input value={vm.ord.q} onChange={vm.ord.onQ} placeholder={vm.ord.t.search} aria-label={vm.ord.t.search} style={S("flex:1;min-width:0;border:0;background:transparent;font-size:15px;height:100%")} />
                               </label>
@@ -1112,7 +1112,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                           </div>
                           {vm.ord.noOrders && (
                             <>
-                            <div data-screen-label="06c Orders \u00b7 empty" style={S("border:1px solid #F0E4E8;border-radius:20px;padding:56px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px")}>
+                            <div data-screen-label="06c Orders \u00b7 empty" style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:20px;padding:56px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px")}>
                               <span style={S("width:56px;height:56px;border-radius:16px;background:#FDEAF2;color:#C0284F;display:flex;align-items:center;justify-content:center")}>
                                 <svg width="26" height="26" viewBox="0 0 20 20" fill="none">
                                   <path d="M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -1122,7 +1122,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                 <h2 style={S("font-size:20px;font-weight:600;letter-spacing:-0.02em")}>
                                   {vm.ord.e.title}
                                 </h2>
-                                <p style={S("font-size:15px;color:#8A5A6E;line-height:1.5;text-wrap:pretty")}>
+                                <p style={S("font-size:15px;color:#583246;line-height:1.5;text-wrap:pretty")}>
                                   {vm.ord.e.body}
                                 </p>
                               </div>
@@ -1179,7 +1179,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                               {r.name}
                                             </span>
                                           </div>
-                                          <span style={S("font-size:14px;color:#8A5A6E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>
+                                          <span style={S("font-size:14px;color:#583246;white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>
                                             {r.summary}
                                           </span>
                                         </div>
@@ -1187,7 +1187,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           <span style={S(`display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:${r.sbg};color:${r.sfg}`)}>
                                             {r.stLabel}
                                           </span>
-                                          <span style={S("font-size:13px;color:#8A5A6E;white-space:nowrap")}>
+                                          <span style={S("font-size:13px;color:#583246;white-space:nowrap")}>
                                             {r.type}
                                           </span>
                                           <span style={S(`font-size:13px;font-weight:500;color:${r.whenFg};font-variant-numeric:tabular-nums;white-space:nowrap`)}>
@@ -1196,7 +1196,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           <span dir="ltr" style={S("font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:72px;text-align:end")}>
                                             {r.total}
                                           </span>
-                                          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#8A5A6E;transition:transform .18s;transform:rotate(${r.chev})`)}>
+                                          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S(`flex:none;color:#583246;transition:transform .18s;transform:rotate(${r.chev})`)}>
                                             <path d="m5 8 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                                           </svg>
                                         </div>
@@ -1221,7 +1221,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                               </div>
                                               <span style={S(`font-size:13px;line-height:1.3;padding-inline-end:8px;font-weight:${sp.fw};color:${sp.fg}`)}>
                                                 {sp.label}
-                                                <span style={S("display:block;font-weight:400;font-size:12px;color:#8A5A6E;font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:2px")}>
+                                                <span style={S("display:block;font-weight:400;font-size:12px;color:#583246;font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:2px")}>
                                                   {sp.time}
                                                 </span>
                                               </span>
@@ -1258,10 +1258,10 @@ export function DcTemplate({ vm }: { vm: any }) {
                                               </div>
                                             </Fragment>
                                           ))}
-                                          <div style={S("border-top:1px dashed #ECD9E0;margin-top:8px;padding-top:10px;display:flex;flex-direction:column;gap:5px")}>
+                                          <div style={S("border-top:1px dashed #DDC3CF;margin-top:8px;padding-top:10px;display:flex;flex-direction:column;gap:5px")}>
                                             {(r.d.totals as any[]).map((tt: any, __i: number) => (
                                               <Fragment key={__i}>
-                                                <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:14px;color:#8A5A6E")}>
+                                                <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:14px;color:#583246")}>
                                                   <span>
                                                     {tt.k}
                                                   </span>
@@ -1288,12 +1288,12 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           <span style={S("font-size:15px;font-weight:500")}>
                                             {r.d.name}
                                           </span>
-                                          <span dir="ltr" style={S("font-size:14px;color:#3D1C31;font-variant-numeric:tabular-nums;text-align:start")}>
+                                          <span dir="ltr" style={S("font-size:14px;color:#2A1020;font-variant-numeric:tabular-nums;text-align:start")}>
                                             {r.d.phone}
                                           </span>
                                           {r.d.isDelivery && (
                                             <>
-                                            <span style={S("font-size:14px;color:#3D1C31;line-height:1.45;margin-top:4px")}>
+                                            <span style={S("font-size:14px;color:#2A1020;line-height:1.45;margin-top:4px")}>
                                               {r.d.addr}
                                             </span>
                                             </>
@@ -1309,19 +1309,19 @@ export function DcTemplate({ vm }: { vm: any }) {
                                             </>
                                           )}
                                           <div style={S("display:flex;flex-wrap:wrap;gap:8px;margin-top:12px")}>
-                                            <button type="button" onClick={r.d.message} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
+                                            <button type="button" onClick={r.d.message} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #DDC3CF;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
                                               <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
                                                 <path d="M3.5 16.5 4.6 13A7 7 0 1 1 7.3 15.6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
                                               </svg>
                                               {r.t.msg}
                                             </button>
-                                            <a href={r.d.tel} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
+                                            <a href={r.d.tel} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #DDC3CF;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
                                               <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
                                                 <path d="M4 3.5h3l1.5 3.5-2 1.3a9 9 0 0 0 5.2 5.2l1.3-2 3.5 1.5v3a1.5 1.5 0 0 1-1.6 1.5A14 14 0 0 1 2.5 5.1 1.5 1.5 0 0 1 4 3.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
                                               </svg>
                                               {r.t.call}
                                             </a>
-                                            <button type="button" onClick={r.d.print} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
+                                            <button type="button" onClick={r.d.print} style={S("height:36px;padding:0 12px;border-radius:10px;border:1px solid #DDC3CF;background:#fff;font-weight:500;font-size:14px;display:flex;align-items:center;gap:7px;color:#1A0815;text-decoration:none")} className="dch0">
                                               <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
                                                 <path d="M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
                                               </svg>
@@ -1346,7 +1346,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           <>
                                           <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:12px")}>
                                             <div style={S("display:flex;align-items:center;gap:10px;flex-wrap:wrap")}>
-                                              <span style={S("font-size:14px;color:#3D1C31")}>
+                                              <span style={S("font-size:14px;color:#2A1020")}>
                                                 {r.t.prep}
                                               </span>
                                               <div role="radiogroup" aria-label={r.t.prep} style={S("display:flex;padding:3px;border-radius:10px;background:#F6EEF2;gap:2px")}>
@@ -1385,7 +1385,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                             ))}
                                           </div>
                                           <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px")}>
-                                            <span style={S("font-size:13px;color:#8A5A6E;flex:1 1 200px")}>
+                                            <span style={S("font-size:13px;color:#583246;flex:1 1 200px")}>
                                               {r.t.told}
                                             </span>
                                             <button type="button" onClick={r.d.cancelReject} style={S("height:44px;padding:0 16px;border-radius:12px;font-weight:500;font-size:15px")} className="dch0">
@@ -1426,11 +1426,11 @@ export function DcTemplate({ vm }: { vm: any }) {
                               )}
                               {vm.ord.empty && (
                                 <>
-                                <div style={S("padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;border:1px dashed #ECD9E0;border-radius:14px")}>
+                                <div style={S("padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;border:1px dashed #DDC3CF;border-radius:14px")}>
                                   <span style={S("font-size:15px;font-weight:600")}>
                                     {vm.ord.tabEmpty.title}
                                   </span>
-                                  <span style={S("font-size:14px;color:#8A5A6E;max-width:360px;line-height:1.45")}>
+                                  <span style={S("font-size:14px;color:#583246;max-width:360px;line-height:1.45")}>
                                     {vm.ord.tabEmpty.body}
                                   </span>
                                 </div>
@@ -1450,14 +1450,14 @@ export function DcTemplate({ vm }: { vm: any }) {
                               <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
                                 Customers
                               </h1>
-                              <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5")}>
+                              <p style={S("font-size:15px;color:#583246;margin-top:6px;line-height:1.5")}>
                                 {vm.cu.sub}
                               </p>
                             </div>
-                            <label style={S("flex:0 1 300px;min-width:200px;height:44px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px")}>
+                            <label style={S("flex:0 1 300px;min-width:200px;height:44px;border-radius:12px;border:1.5px solid #DDC3CF;background:#fff;display:flex;align-items:center;gap:8px;padding:0 12px")}>
                               <svg width="16" height="16" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
-                                <circle cx="9" cy="9" r="5.5" stroke="#8A5A6E" strokeWidth="1.7" />
-                                <path d="m13.2 13.2 3.3 3.3" stroke="#8A5A6E" strokeWidth="1.7" strokeLinecap="round" />
+                                <circle cx="9" cy="9" r="5.5" stroke="#583246" strokeWidth="1.7" />
+                                <path d="m13.2 13.2 3.3 3.3" stroke="#583246" strokeWidth="1.7" strokeLinecap="round" />
                               </svg>
                               <input value={vm.cu.q} onChange={vm.cu.onQ} placeholder="Search name or number" aria-label="Search customers" style={S("flex:1;min-width:0;border:0;background:transparent;font-size:15px;height:100%")} />
                             </label>
@@ -1478,7 +1478,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                             <span style={S("flex:1")} />
                             {vm.cu.hasSel && (
                               <>
-                              <button type="button" onClick={vm.cu.clear} style={S("height:36px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:500;color:#3D1C31")} className="dch12">
+                              <button type="button" onClick={vm.cu.clear} style={S("height:36px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:500;color:#2A1020")} className="dch12">
                                 Clear
                               </button>
                               </>
@@ -1516,7 +1516,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           <span style={S("font-size:15px;font-weight:600")}>
                                             {c.name}
                                           </span>
-                                          <span style={S("display:flex;align-items:center;gap:6px;font-size:14px;color:#3D1C31;font-variant-numeric:tabular-nums")}>
+                                          <span style={S("display:flex;align-items:center;gap:6px;font-size:14px;color:#2A1020;font-variant-numeric:tabular-nums")}>
                                             <svg width="13" height="13" viewBox="0 0 20 20" fill="none" style={S("flex:none")}>
                                               <path d="M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z" stroke="#16704A" strokeWidth="1.7" strokeLinejoin="round" />
                                             </svg>
@@ -1526,7 +1526,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                       </span>
                                       <span style={S("display:flex;gap:22px;font-size:14px;font-variant-numeric:tabular-nums;flex:none")}>
                                         <span style={S("display:flex;flex-direction:column;gap:2px")}>
-                                          <span style={S("color:#8A5A6E;font-size:13px")}>
+                                          <span style={S("color:#583246;font-size:13px")}>
                                             Orders
                                           </span>
                                           <span style={S("font-weight:600")}>
@@ -1534,7 +1534,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           </span>
                                         </span>
                                         <span style={S("display:flex;flex-direction:column;gap:2px")}>
-                                          <span style={S("color:#8A5A6E;font-size:13px")}>
+                                          <span style={S("color:#583246;font-size:13px")}>
                                             Spent
                                           </span>
                                           <span style={S("font-weight:600")}>
@@ -1542,7 +1542,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           </span>
                                         </span>
                                         <span style={S("display:flex;flex-direction:column;gap:2px;min-width:86px")}>
-                                          <span style={S("color:#8A5A6E;font-size:13px")}>
+                                          <span style={S("color:#583246;font-size:13px")}>
                                             Last order
                                           </span>
                                           <span style={S("font-weight:600")}>
@@ -1551,7 +1551,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                         </span>
                                       </span>
                                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={S(`flex:none;transform:rotate(${c.rot});transition:transform .15s`)}>
-                                        <path d="m4 6 4 4 4-4" stroke="#8A5A6E" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                                        <path d="m4 6 4 4 4-4" stroke="#583246" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
                                       </svg>
                                     </button>
                                   </div>
@@ -1564,7 +1564,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                       <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px")}>
                                         {(c.addrs as any[]).map((a: any, __i: number) => (
                                           <Fragment key={__i}>
-                                            <div style={S("border:1px solid #F0E4E8;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;background:#FFFBFC")}>
+                                            <div style={S("border:1px solid #E3CBD6;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;background:#FCEEF4")}>
                                               <span style={S("display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600")}>
                                                 {a.label}
                                                 {a.def && (
@@ -1575,10 +1575,10 @@ export function DcTemplate({ vm }: { vm: any }) {
                                                   </>
                                                 )}
                                               </span>
-                                              <span style={S("font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty")}>
+                                              <span style={S("font-size:14px;line-height:1.45;color:#2A1020;text-wrap:pretty")}>
                                                 {a.text}
                                               </span>
-                                              <span style={S("font-size:13px;color:#8A5A6E")}>
+                                              <span style={S("font-size:13px;color:#583246")}>
                                                 {a.uses}
                                               </span>
                                             </div>
@@ -1593,7 +1593,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                             ))}
                             {vm.cu.empty && (
                               <>
-                              <p style={S("padding:32px;text-align:center;font-size:15px;color:#8A5A6E")}>
+                              <p style={S("padding:32px;text-align:center;font-size:15px;color:#583246")}>
                                 No customers match your search.
                               </p>
                               </>
@@ -1609,7 +1609,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                             <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
                               Campaigns
                             </h1>
-                            <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5")}>
+                            <p style={S("font-size:15px;color:#583246;margin-top:6px;line-height:1.5")}>
                               Send offers to your customers on WhatsApp.
                             </p>
                           </div>
@@ -1623,10 +1623,10 @@ export function DcTemplate({ vm }: { vm: any }) {
                             ))}
                           </div>
                           <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px;align-items:start")}>
-                            <form onSubmit={vm.cp.send} noValidate={true} style={S("border:1px solid #F0E4E8;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0")}>
+                            <form onSubmit={vm.cp.send} noValidate={true} style={S("border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:18px;min-width:0")}>
                               {vm.cp.isAll && (
                                 <>
-                                <div style={S("display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:#FBF3F8")}>
+                                <div style={S("display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:#F7E7EF")}>
                                   <span style={S("width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none")}>
                                     <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
                                       <path d="M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5" stroke="#8A2040" strokeWidth="1.6" strokeLinecap="round" />
@@ -1636,7 +1636,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     <span style={S("font-size:15px;font-weight:600")}>
                                       All customers
                                     </span>
-                                    <span style={S("font-size:13px;color:#8A5A6E")}>
+                                    <span style={S("font-size:13px;color:#583246")}>
                                       {vm.cp.allNote}
                                     </span>
                                   </span>
@@ -1654,7 +1654,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                       {vm.cp.allBtn}
                                     </button>
                                   </div>
-                                  <div style={S("border:1.5px solid #ECD9E0;border-radius:14px;max-height:232px;overflow-y:auto;display:flex;flex-direction:column")}>
+                                  <div style={S("border:1.5px solid #DDC3CF;border-radius:14px;max-height:232px;overflow-y:auto;display:flex;flex-direction:column")}>
                                     {(vm.cp.pick as any[]).map((c: any, __i: number) => (
                                       <Fragment key={__i}>
                                         <button type="button" onClick={c.toggle} style={S(`display:flex;align-items:center;gap:12px;padding:10px 14px;text-align:start;border-bottom:1px solid #F6EEF2;background:${c.rowBg}`)} className="dch13">
@@ -1670,7 +1670,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           <span style={S("flex:1;min-width:0;font-size:14px;font-weight:500")}>
                                             {c.name}
                                           </span>
-                                          <span style={S("font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                                          <span style={S("font-size:13px;color:#583246;font-variant-numeric:tabular-nums")}>
                                             {c.phone}
                                           </span>
                                         </button>
@@ -1690,7 +1690,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     <span style={S("font-size:14px;font-weight:600")}>
                                       Include a discount code
                                     </span>
-                                    <span style={S("font-size:13px;color:#8A5A6E")}>
+                                    <span style={S("font-size:13px;color:#583246")}>
                                       Everyone gets the same code
                                     </span>
                                   </span>
@@ -1702,9 +1702,9 @@ export function DcTemplate({ vm }: { vm: any }) {
                               )}
                               {vm.cp.showCode && (
                                 <>
-                                <div style={S("display:flex;flex-direction:column;gap:14px;padding:14px;border-radius:14px;background:#FFF7FA;border:1px dashed #F3B8CB")}>
+                                <div style={S("display:flex;flex-direction:column;gap:14px;padding:14px;border-radius:14px;background:#FDEBF3;border:1px dashed #F3B8CB")}>
                                   <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                                    <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                    <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
                                       Discount
                                     </span>
                                     <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
@@ -1719,13 +1719,13 @@ export function DcTemplate({ vm }: { vm: any }) {
                                   </div>
                                   <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px")}>
                                     <label style={S("display:flex;flex-direction:column;gap:8px")}>
-                                      <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                      <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
                                         Code
                                       </span>
-                                      <input value={vm.cp.code} onChange={vm.cp.onCode} style={S("height:44px;padding:0 12px;border-radius:11px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-weight:600;letter-spacing:.04em")} className="dch14" />
+                                      <input value={vm.cp.code} onChange={vm.cp.onCode} style={S("height:44px;padding:0 12px;border-radius:11px;border:1.5px solid #DDC3CF;background:#fff;font-size:15px;font-weight:600;letter-spacing:.04em")} className="dch14" />
                                     </label>
                                     <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                                      <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                      <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
                                         Valid for
                                       </span>
                                       <div style={S("display:flex;gap:6px")}>
@@ -1743,12 +1743,12 @@ export function DcTemplate({ vm }: { vm: any }) {
                                 </>
                               )}
                               <div style={S("display:flex;flex-direction:column;gap:8px")}>
-                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
                                   Offer image
                                 </span>
                                 {vm.cp.noImg && (
                                   <>
-                                  <label style={S("height:132px;border-radius:14px;border:1.5px dashed #E3CBD4;background:#FFFBFC;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;text-align:center;padding:0 16px")} className="dch15">
+                                  <label style={S("height:132px;border-radius:14px;border:1.5px dashed #CBA5B6;background:#FCEEF4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;text-align:center;padding:0 16px")} className="dch15">
                                     <input type="file" accept="image/png,image/jpeg,image/webp" onChange={vm.cp.onImg} style={S("position:absolute;width:1px;height:1px;opacity:0;pointer-events:none")} />
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                                       <rect x="3.5" y="4.5" width="17" height="15" rx="3" stroke="#C0284F" strokeWidth="1.6" />
@@ -1758,7 +1758,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     <span style={S("font-size:14px;font-weight:600")}>
                                       Upload an image
                                     </span>
-                                    <span style={S("font-size:13px;color:#8A5A6E")}>
+                                    <span style={S("font-size:13px;color:#583246")}>
                                       JPG or PNG, up to 5 MB. Square images work best.
                                     </span>
                                   </label>
@@ -1766,13 +1766,13 @@ export function DcTemplate({ vm }: { vm: any }) {
                                 )}
                                 {vm.cp.hasImg && (
                                   <>
-                                  <div style={S("display:flex;align-items:center;gap:12px;padding:10px;border-radius:14px;border:1.5px solid #ECD9E0")}>
+                                  <div style={S("display:flex;align-items:center;gap:12px;padding:10px;border-radius:14px;border:1.5px solid #DDC3CF")}>
                                     <div style={S(`width:64px;height:64px;border-radius:10px;flex:none;background-color:#FBF3F8;background-image:${vm.cp.imgBg};background-size:cover;background-position:center`)} />
                                     <span style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:2px")}>
                                       <span style={S("font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>
                                         {vm.cp.imgName}
                                       </span>
-                                      <span style={S("font-size:13px;color:#8A5A6E")}>
+                                      <span style={S("font-size:13px;color:#583246")}>
                                         Sent above your message
                                       </span>
                                     </span>
@@ -1782,7 +1782,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     </label>
                                     <button type="button" onClick={vm.cp.clearImg} aria-label="Remove image" style={S("width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
                                       <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                                        <path d="m4 4 8 8M12 4l-8 8" stroke="#3D1C31" strokeWidth="1.7" strokeLinecap="round" />
+                                        <path d="m4 4 8 8M12 4l-8 8" stroke="#2A1020" strokeWidth="1.7" strokeLinecap="round" />
                                       </svg>
                                     </button>
                                   </div>
@@ -1790,11 +1790,11 @@ export function DcTemplate({ vm }: { vm: any }) {
                                 )}
                               </div>
                               <label style={S("display:flex;flex-direction:column;gap:8px")}>
-                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
                                   Message
                                 </span>
-                                <textarea value={vm.cp.msg} onChange={vm.cp.onMsg} rows={4} style={S("padding:12px 14px;border-radius:12px;border:1.5px solid #ECD9E0;font-size:15px;line-height:1.5;resize:vertical;font-family:inherit")} className="dch14" />
-                                <span style={S("font-size:13px;color:#8A5A6E")}>
+                                <textarea value={vm.cp.msg} onChange={vm.cp.onMsg} rows={4} style={S("padding:12px 14px;border-radius:12px;border:1.5px solid #DDC3CF;font-size:15px;line-height:1.5;resize:vertical;font-family:inherit")} className="dch14" />
+                                <span style={S("font-size:13px;color:#583246")}>
                                   {vm.cp.tokens}
                                 </span>
                               </label>
@@ -1819,7 +1819,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                 Preview
                               </span>
                               <div style={S("border-radius:20px;background:#EFE7DD;padding:18px 16px 22px;display:flex;flex-direction:column;gap:10px")}>
-                                <span style={S("align-self:center;font-size:12px;padding:3px 10px;border-radius:8px;background:rgba(255,255,255,.75);color:#3D1C31")}>
+                                <span style={S("align-self:center;font-size:12px;padding:3px 10px;border-radius:8px;background:rgba(255,255,255,.75);color:#2A1020")}>
                                   {"To "}{vm.cp.previewTo}
                                 </span>
                                 <div style={S("align-self:flex-start;max-width:88%;width:300px;background:#fff;border-radius:4px 14px 14px 14px;padding:4px 4px 8px;box-shadow:0 1px 1px rgba(26,8,21,.08);display:flex;flex-direction:column;gap:8px")}>
@@ -1830,7 +1830,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                   )}
                                   {vm.cp.noImg && (
                                     <>
-                                    <span style={S("display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:16/9;border-radius:11px 11px 4px 4px;background:#F6EEF2;font-size:13px;color:#8A5A6E")}>
+                                    <span style={S("display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:16/9;border-radius:11px 11px 4px 4px;background:#F6EEF2;font-size:13px;color:#583246")}>
                                       Your offer image
                                     </span>
                                     </>
@@ -1854,7 +1854,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                       </span>
                                       </>
                                     )}
-                                    <span style={S("align-self:flex-end;font-size:11px;color:#8A5A6E")}>
+                                    <span style={S("align-self:flex-end;font-size:11px;color:#583246")}>
                                       12:04
                                     </span>
                                   </div>
@@ -1873,18 +1873,18 @@ export function DcTemplate({ vm }: { vm: any }) {
                             </h2>
                             {(vm.cp.history as any[]).map((hx: any, __i: number) => (
                               <Fragment key={__i}>
-                                <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding:14px 18px;border:1px solid #F0E4E8;border-radius:14px")}>
+                                <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding:14px 18px;border:1px solid #DDC3CF;background:#fff;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:14px")}>
                                   <span style={S("flex:1 1 240px;min-width:0;display:flex;flex-direction:column;gap:3px")}>
                                     <span style={S("font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>
                                       {hx.title}
                                     </span>
-                                    <span style={S("font-size:13px;color:#8A5A6E")}>
+                                    <span style={S("font-size:13px;color:#583246")}>
                                       {hx.meta}
                                     </span>
                                   </span>
                                   <span style={S("display:flex;gap:22px;font-size:14px;font-variant-numeric:tabular-nums")}>
                                     <span style={S("display:flex;flex-direction:column;gap:2px")}>
-                                      <span style={S("color:#8A5A6E;font-size:13px")}>
+                                      <span style={S("color:#583246;font-size:13px")}>
                                         Sent
                                       </span>
                                       <span style={S("font-weight:600")}>
@@ -1892,7 +1892,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                       </span>
                                     </span>
                                     <span style={S("display:flex;flex-direction:column;gap:2px")}>
-                                      <span style={S("color:#8A5A6E;font-size:13px")}>
+                                      <span style={S("color:#583246;font-size:13px")}>
                                         Read
                                       </span>
                                       <span style={S("font-weight:600")}>
@@ -1900,7 +1900,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                       </span>
                                     </span>
                                     <span style={S("display:flex;flex-direction:column;gap:2px")}>
-                                      <span style={S("color:#8A5A6E;font-size:13px")}>
+                                      <span style={S("color:#583246;font-size:13px")}>
                                         Code used
                                       </span>
                                       <span style={S("font-weight:600")}>
@@ -1928,7 +1928,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                       {vm.pagePlans && (
                         <>
                         <div dir="ltr" style={S("position:fixed;inset:0;z-index:55;background:#fff;display:flex;flex-direction:column")}>
-                          <header style={S("height:64px;flex:none;padding:0 16px 0 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F0E4E8")}>
+                          <header style={S("height:64px;flex:none;padding:0 16px 0 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #E3CBD6")}>
                             <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style={S("display:block;flex:none")}>
                               <defs>
                                 <linearGradient id="gPD3" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
@@ -1943,12 +1943,12 @@ export function DcTemplate({ vm }: { vm: any }) {
                             <span style={S("font-size:16px;font-weight:600;flex:1;min-width:0")}>
                               Subscribe to Lumia Order
                             </span>
-                            <span style={S("font-size:14px;color:#8A5A6E;flex:none")}>
+                            <span style={S("font-size:14px;color:#583246;flex:none")}>
                               {vm.sub.stepLabel}
                             </span>
                             {vm.sub.locked && (
                               <>
-                              <button type="button" onClick={vm.sub.logout} style={S("height:40px;padding:0 14px;border-radius:12px;border:1.5px solid #ECD9E0;font-size:14px;font-weight:600;flex:none")} className="dch0">
+                              <button type="button" onClick={vm.sub.logout} style={S("height:40px;padding:0 14px;border-radius:12px;border:1.5px solid #DDC3CF;font-size:14px;font-weight:600;flex:none")} className="dch0">
                                 {vm.sub.logoutLabel}
                               </button>
                               </>
@@ -1980,7 +1980,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                         </div>
                                         </>
                                       )}
-                                      <p style={S("font-size:15px;color:#8A5A6E;margin-top:6px;line-height:1.5;text-wrap:pretty")}>
+                                      <p style={S("font-size:15px;color:#583246;margin-top:6px;line-height:1.5;text-wrap:pretty")}>
                                         {vm.sub.trialLine}
                                       </p>
                                       {vm.sub.locked && (
@@ -2011,22 +2011,22 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           <span style={S("font-size:19px;font-weight:600")}>
                                             {p.name}
                                           </span>
-                                          <span style={S("font-size:14px;line-height:1.45;color:#8A5A6E;margin-top:6px")}>
+                                          <span style={S("font-size:14px;line-height:1.45;color:#583246;margin-top:6px")}>
                                             {p.desc}
                                           </span>
                                           <div style={S("display:flex;flex-direction:column;margin-top:16px;font-variant-numeric:tabular-nums")}>
-                                            <span style={S("font-size:14px;color:#8A5A6E;text-decoration:line-through;min-height:20px")}>
+                                            <span style={S("font-size:14px;color:#583246;text-decoration:line-through;min-height:20px")}>
                                               {p.strike}
                                             </span>
                                             <span style={S("display:flex;align-items:baseline;gap:6px")}>
                                               <span style={S("font-size:30px;font-weight:600;letter-spacing:-0.04em")}>
                                                 {p.price}
                                               </span>
-                                              <span style={S("font-size:14px;color:#8A5A6E")}>
+                                              <span style={S("font-size:14px;color:#583246")}>
                                                 {p.per}
                                               </span>
                                             </span>
-                                            <span style={S("font-size:13px;color:#3D1C31;margin-top:4px")}>
+                                            <span style={S("font-size:13px;color:#2A1020;margin-top:4px")}>
                                               {p.eq}
                                             </span>
                                             {vm.sub.terminalOn && (
@@ -2037,10 +2037,10 @@ export function DcTemplate({ vm }: { vm: any }) {
                                               </>
                                             )}
                                           </div>
-                                          <span style={S("height:1px;background:#F0E4E8;margin:18px 0 14px;display:block")} />
+                                          <span style={S("height:1px;background:#E3CBD6;margin:18px 0 14px;display:block")} />
                                           {p.hasInc && (
                                             <>
-                                            <span style={S("font-size:13px;font-weight:600;color:#3D1C31;margin-bottom:10px")}>
+                                            <span style={S("font-size:13px;font-weight:600;color:#2A1020;margin-bottom:10px")}>
                                               {p.inc}
                                             </span>
                                             </>
@@ -2069,7 +2069,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                               {vm.sub.stepPay && (
                                 <>
                                 <div data-screen-label="12 Payment" style={S("display:flex;flex-direction:column;gap:20px;max-width:900px;width:100%")}>
-                                  <button type="button" onClick={vm.subBackPlans} style={S("align-self:flex-start;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px 0 8px;border-radius:10px;font-size:14px;font-weight:500;color:#3D1C31")} className="dch6">
+                                  <button type="button" onClick={vm.subBackPlans} style={S("align-self:flex-start;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px 0 8px;border-radius:10px;font-size:14px;font-weight:500;color:#2A1020")} className="dch6">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                       <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
@@ -2082,10 +2082,10 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     {vm.sub.embed && (
                                       <>
                                       <div style={S("display:flex;flex-direction:column;gap:12px;min-width:0")}>
-                                        <button type="button" onClick={vm.subEmbedBack} style={S("align-self:flex-start;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px 0 8px;border-radius:10px;font-size:14px;font-weight:500;color:#3D1C31")} className="dch6">
+                                        <button type="button" onClick={vm.subEmbedBack} style={S("align-self:flex-start;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px 0 8px;border-radius:10px;font-size:14px;font-weight:500;color:#2A1020")} className="dch6">
                                           ← Edit details
                                         </button>
-                                        <div ref={vm.stripeRef} style={S("min-height:420px;border:1.5px solid #ECD9E0;border-radius:16px;padding:12px;background:#fff")} />
+                                        <div ref={vm.stripeRef} style={S("min-height:420px;border:1.5px solid #DDC3CF;border-radius:16px;padding:12px;background:#fff")} />
                                       </div>
                                       </>
                                     )}
@@ -2094,7 +2094,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                       <form onSubmit={vm.subPay} noValidate={true} style={S("display:flex;flex-direction:column;gap:16px")}>
                                         {vm.sub.terminalOn && (
                                           <>
-                                          <section style={S("border:2px solid #FF5577;background:#FFF7FA;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px")}>
+                                          <section style={S("border:2px solid #FF5577;background:#FDEBF3;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px")}>
                                             <div style={S("display:flex;gap:14px;align-items:flex-start")}>
                                               <div style={S("flex:none;width:64px;height:112px;position:relative;overflow:hidden;border-radius:10px;background:#fff")}>
                                                 <div style={S("width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#C0284F")}>
@@ -2112,13 +2112,13 @@ export function DcTemplate({ vm }: { vm: any }) {
                                                     {vm.sub.termBadge}
                                                   </span>
                                                 </div>
-                                                <span style={S("font-size:14px;line-height:1.45;color:#3D1C31;text-wrap:pretty")}>
+                                                <span style={S("font-size:14px;line-height:1.45;color:#2A1020;text-wrap:pretty")}>
                                                   {vm.sub.termDesc}
                                                 </span>
                                                 <span style={S("display:flex;align-items:baseline;gap:8px;margin-top:4px;font-variant-numeric:tabular-nums")}>
                                                   {vm.sub.hasRegular && (
                                                     <>
-                                                    <span style={S("font-size:14px;color:#8A5A6E;text-decoration:line-through")}>
+                                                    <span style={S("font-size:14px;color:#583246;text-decoration:line-through")}>
                                                       {vm.sub.termRegular}
                                                     </span>
                                                     </>
@@ -2126,17 +2126,17 @@ export function DcTemplate({ vm }: { vm: any }) {
                                                   <span style={S("font-size:18px;font-weight:600")}>
                                                     {vm.sub.termPrice}
                                                   </span>
-                                                  <span style={S("font-size:13px;color:#8A5A6E")}>
+                                                  <span style={S("font-size:13px;color:#583246")}>
                                                     one-time
                                                   </span>
                                                 </span>
                                               </div>
                                             </div>
                                             <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding-top:12px;border-top:1px solid #F3D6E2")}>
-                                              <span style={S("font-size:14px;color:#3D1C31")}>
+                                              <span style={S("font-size:14px;color:#2A1020")}>
                                                 {vm.sub.termQtyNote}
                                               </span>
-                                              <div style={S("display:flex;align-items:center;border:1.5px solid #ECD9E0;border-radius:10px;background:#fff")}>
+                                              <div style={S("display:flex;align-items:center;border:1.5px solid #DDC3CF;border-radius:10px;background:#fff")}>
                                                 <button type="button" onClick={vm.termDec} disabled={!!vm.sub.termMin} aria-label="Fewer terminals" style={S(`width:36px;height:36px;font-size:18px;opacity:${vm.sub.decOp}`)}>
                                                   −
                                                 </button>
@@ -2151,7 +2151,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                             {vm.sub.hasTerm && (
                                               <>
                                               <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                                <span style={S("font-size:14px;font-weight:500;color:#2A1020")}>
                                                   Delivery address for the terminal
                                                 </span>
                                                 <input autoComplete="street-address" placeholder="Building, street, area, emirate" value={vm.sub.addr} onChange={vm.onAddr} style={S(`height:48px;padding:0 14px;border-radius:12px;border:1.5px solid ${vm.sub.addrBd};background:#fff;font-size:15px`)} className="dch14" />
@@ -2163,7 +2163,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                                 </span>
                                                 </>
                                               )}
-                                              <span style={S("font-size:13px;color:#8A5A6E;margin-top:-4px")}>
+                                              <span style={S("font-size:13px;color:#583246;margin-top:-4px")}>
                                                 Estimated delivery: 10–15 business days.
                                               </span>
                                               </>
@@ -2179,7 +2179,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           )}
                                           {vm.sub.payLabel}
                                         </button>
-                                        <p style={S("display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:1.45;color:#8A5A6E")}>
+                                        <p style={S("display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:1.45;color:#583246")}>
                                           <svg width="14" height="14" viewBox="0 0 20 20" fill="none" style={S("flex:none;margin-top:2px")}>
                                             <rect x="4.5" y="9" width="11" height="8" rx="2" stroke="currentColor" strokeWidth="1.6" />
                                             <path d="M7 9V6.5a3 3 0 0 1 6 0V9" stroke="currentColor" strokeWidth="1.6" />
@@ -2196,22 +2196,22 @@ export function DcTemplate({ vm }: { vm: any }) {
                                       </form>
                                       </>
                                     )}
-                                    <aside style={S("background:#FBF3F8;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:14px")}>
+                                    <aside style={S("background:#F8E1EC;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:14px")}>
                                       <div style={S("display:flex;align-items:flex-start;justify-content:space-between;gap:12px")}>
                                         <div style={S("display:flex;flex-direction:column;gap:3px")}>
                                           <span style={S("font-size:19px;font-weight:600;letter-spacing:-0.02em")}>
                                             {vm.sub.selName}
                                           </span>
-                                          <span style={S("font-size:14px;color:#3D1C31")}>
+                                          <span style={S("font-size:14px;color:#2A1020")}>
                                             {vm.sub.selBilling}
                                           </span>
                                         </div>
-                                        <button type="button" onClick={vm.subBackPlans} style={S("font-size:14px;font-weight:500;color:#1A0815;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px")} className="dch2">
+                                        <button type="button" onClick={vm.subBackPlans} style={S("font-size:14px;font-weight:500;color:#1A0815;text-decoration:underline;text-decoration-color:#CBA5B6;text-underline-offset:3px")} className="dch2">
                                           Change
                                         </button>
                                       </div>
-                                      <div style={S("display:flex;flex-direction:column;gap:10px;font-size:15px;font-variant-numeric:tabular-nums;padding-top:14px;border-top:1px solid #ECD9E0")}>
-                                        <div style={S("display:flex;justify-content:space-between;gap:12px;color:#3D1C31")}>
+                                      <div style={S("display:flex;flex-direction:column;gap:10px;font-size:15px;font-variant-numeric:tabular-nums;padding-top:14px;border-top:1px solid #DDC3CF")}>
+                                        <div style={S("display:flex;justify-content:space-between;gap:12px;color:#2A1020")}>
                                           <span>
                                             {vm.sub.selName}
                                           </span>
@@ -2221,7 +2221,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                         </div>
                                         {vm.sub.hasTerm && (
                                           <>
-                                          <div style={S("display:flex;justify-content:space-between;gap:12px;color:#3D1C31")}>
+                                          <div style={S("display:flex;justify-content:space-between;gap:12px;color:#2A1020")}>
                                             <span>
                                               {vm.sub.termLine}
                                             </span>
@@ -2233,7 +2233,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                         )}
                                         {vm.sub.hasVat && (
                                           <>
-                                          <div style={S("display:flex;justify-content:space-between;gap:12px;color:#3D1C31")}>
+                                          <div style={S("display:flex;justify-content:space-between;gap:12px;color:#2A1020")}>
                                             <span>
                                               {vm.sub.vatLabel}
                                             </span>
@@ -2243,7 +2243,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           </div>
                                           </>
                                         )}
-                                        <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:18px;font-weight:600;padding-top:10px;border-top:1px solid #ECD9E0")}>
+                                        <div style={S("display:flex;justify-content:space-between;gap:12px;font-size:18px;font-weight:600;padding-top:10px;border-top:1px solid #DDC3CF")}>
                                           <span>
                                             Total today
                                           </span>
@@ -2252,7 +2252,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                           </span>
                                         </div>
                                       </div>
-                                      <p style={S("font-size:13px;color:#8A5A6E")}>
+                                      <p style={S("font-size:13px;color:#583246")}>
                                         {"Renews on "}{vm.sub.renew}.
                                       </p>
                                     </aside>
@@ -2272,12 +2272,12 @@ export function DcTemplate({ vm }: { vm: any }) {
                             WhatsApp
                           </h1>
                           <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start")}>
-                            <div style={S("background:#FAF6FA;border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:16px")}>
-                              <span style={S("font-size:14px;font-weight:600;color:#8A5A6E")}>
+                            <div style={S("background:#fff;border:1px solid #DDC3CF;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:16px")}>
+                              <span style={S("font-size:14px;font-weight:600;color:#583246")}>
                                 Connection
                               </span>
                               <div style={S("display:flex;align-items:center;gap:14px")}>
-                                <span style={S("width:48px;height:48px;border-radius:14px;background:#fff;border:1px solid #ECD9E0;display:flex;align-items:center;justify-content:center;flex:none")}>
+                                <span style={S("width:48px;height:48px;border-radius:14px;background:#fff;border:1px solid #DDC3CF;display:flex;align-items:center;justify-content:center;flex:none")}>
                                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style={S("display:block")}>
                                     <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
                                     <path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff" />
@@ -2287,14 +2287,14 @@ export function DcTemplate({ vm }: { vm: any }) {
                                   <span style={S("font-size:16px;font-weight:600")}>
                                     WhatsApp Business
                                   </span>
-                                  <span style={S("font-size:15px;color:#3D1C31;font-variant-numeric:tabular-nums")}>
+                                  <span style={S("font-size:15px;color:#2A1020;font-variant-numeric:tabular-nums")}>
                                     {vm.waPagePhone}
                                   </span>
                                 </div>
                               </div>
                               <div style={S("display:flex;flex-direction:column;border-top:1px solid #EFE3E9")}>
                                 <div style={S("display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #EFE3E9")}>
-                                  <span style={S("font-size:14px;color:#8A5A6E")}>
+                                  <span style={S("font-size:14px;color:#583246")}>
                                     Status
                                   </span>
                                   <span style={S(`display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:${vm.waStat.fg}`)}>
@@ -2305,7 +2305,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                 {vm.waIsConnected && (
                                   <>
                                   <div style={S("display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EFE3E9;font-size:14px")}>
-                                    <span style={S("color:#8A5A6E")}>
+                                    <span style={S("color:#583246")}>
                                       Display name
                                     </span>
                                     <span style={S("text-align:end")}>
@@ -2313,7 +2313,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     </span>
                                   </div>
                                   <div style={S("display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #EFE3E9;font-size:14px")}>
-                                    <span style={S("color:#8A5A6E")}>
+                                    <span style={S("color:#583246")}>
                                       Business portfolio
                                     </span>
                                     <span>
@@ -2323,7 +2323,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                   </>
                                 )}
                                 <div style={S("display:flex;justify-content:space-between;gap:12px;padding:12px 0;font-size:14px")}>
-                                  <span style={S("color:#8A5A6E")}>
+                                  <span style={S("color:#583246")}>
                                     Your Lumia login
                                   </span>
                                   <span style={S("font-variant-numeric:tabular-nums")}>
@@ -2333,14 +2333,14 @@ export function DcTemplate({ vm }: { vm: any }) {
                               </div>
                               {vm.waIsConnected && (
                                 <>
-                                <button type="button" onClick={vm.askDisconnect} style={S("align-self:flex-start;height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch4">
+                                <button type="button" onClick={vm.askDisconnect} style={S("align-self:flex-start;height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:15px")} className="dch4">
                                   Disconnect
                                 </button>
                                 </>
                               )}
                               {vm.waIsDisconnected && (
                                 <>
-                                <p style={S("font-size:14px;line-height:1.5;color:#3D1C31;text-wrap:pretty")}>
+                                <p style={S("font-size:14px;line-height:1.5;color:#2A1020;text-wrap:pretty")}>
                                   Your menu, orders and customer data are still in Lumia.
                                 </p>
                                 <button type="button" onClick={vm.reconnect} style={S("align-self:flex-start;height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
@@ -2358,14 +2358,14 @@ export function DcTemplate({ vm }: { vm: any }) {
                             </div>
                             {vm.waShowToday && (
                               <>
-                              <div style={S("background:#FAF6FA;border-radius:20px;padding:20px 22px 8px;display:flex;flex-direction:column")}>
-                                <span style={S("font-size:14px;font-weight:600;color:#8A5A6E;padding-bottom:6px")}>
+                              <div style={S("background:#fff;border:1px solid #DDC3CF;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);border-radius:20px;padding:20px 22px 8px;display:flex;flex-direction:column")}>
+                                <span style={S("font-size:14px;font-weight:600;color:#583246;padding-bottom:6px")}>
                                   Today
                                 </span>
                                 {(vm.waToday as any[]).map((t: any, __i: number) => (
                                   <Fragment key={__i}>
                                     <div style={S(`display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 0;border-top:${t.bt}`)}>
-                                      <span style={S("font-size:15px;color:#3D1C31")}>
+                                      <span style={S("font-size:15px;color:#2A1020")}>
                                         {t.label}
                                       </span>
                                       <span style={S("font-size:26px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums")}>
@@ -2389,11 +2389,11 @@ export function DcTemplate({ vm }: { vm: any }) {
                             <h2 style={S("font-size:22px;font-weight:600;letter-spacing:-0.03em")}>
                               Disconnect WhatsApp?
                             </h2>
-                            <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
+                            <p style={S("font-size:15px;line-height:1.5;color:#2A1020;margin-top:10px;text-wrap:pretty")}>
                               Lumia will stop receiving and replying to customer messages from this number. Your menu, orders and customer data will remain in Lumia.
                             </p>
                             <div style={S("display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:24px")}>
-                              <button type="button" onClick={vm.cancelDisconnect} style={S("flex:1 1 140px;height:48px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
+                              <button type="button" onClick={vm.cancelDisconnect} style={S("flex:1 1 140px;height:48px;padding:0 18px;border-radius:12px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:15px")} className="dch0">
                                 Cancel
                               </button>
                               <button type="button" onClick={vm.doDisconnect} style={S("flex:1 1 180px;height:48px;padding:0 18px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px")} className="dch17">
@@ -2412,14 +2412,14 @@ export function DcTemplate({ vm }: { vm: any }) {
                             <h2 style={S("font-size:22px;font-weight:600;letter-spacing:-0.03em")}>
                               {vm.dlg.title}
                             </h2>
-                            <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;text-wrap:pretty")}>
+                            <p style={S("font-size:15px;line-height:1.5;color:#2A1020;margin-top:8px;text-wrap:pretty")}>
                               {vm.dlg.hint}
                             </p>
                             {(vm.dlg.fields as any[]).map((f: any, __i: number) => (
                               <Fragment key={__i}>
-                                <label style={S("display:block;font-size:14px;font-weight:500;color:#3D1C31;margin-top:16px")}>
+                                <label style={S("display:block;font-size:14px;font-weight:500;color:#2A1020;margin-top:16px")}>
                                   {f.label}
-                                  <input type="text" value={f.value} onChange={f.onChange} placeholder={f.placeholder} dir={f.dir} inputMode={f.mode} autoFocus={f.focus} style={S("display:block;margin-top:8px;height:48px;width:100%;border-radius:12px;border:1.5px solid #E3CBD4;padding:0 14px;font-size:16px;background:#fff")} />
+                                  <input type="text" value={f.value} onChange={f.onChange} placeholder={f.placeholder} dir={f.dir} inputMode={f.mode} autoFocus={f.focus} style={S("display:block;margin-top:8px;height:48px;width:100%;border-radius:12px;border:1.5px solid #CBA5B6;padding:0 14px;font-size:16px;background:#fff")} />
                                 </label>
                               </Fragment>
                             ))}
@@ -2431,7 +2431,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                               </>
                             )}
                             <div style={S("display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:24px")}>
-                              <button type="button" onClick={vm.dlg.cancel} style={S("flex:1 1 120px;height:48px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
+                              <button type="button" onClick={vm.dlg.cancel} style={S("flex:1 1 120px;height:48px;padding:0 18px;border-radius:12px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:15px")} className="dch0">
                                 Cancel
                               </button>
                               <button type="submit" disabled={!!vm.dlg.busy} style={S(`flex:1 1 160px;height:48px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;opacity:${vm.dlg.op}`)}>
@@ -2447,7 +2447,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                         <div dir="ltr" style={S("position:fixed;inset:0;z-index:40;display:flex;justify-content:flex-end")}>
                           <div onClick={vm.waClose} style={S("position:absolute;inset:0;background:rgba(26,8,21,.32)")} />
                           <aside role="dialog" aria-modal="true" aria-label="Connect WhatsApp" data-screen-label={vm.waLabel} style={S(`position:relative;width:${vm.L.drawerW};max-width:100%;height:100%;background:#fff;display:flex;flex-direction:column;box-shadow:-24px 0 60px -30px rgba(26,8,21,.35)`)}>
-                            <div style={S("height:64px;flex:none;padding:0 12px 0 24px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F0E4E8")}>
+                            <div style={S("height:64px;flex:none;padding:0 12px 0 24px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #E3CBD6")}>
                               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={S("display:block;flex:none")}>
                                 <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
                                 <path d="M8.9 7.4c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.1.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3l-1.7-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.7-1.2-1.5-1.4-1.7-.1-.3 0-.4.1-.5l.4-.4.2-.4v-.4l-.9-2z" fill="#fff" />
@@ -2455,7 +2455,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                               <span style={S("flex:1;font-size:15px;font-weight:600")}>
                                 WhatsApp
                               </span>
-                              <span style={S("font-size:13px;font-weight:500;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                              <span style={S("font-size:13px;font-weight:500;color:#583246;font-variant-numeric:tabular-nums")}>
                                 {vm.waSetupLabel}
                               </span>
                               <button type="button" onClick={vm.waClose} aria-label="Close" style={S("width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none")} className="dch0">
@@ -2476,20 +2476,20 @@ export function DcTemplate({ vm }: { vm: any }) {
                                 <h2 style={S("font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px;text-wrap:balance")}>
                                   Connect your WhatsApp Business
                                 </h2>
-                                <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
+                                <p style={S("font-size:15px;line-height:1.5;color:#2A1020;margin-top:10px;text-wrap:pretty")}>
                                   Connect the WhatsApp number your customers use to place orders. Lumia will receive messages and help turn them into orders automatically.
                                 </p>
                                 <button type="button" onClick={vm.startConnect} style={S("margin-top:24px;height:54px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
                                   Connect WhatsApp
                                 </button>
-                                <span style={S("font-size:14px;font-weight:600;color:#8A5A6E;margin-top:26px")}>
+                                <span style={S("font-size:14px;font-weight:600;color:#583246;margin-top:26px")}>
                                   What happens next
                                 </span>
                                 <ol style={S("list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:12px")}>
                                   {(vm.waSteps as any[]).map((st: any, __i: number) => (
                                     <Fragment key={__i}>
                                       <li style={S("display:flex;align-items:center;gap:12px;font-size:15px")}>
-                                        <span style={S("width:24px;height:24px;border-radius:50%;border:1.5px solid #ECD9E0;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#8A2040;font-variant-numeric:tabular-nums")}>
+                                        <span style={S("width:24px;height:24px;border-radius:50%;border:1.5px solid #DDC3CF;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#8A2040;font-variant-numeric:tabular-nums")}>
                                           {st.n}
                                         </span>
                                         {st.label}
@@ -2497,12 +2497,12 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     </Fragment>
                                   ))}
                                 </ol>
-                                <div style={S("margin-top:26px;border-radius:16px;background:#FAF6FA;padding:16px 18px;display:flex;flex-direction:column;gap:12px")}>
+                                <div style={S("margin-top:26px;border-radius:16px;background:#fff;border:1px solid #DDC3CF;box-shadow:0 1px 2px rgba(60,20,40,.06),0 10px 26px -18px rgba(60,20,40,.22);padding:16px 18px;display:flex;flex-direction:column;gap:12px")}>
                                   <div style={S("display:flex;gap:10px;align-items:flex-start;font-size:14px;font-weight:600;line-height:1.4")}>
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={S("flex:none;margin-top:2px")}>
-                                      <circle cx="8" cy="8" r="7" stroke="#8A5A6E" strokeWidth="1.4" />
-                                      <path d="M8 7.2v4" stroke="#8A5A6E" strokeWidth="1.5" strokeLinecap="round" />
-                                      <circle cx="8" cy="4.9" r=".85" fill="#8A5A6E" />
+                                      <circle cx="8" cy="8" r="7" stroke="#583246" strokeWidth="1.4" />
+                                      <path d="M8 7.2v4" stroke="#583246" strokeWidth="1.5" strokeLinecap="round" />
+                                      <circle cx="8" cy="4.9" r=".85" fill="#583246" />
                                     </svg>
                                     <span>
                                       Your login number and business WhatsApp can be different.
@@ -2510,7 +2510,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                   </div>
                                   <div style={S("display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px")}>
                                     <div style={S("background:#fff;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px")}>
-                                      <span style={S("font-size:12px;color:#8A5A6E")}>
+                                      <span style={S("font-size:12px;color:#583246")}>
                                         Your Lumia login
                                       </span>
                                       <span style={S("font-size:14px;font-weight:500;font-variant-numeric:tabular-nums")}>
@@ -2518,16 +2518,16 @@ export function DcTemplate({ vm }: { vm: any }) {
                                       </span>
                                     </div>
                                     <div style={S("background:#fff;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px")}>
-                                      <span style={S("font-size:12px;color:#8A5A6E")}>
+                                      <span style={S("font-size:12px;color:#583246")}>
                                         Restaurant WhatsApp
                                       </span>
-                                      <span style={S("font-size:14px;color:#3D1C31")}>
+                                      <span style={S("font-size:14px;color:#2A1020")}>
                                         Not connected yet
                                       </span>
                                     </div>
                                   </div>
                                 </div>
-                                <button type="button" onClick={vm.waClose} style={S("margin-top:20px;height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
+                                <button type="button" onClick={vm.waClose} style={S("margin-top:20px;height:44px;font-size:15px;font-weight:500;color:#2A1020;text-decoration:underline;text-decoration-color:#CBA5B6;text-underline-offset:4px")} className="dch2">
                                   Do this later
                                 </button>
                               </div>
@@ -2548,10 +2548,10 @@ export function DcTemplate({ vm }: { vm: any }) {
                                 <h2 style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;margin-top:26px")}>
                                   Connecting to WhatsApp...
                                 </h2>
-                                <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;max-width:300px;text-wrap:pretty")}>
+                                <p style={S("font-size:15px;line-height:1.5;color:#2A1020;margin-top:8px;max-width:300px;text-wrap:pretty")}>
                                   Keep this window open while we finish the setup.
                                 </p>
-                                <button type="button" onClick={vm.cancelConnect} style={S("margin-top:28px;height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
+                                <button type="button" onClick={vm.cancelConnect} style={S("margin-top:28px;height:44px;font-size:15px;font-weight:500;color:#2A1020;text-decoration:underline;text-decoration-color:#CBA5B6;text-underline-offset:4px")} className="dch2">
                                   Cancel
                                 </button>
                               </div>
@@ -2580,7 +2580,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     </h2>
                                     </>
                                   )}
-                                  <div style={S("margin-top:22px;border:1px solid #ECD9E0;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px")}>
+                                  <div style={S("margin-top:22px;border:1px solid #DDC3CF;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px")}>
                                     <div style={S("display:flex;align-items:center;gap:14px")}>
                                       <span style={S("position:relative;width:52px;height:52px;border-radius:50%;background:#1A0815;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none")}>
                                         {vm.waInitials}
@@ -2592,20 +2592,20 @@ export function DcTemplate({ vm }: { vm: any }) {
                                         </span>
                                       </span>
                                       <div style={S("flex:1;min-width:0;display:flex;flex-direction:column;gap:2px")}>
-                                        <span style={S("font-size:12px;color:#8A5A6E")}>
+                                        <span style={S("font-size:12px;color:#583246")}>
                                           WhatsApp Business
                                         </span>
                                         <span style={S("font-size:17px;font-weight:600;letter-spacing:-0.01em")}>
                                           {vm.waName}
                                         </span>
-                                        <span style={S("font-size:14px;color:#3D1C31;font-variant-numeric:tabular-nums")}>
+                                        <span style={S("font-size:14px;color:#2A1020;font-variant-numeric:tabular-nums")}>
                                           {vm.waPhone}
                                         </span>
                                       </div>
                                     </div>
                                     <div style={S("display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border-top:1px solid #F3EEF1;padding-top:14px")}>
                                       <div style={S("display:flex;flex-direction:column;gap:4px")}>
-                                        <span style={S("font-size:12px;color:#8A5A6E")}>
+                                        <span style={S("font-size:12px;color:#583246")}>
                                           Status
                                         </span>
                                         <span style={S("display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:#16704A")}>
@@ -2614,7 +2614,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                         </span>
                                       </div>
                                       <div style={S("display:flex;flex-direction:column;gap:4px")}>
-                                        <span style={S("font-size:12px;color:#8A5A6E")}>
+                                        <span style={S("font-size:12px;color:#583246")}>
                                           Business portfolio
                                         </span>
                                         <span style={S("font-size:14px;font-weight:500")}>
@@ -2625,17 +2625,17 @@ export function DcTemplate({ vm }: { vm: any }) {
                                   </div>
                                   {vm.waNoCatalog && (
                                     <>
-                                    <p style={S("margin-top:14px;border-radius:14px;background:#FAF6FA;padding:12px 16px;font-size:14px;line-height:1.5;color:#3D1C31")}>
+                                    <p style={S("margin-top:14px;border-radius:14px;background:#F7E7EF;padding:12px 16px;font-size:14px;line-height:1.5;color:#2A1020")}>
                                       No WhatsApp catalog was found. Your current Lumia menu will continue to be used.
                                     </p>
                                     </>
                                   )}
                                 </div>
-                                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
+                                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #E3CBD6;display:flex;flex-direction:column;gap:10px")}>
                                   <button type="button" onClick={vm.successContinue} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
                                     Continue
                                   </button>
-                                  <button type="button" onClick={vm.manageConnection} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
+                                  <button type="button" onClick={vm.manageConnection} style={S("height:50px;border-radius:14px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:16px")} className="dch3">
                                     Manage connection
                                   </button>
                                 </div>
@@ -2649,14 +2649,14 @@ export function DcTemplate({ vm }: { vm: any }) {
                                   <h2 style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;line-height:1.15;text-wrap:balance")}>
                                     We found information from your WhatsApp Business account
                                   </h2>
-                                  <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
+                                  <p style={S("font-size:15px;line-height:1.5;color:#2A1020;margin-top:10px;text-wrap:pretty")}>
                                     Nothing in Lumia changes until you choose to use it.
                                   </p>
-                                  <div style={S("margin-top:20px;border:1px solid #ECD9E0;border-radius:16px;display:flex;flex-direction:column;padding:0 18px")}>
+                                  <div style={S("margin-top:20px;border:1px solid #DDC3CF;border-radius:16px;display:flex;flex-direction:column;padding:0 18px")}>
                                     {(vm.waImport as any[]).map((r: any, __i: number) => (
                                       <Fragment key={__i}>
                                         <div style={S(`display:flex;align-items:center;gap:12px;min-height:58px;padding:10px 0;border-top:${r.bt}`)}>
-                                          <span style={S("flex:0 0 96px;font-size:13px;color:#8A5A6E")}>
+                                          <span style={S("flex:0 0 96px;font-size:13px;color:#583246")}>
                                             {r.label}
                                           </span>
                                           <div style={S("flex:1;min-width:0;display:flex;align-items:center;gap:10px")}>
@@ -2683,11 +2683,11 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     ))}
                                   </div>
                                 </div>
-                                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
+                                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #E3CBD6;display:flex;flex-direction:column;gap:10px")}>
                                   <button type="button" onClick={vm.useAll} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
                                     Use this information
                                   </button>
-                                  <button type="button" onClick={vm.toReview} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
+                                  <button type="button" onClick={vm.toReview} style={S("height:50px;border-radius:14px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:16px")} className="dch3">
                                     Review first
                                   </button>
                                 </div>
@@ -2701,7 +2701,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                   <h2 style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;line-height:1.15")}>
                                     Review differences
                                   </h2>
-                                  <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
+                                  <p style={S("font-size:15px;line-height:1.5;color:#2A1020;margin-top:10px;text-wrap:pretty")}>
                                     Choose which version Lumia should use for each item.
                                   </p>
                                   <div style={S("display:flex;flex-direction:column;gap:22px;margin-top:22px")}>
@@ -2715,7 +2715,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                             {(d.opts as any[]).map((o: any, __i: number) => (
                                               <Fragment key={__i}>
                                                 <button type="button" role="radio" aria-checked={o.on} onClick={o.pick} style={S(`text-align:start;border-radius:14px;border:1.5px solid ${o.bd};background:${o.bg};padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-height:88px`)} className="dch18">
-                                                  <span style={S("display:flex;align-items:center;gap:8px;font-size:12px;color:#8A5A6E")}>
+                                                  <span style={S("display:flex;align-items:center;gap:8px;font-size:12px;color:#583246")}>
                                                     <span style={S(`width:16px;height:16px;border-radius:50%;border:${o.dotBd};background:#fff;flex:none`)} />
                                                     {o.src}
                                                   </span>
@@ -2731,11 +2731,11 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     ))}
                                   </div>
                                 </div>
-                                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:6px")}>
+                                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #E3CBD6;display:flex;flex-direction:column;gap:6px")}>
                                   <button type="button" onClick={vm.saveChoices} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
                                     Save choices
                                   </button>
-                                  <button type="button" onClick={vm.toImport} style={S("height:44px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
+                                  <button type="button" onClick={vm.toImport} style={S("height:44px;font-size:15px;font-weight:500;color:#2A1020;text-decoration:underline;text-decoration-color:#CBA5B6;text-underline-offset:4px")} className="dch2">
                                     Back
                                   </button>
                                 </div>
@@ -2751,14 +2751,14 @@ export function DcTemplate({ vm }: { vm: any }) {
                                   </h2>
                                   {vm.menuDone && (
                                     <>
-                                    <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
+                                    <p style={S("font-size:15px;line-height:1.5;color:#2A1020;margin-top:10px;text-wrap:pretty")}>
                                       Your current Lumia menu stays as it is unless you choose to replace it.
                                     </p>
                                     </>
                                   )}
                                   <div style={S("display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:20px")}>
-                                    <div style={S("border-radius:16px;border:1px solid #ECD9E0;padding:14px 16px;display:flex;flex-direction:column;gap:4px")}>
-                                      <span style={S("display:flex;align-items:center;gap:7px;font-size:13px;color:#8A5A6E")}>
+                                    <div style={S("border-radius:16px;border:1px solid #DDC3CF;padding:14px 16px;display:flex;flex-direction:column;gap:4px")}>
+                                      <span style={S("display:flex;align-items:center;gap:7px;font-size:13px;color:#583246")}>
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={S("display:block;flex:none")}>
                                           <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
                                         </svg>
@@ -2767,21 +2767,21 @@ export function DcTemplate({ vm }: { vm: any }) {
                                       <span style={S("font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums")}>
                                         {vm.waCatTotal}
                                       </span>
-                                      <span style={S("font-size:14px;color:#3D1C31")}>
+                                      <span style={S("font-size:14px;color:#2A1020")}>
                                         {"products \u00b7 "}{vm.waCatCount}{" categories"}
                                       </span>
                                     </div>
                                     {vm.menuDone && (
                                       <>
-                                      <div style={S("border-radius:16px;background:#FAF6FA;padding:14px 16px;display:flex;flex-direction:column;gap:4px")}>
-                                        <span style={S("display:flex;align-items:center;gap:7px;font-size:13px;color:#8A5A6E")}>
+                                      <div style={S("border-radius:16px;background:#F7E7EF;padding:14px 16px;display:flex;flex-direction:column;gap:4px")}>
+                                        <span style={S("display:flex;align-items:center;gap:7px;font-size:13px;color:#583246")}>
                                           <span style={S("width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,#FF5577,#C93DFF)")} />
                                           Lumia menu · in use
                                         </span>
                                         <span style={S("font-size:28px;font-weight:600;letter-spacing:-0.03em;font-variant-numeric:tabular-nums")}>
                                           {vm.lumiaItems}
                                         </span>
-                                        <span style={S("font-size:14px;color:#3D1C31")}>
+                                        <span style={S("font-size:14px;color:#2A1020")}>
                                           {"items \u00b7 "}{vm.lumiaCats}{" categories"}
                                         </span>
                                       </div>
@@ -2790,7 +2790,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                   </div>
                                   {vm.catOpen && (
                                     <>
-                                    <div style={S("margin-top:14px;border:1px solid #ECD9E0;border-radius:16px;padding:4px 18px")}>
+                                    <div style={S("margin-top:14px;border:1px solid #DDC3CF;border-radius:16px;padding:4px 18px")}>
                                       {(vm.waCatList as any[]).map((g: any, __i: number) => (
                                         <Fragment key={__i}>
                                           <div style={S(`padding:12px 0;border-top:${g.bt};display:flex;flex-direction:column;gap:3px`)}>
@@ -2798,11 +2798,11 @@ export function DcTemplate({ vm }: { vm: any }) {
                                               <span style={S("font-size:15px;font-weight:600")}>
                                                 {g.cat}
                                               </span>
-                                              <span style={S("font-size:13px;color:#8A5A6E;font-variant-numeric:tabular-nums")}>
+                                              <span style={S("font-size:13px;color:#583246;font-variant-numeric:tabular-nums")}>
                                                 {g.label}
                                               </span>
                                             </div>
-                                            <span style={S("font-size:13px;line-height:1.45;color:#3D1C31")}>
+                                            <span style={S("font-size:13px;line-height:1.45;color:#2A1020")}>
                                               {g.sample}
                                             </span>
                                           </div>
@@ -2814,14 +2814,14 @@ export function DcTemplate({ vm }: { vm: any }) {
                                 </div>
                                 {vm.menuDone && (
                                   <>
-                                  <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
+                                  <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #E3CBD6;display:flex;flex-direction:column;gap:10px")}>
                                     <button type="button" onClick={vm.waFinish} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
                                       Keep current Lumia menu
                                     </button>
-                                    <button type="button" onClick={vm.toggleCat} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
+                                    <button type="button" onClick={vm.toggleCat} style={S("height:50px;border-radius:14px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:16px")} className="dch3">
                                       {vm.catBtn}
                                     </button>
-                                    <button type="button" onClick={vm.askReplace} style={S("height:40px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch19">
+                                    <button type="button" onClick={vm.askReplace} style={S("height:40px;font-size:15px;font-weight:500;color:#2A1020;text-decoration:underline;text-decoration-color:#CBA5B6;text-underline-offset:4px")} className="dch19">
                                       Replace current menu
                                     </button>
                                   </div>
@@ -2829,14 +2829,14 @@ export function DcTemplate({ vm }: { vm: any }) {
                                 )}
                                 {vm.menuEmpty && (
                                   <>
-                                  <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
+                                  <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #E3CBD6;display:flex;flex-direction:column;gap:10px")}>
                                     <button type="button" onClick={vm.useCatalog} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
                                       Use WhatsApp catalog as menu
                                     </button>
-                                    <button type="button" onClick={vm.toggleCat} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
+                                    <button type="button" onClick={vm.toggleCat} style={S("height:50px;border-radius:14px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:16px")} className="dch3">
                                       {vm.catBtn}
                                     </button>
-                                    <button type="button" onClick={vm.waFinish} style={S("height:40px;font-size:15px;font-weight:500;color:#3D1C31;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:4px")} className="dch2">
+                                    <button type="button" onClick={vm.waFinish} style={S("height:40px;font-size:15px;font-weight:500;color:#2A1020;text-decoration:underline;text-decoration-color:#CBA5B6;text-underline-offset:4px")} className="dch2">
                                       Not now
                                     </button>
                                   </div>
@@ -2849,11 +2849,11 @@ export function DcTemplate({ vm }: { vm: any }) {
                                       <h3 style={S("font-size:20px;font-weight:600;letter-spacing:-0.025em")}>
                                         Replace current menu?
                                       </h3>
-                                      <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:8px;text-wrap:pretty")}>
+                                      <p style={S("font-size:15px;line-height:1.5;color:#2A1020;margin-top:8px;text-wrap:pretty")}>
                                         {"Your "}{vm.lumiaItems}{" Lumia menu items will be replaced by "}{vm.waCatTotal}{" products from your WhatsApp catalog. Prices and availability you set in Lumia won't be kept."}
                                       </p>
                                       <div style={S("display:flex;flex-wrap:wrap;gap:10px;margin-top:20px")}>
-                                        <button type="button" onClick={vm.cancelReplace} style={S("flex:1 1 120px;height:48px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dch0">
+                                        <button type="button" onClick={vm.cancelReplace} style={S("flex:1 1 120px;height:48px;border-radius:12px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:15px")} className="dch0">
                                           Cancel
                                         </button>
                                         <button type="button" onClick={vm.useCatalog} style={S("flex:1 1 140px;height:48px;border-radius:12px;background:#B4233B;color:#fff;font-weight:600;font-size:15px")} className="dch17">
@@ -2880,11 +2880,11 @@ export function DcTemplate({ vm }: { vm: any }) {
                                   <h2 style={S("font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px")}>
                                     We couldn't connect WhatsApp
                                   </h2>
-                                  <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
+                                  <p style={S("font-size:15px;line-height:1.5;color:#2A1020;margin-top:10px;text-wrap:pretty")}>
                                     Your Lumia account is safe. Try connecting again or continue setup and return later.
                                   </p>
-                                  <div style={S("margin-top:20px;border-radius:14px;background:#FAF6FA;padding:12px 16px;display:flex;flex-direction:column;gap:3px")}>
-                                    <span style={S("font-size:12px;color:#8A5A6E")}>
+                                  <div style={S("margin-top:20px;border-radius:14px;background:#F7E7EF;padding:12px 16px;display:flex;flex-direction:column;gap:3px")}>
+                                    <span style={S("font-size:12px;color:#583246")}>
                                       What happened
                                     </span>
                                     <span style={S("font-size:15px;line-height:1.45")}>
@@ -2892,11 +2892,11 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     </span>
                                   </div>
                                 </div>
-                                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
+                                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #E3CBD6;display:flex;flex-direction:column;gap:10px")}>
                                   <button type="button" onClick={vm.startConnect} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
                                     Try again
                                   </button>
-                                  <button type="button" onClick={vm.waClose} style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px")} className="dch3">
+                                  <button type="button" onClick={vm.waClose} style={S("height:50px;border-radius:14px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:16px")} className="dch3">
                                     Do this later
                                   </button>
                                 </div>
@@ -2917,21 +2917,21 @@ export function DcTemplate({ vm }: { vm: any }) {
                                   <h2 style={S("font-size:26px;font-weight:600;letter-spacing:-0.035em;line-height:1.1;margin-top:20px;text-wrap:balance")}>
                                     This WhatsApp number is already connected
                                   </h2>
-                                  <p style={S("font-size:15px;line-height:1.5;color:#3D1C31;margin-top:10px;text-wrap:pretty")}>
+                                  <p style={S("font-size:15px;line-height:1.5;color:#2A1020;margin-top:10px;text-wrap:pretty")}>
                                     Choose another number or manage the existing connection before continuing.
                                   </p>
-                                  <div style={S("margin-top:20px;display:inline-flex;justify-self:start;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;background:#FAF6FA;font-size:14px;font-weight:500;font-variant-numeric:tabular-nums")}>
+                                  <div style={S("margin-top:20px;display:inline-flex;justify-self:start;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;background:#F7E7EF;font-size:14px;font-weight:500;font-variant-numeric:tabular-nums")}>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={S("display:block;flex:none")}>
                                       <path d="M12 2.6a9.4 9.4 0 0 0-8.1 14.1L2.6 21.4l4.8-1.3A9.4 9.4 0 1 0 12 2.6z" fill="#25D366" />
                                     </svg>
                                     {vm.waPhone}
                                   </div>
                                 </div>
-                                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #F0E4E8;display:flex;flex-direction:column;gap:10px")}>
+                                <div style={S("flex:none;padding:16px 24px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #E3CBD6;display:flex;flex-direction:column;gap:10px")}>
                                   <button type="button" onClick={vm.startConnect} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px;box-shadow:0 10px 24px -12px rgba(201,61,255,.55)")} className="dch1">
                                     Choose another number
                                   </button>
-                                  <a href="#help" style={S("height:50px;border-radius:14px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:16px;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#1A0815")} className="dch3">
+                                  <a href="#help" style={S("height:50px;border-radius:14px;border:1.5px solid #DDC3CF;background:#fff;font-weight:500;font-size:16px;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#1A0815")} className="dch3">
                                     View help
                                   </a>
                                 </div>
@@ -2952,7 +2952,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                 <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
                   <div onClick={vm.subLater} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
                   <div role="dialog" aria-modal="true" aria-labelledby="tr-h" data-screen-label="10 Free trial" style={S("position:relative;width:100%;max-width:440px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)")}>
-                    <div style={S("padding:26px 26px 22px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);display:flex;flex-direction:column;gap:14px")}>
+                    <div style={S("padding:26px 26px 22px;background:linear-gradient(135deg,#FFC9DB 0%,#F7B9EA 50%,#D3B6FF 100%);display:flex;flex-direction:column;gap:14px")}>
                       <span style={S("align-self:flex-start;height:28px;padding:0 11px;border-radius:999px;background:#fff;font-size:13px;font-weight:600;color:#8A2040;display:flex;align-items:center")}>
                         Free trial
                       </span>
@@ -2969,14 +2969,14 @@ export function DcTemplate({ vm }: { vm: any }) {
                       </div>
                     </div>
                     <div style={S("padding:22px 26px 24px;display:flex;flex-direction:column;gap:20px")}>
-                      <p style={S("font-size:15px;line-height:1.55;color:#3D1C31;text-wrap:pretty")}>
+                      <p style={S("font-size:15px;line-height:1.55;color:#2A1020;text-wrap:pretty")}>
                         {vm.sub.body}
                       </p>
                       <div style={S("display:flex;flex-direction:column;gap:6px")}>
                         <button type="button" onClick={vm.subOpenPlans} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px")} className="dch1">
                           Choose a plan
                         </button>
-                        <button type="button" onClick={vm.subLater} style={S("height:44px;font-size:15px;font-weight:500;color:#3D1C31")} className="dch8">
+                        <button type="button" onClick={vm.subLater} style={S("height:44px;font-size:15px;font-weight:500;color:#2A1020")} className="dch8">
                           {vm.sub.later}
                         </button>
                       </div>
@@ -2990,7 +2990,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                 <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
                   <div onClick={vm.lockClose} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
                   <div role="dialog" aria-modal="true" aria-labelledby="lk-h" data-screen-label="14 Premium feature" style={S("position:relative;width:100%;max-width:420px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)")}>
-                    <div style={S("padding:24px 24px 20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);display:flex;flex-direction:column;gap:14px")}>
+                    <div style={S("padding:24px 24px 20px;background:linear-gradient(135deg,#FFC9DB 0%,#F7B9EA 50%,#D3B6FF 100%);display:flex;flex-direction:column;gap:14px")}>
                       <span style={S("align-self:flex-start;height:28px;padding:0 11px;border-radius:999px;background:#fff;font-size:13px;font-weight:600;color:#8A2040;display:flex;align-items:center;gap:6px")}>
                         <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
                           <rect x="4.5" y="9" width="11" height="8" rx="2" stroke="currentColor" strokeWidth="1.8" />
@@ -3003,7 +3003,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                       </h2>
                     </div>
                     <div style={S("padding:20px 24px 22px;display:flex;flex-direction:column;gap:18px")}>
-                      <p style={S("font-size:15px;line-height:1.55;color:#3D1C31;text-wrap:pretty")}>
+                      <p style={S("font-size:15px;line-height:1.55;color:#2A1020;text-wrap:pretty")}>
                         {vm.lock.body}
                       </p>
                       <div style={S("display:flex;flex-direction:column;gap:8px;font-size:15px")}>
@@ -3024,7 +3024,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                         <button type="button" onClick={vm.lockUpgrade} style={S("height:52px;border-radius:14px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:16px")} className="dch1">
                           {vm.lock.cta}
                         </button>
-                        <button type="button" onClick={vm.lockClose} style={S("height:44px;font-size:15px;font-weight:500;color:#3D1C31")} className="dch8">
+                        <button type="button" onClick={vm.lockClose} style={S("height:44px;font-size:15px;font-weight:500;color:#2A1020")} className="dch8">
                           Not now
                         </button>
                       </div>
@@ -3046,7 +3046,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                     <h2 style={S("font-size:24px;font-weight:600;letter-spacing:-0.03em;margin-top:18px")}>
                       {"You\u2019re on the "}{vm.sub.paidName}{" plan"}
                     </h2>
-                    <p style={S("font-size:15px;line-height:1.55;color:#3D1C31;margin-top:8px;text-wrap:pretty")}>
+                    <p style={S("font-size:15px;line-height:1.55;color:#2A1020;margin-top:8px;text-wrap:pretty")}>
                       Lumia will keep receiving WhatsApp orders without interruption. Your terminal arrives in 10–15 business days, and you can track it from Overview.
                     </p>
                     <button type="button" onClick={vm.subLater} style={S("margin-top:24px;width:100%;height:52px;border-radius:14px;background:#1A0815;color:#fff;font-weight:600;font-size:16px")} className="dch11">
