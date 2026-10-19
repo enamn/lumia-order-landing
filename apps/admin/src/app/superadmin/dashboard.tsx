@@ -104,12 +104,12 @@ function Tax() {
     </section>
   );
 }
-const COUNTRIES: [string, string, string, number][] = [["SA", "Saudi Arabia", "SAR", 2], ["OM", "Oman", "OMR", 3], ["BH", "Bahrain", "BHD", 3], ["QA", "Qatar", "QAR", 2], ["KW", "Kuwait", "KWD", 3]];
+const COUNTRIES: [string, string, string, number][] = [["AE", "United Arab Emirates", "AED", 2], ["SA", "Saudi Arabia", "SAR", 2], ["OM", "Oman", "OMR", 3], ["BH", "Bahrain", "BHD", 3], ["QA", "Qatar", "QAR", 2], ["KW", "Kuwait", "KWD", 3]];
 const PLAN_ROWS: [string, string][] = [["starter", "Starter"], ["plus", "Plus"], ["pro", "Pro"]];
 const inp: React.CSSProperties = { width: 110, height: 36, borderRadius: 10, border: "1.5px solid #ECD9E0", padding: "0 10px", fontSize: 15, fontVariantNumeric: "tabular-nums", background: "#fff", color: ink };
 function Prices() {
   const [d, setD] = React.useState<any>(null), [flags, setFlags] = React.useState<any[]>([]), [err, setErr] = React.useState(""), [ok, setOk] = React.useState(""), [busy, setBusy] = React.useState(false);
-  const [cc, setCc] = React.useState("SA"), [vals, setVals] = React.useState<Record<string, string>>({}), [from, setFrom] = React.useState(new Date().toISOString().slice(0, 10));
+  const [cc, setCc] = React.useState("AE"), [vals, setVals] = React.useState<Record<string, string>>({}), [from, setFrom] = React.useState(new Date().toISOString().slice(0, 10));
   const load = () => Promise.all([
     fetch("/api/superadmin/prices", { cache: "no-store" }).then(async r => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error?.message ?? "Could not load."); return j.data ?? j; }),
     fetch("/api/superadmin/markets", { cache: "no-store" }).then(r => r.json()).then(j => j.data ?? j).catch(() => []),
@@ -124,13 +124,13 @@ function Prices() {
     for (const p of rows) { const live = p.status === "ACTIVE" && new Date(p.effectiveFrom).getTime() <= now; const had = m.get(p.item); if (!had || (live && !had.live) || (live === had.live && new Date(p.createdAt) > new Date(had.p.createdAt))) m.set(p.item, { p, live }); }
     return m;
   }, [d, cc]);
-  React.useEffect(() => { const v: Record<string, string> = {}; current.forEach((x, item) => { v[item] = unit(x.p.amountMinor); }); setVals(v); setOk(""); setErr(""); }, [current]); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => { const v: Record<string, string> = {}; current.forEach((x, item) => { v[item] = unit(x.p.amountMinor); }); if (cc === "AE") for (const item of [...(d?.items ?? []), ...(d?.terminalItems ?? [])]) if (!(item in v)) { const a = uae(item); if (a != null) v[item] = String(a); } setVals(v); setOk(""); setErr(""); }, [current]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!d) return <section style={{ ...card, marginTop: 12 }}><h2 style={h2}>Plan prices</h2>{err ? <div role="alert" style={{ color: "#B4233B" }}>{err}</div> : <span style={{ color: muted }}>Loading…</span>}</section>;
   const items: string[] = d.items, tItems: string[] = d.terminalItems ?? [], tReq = tItems.filter(i => i !== "terminal:regular"), has = (i: string) => Number(vals[i]) > 0;
   const filled = [...items, ...tItems].filter(has), plansFilled = items.filter(has), tCount = tReq.filter(has).length, terminalOk = tCount === 0 || tCount === tReq.length, allFilled = plansFilled.length === items.length && terminalOk;
-  const liveCount = items.filter(i => current.get(i)?.live).length, liveTerm = tReq.every(i => current.get(i)?.live);
+  const builtIn = cc === "AE", liveCount = items.filter(i => builtIn || current.get(i)?.live).length, liveTerm = builtIn || tReq.every(i => current.get(i)?.live);
   const mk = flags.find((m: any) => m.code === cc), curOn = d.enabledCurrencies.includes(cur);
-  const status = (code: string) => { const rows = d.prices.filter((p: any) => p.country === code); if (!rows.length) return ["Not set", "#F3EEF1"]; const n = new Set(rows.filter((p: any) => p.status === "ACTIVE" && new Date(p.effectiveFrom) <= new Date()).map((p: any) => p.item)).size; return n === items.length ? ["Prices live", "#E4F4EC"] : ["Draft", "#FFF1DC"]; };
+  const status = (code: string) => { const rows = d.prices.filter((p: any) => p.country === code); if (!rows.length) return code === "AE" ? ["Built-in prices", "#E4F4EC"] : ["Not set", "#F3EEF1"]; const n = new Set(rows.filter((p: any) => p.status === "ACTIVE" && new Date(p.effectiveFrom) <= new Date()).map((p: any) => p.item)).size; return n === items.length || code === "AE" ? [n ? "Prices live" : "Draft", n ? "#E4F4EC" : "#FFF1DC"] : n === items.length ? ["Prices live", "#E4F4EC"] : ["Draft", "#FFF1DC"]; };
   const uae = (item: string) => { const [kind, a, b] = item.split(":"); return kind === "plan" ? d.uae.plans[a][b] : kind === "branch" ? d.uae.extraBranch[a] : kind === "terminal" ? (a === "yearly" ? d.uae.terminal?.yearly?.[b!] : d.uae.terminal?.[a!]) : d.uae.topups[a]; };
   const save = async (statusTo: "DRAFT" | "ACTIVE") => {
     const amounts: Record<string, number> = {}; for (const i of [...items, ...tItems]) if (Number(vals[i]) > 0) amounts[i] = Number(vals[i]);
@@ -140,14 +140,14 @@ function Prices() {
     catch (e: any) { setErr(e.message); }
     setBusy(false);
   };
-  const cell = (item: string) => <td style={{ padding: "6px 14px 6px 0", whiteSpace: "nowrap" }}><input type="number" inputMode="decimal" min="0" step={dec === 3 ? "0.01" : "0.01"} aria-label={`${country[1]} ${item}`} style={inp} value={vals[item] ?? ""} placeholder="–" onChange={e => setVals(v => ({ ...v, [item]: e.target.value }))} /><span style={{ fontSize: 12, color: muted, marginInlineStart: 8 }}>AED {uae(item)}</span>{current.get(item) && <span style={{ fontSize: 11, marginInlineStart: 6, color: current.get(item).live ? "#16704A" : "#A86A00" }}>{current.get(item).live ? "live" : "draft"}</span>}</td>;
+  const cell = (item: string) => <td style={{ padding: "6px 14px 6px 0", whiteSpace: "nowrap" }}><input type="number" inputMode="decimal" min="0" step={dec === 3 ? "0.01" : "0.01"} aria-label={`${country[1]} ${item}`} style={inp} value={vals[item] ?? ""} placeholder="–" onChange={e => setVals(v => ({ ...v, [item]: e.target.value }))} />{cc !== "AE" && <span style={{ fontSize: 12, color: muted, marginInlineStart: 8 }}>AED {uae(item)}</span>}{current.get(item) && <span style={{ fontSize: 11, marginInlineStart: 6, color: current.get(item).live ? "#16704A" : "#A86A00" }}>{current.get(item).live ? "live" : "draft"}</span>}</td>;
   // A plain function, not a component: a component defined inside Prices is a new type on every render, which remounts the inputs and drops the cursor after each key.
   const row = (label: string, a: string, b?: string) => <tr key={a} style={{ borderTop: `1px solid ${line}` }}><td style={{ padding: "6px 14px 6px 0", fontWeight: 600 }}>{label}</td>{cell(a)}{b ? cell(b) : <td />}</tr>;
   const check = (on: boolean, text: string) => <div style={{ fontSize: 13, display: "flex", gap: 8, alignItems: "center" }}><span aria-hidden style={{ color: on ? "#16704A" : "#B4233B" }}>{on ? "✓" : "✗"}</span><span>{text}</span></div>;
   return (
     <section style={{ ...card, marginTop: 12 }}>
       <h2 style={h2}>Plan prices per country</h2>
-      <div style={{ fontSize: 13, color: muted, marginBottom: 12 }}>Enter the price of every plan in the country's own currency, before tax. The UAE prices (AED) are shown next to each box for reference. Save a draft while you work; “Make active” starts selling at these prices on the date you choose.</div>
+      <div style={{ fontSize: 13, color: muted, marginBottom: 12 }}>Enter the price of every plan in the country's own currency, before tax. For the UAE the boxes start with the current prices; any price you do not save keeps its built-in value. The UAE prices (AED) are shown next to the other countries' boxes for reference. Save a draft while you work; “Make active” starts selling at these prices on the date you choose.</div>
       <div role="tablist" style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>{COUNTRIES.map(([code, name]) => { const [t, bg] = status(code); return <button key={code} type="button" role="tab" aria-selected={cc === code} onClick={() => setCc(code)} style={{ ...btnSm, background: cc === code ? "#FBF1FF" : "#fff", borderColor: cc === code ? "#C93DFF" : "#ECD9E0", height: 40 }}>{name} <span style={{ fontSize: 11, fontWeight: 600, borderRadius: 999, padding: "1px 8px", background: bg, marginInlineStart: 4 }}>{t}</span></button>; })}</div>
       {err && <div role="alert" style={{ color: "#B4233B", fontSize: 14, marginBottom: 8 }}>{err}</div>}
       {ok && <div role="status" style={{ color: "#16704A", fontSize: 14, marginBottom: 8 }}>{ok}</div>}

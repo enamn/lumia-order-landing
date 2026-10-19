@@ -5,7 +5,7 @@ import { isCountryCode, marketOf } from "../market/countries";
 import { marketFlags } from "../market/service";
 import { PLAN_IDS, TOPUP_IDS, UAE_BOOK, type PriceBook, type PlanId } from "./plans";
 
-// What a restaurant is charged is decided here and nowhere else: the UAE price list from code, every other market only from prices a super admin approved.
+// What a restaurant is charged is decided here and nowhere else: the UAE price list (the list in code, with any prices a super admin approved on top), every other market only from prices a super admin approved.
 // Nothing is invented for a market without prices, and nothing is converted from another currency.
 // Terminal prices of a market: all five must be approved for the terminal to be sold there (and the market's terminal switch must be on); the regular price is only the struck-through one.
 export const TERMINAL_REQUIRED = ["terminal:yearly:starter", "terminal:yearly:plus", "terminal:yearly:pro", "terminal:monthly", "terminal:extra"] as const;
@@ -19,11 +19,25 @@ export const providerAmountOk = (amountMinor: number, currency: string) => Numbe
 const CURRENCY_COUNTRY: Record<string, string> = { AED: "AE", SAR: "SA", OMR: "OM", BHD: "BH", QAR: "QA", KWD: "KW" };
 const marketOfCurrency = (currency: string) => (CURRENCY_COUNTRY[currency] ? marketOf(CURRENCY_COUNTRY[currency]) : undefined);
 
+// The UAE price list: the built-in prices (plans.ts) with whatever a super admin has made active for the UAE laid over them, item by item.
+// A price the super admin never entered keeps its built-in value, so the UAE can always be sold.
+export async function uaeBook(now = new Date()): Promise<PriceBook> {
+  const rows = await db.marketPrice.findMany({ where: { country: "AE", status: "ACTIVE", effectiveFrom: { lte: now } }, orderBy: { effectiveFrom: "desc" } });
+  const latest = new Map<string, number>(); for (const r of rows) if (!latest.has(r.item) && r.currency === "AED") latest.set(r.item, r.amountMinor / 100);
+  const u = (item: string, built: number) => latest.get(item) ?? built, b = UAE_BOOK, t = b.terminal;
+  return {
+    ...b,
+    plans: Object.fromEntries(PLAN_IDS.map(p => [p, { monthly: u(`plan:${p}:monthly`, b.plans[p].monthly), yearly: u(`plan:${p}:yearly`, b.plans[p].yearly) }])) as Record<PlanId, { monthly: number; yearly: number }>,
+    extraBranch: { monthly: u("branch:monthly", b.extraBranch.monthly), yearly: u("branch:yearly", b.extraBranch.yearly) },
+    topups: { orders50: u("topup:orders50", b.topups.orders50), orders200: u("topup:orders200", b.topups.orders200) },
+    terminal: t && { yearly: { starter: u("terminal:yearly:starter", t.yearly.starter), plus: u("terminal:yearly:plus", t.yearly.plus), pro: u("terminal:yearly:pro", t.yearly.pro) }, monthly: u("terminal:monthly", t.monthly), extra: u("terminal:extra", t.extra), ...(latest.has("terminal:regular") ? { regular: latest.get("terminal:regular")! } : t.regular != null ? { regular: t.regular } : {}) },
+  };
+}
 export async function priceBookFor(country: string, now = new Date()): Promise<PriceBook> {
   if (!isCountryCode(country)) throw new AppError("COUNTRY_NOT_SUPPORTED", "This country is not supported.", 422);
   const flags = await marketFlags(country);
   if (!flags.paidActivationEnabled) throw new AppError("MARKET_NOT_ENABLED", "Paid plans are not open in this country yet.", 409);
-  if (country === "AE") return UAE_BOOK;
+  if (country === "AE") return uaeBook(now);
   const market = marketOf(country), rows = await db.marketPrice.findMany({ where: { country, status: "ACTIVE", effectiveFrom: { lte: now } }, orderBy: { effectiveFrom: "desc" } });
   const latest = new Map<string, (typeof rows)[number]>(); for (const r of rows) if (!latest.has(r.item)) latest.set(r.item, r);
   const missing = itemsOf().filter(i => !latest.has(i));
@@ -56,7 +70,7 @@ const priceSchema = z.object({
 }).strict();
 export async function setMarketPrice(actorId: string, input: unknown) {
   const b = priceSchema.parse(input);
-  if (!isCountryCode(b.country) || b.country === "AE") throw new AppError("COUNTRY_NOT_SUPPORTED", "Prices are entered for Saudi Arabia, Oman, Bahrain, Qatar and Kuwait. The UAE list is in code.", 422);
+  if (!isCountryCode(b.country)) throw new AppError("COUNTRY_NOT_SUPPORTED", "Prices are entered for the UAE, Saudi Arabia, Oman, Bahrain, Qatar and Kuwait.", 422);
   const market = marketOf(b.country), scale = market.currencyDecimals === 3 ? 1000 : 100, amountMinor = Math.round(b.amount * scale);
   if (Math.abs(amountMinor / scale - b.amount) > 1e-9) throw new AppError("INVALID_AMOUNT", `Use at most ${market.currencyDecimals} decimal places for ${market.currency}.`, 422);
   if (!providerAmountOk(amountMinor, market.currency)) throw new AppError("INVALID_AMOUNT", `${market.currency} amounts must end in 0 in the last decimal place (the payment provider does not take smaller steps).`, 422);

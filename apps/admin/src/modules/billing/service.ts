@@ -4,10 +4,10 @@ import { db } from "@/server/db";
 import { authorize } from "@/server/authorization";
 import { AppError } from "@/server/errors";
 import { lumiaApi } from "@/server/lumia-api";
-import { EXTRA_BRANCH, INCLUDED_BRANCHES, PLANS, RETRY_DAYS, TOPUPS, TOPUP_IDS, addPeriod, isUpgrade, quoteExtraBranch, quoteRenewal, quoteSignup, quoteTopUp, quoteUpgrade, withTax, UAE_BOOK, type PriceBook, type Billing, type PlanId, type Quote } from "./plans";
+import { EXTRA_BRANCH, INCLUDED_BRANCHES, PLANS, RETRY_DAYS, TOPUPS, TOPUP_IDS, addPeriod, isUpgrade, quoteExtraBranch, quoteRenewal, quoteSignup, quoteTopUp, quoteUpgrade, withTax, type PriceBook, type Billing, type PlanId, type Quote } from "./plans";
 import { addCredits, usageSummary } from "./usage";
 import { requireTaxEligible, taxDecisionFor } from "../tax/service";
-import { priceBookFor, priceBookForBusiness, priceBookOrNull, providerAmountOk } from "./pricing";
+import { priceBookFor, priceBookForBusiness, priceBookOrNull, providerAmountOk, uaeBook } from "./pricing";
 import { MARKETS, isCountryCode } from "../market/countries";
 import type { TaxDecision } from "../tax/policy";
 
@@ -88,7 +88,7 @@ const iso = (d: Date | null | undefined) => (d ? d.toISOString() : undefined);
 export async function getSubscription(userId: string, businessId: string) {
   const { member } = await authorize(userId, businessId);
   const [b, sub, known, usage, tax] = await Promise.all([db.business.findUniqueOrThrow({ where: { id: businessId }, select: { createdAt: true, stripeCustomerId: true, email: true, emailVerifiedAt: true } }), getSubscriptionFor(businessId), knownDetails(businessId), usageSummary(businessId), taxDecisionFor(businessId)]);
-  const { book: pbook, code: priceCode } = await priceBookOrNull(businessId), book = pbook ?? UAE_BOOK;
+  const { book: pbook, code: priceCode } = await priceBookOrNull(businessId), book = pbook ?? await uaeBook();
   const vat = await vatGate(businessId), trialStart = vat.required ? vat.verifiedFrom ?? b.createdAt : b.createdAt;
   const active = isActive(sub), nextPlan = (sub?.pendingPlan ?? sub?.plan) as PlanId | undefined, nextBilling = (sub?.pendingBilling ?? sub?.billing) as Billing | undefined;
   return {
@@ -199,7 +199,7 @@ export async function applySession(businessId: string, session: SessionSummary, 
   if (!Number.isInteger(terminals) || terminals < 0 || terminals > 10) throw new AppError("VALIDATION_FAILED", "Unknown terminal count.", 400);
   if (!(plan in PLANS) || (billing !== "monthly" && billing !== "yearly")) throw new AppError("VALIDATION_FAILED", "Unknown plan.", 400);
   const paidRate = Number(session.metadata.taxRate ?? "5"); // sessions opened before the tax decision existed were charged 5%
-  const paidCurrency = session.metadata.currency || "AED", book: PriceBook = paidCurrency === "AED" ? UAE_BOOK : await priceBookForBusiness(businessId, now);
+  const paidCurrency = session.metadata.currency || "AED", book: PriceBook = paidCurrency === "AED" ? await uaeBook(now) : await priceBookForBusiness(businessId, now);
   const quote = quoteSignup(plan, billing, terminals, Number.isFinite(paidRate) ? paidRate : 5, book), taxSnapshot = await taxDecisionFor(businessId, now);
   if (book.currency !== paidCurrency || session.amountTotalMinor !== quote.totalMinor) { console.error(JSON.stringify({ level: "error", code: "BILLING_AMOUNT_MISMATCH", expected: quote.totalMinor, got: session.amountTotalMinor })); throw new AppError("AMOUNT_MISMATCH", "The payment did not match the plan. Please contact Lumia.", 409); }
   const end = addPeriod(now, billing), card = await cardOf(session.paymentMethodId);
@@ -345,9 +345,9 @@ export async function buyTopUp(userId: string, businessId: string, input: unknow
 // ---- extra branches (Pro) ----
 async function branchInfo(businessId: string, sub: Subscription | null, ratePercent: number, book: PriceBook | null) {
   const used = await db.location.count({ where: { businessId, status: "ACTIVE" } });
-  const e = entitlements(sub), extra = e.canBuyBranches ? Math.max(0, sub!.extraBranches ?? 0) : 0;
-  const offer = e.canBuyBranches && sub ? quoteExtraBranch(sub.billing as Billing, sub.currentPeriodStart, sub.currentPeriodEnd, new Date(), ratePercent, book ?? UAE_BOOK) : null;
-  const renew = e.canBuyBranches && sub ? withTax([{ name: "Extra branch", unitMinor: Math.round((book ?? UAE_BOOK).extraBranch[sub.billing as Billing] * ((book ?? UAE_BOOK).decimals === 3 ? 1000 : 100)), quantity: 1 }], ratePercent) : null;
+  const e = entitlements(sub), extra = e.canBuyBranches ? Math.max(0, sub!.extraBranches ?? 0) : 0, ubook = book ?? await uaeBook();
+  const offer = e.canBuyBranches && sub ? quoteExtraBranch(sub.billing as Billing, sub.currentPeriodStart, sub.currentPeriodEnd, new Date(), ratePercent, ubook) : null;
+  const renew = e.canBuyBranches && sub ? withTax([{ name: "Extra branch", unitMinor: Math.round(ubook.extraBranch[sub.billing as Billing] * (ubook.decimals === 3 ? 1000 : 100)), quantity: 1 }], ratePercent) : null;
   return { included: e.includedBranches, extra, pendingExtra: e.canBuyBranches ? sub!.pendingExtraBranches ?? undefined : undefined, limit: e.branches, used, canBuy: e.canBuyBranches && extra < EXTRA_BRANCH.max, menuPerBranch: e.menuPerBranch, priceMinor: renew?.subtotalMinor, renewalTotalMinor: renew?.totalMinor, payNowMinor: offer?.totalMinor, ordersPerBranch: EXTRA_BRANCH.orders };
 }
 

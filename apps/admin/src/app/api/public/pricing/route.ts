@@ -1,8 +1,8 @@
 import { db } from "@/server/db";
 import { visitorCountry } from "@/server/visitor-country";
 import { GCC_CODES, MARKETS, isCountryCode } from "@/modules/market/countries";
-import { PLAN_IDS, UAE_BOOK } from "@/modules/billing/plans";
-import { TERMINAL_REQUIRED } from "@/modules/billing/pricing";
+import { PLAN_IDS } from "@/modules/billing/plans";
+import { TERMINAL_REQUIRED, uaeBook } from "@/modules/billing/pricing";
 import { marketFlags } from "@/modules/market/service";
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   const detected = visitorCountry(request.headers);
   const asked = new URL(request.url).searchParams.get("country")?.toUpperCase() ?? "";
   const country = (GCC_CODES as readonly string[]).includes(asked) ? asked : detected;
-  const uae = { detected: country, country: "AE", countryName: MARKETS.AE.nameEn, currency: "AED", decimals: 2, local: false, paidOpen: true, plans: UAE_BOOK.plans, terminal: { currency: "AED", decimals: 2, ...UAE_BOOK.terminal! } };
+  const book = await uaeBook(), uae = { detected: country, country: "AE", countryName: MARKETS.AE.nameEn, currency: "AED", decimals: 2, local: false, paidOpen: true, plans: book.plans, terminal: { currency: "AED", decimals: 2, ...book.terminal! } };
   let body: object = uae;
   if (isCountryCode(country) && country !== "AE") {
     const m = MARKETS[country], scale = m.currencyDecimals === 3 ? 1000 : 100;

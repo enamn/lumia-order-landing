@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { db } from "../src/server/db";
 import { createBusiness } from "../src/modules/business/service";
 import { setMarketFlags } from "../src/modules/market/service";
-import { listMarketPrices, priceBookFor, priceBookForBusiness, providerAmountOk, setMarketPrice, itemsOf } from "../src/modules/billing/pricing";
+import { listMarketPrices, priceBookFor, priceBookForBusiness, providerAmountOk, setMarketPrice, itemsOf, uaeBook } from "../src/modules/billing/pricing";
 import { quoteRenewal, quoteSignup, UAE_BOOK } from "../src/modules/billing/plans";
 import { startCheckout } from "../src/modules/billing/service";
 import { saveBillingTax, reviewVat } from "../src/modules/tax/service";
@@ -46,11 +46,10 @@ describe.skipIf(!enabled)("market prices", () => {
     const book = await priceBookFor("SA"); expect(book).toMatchObject({ currency: "SAR", decimals: 2, terminal: null, plans: { plus: { monthly: 299 } } });
     expect(quoteRenewal("plus", "monthly", 0, 0, book).totalMinor).toBe(29900); expect(quoteRenewal("pro", "yearly", 2, 0, book).totalMinor).toBe(49900 + 2 * 12900);
   });
-  it("amounts are checked: decimals of the currency, steps of 10 for OMR, BHD and KWD, no UAE prices through the editor", async () => {
+  it("amounts are checked: decimals of the currency, steps of 10 for OMR, BHD and KWD, AED only for the UAE", async () => {
     await expect(setMarketPrice(admin, { country: "KW", item: "plan:plus:monthly", amount: 12.3456, status: "DRAFT", effectiveFrom: past, version: "x" })).rejects.toMatchObject({ code: "INVALID_AMOUNT" });
     await expect(setMarketPrice(admin, { country: "KW", item: "plan:plus:monthly", amount: 12.345, status: "DRAFT", effectiveFrom: past, version: "x" })).rejects.toMatchObject({ code: "INVALID_AMOUNT" });
     await setMarketPrice(admin, { country: "KW", item: "plan:plus:monthly", amount: 12.34, status: "DRAFT", effectiveFrom: past, version: "x" });
-    await expect(setMarketPrice(admin, { country: "AE", item: "plan:plus:monthly", amount: 1, status: "ACTIVE", effectiveFrom: past, version: "x" })).rejects.toMatchObject({ code: "COUNTRY_NOT_SUPPORTED" });
     await expect(setMarketPrice(admin, { country: "KW", item: "plan:gold:monthly", amount: 1, status: "ACTIVE", effectiveFrom: past, version: "x" })).rejects.toBeTruthy();
     expect((await listMarketPrices()).some(p => p.country === "KW" && p.amountMinor === 12340)).toBe(true);
   });
@@ -70,5 +69,20 @@ describe.skipIf(!enabled)("market prices", () => {
     await reviewVat(admin, sa, { decision: "VERIFIED", method: "MANUAL_DOCUMENT_REVIEW", evidenceReference: "doc-5", validTo: new Date(Date.now() + 200 * 86_400_000).toISOString(), reason: "checked" });
     calls = []; await startCheckout(saOwner, sa, { plan: "plus", billing: "monthly", terminals: 0 });
     expect(calls.find(c => c.path === "/internal/billing/checkout")!.body).toMatchObject({ currency: "SAR", lines: [{ unitMinor: 29900 }], metadata: { total: "29900", taxRate: "0" } });
+  });
+  it("the UAE list is the built-in one until a super admin makes UAE prices active, item by item, from their start date", async () => {
+    expect((await uaeBook()).plans.plus).toEqual(UAE_BOOK.plans.plus);
+    const version = `ae-${crypto.randomUUID().slice(0, 6)}`;
+    try {
+      await setMarketPrice(admin, { country: "AE", item: "plan:plus:monthly", amount: 259, status: "DRAFT", effectiveFrom: past, version });
+      expect((await uaeBook()).plans.plus.monthly).toBe(UAE_BOOK.plans.plus.monthly); // a draft changes nothing
+      await setMarketPrice(admin, { country: "AE", item: "plan:plus:monthly", amount: 259, status: "ACTIVE", effectiveFrom: future, version: version + "f" });
+      expect((await uaeBook()).plans.plus.monthly).toBe(UAE_BOOK.plans.plus.monthly); // not started yet
+      await setMarketPrice(admin, { country: "AE", item: "plan:plus:monthly", amount: 259, status: "ACTIVE", effectiveFrom: past, version: version + "a" });
+      const book = await uaeBook();
+      expect(book.plans.plus).toEqual({ monthly: 259, yearly: UAE_BOOK.plans.plus.yearly }); // the other prices keep their built-in value
+      expect(quoteSignup("plus", "monthly", 0, 0, book).lines[0]!.unitMinor).toBe(25900);
+    } finally { await db.marketPrice.deleteMany({ where: { version: { startsWith: version } } }); }
+    expect((await uaeBook()).plans.plus.monthly).toBe(UAE_BOOK.plans.plus.monthly);
   });
 });
