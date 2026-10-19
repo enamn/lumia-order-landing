@@ -5,10 +5,15 @@ import { terminalOf, usePriceInfo, type PriceInfo } from '../pricing';
 import { Money } from '../components/Money';
 import { useLang, useT } from '../i18n';
 
+// How much cheaper the yearly price is than twelve monthly payments, in whole percent (0 when it is not cheaper).
+const savePct = (m: number, y: number) => (m > 0 ? Math.max(0, Math.round((1 - y / (m * 12)) * 100)) : 0);
+const bookOf = (info: PriceInfo | null, plan: Plan) => info?.plans?.[plan.name.toLowerCase() as 'starter' | 'plus' | 'pro'] ?? { monthly: plan.amounts.month, yearly: plan.amounts.year };
+
 export function Pricing() {
   const t = useT(), { lang } = useLang();
   const [billing, setBilling] = useState<Billing>('yearly');
   const info = usePriceInfo(), term = terminalOf(info);
+  const topSave = Math.max(...PLANS.map((p) => { const b = bookOf(info, p); return savePct(b.monthly, b.yearly); }));
   const off = term && term.monthly > 0 ? Math.round((1 - Math.min(...Object.values(term.yearly)) / term.monthly) * 100) : 0;
 
   return (
@@ -25,7 +30,7 @@ export function Pricing() {
                 {t('Monthly', 'شهري')}
               </button>
               <button role="tab" aria-selected={billing === 'yearly'} className={billing === 'yearly' ? 'is-on' : ''} onClick={() => setBilling('yearly')} style={{ paddingInlineEnd: 14 }}>
-                {t('Yearly', 'سنوي')}<span className="pill-ok">{t('Save 2 months', 'وفّر شهرين')}</span>
+                {t('Yearly', 'سنوي')}{topSave > 0 && <span className="pill-ok">{t(`Save up to ${topSave}%`, `وفّر حتى ${topSave}%`)}</span>}
               </button>
             </div>
             <div className="muted" style={{ fontSize: 14 }}>{t('0% commission on orders · AI ordering included, subject to fair-use terms', '0% عمولة على الطلبات · الطلب بالذكاء الاصطناعي مشمول وفق شروط الاستخدام العادل')}</div>
@@ -106,7 +111,7 @@ function PlanCard({ plan, billing, info }: { plan: Plan; billing: Billing; info:
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 6, fontSize: 13 }}>
               <span style={{ color: 'var(--ink-2)' }}>{t(<>Billed yearly: {price.year}</>, <>تُدفع سنوياً: {price.year}</>)}</span>
-              <span className="pill-ok">{t('Save 2 months', 'وفّر شهرين')}</span>
+              {savePct(m, y) > 0 && <span className="pill-ok">{t(`Save ${savePct(m, y)}%`, `وفّر ${savePct(m, y)}%`)}</span>}
             </div>
           </>
         ) : (
