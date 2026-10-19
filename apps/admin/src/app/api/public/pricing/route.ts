@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   let body: object = uae;
   if (isCountryCode(country) && country !== "AE") {
     const m = MARKETS[country], scale = m.currencyDecimals === 3 ? 1000 : 100;
-    const rows = await db.marketPrice.findMany({ where: { country, status: "ACTIVE", effectiveFrom: { lte: new Date() } }, orderBy: { effectiveFrom: "desc" } });
+    const rows = await db.marketPrice.findMany({ where: { country, status: "ACTIVE", effectiveFrom: { lte: new Date() } }, orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }] });
     const latest = new Map<string, number>(); for (const r of rows) if (!latest.has(r.item) && r.currency === m.currency) latest.set(r.item, r.amountMinor / scale);
     const plans = Object.fromEntries(PLAN_IDS.map(p => [p, { monthly: latest.get(`plan:${p}:monthly`), yearly: latest.get(`plan:${p}:yearly`) }]));
     if (PLAN_IDS.every(p => plans[p]!.monthly && plans[p]!.yearly)) {

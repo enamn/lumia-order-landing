@@ -82,6 +82,10 @@ describe.skipIf(!enabled)("market prices", () => {
       const book = await uaeBook();
       expect(book.plans.plus).toEqual({ monthly: 259, yearly: UAE_BOOK.plans.plus.yearly }); // the other prices keep their built-in value
       expect(quoteSignup("plus", "monthly", 0, 0, book).lines[0]!.unitMinor).toBe(25900);
+      // saved twice with the same start date: the newest save wins
+      await setMarketPrice(admin, { country: "AE", item: "plan:plus:yearly", amount: 2500, status: "ACTIVE", effectiveFrom: past, version: version + "b" });
+      await setMarketPrice(admin, { country: "AE", item: "plan:plus:yearly", amount: 2508, status: "ACTIVE", effectiveFrom: past, version: version + "c" });
+      expect((await uaeBook()).plans.plus.yearly).toBe(2508);
     } finally { await db.marketPrice.deleteMany({ where: { version: { startsWith: version } } }); }
     expect((await uaeBook()).plans.plus.monthly).toBe(UAE_BOOK.plans.plus.monthly);
   });

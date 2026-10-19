@@ -22,7 +22,7 @@ const marketOfCurrency = (currency: string) => (CURRENCY_COUNTRY[currency] ? mar
 // The UAE price list: the built-in prices (plans.ts) with whatever a super admin has made active for the UAE laid over them, item by item.
 // A price the super admin never entered keeps its built-in value, so the UAE can always be sold.
 export async function uaeBook(now = new Date()): Promise<PriceBook> {
-  const rows = await db.marketPrice.findMany({ where: { country: "AE", status: "ACTIVE", effectiveFrom: { lte: now } }, orderBy: { effectiveFrom: "desc" } });
+  const rows = await db.marketPrice.findMany({ where: { country: "AE", status: "ACTIVE", effectiveFrom: { lte: now } }, orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }] });
   const latest = new Map<string, number>(); for (const r of rows) if (!latest.has(r.item) && r.currency === "AED") latest.set(r.item, r.amountMinor / 100);
   const u = (item: string, built: number) => latest.get(item) ?? built, b = UAE_BOOK, t = b.terminal;
   return {
@@ -38,7 +38,7 @@ export async function priceBookFor(country: string, now = new Date()): Promise<P
   const flags = await marketFlags(country);
   if (!flags.paidActivationEnabled) throw new AppError("MARKET_NOT_ENABLED", "Paid plans are not open in this country yet.", 409);
   if (country === "AE") return uaeBook(now);
-  const market = marketOf(country), rows = await db.marketPrice.findMany({ where: { country, status: "ACTIVE", effectiveFrom: { lte: now } }, orderBy: { effectiveFrom: "desc" } });
+  const market = marketOf(country), rows = await db.marketPrice.findMany({ where: { country, status: "ACTIVE", effectiveFrom: { lte: now } }, orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }] });
   const latest = new Map<string, (typeof rows)[number]>(); for (const r of rows) if (!latest.has(r.item)) latest.set(r.item, r);
   const missing = itemsOf().filter(i => !latest.has(i));
   if (missing.length) throw new AppError("MARKET_PRICE_NOT_CONFIGURED", "Plan prices for this country are not available yet.", 409, { missing });
@@ -96,4 +96,4 @@ export async function setMarketPriceList(actorId: string, input: unknown) {
   for (const item of Object.keys(b.amounts)) rows.push(await setMarketPrice(actorId, { country: b.country, item, amount: b.amounts[item], status: b.status, effectiveFrom: b.effectiveFrom, version: b.version }));
   return rows;
 }
-export const listMarketPrices = () => db.marketPrice.findMany({ orderBy: [{ country: "asc" }, { item: "asc" }, { effectiveFrom: "desc" }], take: 300 });
+export const listMarketPrices = () => db.marketPrice.findMany({ orderBy: [{ createdAt: "desc" }], take: 1000 }); // newest first; every save adds rows, so the cap is generous
