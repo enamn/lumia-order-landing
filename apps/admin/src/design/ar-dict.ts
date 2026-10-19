@@ -745,6 +745,7 @@ export const AR_PATTERNS: [RegExp, (m: RegExpExecArray) => string][] = [
   [/^\/ year$/, () => "/ سنة"],
   [/^\/ month$/, () => "/ شهر"],
   [/^≈ (.+)\/month, billed annually$/, m => `≈ ${m[1]} / شهرياً، تُفوتر سنوياً`],
+  [/^Billed yearly: (.+)$/, m => `تُفوتر سنوياً: ${m[1]}`],
   [/^(\d+) of (\d+) completed$/, m => `${m[1]} من ${m[2]} مكتملة`],
   [/^Price \((.+)\)$/, m => `السعر (${m[1]})`],
   [new RegExp(`^${DATE}$`), m => date(m[1]!, m[2]!, m[3]!)],

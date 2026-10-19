@@ -12,7 +12,7 @@ export const auth = betterAuth({
   advanced: { database: { generateId: "uuid" }, useSecureCookies: process.env.NODE_ENV === "production", defaultCookieAttributes: { httpOnly: true, sameSite: "lax" } },
   session: { expiresIn: 60 * 60 * 24 * 30, updateAge: 60 * 60 * 24 },
   rateLimit: { enabled: true, storage: "database", window: 60, max: 60,
-    customRules: { "/whatsapp/send-code": { window: 60, max: 5 }, "/whatsapp/verify-code": { window: 60, max: 15 } } },
+    customRules: { "/whatsapp/send-code": { window: 60, max: 5 }, "/whatsapp/verify-code": { window: 60, max: 15 }, "/firebase/verify": { window: 60, max: 15 } } },
   logger: {
     level: "error",
     log: (level, message) => {

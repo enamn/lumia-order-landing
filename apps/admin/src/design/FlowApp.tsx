@@ -17,6 +17,7 @@ import { marketOf, isCountryCode, MARKETS } from "@/modules/market/countries";
 import { AccountMenu, PlanBadge } from "./AccountMenu";
 import { BillingPage } from "./BillingPage";
 import { ArabicDom } from "./ArabicDom";
+import { confirmFirebaseCode, firebaseSmsEnabled, sendFirebaseSms, smsFailure } from "./firebase-phone";
 import { mountEmbeddedCheckout } from "@/lib/stripe-embed";
 import { authClient } from "@/lib/auth-client";
 import { logoToDataUrl } from "@/lib/logo";
@@ -115,7 +116,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       phase: 0, menuDone: count(toCats(props.menu, props.currency)) > 0, cat: "All", menu: toCats(props.menu, props.currency), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
       page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", embedId: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waPortfolio: props.wa.businessPortfolioName ?? "", waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
       custList: null as any, custErr: "", custSel: [] as string[], custOpen: null as any, custQ: "", campMode: "all", campCode: true, campPct: 20, campDays: 7, campMsgAll: `Hi {name}, this weekend only: 20% off all burgers at ${business?.name ?? "our restaurant"}. Reply here to order.`, campMsgOffer: `Hi {name}, thanks for ordering with us. Here’s a discount on your next order from ${business?.name ?? "us"}.`, campCodeTxt: "WEEKEND20", campImg: "", campImgFile: null as any, campImgName: "", campSending: false, campToast: "", campErr: "", campHist: null as any,
-      menuScope: null as Scope | null, menuBranch: "", scopeBusy: false, scopeErr: "", lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
+      menuScope: null as Scope | null, menuBranch: "", scopeBusy: false, scopeErr: "", smsMode: false, lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
     };
   }
   later(ms: number, fn: () => void) { const t = setTimeout(fn, ms); this.timers.push(t); return t; }
@@ -475,26 +476,50 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       this.setState({ resendAt: Date.now() + (r.resendAfter ?? 30) * 1000, note: r.testMode ? "Test mode: no message was sent. Enter 111111." : null });
     } catch (err) { this.setState({ sending: false, invalid: true, srvErr: err instanceof Error ? err.message : "We couldn’t send the code. Please try again." }); }
   };
+  private fbConfirm: any = null; // the pending Firebase SMS confirmation (SMS sign-in)
   async verify(code: string) {
     if (this.state.verifying || this.state.otpErr === "expired") return;
     this.setState({ verifying: true, otpErr: null, otpFail: "", note: null });
     try {
-      const r = await api("/api/auth/whatsapp/verify-code", "POST", { phoneNumber: this.state.e164, code });
+      let r: any;
+      if (this.state.smsMode && this.fbConfirm) {
+        const idToken = await confirmFirebaseCode(this.fbConfirm, code);
+        r = await api("/api/auth/firebase/verify", "POST", { idToken, language: this.state.lang });
+      } else r = await api("/api/auth/whatsapp/verify-code", "POST", { phoneNumber: this.state.e164, code });
       if (String(r.redirectTo).startsWith("/superadmin")) { window.location.assign("/superadmin"); return; }
       if (String(r.redirectTo).startsWith("/dashboard")) { window.location.assign("/dashboard"); return; }
       this.setState({ verifying: false }); this.go("verified"); this.later(1300, () => this.go("name"));
     } catch (err: any) {
-      if (err.code === "INVALID_CODE") { this.setState({ verifying: false, otpErr: "incorrect" }); this.focus(this.otpRef); }
-      else if (err.code === "CODE_EXPIRED") this.setState({ verifying: false, otpErr: "expired", resendAt: 0 });
-      else this.setState({ verifying: false, otpFail: err.message, digits: "" });
+      const f = this.state.smsMode ? smsFailure(err) : null, bad = err.code === "INVALID_CODE" || f === "incorrect", old = err.code === "CODE_EXPIRED" || f === "expired";
+      if (bad) { this.setState({ verifying: false, otpErr: "incorrect" }); this.focus(this.otpRef); }
+      else if (old) this.setState({ verifying: false, otpErr: "expired", resendAt: 0 });
+      else this.setState({ verifying: false, otpFail: this.state.smsMode && !err.code ? this.smsMessage(f ?? "failed") : err.message, digits: "" });
     }
   }
+  smsMessage(f: string) {
+    const ar = this.state.lang === "ar";
+    return ({
+      "invalid-number": ar ? "تعذّر إرسال رسالة نصية إلى هذا الرقم. تحقق منه وحاول مرة أخرى." : "We couldn’t send an SMS to this number. Check it and try again.",
+      "too-many": ar ? "محاولات كثيرة. انتظر بضع دقائق ثم حاول مرة أخرى." : "Too many attempts. Please wait a few minutes and try again.",
+      "not-available": ar ? "الرسائل النصية غير متاحة لهذا الرقم حالياً. استخدم رمز واتساب." : "SMS isn’t available for this number yet. Use the WhatsApp code instead.",
+      failed: ar ? "تعذّر إرسال رمز الرسالة النصية. انتظر دقيقة وحاول مرة أخرى." : "We couldn’t send your SMS code. Please wait a minute and try again.",
+    } as Record<string, string>)[f] ?? "";
+  }
   async resend(channel: "whatsapp" | "sms") {
+    const ar = this.state.lang === "ar", viaFirebase = channel === "sms" && !this.props.testMode && firebaseSmsEnabled();
     try {
+      if (viaFirebase) { // SMS through Firebase Phone Authentication
+        this.setState({ sending: true });
+        this.fbConfirm = await sendFirebaseSms(this.state.e164, this.state.lang);
+        this.setState({ sending: false, smsMode: true, digits: "", otpErr: null, otpFail: "", resendAt: Date.now() + 60 * 1000, now: Date.now(), note: ar ? `تم إرسال الرمز برسالة نصية إلى ${maskPhone(this.state.e164)}.` : `Code sent by SMS to ${maskPhone(this.state.e164)}.` });
+        this.focus(this.otpRef);
+        return;
+      }
       const r = await api("/api/auth/whatsapp/send-code", "POST", { phoneNumber: this.state.e164, language: this.state.lang, channel });
-      this.setState({ digits: "", otpErr: null, otpFail: "", resendAt: Date.now() + (r.resendAfter ?? 30) * 1000, now: Date.now(), note: r.testMode ? "Test mode: no message was sent. Enter 111111." : channel === "sms" ? `Code sent by SMS to ${maskPhone(this.state.e164)}.` : "New code sent to your WhatsApp." });
+      this.fbConfirm = null;
+      this.setState({ smsMode: false, digits: "", otpErr: null, otpFail: "", resendAt: Date.now() + (r.resendAfter ?? 30) * 1000, now: Date.now(), note: r.testMode ? "Test mode: no message was sent. Enter 111111." : channel === "sms" ? (ar ? `تم إرسال الرمز برسالة نصية إلى ${maskPhone(this.state.e164)}.` : `Code sent by SMS to ${maskPhone(this.state.e164)}.`) : (ar ? "تم إرسال رمز جديد إلى واتساب." : "New code sent to your WhatsApp.") });
       this.focus(this.otpRef);
-    } catch (err) { this.setState({ otpFail: err instanceof Error ? err.message : "We couldn’t send the code. Please try again.", note: null }); }
+    } catch (err) { this.setState({ sending: false, otpFail: viaFirebase ? this.smsMessage(smsFailure(err)) : err instanceof Error ? err.message : "We couldn’t send the code. Please try again.", note: null }); }
   }
   // ---- name / menu
   submitName = async (e: any) => {
@@ -633,12 +658,12 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const X = la ? {
       back: "رجوع", langBtn: "EN", langAria: "Switch to English", title: "ابدأ مع لوميا أوردر", sub: "أدخل رقم جوالك لإنشاء حسابك أو تسجيل الدخول.", mobile: "رقم الجوال", ccAria: "رمز الدولة", hint: "سنرسل رمز تحقق عبر واتساب. لا حاجة لكلمة مرور.",
       terms1: "بمتابعتك، فإنك توافق على ", terms: "شروط الخدمة", and: " و", privacy: "سياسة الخصوصية",
-      otpTitle: "تحقق من واتساب", otpSent: "أرسلنا رمز تحقق من 6 أرقام إلى", change: "تغيير رقم الهاتف", codeAria: "رمز التحقق", sms: "إرسال الرمز برسالة نصية", verified: "تم التحقق من الرقم",
+      otpTitle: s.smsMode ? "تحقق من رسائلك النصية" : "تحقق من واتساب", otpSent: "أرسلنا رمز تحقق من 6 أرقام إلى", change: "تغيير رقم الهاتف", codeAria: "رمز التحقق", sms: "إرسال الرمز برسالة نصية", verified: "تم التحقق من الرقم",
       nameTitle: "أخبرنا عن مطعمك", nameLabel: "اسم المطعم", namePh: "بيت البرجر", logo: "الشعار", optional: "اختياري", logoHint: "PNG أو JPG، والمربع هو الأفضل", cont: "متابعة",
     } : {
       back: "Back", langBtn: "عربي", langAria: "التبديل إلى العربية", title: "Get started with Lumia Order", sub: "Enter your mobile number to create your account or sign in.", mobile: "Mobile number", ccAria: "Country code", hint: "We'll send a verification code on WhatsApp. No password needed.",
       terms1: "By continuing, you agree to Lumia's ", terms: "Terms of Service", and: " and ", privacy: "Privacy Policy",
-      otpTitle: "Check your WhatsApp", otpSent: "We sent a 6-digit verification code to", change: "Change phone number", codeAria: "Verification code", sms: "Send code by SMS", verified: "Number verified",
+      otpTitle: s.smsMode ? "Check your text messages" : "Check your WhatsApp", otpSent: "We sent a 6-digit verification code to", change: "Change phone number", codeAria: "Verification code", sms: "Send code by SMS", verified: "Number verified",
       nameTitle: "Tell us about your restaurant", nameLabel: "Restaurant name", namePh: "Burger House", logo: "Logo", optional: "Optional", logoHint: "PNG or JPG, square works best", cont: "Continue",
     };
     const masked = maskPhone(s.e164 || p.userPhone || c.dial + " " + fmt("501234567", c.groups));
