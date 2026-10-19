@@ -7,12 +7,13 @@ export function Header() {
   const [open, setOpen] = useState(false);
   const t = useT(), { lang } = useLang();
   const label = (href: string, en: string) => (lang === 'ar' ? NAV_LINKS_AR[href] ?? en : en);
+  const base = typeof window !== 'undefined' && window.location.pathname.replace(/\/+$/, '') !== '' ? '/' : ''; // on the legal pages the links go back to the home page sections
   return (
     <header className="header">
       <div className="wrap header__inner">
         <Brand />
         <nav className="header__nav" aria-label="Main">
-          {NAV_LINKS.map(([href, l]) => <a key={href} href={href}>{label(href, l)}</a>)}
+          {NAV_LINKS.map(([href, l]) => <a key={href} href={base + href}>{label(href, l)}</a>)}
         </nav>
         <div className="header__actions">
           <LangSwitch />
@@ -22,7 +23,7 @@ export function Header() {
         </div>
       </div>
       <nav id="mobile-nav" className="header__panel" data-open={open} aria-label="Mobile">
-        {NAV_LINKS.map(([href, l]) => <a key={href} href={href} onClick={() => setOpen(false)}>{label(href, l)}</a>)}
+        {NAV_LINKS.map(([href, l]) => <a key={href} href={base + href} onClick={() => setOpen(false)}>{label(href, l)}</a>)}
         <a href={LOGIN_URL} data-track="login" data-loc="mobile-menu">{t('Sign in', 'تسجيل الدخول')}</a>
       </nav>
     </header>

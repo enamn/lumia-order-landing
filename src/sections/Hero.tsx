@@ -4,8 +4,8 @@ import { Aed } from '../components/Money';
 import { Terminal, type TerminalScreen } from '../components/Terminal';
 import { useT } from '../i18n';
 
-/** One loop: voice note → customer confirms → terminal rings → staff accept and pick an ETA → the receipt prints. */
-const STEP_MS = [800, 1500, 1600, 1600, 1200, 2800, 1100, 1100, 1300, 800, 700, 600, 600, 1200, 3600, 2600];
+/** One loop: voice note → Lumia lists the order to confirm → customer confirms → Lumia gives the order number → terminal rings → staff accept and pick an ETA → the receipt prints. */
+const STEP_MS = [800, 1500, 1600, 2200, 1500, 1300, 2800, 1100, 1100, 1300, 800, 700, 600, 600, 1200, 3600, 2600];
 const LAST = STEP_MS.length - 1;
 
 function useStory() {
@@ -31,7 +31,7 @@ export function Hero() {
   const t = useT();
   const { s, replay } = useStory();
   const printed = (n: number) => (s >= n ? ' is-on' : '');
-  const screen: TerminalScreen = s < 5 ? 'ready' : s === 5 ? 'new' : s < 8 ? 'eta' : 'accepted';
+  const screen: TerminalScreen = s < 6 ? 'ready' : s === 6 ? 'new' : s < 9 ? 'eta' : 'accepted';
 
   return (
     <section className="hero2">
@@ -68,26 +68,26 @@ export function Hero() {
                   <span className="svoice__wave">{BARS.map((h, i) => <span key={i} style={{ height: h, animationDelay: `${i * 50}ms` }} />)}</span>
                   <span className="svoice__len">0:13</span>
                 </div>
-                <p className={`stext${printed(2)}`}>{t('Hi, can I get 2 chicken burgers, one without pickles, large fries and 2 Cokes?', 'مرحبا، أبغى 2 برجر دجاج، واحد بدون مخلل، وبطاطس كبيرة و2 كولا.')}</p>
                 <span className="sbub__time">21:04 ✓✓</span>
               </div>
 
               <div className={`sbub sbub--in${s >= 3 ? ' is-on' : ''}`}>
-                {t(<>Order #1048 · total <b><Aed n={82} /></b>. Shall I confirm?</>, <>الطلب #1048 · الإجمالي <b><Aed n={82} /></b>. هل أؤكده؟</>)}
+                {t(<>Your order:<br />2 × Chicken Burger (1 no pickles)<br />1 × Large Fries<br />2 × Coca-Cola<br />Delivery <Aed n={8} /><b style={{ display: 'block', marginTop: 4 }}>Total <Aed n={82} />. Shall I confirm?</b></>, <>طلبك:<br />2 × برجر دجاج (واحد بدون مخلل)<br />1 × بطاطس كبيرة<br />2 × كولا<br />التوصيل <Aed n={8} /><b style={{ display: 'block', marginTop: 4 }}>الإجمالي <Aed n={82} />. هل أؤكد الطلب؟</b></>)}
                 <span className="sbub__time">21:04</span>
               </div>
               <div className={`sbub sbub--out${s >= 4 ? ' is-on' : ''}`}>{t('Yes, confirm.', 'نعم، أكّد.')} <span className="sbub__time sbub__time--inline">21:05 ✓✓</span></div>
-              <div className={`sbub sbub--in${s >= 8 ? ' is-on' : ''}`}>{t('Accepted! Ready in 45 minutes.', 'تم القبول! جاهز خلال 45 دقيقة.')}<span className="sbub__time">21:06</span></div>
+              <div className={`sbub sbub--in${s >= 5 ? ' is-on' : ''}`}>{t(<>Confirmed ✓ Your order number is <b>#1048</b>. The restaurant is receiving it now.</>, <>تم التأكيد ✓ رقم طلبك <b>#1048</b>. المطعم يستلمه الآن.</>)}<span className="sbub__time">21:05</span></div>
+              <div className={`sbub sbub--in${s >= 9 ? ' is-on' : ''}`}>{t('Accepted! Ready in 45 minutes.', 'تم القبول! جاهز خلال 45 دقيقة.')}<span className="sbub__time">21:06</span></div>
             </div>
           </div>
 
           {/* the real terminal, with the receipt coming out of its top */}
           <div className="story__printer">
-            <div className={`tdev${s === 5 ? ' is-ring' : ''}`}>
+            <div className={`tdev${s === 6 ? ' is-ring' : ''}`}>
               <span className="device__waves" aria-hidden="true"><span className="wv wv--l"><i /><i /><i /></span><span className="wv wv--r"><i /><i /><i /></span></span>
-              <Terminal screen={screen} eta={s >= 7 ? 45 : null} receipt={s >= 9 && s < 15} />
+              <Terminal screen={screen} eta={s >= 8 ? 45 : null} receipt={s >= 10 && s < 16} />
             </div>
-            <div className={`story__alert${s >= 5 && s <= 12 ? ' is-on' : ''}`}><i /> {s < 8 ? t('New order · waiting for accept', 'طلب جديد · بانتظار القبول') : t('Accepted · printing the receipt', 'تم القبول · جارٍ طباعة الإيصال')}</div>
+            <div className={`story__alert${s >= 6 && s <= 13 ? ' is-on' : ''}`}><i /> {s < 9 ? t('New order · waiting for accept', 'طلب جديد · بانتظار القبول') : t('Accepted · printing the receipt', 'تم القبول · جارٍ طباعة الإيصال')}</div>
           </div>
 
           <button className="story__replay" onClick={replay} aria-label={t('Replay the animation', 'أعد تشغيل الحركة')}>{t('↻ Replay', '↻ إعادة')}</button>

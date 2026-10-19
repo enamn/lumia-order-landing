@@ -1,4 +1,5 @@
-import { ScaledTerminal, Terminal } from '../components/Terminal';
+import { useEffect, useRef, useState } from 'react';
+import { ScaledTerminal, Terminal, type TerminalScreen } from '../components/Terminal';
 import { TERMINAL_SPECS, TERMINAL_SPECS_AR } from '../data';
 import { useT } from '../i18n';
 import { Aed } from '../components/Money';
@@ -13,13 +14,49 @@ const FLOW: [string, boolean][] = [
   ['Kitchen starts preparation', false],
 ];
 
+// How long each step stays current (ms). Step 3 is the one where the terminal rings.
+const STEP_MS = [1300, 1500, 2800, 1500, 1800, 1800];
+const DONE = FLOW.length;
+
 export function TerminalIntro() {
   const t = useT();
+  const ref = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
+  const [step, setStep] = useState(-1);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !('IntersectionObserver' in window)) { setVisible(true); return; }
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.4 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!visible) { setStep(-1); return; }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setStep(DONE); return; }
+    let i = -1;
+    let id: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      i += 1;
+      if (i > DONE) { i = -1; setStep(-1); id = setTimeout(tick, 900); return; }
+      setStep(i);
+      id = setTimeout(tick, i === DONE ? 3400 : STEP_MS[i]);
+    };
+    id = setTimeout(tick, 500);
+    return () => clearTimeout(id);
+  }, [visible]);
+
+  const ringing = step === 2;
+  const screen: TerminalScreen = step < 2 ? 'ready' : step === 2 ? 'new' : step === 3 ? 'eta' : 'accepted';
   return (
-    <section id="terminal" className="section">
+    <section id="terminal" className="section" ref={ref}>
       <div className="wrap grid" style={{ ['--min' as string]: '420px', gap: 'clamp(48px,6vw,88px)', alignItems: 'center' }}>
-        <div style={{ justifySelf: 'center', width: 300, maxWidth: '100%', borderRadius: 28, background: 'var(--soft)', padding: '20px 0 12px', overflow: 'hidden' }}>
-          <Terminal screen="accepted" eta={45} receipt />
+        <div style={{ justifySelf: 'center', width: 340, maxWidth: '100%', borderRadius: 28, background: 'var(--soft)', padding: '28px 0 20px', overflow: 'hidden' }}>
+          <div className={`tdev${ringing ? ' is-ring' : ''}`}>
+            <span className="device__waves" aria-hidden="true"><span className="wv wv--l"><i /><i /><i /></span><span className="wv wv--r"><i /><i /><i /></span></span>
+            <Terminal screen={screen} eta={step >= 3 ? 45 : null} receipt={step >= 4} />
+          </div>
         </div>
         <div>
           <span className="badge" style={{ fontSize: 11, letterSpacing: '.16em' }}>{t('RECOMMENDED FOR RESTAURANTS', 'موصى به للمطاعم')}</span>
@@ -29,7 +66,7 @@ export function TerminalIntro() {
           </p>
           <ol className="tsteps" style={{ listStyle: 'none' }}>
             {FLOW.map(([text, key], i) => (
-              <li key={text} className="tstep">
+              <li key={text} className={`tstep${step > i ? ' is-done' : step === i ? ' is-now' : ''}`}>
                 <div className="tstep__rail">
                   <span className={`tstep__num${key ? ' is-key' : ''}`}>{i + 1}</span>
                   {i < FLOW.length - 1 && <span className="tstep__line" />}

@@ -422,8 +422,18 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
   background: #fff; border: 1px solid var(--line-2); color: var(--ink-2);
 }
 .tstep__num.is-key { background: var(--grad-diag); border: 0; color: #fff; }
-.tstep__line { width: 1px; height: 14px; background: var(--line-2); }
-.tstep__text { font-size: 16px; line-height: 1.4; padding-top: 4px; }
+.tstep__line { position: relative; width: 1px; height: 14px; background: var(--line-2); }
+.tstep__line::after { content: ''; position: absolute; inset: 0; background: var(--pink); transform: scaleY(0); transform-origin: top; transition: transform 0.4s var(--ease); }
+.tstep__text { font-size: 16px; line-height: 1.4; padding-top: 4px; transition: opacity 0.4s var(--ease), transform 0.4s var(--ease); }
+.tstep__num { transition: background 0.35s var(--ease), color 0.35s var(--ease), border-color 0.35s var(--ease), transform 0.35s var(--ease), box-shadow 0.35s var(--ease); }
+.tsteps:has(.is-now, .is-done) .tstep:not(.is-now):not(.is-done) .tstep__text { opacity: 0.38; }
+.tstep:not(.is-now):not(.is-done) .tstep__num.is-key { background: #fff; border: 1px solid var(--line-2); color: var(--ink-2); }
+.tstep.is-now .tstep__num { background: var(--grad-diag); border-color: transparent; color: #fff; transform: scale(1.14); box-shadow: 0 0 0 5px rgba(255, 85, 119, 0.16); }
+.tstep.is-done .tstep__num { background: var(--ink); border-color: var(--ink); color: #fff; }
+.tstep.is-done .tstep__line::after { transform: scaleY(1); }
+.tstep.is-now .tstep__text { transform: translateX(3px); }
+[dir='rtl'] .tstep.is-now .tstep__text { transform: translateX(-3px); }
+@media (prefers-reduced-motion: reduce) { .tstep__num, .tstep__text, .tstep__line::after { transition: none; } }
 .price-strike { font-size: 15px; color: var(--muted); text-decoration: line-through; }
 .price-big { font-size: clamp(36px, 3.6vw, 46px); font-weight: 600; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
 
@@ -449,7 +459,7 @@ button { font: inherit; cursor: pointer; border: 0; background: none; color: inh
 .billing button { height: 44px; padding: 0 18px; border-radius: 10px; font-size: 15px; font-weight: 600; color: var(--ink-2); display: inline-flex; align-items: center; gap: 8px; transition: background 0.2s, color 0.2s; }
 .billing button.is-on { background: var(--ink); color: #fff; }
 .plan { background: #fff; border: 1px solid var(--line); border-radius: 24px; padding: clamp(24px, 3vw, 32px); display: flex; flex-direction: column; }
-.plan.gradient-border { border: 2px solid transparent; }
+.plan.gradient-border { border: 2px solid transparent; padding: calc(clamp(24px, 3vw, 32px) - 1px); }
 .plan__name { font-size: 21px; font-weight: 600; }
 .plan__desc { font-size: 14px; color: var(--muted); margin-top: 6px; }
 .plan__price { margin-top: 20px; min-height: 112px; }
@@ -1016,3 +1026,32 @@ html[lang='ar'] .mx__cat, html[lang='ar'] .mx__types span { font-family: 'Cairo'
 .mi__doc.is-in .mi__line { opacity: 1; transition-delay: calc(var(--i) * 550ms); }
 .mx__card.is-on .mx__sync { transition-delay: 4.2s; }
 .mx__beam.is-on i { animation-duration: 1.4s; }
+
+/* Dashboard section: a returning customer (Samer) */
+.rp { display: grid; gap: clamp(28px, 4vw, 64px); align-items: center; margin-top: clamp(40px, 5vw, 72px); }
+@media (min-width: 900px) { .rp { grid-template-columns: minmax(0, 1fr) minmax(0, 460px); } }
+.rp__copy h3 { font-size: clamp(30px, 3.4vw, 44px); font-weight: 600; letter-spacing: -0.035em; line-height: 1.05; text-wrap: balance; }
+.rp__copy .lead { margin-top: 14px; font-size: 17px; max-width: 520px; color: var(--ink-2); }
+.rp__facts { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 14px; }
+.rp__facts li { display: flex; gap: 12px; align-items: flex-start; }
+.rp__tick { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--grad); color: #fff; font-size: 13px; font-weight: 700; display: grid; place-items: center; margin-top: 1px; }
+.rp__facts b { display: block; font-size: 16px; font-weight: 600; }
+.rp__facts i { display: block; font-style: normal; font-size: 14.5px; color: var(--ink-2); margin-top: 2px; }
+.rp__phone { background: #fff; border: 1px solid var(--line); border-radius: 26px; overflow: hidden; box-shadow: 0 40px 80px -48px rgba(120, 30, 90, 0.45), 0 2px 6px rgba(60, 20, 40, 0.06); }
+.rp__head { display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: #fff; border-bottom: 1px solid var(--line); }
+.rp__av { width: 42px; height: 42px; border-radius: 50%; background: var(--grad); color: #fff; font-weight: 700; font-size: 18px; display: grid; place-items: center; flex: none; }
+.rp__who { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.rp__who b { font-size: 16px; font-weight: 600; }
+.rp__who i { font-style: normal; font-size: 13px; color: var(--ink-2); }
+.rp__badge { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--chip); color: #8a2040; flex: none; }
+.rp__body { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 18px 18px 56px; background: var(--wa-bg); min-height: 430px; }
+.rp__body .sbub { font-size: 15.5px; max-width: 88%; }
+.rp__last { display: block; margin-top: 8px; padding: 9px 11px; border-radius: 10px; background: var(--soft, #f7eef3); font-size: 14px; line-height: 1.5; }
+.rp__last em { display: block; font-style: normal; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 2px; }
+
+/* typing dots sit in a fixed slot under the chat, so nothing moves when they appear */
+.rp__typing { position: absolute; inset-inline-start: 18px; bottom: 16px; display: inline-flex; gap: 4px; padding: 11px 14px; background: #fff; border-radius: 12px; opacity: 0; transition: opacity .2s; }
+.rp__typing.is-on { opacity: 1; }
+.rp__typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--line-2); animation: typedot 1s infinite; } .rp__typing i:nth-child(2) { animation-delay: .15s; } .rp__typing i:nth-child(3) { animation-delay: .3s; }
+.plan .row-between { height: 32px; }
+.plan__desc { min-height: 3em; line-height: 1.5; }

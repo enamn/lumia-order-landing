@@ -1,7 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
-import { LogoMark } from '../components/Logo';
-import { LegalLinks } from '../sections/Chrome';
-import { LangSwitch, useT } from '../i18n';
+import { Header, LegalLinks } from '../sections/Chrome';
+import { useT } from '../i18n';
 
 export const PRIVACY_EMAIL = 'privacy@lumia.ae';
 const LAST_UPDATED = '28 September 2026';
@@ -33,18 +32,7 @@ function LegalLayout({ title, eyebrow, children }: { title: string; eyebrow?: st
 
   return (
     <div className="legal-page">
-      <header className="legal-header">
-        <div className="wrap">
-          <a href="/" className="brand" aria-label={t('Lumia Order home', 'الصفحة الرئيسية للوميا أوردر')}>
-            <LogoMark size={30} />
-            <span className="brand__word"><b>Lumia</b><span>Order</span></span>
-          </a>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <LangSwitch />
-            <a href="/" className="legal-back">{t('← Back to site', 'العودة إلى الموقع →')}</a>
-          </span>
-        </div>
-      </header>
+      <Header />
       <main className="legal">
         <div className="eyebrow eyebrow--lg">{eyebrow ?? t('Legal', 'قانوني')}</div>
         <h1>{title}</h1>

@@ -149,21 +149,73 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="grid" style={{ ['--min' as string]: '360px', marginTop: 'clamp(28px,3vw,40px)', gap: '20px 48px', alignItems: 'center' }}>
-          <div>
-            <h3 style={{ fontSize: 'clamp(24px,2.4vw,30px)', fontWeight: 600, letterSpacing: '-0.03em' }}>{t('Make repeat orders easier.', 'اجعل الطلبات المتكررة أسهل.')}</h3>
-            <p className="lead" style={{ fontSize: 16, marginTop: 10, maxWidth: 460 }}>
-              {t('With confirmed customer information, Lumia can make future orders faster. It always asks before reusing a saved address.', 'بمعلومات العميل المؤكدة، يجعل لوميا الطلبات القادمة أسرع، ويسأل دائماً قبل إعادة استخدام عنوان محفوظ.')}
-            </p>
-          </div>
-          <div style={{ background: 'var(--wa-bg)', borderRadius: 18, padding: 16, display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14 }}>
-            <div style={{ alignSelf: 'flex-start', background: '#fff', borderRadius: 12, padding: '8px 12px' }}>{t('Welcome back, Samer 👋', 'أهلاً بعودتك يا سامر 👋')}</div>
-            <div style={{ alignSelf: 'flex-start', background: '#fff', borderRadius: 12, padding: '8px 12px', maxWidth: '90%' }}>
-              {t('Would you like delivery to your previously confirmed address in Al Majaz?', 'هل تريد التوصيل إلى عنوانك المؤكد سابقاً في المجاز؟')}
-            </div>
-          </div>
-        </div>
+        <RepeatOrder />
       </div>
     </section>
+  );
+}
+
+const RP_MS = [700, 1000, 1000, 2800, 1300, 1000, 2600, 1200, 1000, 4500];
+const RP_LAST = RP_MS.length - 1;
+
+/** A returning customer: Lumia knows the name, offers the last order and asks before reusing the saved address. */
+function RepeatOrder() {
+  const t = useT();
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  const [s, setS] = useState(RP_LAST);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !('IntersectionObserver' in window)) { setVisible(true); return; }
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.4 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !visible) { window.clearTimeout(timer.current); return; }
+    const run = (n: number) => { setS(n); timer.current = window.setTimeout(() => run(n >= RP_LAST ? 0 : n + 1), RP_MS[n]); };
+    run(0);
+    return () => window.clearTimeout(timer.current);
+  }, [visible]);
+  const on = (n: number) => (s >= n ? ' is-on' : '');
+
+  return (
+    <div className="rp" ref={ref}>
+      <div className="rp__copy">
+        <h3>{t('Make repeat orders easier.', 'اجعل الطلبات المتكررة أسهل.')}</h3>
+        <p className="lead">{t('Lumia remembers every customer. Regulars get greeted by name, offered their usual order, and asked before a saved address is reused.', 'يتعرّف لوميا على كل عميل. يُرحَّب بالعملاء الدائمين بأسمائهم، ويُعرض عليهم طلبهم المعتاد، ويُسألون قبل إعادة استخدام عنوان محفوظ.')}</p>
+        <ul className="rp__facts">
+          {[[t('Knows the name', 'يعرف الاسم'), t('Greets Samer, not “customer”.', 'يرحّب بسامر لا بـ«عميل».')], [t('Offers the last order', 'يعرض الطلب الأخير'), t('One “yes” to repeat it.', 'كلمة «نعم» واحدة لتكراره.')], [t('Asks before using the address', 'يسأل قبل استخدام العنوان'), t('Saved addresses are always confirmed.', 'تُؤكَّد العناوين المحفوظة دائماً.')]].map(([h, d]) => (
+            <li key={h}><span className="rp__tick">✓</span><span><b>{h}</b><i>{d}</i></span></li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="rp__phone" role="img" aria-label={t('WhatsApp chat with a returning customer, Samer', 'محادثة واتساب مع عميل عائد اسمه سامر')}>
+        <div className="story__head">
+          <span className="story__avatar">BH</span>
+          <span><b>{t('Burger House', 'بيت البرجر')}</b><i>{t('Business account', 'حساب تجاري')}</i></span>
+        </div>
+        <div className="rp__body">
+          <div className={`sbub sbub--out${on(1)}`}>{t('Hi', 'مرحبا')}<span className="sbub__time">19:42 ✓✓</span></div>
+          <div className={`sbub sbub--in${on(3)}`}>
+            {t('Welcome back, Samer 👋 Same as your last order?', 'أهلاً بعودتك يا سامر 👋 نفس طلبك الأخير؟')}
+            <span className="sbub__time">19:42</span>
+          </div>
+          <div className={`sbub sbub--out${on(4)}`}>{t('Yes, deliver to home', 'نعم، وصّله للبيت')}<span className="sbub__time">19:43 ✓✓</span></div>
+          <div className={`sbub sbub--in${on(6)}`}>
+            {t(<>Delivering to your saved home address, right? Total <b><Aed n={82} /></b>. Shall I confirm?</>, <>التوصيل إلى عنوان بيتك المحفوظ، صحيح؟ الإجمالي <b><Aed n={82} /></b>. هل أؤكد الطلب؟</>)}
+            <span className="sbub__time">19:43</span>
+          </div>
+          <div className={`sbub sbub--out${on(7)}`}>{t('Confirm ✓', 'أكّد ✓')}<span className="sbub__time">19:43 ✓✓</span></div>
+          <div className={`sbub sbub--in${on(9)}`}>
+            {t(<>Confirmed ✓ Your order number is <b>#1052</b>. The restaurant has it now.</>, <>تم التأكيد ✓ رقم طلبك <b>#1052</b>. المطعم استلمه الآن.</>)}
+            <span className="sbub__time">19:44</span>
+          </div>
+          <div className={`rp__typing${s === 2 || s === 5 || s === 8 ? ' is-on' : ''}`}><i /><i /><i /></div>
+        </div>
+      </div>
+    </div>
   );
 }

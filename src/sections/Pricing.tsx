@@ -101,12 +101,12 @@ function PlanCard({ plan, billing, info }: { plan: Plan; billing: Billing; info:
       <div className="plan__price tabnum">
         {billing === 'yearly' ? (
           <>
-            <div className="price-strike">{price.strike}</div>
+            <div className="price-strike">{price.month}</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-              <span className="price-big">{price.year}</span><span className="plan__per">{t('/ year', '/ سنة')}</span>
+              <span className="price-big">{price.perMonth}</span><span className="plan__per">{t('/ month', '/ شهر')}</span>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 6, fontSize: 13 }}>
-              <span style={{ color: 'var(--ink-2)' }}>≈ {price.perMonth}{t('/month, billed annually', '/شهر، تُدفع سنوياً')}</span>
+              <span style={{ color: 'var(--ink-2)' }}>{t(<>Billed yearly: {price.year}</>, <>تُدفع سنوياً: {price.year}</>)}</span>
               <span className="pill-ok">{t('Save 2 months', 'وفّر شهرين')}</span>
             </div>
           </>
