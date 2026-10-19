@@ -82,12 +82,11 @@ function priceNote(info: PriceInfo | null, lang: 'en' | 'ar') {
 
 function PlanCard({ plan, billing, info }: { plan: Plan; billing: Billing; info: PriceInfo | null }) {
   const t = useT();
-  // Amounts in the visitor's currency when approved prices exist for it; otherwise the AED list price.
-  const key = plan.name.toLowerCase() as 'starter' | 'plus' | 'pro', local = info?.local ? info.plans[key] : null;
-  const cur = local && info ? info.currency : 'AED', dec = local && info ? info.decimals : 2;
-  const m = local ? local.monthly : plan.amounts.month, y = local ? local.yearly : plan.amounts.year;
-  // Prices in whole units show as such (KWD 209); only amounts with a fraction show decimals (KWD 12.9). The per-month price keeps the decimals it needs.
-  const frac = !Number.isInteger(m) || !Number.isInteger(y), scale = 100, perMonth = frac ? Math.round((y / 12) * scale) / scale : Math.round(y / 12);
+  // The amounts come from the admin app (the visitor's own approved prices, or the UAE prices in AED); data.ts only fills in until they arrive or if the request fails.
+  const key = plan.name.toLowerCase() as 'starter' | 'plus' | 'pro', live = info?.plans?.[key] ?? null;
+  const cur = live && info ? info.currency : 'AED', dec = live && info ? info.decimals : 2;
+  const m = live ? live.monthly : plan.amounts.month, y = live ? live.yearly : plan.amounts.year;
+  const scale = 100, perMonth = Math.round((y / 12) * scale) / scale; // the yearly price divided by 12, exactly (to the cent)
   const M = (n: number) => <Money n={Math.round(n * scale) / scale} cur={cur} dec={dec} />;
   const price = { month: M(m), year: M(y), strike: M(m * 12), perMonth: M(perMonth) };
   return (
