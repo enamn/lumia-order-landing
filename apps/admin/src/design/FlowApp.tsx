@@ -470,7 +470,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     if (!countryOf(c.dial + num)) { this.setState({ invalid: true, srvErr: "" }); this.focus(this.phoneRef); return; }
     this.setState({ sending: true, invalid: false, srvErr: "", ccOpen: false });
     try {
-      const r = await api("/api/auth/whatsapp/send-code", "POST", { phoneNumber: c.dial + num, language: "en", channel });
+      const r = await api("/api/auth/whatsapp/send-code", "POST", { phoneNumber: c.dial + num, language: this.state.lang, channel });
       this.setState({ sending: false, e164: c.dial + num }); this.go("otp");
       this.setState({ resendAt: Date.now() + (r.resendAfter ?? 30) * 1000, note: r.testMode ? "Test mode: no message was sent. Enter 111111." : null });
     } catch (err) { this.setState({ sending: false, invalid: true, srvErr: err instanceof Error ? err.message : "We couldn’t send the code. Please try again." }); }
@@ -491,7 +491,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   }
   async resend(channel: "whatsapp" | "sms") {
     try {
-      const r = await api("/api/auth/whatsapp/send-code", "POST", { phoneNumber: this.state.e164, language: "en", channel });
+      const r = await api("/api/auth/whatsapp/send-code", "POST", { phoneNumber: this.state.e164, language: this.state.lang, channel });
       this.setState({ digits: "", otpErr: null, otpFail: "", resendAt: Date.now() + (r.resendAfter ?? 30) * 1000, now: Date.now(), note: r.testMode ? "Test mode: no message was sent. Enter 111111." : channel === "sms" ? `Code sent by SMS to ${maskPhone(this.state.e164)}.` : "New code sent to your WhatsApp." });
       this.focus(this.otpRef);
     } catch (err) { this.setState({ otpFail: err instanceof Error ? err.message : "We couldn’t send the code. Please try again.", note: null }); }

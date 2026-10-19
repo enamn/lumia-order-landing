@@ -6,7 +6,8 @@ const clean = (v: string | undefined) => (typeof v === "string" ? v.trim() : "")
 export function twilioConfigured() { return !!(clean(process.env.TWILIO_ACCOUNT_SID) && clean(process.env.TWILIO_AUTH_TOKEN) && clean(process.env.TWILIO_VERIFY_SERVICE_SID)); }
 async function call(path: "Verifications" | "VerificationCheck", body: Record<string, string>) {
   const sid = clean(process.env.TWILIO_ACCOUNT_SID), token = clean(process.env.TWILIO_AUTH_TOKEN), service = clean(process.env.TWILIO_VERIFY_SERVICE_SID);
-  const res = await fetch(`https://verify.twilio.com/v2/Services/${encodeURIComponent(service)}/${path}`, {
+  const base = process.env.NODE_ENV !== "production" && process.env.TWILIO_VERIFY_BASE_URL ? process.env.TWILIO_VERIFY_BASE_URL.replace(/\/$/, "") : "https://verify.twilio.com"; // the override is for local testing only
+  const res = await fetch(`${base}/v2/Services/${encodeURIComponent(service)}/${path}`, {
     method: "POST",
     headers: { Authorization: `Basic ${Buffer.from(`${sid}:${token}`).toString("base64")}`, "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams(body),
