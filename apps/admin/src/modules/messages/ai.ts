@@ -18,6 +18,8 @@ import { checkCode } from "@/modules/campaigns/codes";
 import { confirmPendingOrder, createOrderFromDraft, discardPendingOrders, findPendingOrder } from "@/modules/orders/service";
 import { showTyping } from "@/modules/whatsapp/typing";
 import { greetingText, isGreeting } from "./greeting";
+import { closedText, hoursFrom, openStatus } from "./hours";
+import type { Hours } from "@/modules/settings/schema";
 
 // The AI assistant answers customers' WhatsApp messages from the restaurant's own menu. It only replies when the owner turned it on,
 // never keeps talking once a person has taken over, and hands anything it cannot answer (orders, complaints, unknown facts) to staff.
@@ -101,6 +103,9 @@ export async function autoReply(t: { businessId: string; conversationId: string;
     if (!branchId && branches.length === 1) branchId = branches[0]!.id;
   }
   const branchNeeded = perBranch && !branchId;
+  // Working hours (in the restaurant's time zone): an order is never taken while the restaurant is closed; the customer is told so, with the hours.
+  const hoursRows = await db.businessHours.findMany({ where: { location: { businessId: t.businessId, status: "ACTIVE" } }, orderBy: { createdAt: "asc" }, take: 7 });
+  const openNow = openStatus(hoursFrom((bizRow.settings as { hours?: Hours } | null)?.hours, hoursRows), branchId ?? conversation.branchId ?? null, marketOf(bizRow.countryCode).timezone);
   const menu = branchNeeded ? [] : await loadMenu(t.businessId, perBranch ? branchId : null);
   const byItem = new Map(menu.map(m => [m.itemId, m.index]));
   const savedRows = await db.customerAddress.findMany({ where: { customerId: conversation.customerId }, orderBy: { isDefault: "desc" }, take: 6 });
@@ -114,7 +119,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   // A tap on the review template's buttons is handled directly: no AI call, nothing counted against the AI allowance.
   const tapText = latestInbound.textContent.trim();
   const tap = /^(confirm order|تأكيد الطلب)$/i.test(tapText) ? "confirm" : /^(change order|تعديل الطلب)$/i.test(tapText) ? "change" : null;
-  if (tap) { const pendingOrder = await findPendingOrder(t.conversationId); if (pendingOrder) return handleReviewTap(t, tap, pendingOrder, account, conversation, langOf(recent.find(m => m.direction === "OUTBOUND")?.textContent ?? tapText)); }
+  if (tap) { const pendingOrder = await findPendingOrder(t.conversationId); if (pendingOrder && tap === "confirm" && !openNow.open) { await discardPendingOrders(t.conversationId); return sendDirect(t, account, conversation.customer.phone, closedText(openNow, langOf(recent.find(m => m.direction === "OUTBOUND")?.textContent ?? tapText), conversation.business.name)); } if (pendingOrder) return handleReviewTap(t, tap, pendingOrder, account, conversation, langOf(recent.find(m => m.direction === "OUTBOUND")?.textContent ?? tapText)); }
   // Abuse guard: a flood from one customer.
   const burst = await db.message.count({ where: { conversationId: t.conversationId, direction: "INBOUND", createdAt: { gte: new Date(now - 120000) } } });
   if (burst > RATE_BURST) { if (burst === RATE_BURST + 1) await sendNotice(t, SLOW_DOWN).catch(() => undefined); return "skipped"; }
@@ -140,12 +145,16 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const branchList = branches.map((b, i) => ({ id: String(i + 1), realId: b.id, name: b.name }));
   const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; branch?: string; askLocation?: boolean; locationConfirmed?: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; discountCode?: string; confirmed: boolean } | null }>("/internal/ai/reply", { market: { country: marketOf(bizRow.countryCode).nameEn, currency: bizRow.currencyCode, regionLabel: marketOf(bizRow.countryCode).regionLabelEn.toLowerCase(), regions: regionNames(marketOf(bizRow.countryCode).code) }, businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: fromMinor(m.priceMinor, options.currency), available: m.available })), draft: apiDraft, delivery: deliveryHint, ...(branchNeeded ? { branchNeeded: true, branches: branchList.map(b => ({ id: b.id, name: b.name })), ...(lastBranch ? { lastBranch } : {}) } : {}), ...(wantsPin && candidate ? { candidate: candidate.formatted } : {}), customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: fromMinor(options.minimumMinor, options.currency) }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
   if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "AI_REPLY_REJECTED", status: r.status, apiCode: r.code })); await refund(t.businessId, "ai", taken); return sendNotice(t, TRY_AGAIN, 300000).catch(() => "skipped" as const); } // an AI failure must never leave the customer in silence
+  // Closed: whatever the assistant understood as an order is not taken. The customer gets the closed notice with the working hours, and no draft is kept.
+  const orderAttempt = r.data.intent === "order_request" || Boolean(r.data.order?.items?.length);
+  const closedNow = !openNow.open && orderAttempt;
+  if (closedNow) { r.data.reply = closedText(openNow, r.data.language, conversation.business.name); r.data.order = null as never; r.data.askLocation = false; r.data.needsHuman = false; await discardPendingOrders(t.conversationId); await refund(t.businessId, "ai", taken); }
   const lang = r.data.language; const parts = [r.data.reply];
   const data: { needsHuman?: boolean; aiPausedUntil?: Date | null; draftOrder?: object | null; branchId?: string | null; customerLocation?: object; candidateLocation?: object | null } = {};
   if (newCandidate) data.candidateLocation = newCandidate;
   // The customer confirmed the place we found for their typed address: from now on it works like a shared pin.
   if (wantsPin && candidate && r.data.locationConfirmed) { data.customerLocation = { latitude: candidate.latitude, longitude: candidate.longitude, name: "", address: "", at: new Date().toISOString(), emirate: candidate.emirate, area: candidate.area, street: candidate.street, place: candidate.place, formatted: candidate.formatted, source: "address" }; data.candidateLocation = null; }
-  if (branchSwitched) data.draftOrder = null as never; // the other branch's menu has different items
+  if (branchSwitched || closedNow) data.draftOrder = null as never; // the other branch's menu has different items; a closed restaurant keeps no order in progress
   if (perBranch && branchId !== (conversation.branchId ?? null)) data.branchId = branchId;
   // Pickup: the customer named a branch. Nothing is ordered in this turn (there was no menu yet); the next message uses that branch's menu.
   const chosen = branchNeeded ? branchList.find(b => b.id === r.data.branch) : undefined;
