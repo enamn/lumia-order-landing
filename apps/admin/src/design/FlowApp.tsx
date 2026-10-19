@@ -67,6 +67,10 @@ const count = (m: { items: unknown[] }[]) => m.reduce((a, c) => a + c.items.leng
 const priceNum = (v: string) => (v.trim() === "" ? null : parseAmount(v));
 const toBase64 = (file: File) => new Promise<string>((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result).split(",")[1] ?? ""); r.onerror = () => reject(Error("We couldn’t read that file.")); r.readAsDataURL(file); });
 
+// The campaign messages the dashboard starts with, in the dashboard language (a message the owner edited is never replaced).
+const campDefaults = (lang: "en" | "ar", name: string) => lang === "ar"
+  ? { all: `أهلاً {name}، هذا الأسبوع فقط: خصم 20% على كل البرجر في ${name}. رد هنا للطلب.`, offer: `أهلاً {name}، شكراً لطلبك من عندنا. هذا خصم على طلبك القادم من ${name}.` }
+  : { all: `Hi {name}, this weekend only: 20% off all burgers at ${name}. Reply here to order.`, offer: `Hi {name}, thanks for ordering with us. Here’s a discount on your next order from ${name}.` };
 async function api(path: string, method = "GET", body?: unknown) {
   const res = await fetch(path, { method, headers: { "Content-Type": "application/json" }, ...(body !== undefined || method !== "GET" ? { body: JSON.stringify(body ?? {}) } : {}) });
   const json = await res.json().catch(() => ({}));
@@ -115,7 +119,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu, props.currency)) > 0, cat: "All", menu: toCats(props.menu, props.currency), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
       page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", embedId: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waPortfolio: props.wa.businessPortfolioName ?? "", waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
-      custList: null as any, custErr: "", custSel: [] as string[], custOpen: null as any, custQ: "", campMode: "all", campCode: true, campPct: 20, campDays: 7, campMsgAll: `Hi {name}, this weekend only: 20% off all burgers at ${business?.name ?? "our restaurant"}. Reply here to order.`, campMsgOffer: `Hi {name}, thanks for ordering with us. Here’s a discount on your next order from ${business?.name ?? "us"}.`, campCodeTxt: "WEEKEND20", campImg: "", campImgFile: null as any, campImgName: "", campSending: false, campToast: "", campErr: "", campHist: null as any,
+      custList: null as any, custErr: "", custSel: [] as string[], custOpen: null as any, custQ: "", campMode: "all", campCode: true, campPct: 20, campDays: 7, campMsgAll: campDefaults(props.lang, business?.name ?? "our restaurant").all, campMsgOffer: campDefaults(props.lang, business?.name ?? "us").offer, campCodeTxt: "WEEKEND20", campImg: "", campImgFile: null as any, campImgName: "", campSending: false, campToast: "", campErr: "", campHist: null as any,
       menuScope: null as Scope | null, menuBranch: "", scopeBusy: false, scopeErr: "", smsMode: false, lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
     };
   }
@@ -383,9 +387,10 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const mode = s.campMode || "all", isOffer = mode === "offer", withCode = isOffer || s.campCode;
     const recips = isOffer ? eligible.filter(c => isSel(c.id)) : eligible;
     const pct = s.campPct, days = s.campDays;
-    const until = "valid until " + new Date(Date.now() + days * 86400000).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    const car = s.lang === "ar", untilDate = new Date(Date.now() + days * 86400000);
+    const until = car ? `صالح حتى ${untilDate.toLocaleDateString("ar-AE-u-nu-latn", { day: "numeric", month: "short" })}` : "valid until " + untilDate.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
     const msg = isOffer ? s.campMsgOffer : s.campMsgAll;
-    const who = recips[0] ? first(recips[0].name) : "there";
+    const who = recips[0] ? first(recips[0].name) : car ? "صديقنا" : "there";
     const chip = (on: boolean) => ({ bd: on ? "#FF5577" : "#ECD9E0", bg: on ? "#FDEAF2" : "#fff", fg: on ? "#8A2040" : "#3D1C31" });
     const n = recips.length, cant = !n || !msg.trim() || (withCode && s.campCodeTxt.trim().length < 3) || s.campSending;
     const tab = (v: string, label: string) => { const on = mode === v; return { label, on, fw: on ? 600 : 500, bg: on ? "#fff" : "transparent", fg: on ? "#1A0815" : "#8A5A6E", sh: on ? "0 1px 3px rgba(26,8,21,.12)" : "none", pick: () => this.setState({ campMode: v, campErr: "" }) }; };
@@ -408,21 +413,21 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       cp: {
         modes: [tab("all", "Message all customers"), tab("offer", "Custom offer")],
         isAll: !isOffer, isOffer, withCode, showCode: withCode,
-        allNote: `${eligible.length} customers will receive this message`,
+        allNote: car ? `${eligible.length} عميل سيستلمون هذه الرسالة` : `${eligible.length} customers will receive this message`,
         allBtn: allOn ? "Clear all" : "Select all",
         pick: eligible.map(c => { const on = isSel(c.id); return { ...ck(on), name: c.name, phone: phone(c.phone), rowBg: on ? "#FFF7FA" : "#fff", toggle: () => toggle(c.id) }; }),
         selNote: n ? (n === 1 ? "1 customer selected" : `${n} customers selected`) : "Select at least one customer", selFg: n ? "#8A5A6E" : "#B42318",
         swBg: s.campCode ? "#FF5577" : "#D9BFCB", swX: s.campCode ? "19px" : "3px", toggleCode: () => this.setState((st: any) => ({ campCode: !st.campCode })),
         pcts: [10, 15, 20, 25].map(v => ({ label: v + "%", ...chip(v === pct), pick: () => this.setState((st: any) => ({ campPct: v, campCodeTxt: st.campCodeTxt.replace(/\d+$/, "") + v })) })),
-        days: [7, 14, 30].map(v => ({ label: v + " days", ...chip(v === days), pick: () => this.setState({ campDays: v }) })),
+        days: [7, 14, 30].map(v => ({ label: car ? `${v} يوماً` : v + " days", ...chip(v === days), pick: () => this.setState({ campDays: v }) })),
         code: s.campCodeTxt, onCode: (e: any) => this.setState({ campCodeTxt: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 14) }),
         pctLabel: pct + "%", until,
         imgBg: s.campImg ? `url("${s.campImg}")` : "none", imgName: s.campImgName, hasImg: !!s.campImg, noImg: !s.campImg,
         onImg: (e: any) => { const f: File | undefined = e.target.files?.[0]; e.target.value = ""; if (!f) return; if (!/^image\/(png|jpeg|webp)$/.test(f.type)) { this.setState({ campErr: "Use a JPG, PNG or WebP image." }); return; } if (f.size > 5 * 1048576) { this.setState({ campErr: "Use an image under 5 MB." }); return; } if (s.campImg) URL.revokeObjectURL(s.campImg); this.setState({ campImg: URL.createObjectURL(f), campImgFile: f, campImgName: f.name, campErr: "" }); },
         clearImg: () => { if (s.campImg) URL.revokeObjectURL(s.campImg); this.setState({ campImg: "", campImgFile: null, campImgName: "" }); },
         msg, onMsg: (e: any) => this.setState(isOffer ? { campMsgOffer: e.target.value } : { campMsgAll: e.target.value }),
-        tokens: "Use {name} to add each customer’s first name.",
-        preview: msg.replace(/\{name\}/g, who), previewTo: recips[0] ? (n > 1 ? `${recips[0].name} and ${n - 1} more` : recips[0].name) : "no one yet",
+        tokens: car ? "استخدم {name} لإضافة الاسم الأول لكل عميل." : "Use {name} to add each customer’s first name.",
+        preview: msg.replace(/\{name\}/g, who), previewTo: recips[0] ? (n > 1 ? (car ? `${recips[0].name} و${n - 1} آخرين` : `${recips[0].name} and ${n - 1} more`) : recips[0].name) : car ? "لا أحد بعد" : "no one yet",
         cant, sendOp: cant && !s.campSending ? 0.45 : 1, sending: s.campSending, err: s.campErr,
         sendLabel: s.campSending ? "Sending…" : n === 1 ? "Send to 1 customer" : `Send to ${n} customers`,
         history: hist, toast: s.campToast,
@@ -581,7 +586,10 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   editAr = (item: Item) => this.openDialog({ title: "Add Arabic name", hint: item.n, saveLabel: "Save", fields: [{ key: "nameAr", label: "الاسم (عربي)", placeholder: "الاسم بالعربية", dir: "rtl", value: item.ar }],
     save: async v => { await api(`/api/v1/businesses/${this.state.businessId}/menu/items/${item.id}`, "PATCH", { nameAr: (v.nameAr ?? "").trim() }); await this.refreshMenu(); } });
   signOut = async () => { try { await authClient.signOut(); } finally { window.location.assign("/login"); } };
-  setLang(lang: "en" | "ar") { this.setState({ lang }); try { localStorage.setItem("lumia_lang", lang); } catch { /* optional */ } api("/api/v1/me", "PATCH", { language: lang }).catch(() => undefined); }
+  setLang(lang: "en" | "ar") {
+    const name = this.props.business?.name, from = this.state.lang, st = this.state;
+    const was = { all: campDefaults(from, name ?? "our restaurant").all, offer: campDefaults(from, name ?? "us").offer }, now = { all: campDefaults(lang, name ?? "our restaurant").all, offer: campDefaults(lang, name ?? "us").offer };
+    this.setState({ lang, ...(st.campMsgAll === was.all ? { campMsgAll: now.all } : {}), ...(st.campMsgOffer === was.offer ? { campMsgOffer: now.offer } : {}) }); try { localStorage.setItem("lumia_lang", lang); } catch { /* optional */ } api("/api/v1/me", "PATCH", { language: lang }).catch(() => undefined); }
   // ---- WhatsApp
   openWA = (e?: any) => { e?.preventDefault?.(); if (this.devRef.current) this.devRef.current.scrollTop = 0; this.setState({ wa: "intro", catOpen: false, confirmReplace: false, waErrText: "" }); };
   loadFb(): Promise<any> {
@@ -699,7 +707,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const catName = (g: Cat) => ar ? (g.catAr || g.cat) : g.cat;
     const sections = M.filter(g => q || s.cat === "All" || g.id === s.cat).map(g => {
       const its = g.items.filter(i => !q || match(i)); const soldN = its.filter(i => !i.on).length;
-      return { name: catName(g), alt: ar ? (g.catAr ? g.cat : "") : g.catAr, meta: its.length + " " + T.items + (soldN ? " · " + soldN + " " + T.soldOut : ""),
+      return { name: catName(g), alt: ar ? (g.catAr ? g.cat : "") : g.catAr, meta: its.length + " " + (!ar && its.length === 1 ? "item" : T.items) + (soldN ? " · " + soldN + " " + T.soldOut : ""),
         items: its.map((i, idx) => { const alt = ar ? (i.ar ? i.n : null) : (i.ar || null); return { main: ar ? (i.ar || i.n) : i.n, alt, hasAlt: !!alt, noAlt: !alt && p.canEdit, on: i.on, sold: !i.on, price: formatMoneyUi(toMinor(i.p, this.cur), this.cur), bt: idx ? "1px solid #F3EEF1" : "0", nameFg: i.on ? "#1A0815" : "#8A5A6E", tBg: i.on ? "linear-gradient(90deg,#FF5577,#C93DFF)" : "#EAD9E1", knob: i.on ? (ar ? "-20px" : "20px") : "0px", toggle: () => p.canEdit && this.toggleItem(i), editAr: () => this.editAr(i) }; }) };
     }).filter(g => g.items.length);
     const langFor = (short: boolean) => [["en", "EN"], ["ar", short ? "ع" : "العربية"]].map(([k, label]) => { const on = s.lang === k; return { label, on, fw: on ? 600 : 500, bg: on ? "#fff" : "transparent", fg: on ? "#1A0815" : "#8A5A6E", sh: on ? "0 1px 2px rgba(26,8,21,.12)" : "none", pick: () => this.setLang(k as any) }; });
@@ -755,7 +763,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       totalItems: s.step === "dash" ? count(M) : count(draft), totalCats: s.step === "dash" ? M.length : draft.length, review, hasFlags: flagN > 0, confirmOp: flagN > 0 || s.busy ? 0.45 : 1, readyErr: s.readyErr,
       flagMsg: flagN === 1 ? "1 price needs a quick check before you confirm." : `${flagN} prices need a quick check before you confirm.`, confirmMenu: this.confirmMenu, toMenuUpload: () => this.go("menu", { menuErr: "" }),
       // dash
-      dir: ar ? "rtl" : "ltr", t: T, langs: langFor(false), langsShort: langFor(true), menuMeta: count(M) + " " + T.items + " · " + M.length + " " + T.categories,
+      dir: ar ? "rtl" : "ltr", t: T, langs: langFor(false), langsShort: langFor(true), menuMeta: count(M) + " " + (!ar && count(M) === 1 ? "item" : T.items) + " · " + M.length + " " + (!ar && M.length === 1 ? "category" : T.categories),
       q: s.q, hasQ: !!s.q, onSearch: (e: any) => this.setState({ q: e.target.value }), clearSearch: () => this.setState({ q: "" }), sections, noResults: sections.length === 0, dashErr: s.dashErr,
       cats: [["All", T.all, count(M)], ...M.map(g => [g.id, catName(g), g.items.length])].map(([k, label, n]: any) => { const on = !q && s.cat === k; return { label, count: n, on, pick: () => this.setState({ cat: k, q: "" }), bg: on ? "#FDEAF2" : "transparent", fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, countFg: on ? "#8A2040" : "#8A5A6E", chipBg: on ? "#1A0815" : "#fff", chipFg: on ? "#fff" : "#3D1C31", chipBd: on ? "#1A0815" : "#ECD9E0" }; }),
       menuDone: s.menuDone && count(M) > 0, menuEmpty: !(s.menuDone && count(M) > 0), dashNarrow: narrow, dashWide: !narrow, openAddItem: p.canEdit ? this.openAddItem : noop, dlg,
@@ -763,7 +771,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       setup: setupItems.map(([label0, done, fn], i) => { const lb = T.setup[i]; const label = Array.isArray(lb) ? lb[done ? 1 : 0] : lb; return { label, done, todo: !done, fg: done ? "#1A0815" : "#3D1C31", ul: !done && fn ? "underline" : "none", pick: fn || this.noopFn, bar: i < doneN ? "#16704A" : "rgba(26,8,21,.12)" }; }),
       setupLabel: ar ? `${doneN} من 5 مكتملة` : `${doneN} of 5 completed`, waSetupLabel: `${doneN} of 5 completed`,
       // whatsapp
-      menuScopeNode: <MenuScope scope={s.menuScope} branchId={s.menuBranch} busy={s.scopeBusy} error={s.scopeErr} onPick={id => this.setState({ menuBranch: id, scopeErr: "" }, () => this.refreshMenu().catch(e => this.setState({ scopeErr: e.message })))} onCreate={copy => this.scopeAct(() => api(`/api/v1/businesses/${s.businessId}/menu/branches/${s.menuBranch}`, "POST", { copy }))} onRemove={() => this.scopeAct(() => api(`/api/v1/businesses/${s.businessId}/menu/branches/${s.menuBranch}`, "DELETE"))}/>,
+      menuScopeNode: <MenuScope scope={s.menuScope} branchId={s.menuBranch} busy={s.scopeBusy} error={s.scopeErr} onPick={id => this.setState({ menuBranch: id, scopeErr: "" }, () => this.refreshMenu().catch(e => this.setState({ scopeErr: e.message })))} onCreate={copy => this.scopeAct(() => api(`/api/v1/businesses/${s.businessId}/menu/branches/${s.menuBranch}`, "POST", { copy }))} ar={s.lang === "ar"} onRemove={() => this.scopeAct(() => api(`/api/v1/businesses/${s.businessId}/menu/branches/${s.menuBranch}`, "DELETE"))}/>,
       emailBannerNode: <>{s.subData?.access?.reason === "setup" && s.page !== "Plans" ? <StatusBanner ar={ar} title={ar ? "مطعمك لا يستقبل طلبات العملاء بعد" : "Your restaurant isn’t taking customer orders yet"} body={ar ? "في هذه السوق نقدّم الاشتراكات حالياً للمنشآت المسجّلة في ضريبة القيمة المضافة. أضف الرقم الضريبي من الفوترة ← البيانات الضريبية. تتم مراجعة بياناتك، ويمكنك متابعة تجهيز مطعمك خلال ذلك." : "For this market, Lumia Order currently supports subscriptions for VAT-registered businesses. Add your business VAT number under Billing → Tax details. Your VAT details are reviewed, and meanwhile you can keep preparing your restaurant."} action={ar ? "فتح البيانات الضريبية" : "Open tax details"} onAction={this.openBilling}/> : null}{s.subData?.contactEmail && !s.subData.contactEmail.verified && s.subData.access?.active !== false && s.page !== "Plans" ? <EmailVerify key="email-banner" businessId={s.businessId} email={s.subData.contactEmail.email} verified={false} ar={ar} variant="banner" onVerified={() => this.loadSub()}/> : null}</>,
       pageCustomers: s.page === "Customers", pageCampaigns: s.page === "Campaigns", ...this.custVals(s),
       pageMenu: s.page === "Menu", pageOverview: s.page === "Overview", pageOrders: s.page === "Orders", pageBilling: s.page === "Billing", billingNode: s.page === "Billing" ? <BillingPage businessId={s.businessId} onChoosePlan={() => this.setState({ page: "Plans", planStep: "plans" })} onChanged={() => this.loadSub()}/> : null, ...this.subVals(ar, narrow), ordLoading: s.orders === null && !s.ordErr && s.ordSlow, loaderNode: <ContentLoader/>, ovLoading: s.overview === null && s.ovSlow, ovReady: s.overview !== null, pageSettings: s.page === "Settings", notSettings: s.page !== "Settings", settingsNode: s.page === "Settings" ? <SettingsLoader businessId={s.businessId} query={`?businessId=${s.businessId}`} onPremium={() => this.setState({ lock: "branches" })} onSaved={() => this.loadOverview()}/> : null, ...this.overviewVm(ar, narrow), ...this.ordersVals(ar, narrow), pageWA: s.page === "WhatsApp", waOpen: !!s.wa, wa: { intro: s.wa === "intro", connecting: s.wa === "connecting", success: s.wa === "success", import: s.wa === "import", review: s.wa === "review", catalog: s.wa === "catalog", error: s.wa === "error", inUse: s.wa === "inUse" },

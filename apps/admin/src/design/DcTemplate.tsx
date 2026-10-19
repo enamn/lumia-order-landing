@@ -924,7 +924,6 @@ export function DcTemplate({ vm }: { vm: any }) {
                       )}
                       {vm.pageMenu && (
                         <>
-                        {vm.menuScopeNode}
                         <div style={S("display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px")}>
                           <div>
                             <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
@@ -952,6 +951,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                             </>
                           )}
                         </div>
+                        {vm.menuScopeNode}
                         {vm.menuDone && (
                           <>
                           <div style={S("flex:1;min-height:240px;display:flex;flex-direction:column;gap:16px;margin-top:-8px")}>
@@ -1604,7 +1604,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                       )}
                       {vm.pageCampaigns && (
                         <>
-                        <div data-screen-label="08 Dashboard \u00b7 Campaigns" dir="ltr" style={S("display:flex;flex-direction:column;gap:20px")}>
+                        <div data-screen-label="08 Dashboard \u00b7 Campaigns" dir={vm.dir} style={S("display:flex;flex-direction:column;gap:20px")}>
                           <div>
                             <h1 style={S("font-size:28px;font-weight:600;letter-spacing:-0.035em")}>
                               Campaigns
@@ -1722,7 +1722,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                       <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                         Code
                                       </span>
-                                      <input value={vm.cp.code} onChange={vm.cp.onCode} style={S("height:44px;padding:0 12px;border-radius:11px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-weight:600;letter-spacing:.04em")} className="dch14" />
+                                      <input dir="ltr" value={vm.cp.code} onChange={vm.cp.onCode} style={S("height:44px;padding:0 12px;border-radius:11px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-weight:600;letter-spacing:.04em")} className="dch14" />
                                     </label>
                                     <div style={S("display:flex;flex-direction:column;gap:8px")}>
                                       <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
@@ -1793,7 +1793,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                 <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                   Message
                                 </span>
-                                <textarea value={vm.cp.msg} onChange={vm.cp.onMsg} rows={4} style={S("padding:12px 14px;border-radius:12px;border:1.5px solid #ECD9E0;font-size:15px;line-height:1.5;resize:vertical;font-family:inherit")} className="dch14" />
+                                <textarea dir="auto" value={vm.cp.msg} onChange={vm.cp.onMsg} rows={4} style={S("padding:12px 14px;border-radius:12px;border:1.5px solid #ECD9E0;font-size:15px;line-height:1.5;resize:vertical;font-family:inherit")} className="dch14" />
                                 <span style={S("font-size:13px;color:#8A5A6E")}>
                                   {vm.cp.tokens}
                                 </span>
@@ -1818,7 +1818,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                               <span style={S("font-size:14px;font-weight:600")}>
                                 Preview
                               </span>
-                              <div style={S("border-radius:20px;background:#EFE7DD;padding:18px 16px 22px;display:flex;flex-direction:column;gap:10px")}>
+                              <div dir="ltr" style={S("border-radius:20px;background:#EFE7DD;padding:18px 16px 22px;display:flex;flex-direction:column;gap:10px")}>
                                 <span style={S("align-self:center;font-size:12px;padding:3px 10px;border-radius:8px;background:rgba(255,255,255,.75);color:#3D1C31")}>
                                   {"To "}{vm.cp.previewTo}
                                 </span>
@@ -1839,7 +1839,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     <span style={S("font-size:13px;font-weight:600;color:#C0284F")}>
                                       Burger House
                                     </span>
-                                    <span style={S("font-size:15px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere")}>
+                                    <span dir="auto" style={S("font-size:15px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;text-align:start")}>
                                       {vm.cp.preview}
                                     </span>
                                     {vm.cp.showCode && (
