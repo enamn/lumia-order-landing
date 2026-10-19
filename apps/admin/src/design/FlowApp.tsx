@@ -16,6 +16,7 @@ import { currencySign, formatMoneyUi, fromMinor, moneyUi, parseAmount, scaleOf, 
 import { marketOf, isCountryCode, MARKETS } from "@/modules/market/countries";
 import { AccountMenu, PlanBadge } from "./AccountMenu";
 import { BillingPage } from "./BillingPage";
+import { ArabicDom } from "./ArabicDom";
 import { mountEmbeddedCheckout } from "@/lib/stripe-embed";
 import { authClient } from "@/lib/auth-client";
 import { logoToDataUrl } from "@/lib/logo";
@@ -695,7 +696,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const NAV: [string, string][] = [["Overview", "M3 10.5 10 4l7 6.5M5 9v7.5h10V9"], ["Orders", "M4 5h12l-1.2 11H5.2zM7.5 8a2.5 2.5 0 0 0 5 0"], ["Menu", "M5 4.5h10M5 10h10M5 15.5h6"], ["WhatsApp", "M4.6 15.4 3.5 17.5l2.4-.9A7.2 7.2 0 1 0 4.6 15.4z"], ["Customers", "M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5"], ["Campaigns", "M4 8v4h2.5L12 15.5v-11L6.5 8zM15 7.5a3.5 3.5 0 0 1 0 5"]];
     const noop = (e?: any) => e?.preventDefault?.();
     return {
-      X, rtl: false, showLang: ["phone", "otp", "verified", "name"].includes(s.step), toggleLang: () => this.setLang(la ? "en" : "ar"),
+      X, rtl: false, showLang: ["phone", "otp", "verified", "name", "menu", "processing", "ready"].includes(s.step), toggleLang: () => this.setLang(la ? "en" : "ar"),
       curSign: currencySign(this.cur), termsUrl: `${p.marketingUrl}/terms`, privacyUrl: `${p.marketingUrl}/privacy`,
       L, isFlow: !isDash, canBack: ["otp", "name", "menu"].includes(s.step),
       is: { phone: s.step === "phone", otp: s.step === "otp", verified: s.step === "verified", name: s.step === "name", menu: s.step === "menu", processing: s.step === "processing", ready: s.step === "ready", dash: isDash },
@@ -767,7 +768,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     // The layout depends on the viewport width, so render only once it is known (avoids a flash of the wide layout on phones).
     if (!this.state.mounted) return <div className="dc" style={{ minHeight: "100vh" }}/>;
     const vm = this.renderVals();
-    const signIn = ["phone", "otp", "verified", "name"].includes(this.state.step); // the other set-up screens are still English
-    return <div className={signIn && this.state.lang === "ar" ? "dc dc--bidi" : "dc"} lang={this.state.step === "dash" || signIn ? this.state.lang : "en"}><DcTemplate vm={vm}/><PageLoader show={this.state.sending || this.state.verifying || this.state.busy || this.state.sub === "confirming" || this.state.sub === "paying"} label={this.state.sending ? (this.state.lang === "ar" && signIn ? "جارٍ إرسال الرمز…" : "Sending code…") : this.state.verifying ? (this.state.lang === "ar" && signIn ? "جارٍ التحقق…" : "Verifying…") : this.state.sub === "confirming" ? "Confirming your payment…" : this.state.sub === "paying" ? "Opening secure payment…" : "Saving…"}/></div>;
+    const signIn = ["phone", "otp", "verified", "name", "menu", "processing", "ready"].includes(this.state.step);
+    return <div className={signIn && this.state.lang === "ar" ? "dc dc--bidi" : "dc"} lang={this.state.step === "dash" || signIn ? this.state.lang : "en"}><DcTemplate vm={vm}/><ArabicDom lang={this.state.lang}/><PageLoader show={this.state.sending || this.state.verifying || this.state.busy || this.state.sub === "confirming" || this.state.sub === "paying"} label={this.state.sending ? (this.state.lang === "ar" && signIn ? "جارٍ إرسال الرمز…" : "Sending code…") : this.state.verifying ? (this.state.lang === "ar" && signIn ? "جارٍ التحقق…" : "Verifying…") : this.state.sub === "confirming" ? "Confirming your payment…" : this.state.sub === "paying" ? "Opening secure payment…" : "Saving…"}/></div>;
   }
 }

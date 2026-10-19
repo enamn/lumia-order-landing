@@ -1927,7 +1927,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                       )}
                       {vm.pagePlans && (
                         <>
-                        <div dir="ltr" style={S("position:fixed;inset:0;z-index:55;background:#fff;display:flex;flex-direction:column")}>
+                        <div dir={vm.dir} style={S("position:fixed;inset:0;z-index:55;background:#fff;display:flex;flex-direction:column")}>
                           <header style={S("height:64px;flex:none;padding:0 16px 0 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F0E4E8")}>
                             <svg width="28" height="28" viewBox="0 0 100 100" fill="none" style={S("display:block;flex:none")}>
                               <defs>
@@ -2383,7 +2383,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                       )}
                       {vm.confirmDisc && (
                         <>
-                        <div dir="ltr" style={S("position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px")}>
+                        <div dir={vm.dir} style={S("position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px")}>
                           <div onClick={vm.cancelDisconnect} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
                           <div role="alertdialog" aria-modal="true" data-screen-label="07b Disconnect WhatsApp" style={S("position:relative;width:100%;max-width:420px;background:#fff;border-radius:20px;padding:26px 24px 22px;box-shadow:0 30px 80px -30px rgba(26,8,21,.45);display:flex;flex-direction:column")}>
                             <h2 style={S("font-size:22px;font-weight:600;letter-spacing:-0.03em")}>
@@ -2406,7 +2406,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                       )}
                       {vm.dlg.open && (
                         <>
-                        <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
+                        <div dir={vm.dir} style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
                           <div onClick={vm.dlg.cancel} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
                           <form role="dialog" aria-modal="true" aria-label={vm.dlg.title} data-screen-label="09 Edit dialog" onSubmit={vm.dlg.submit} noValidate={true} style={S("position:relative;width:100%;max-width:420px;background:#fff;border-radius:20px;padding:26px 24px 22px;box-shadow:0 30px 80px -30px rgba(26,8,21,.45);display:flex;flex-direction:column")}>
                             <h2 style={S("font-size:22px;font-weight:600;letter-spacing:-0.03em")}>
@@ -2444,7 +2444,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                       )}
                       {vm.waOpen && (
                         <>
-                        <div dir="ltr" style={S("position:fixed;inset:0;z-index:40;display:flex;justify-content:flex-end")}>
+                        <div dir={vm.dir} style={S("position:fixed;inset:0;z-index:40;display:flex;justify-content:flex-end")}>
                           <div onClick={vm.waClose} style={S("position:absolute;inset:0;background:rgba(26,8,21,.32)")} />
                           <aside role="dialog" aria-modal="true" aria-label="Connect WhatsApp" data-screen-label={vm.waLabel} style={S(`position:relative;width:${vm.L.drawerW};max-width:100%;height:100%;background:#fff;display:flex;flex-direction:column;box-shadow:-24px 0 60px -30px rgba(26,8,21,.35)`)}>
                             <div style={S("height:64px;flex:none;padding:0 12px 0 24px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F0E4E8")}>
@@ -2949,7 +2949,7 @@ export function DcTemplate({ vm }: { vm: any }) {
               </div>
               {vm.sub.panel && (
                 <>
-                <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
+                <div dir={vm.dir} style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
                   <div onClick={vm.subLater} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
                   <div role="dialog" aria-modal="true" aria-labelledby="tr-h" data-screen-label="10 Free trial" style={S("position:relative;width:100%;max-width:440px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)")}>
                     <div style={S("padding:26px 26px 22px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);display:flex;flex-direction:column;gap:14px")}>
@@ -2987,7 +2987,7 @@ export function DcTemplate({ vm }: { vm: any }) {
               )}
               {vm.lockOpen && (
                 <>
-                <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
+                <div dir={vm.dir} style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
                   <div onClick={vm.lockClose} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
                   <div role="dialog" aria-modal="true" aria-labelledby="lk-h" data-screen-label="14 Premium feature" style={S("position:relative;width:100%;max-width:420px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)")}>
                     <div style={S("padding:24px 24px 20px;background:linear-gradient(135deg,#FFEEF2 0%,#FCE8F5 50%,#F1E6FF 100%);display:flex;flex-direction:column;gap:14px")}>
@@ -3035,7 +3035,7 @@ export function DcTemplate({ vm }: { vm: any }) {
               )}
               {vm.sub.done && (
                 <>
-                <div dir="ltr" style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
+                <div dir={vm.dir} style={S("position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px")}>
                   <div onClick={vm.subLater} style={S("position:absolute;inset:0;background:rgba(26,8,21,.36)")} />
                   <div role="dialog" aria-modal="true" data-screen-label="13 Subscribed" style={S("position:relative;width:100%;max-width:420px;background:#fff;border-radius:24px;padding:32px 26px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 30px 70px -20px rgba(26,8,21,.45)")}>
                     <span style={S("width:64px;height:64px;border-radius:50%;background:#E4F4EC;display:flex;align-items:center;justify-content:center")}>
