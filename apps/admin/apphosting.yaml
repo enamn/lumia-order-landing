@@ -16,6 +16,7 @@ env:
   - variable: NEXT_PUBLIC_MARKETING_URL
     value: https://order.lumia.ae
     availability: [BUILD, RUNTIME]
+  # --- SMS sign-in codes (Twilio Verify). To turn on: firebase apphosting:secrets:set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_VERIFY_SERVICE_SID, then add them under `secrets` below. Until then "Send code by SMS" says SMS isn't available yet. ---
   # --- super admin: phone numbers (comma-separated) that may open /superadmin after the normal phone-code sign-in ---
   - variable: SUPER_ADMIN_PHONES
     value: "+971588031592"

@@ -97,5 +97,5 @@ Layout: `order.lumia.ae` = landing page, `app.order.lumia.ae` = this app, `api.o
 5. **Landing page:** set the build-time variable `VITE_ADMIN_URL=https://app.order.lumia.ae` on the landing host and redeploy.
 6. **API host:** `INTERNAL_API_KEY`, `META_APP_ID`, `META_APP_SECRET`, `WHATSAPP_REGISTRATION_PIN`, `ANTHROPIC_API_KEY` (+ `ANTHROPIC_WORKSPACE_ID`), the WhatsApp template settings, and keep its port private.
 7. **Meta app:** add `app.order.lumia.ae` to App Domains and to the Facebook Login allowed JavaScript SDK domains; the webhook callback stays `https://api.order.lumia.ae/webhooks/whatsapp`.
-8. **Real sign-in codes:** WhatsApp authentication template approved in Meta and `META_AUTH_TEMPLATE_NAME` set in the API (SMS is not wired yet).
+8. **Real sign-in codes:** WhatsApp authentication template approved in Meta and `META_AUTH_TEMPLATE_NAME` set in the API (SMS codes use Twilio Verify when `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_VERIFY_SERVICE_SID` are set; Twilio makes and checks that code, so nothing is stored here).
 
