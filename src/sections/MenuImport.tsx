@@ -52,13 +52,13 @@ export function MenuImport() {
     <section className="section mi mx">
       <div className="wrap">
         <div className="split">
-          <h2 className="h2">{t('Upload the menu you already have.', 'ارفع القائمة التي لديك.')}</h2>
+          <h2 className="h2">{t('Upload the menu or product list you already have.', 'ارفع قائمتك أو قائمة منتجاتك التي لديك.')}</h2>
           <div>
             <p className="lead" style={{ fontSize: 'clamp(18px, 1.6vw, 21px)', color: 'var(--ink)', fontWeight: 500 }}>
               {t('Lumia reads it, builds it in your dashboard, and answers every customer from it.', 'يقرؤها لوميا، ويبنيها في لوحة التحكم، ويجيب كل عميل منها.')}
             </p>
             <p className="lead" style={{ fontSize: 16, marginTop: 10 }}>
-              {t('It never invents a dish or a price, and nothing goes live until you approve it.', 'لا يخترع طبقاً ولا سعراً، ولا يُفعَّل شيء قبل أن توافق عليه.')}
+              {t('It never invents a dish, a product or a price, and nothing goes live until you approve it.', 'لا يخترع طبقاً أو منتجاً ولا سعراً، ولا يُفعَّل شيء قبل أن توافق عليه.')}
             </p>
           </div>
         </div>

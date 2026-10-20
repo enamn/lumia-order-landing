@@ -186,7 +186,7 @@ function RepeatOrder() {
         <h3>{t('Make repeat orders easier.', 'اجعل الطلبات المتكررة أسهل.')}</h3>
         <p className="lead">{t('Lumia remembers every customer. Regulars get greeted by name, offered their usual order, and asked before a saved address is reused.', 'يتعرّف لوميا على كل عميل. يُرحَّب بالعملاء الدائمين بأسمائهم، ويُعرض عليهم طلبهم المعتاد، ويُسألون قبل إعادة استخدام عنوان محفوظ.')}</p>
         <ul className="rp__facts">
-          {[[t('Knows the name', 'يعرف الاسم'), t('Greets Samer, not “customer”.', 'يرحّب بسامر لا بـ«عميل».')], [t('Offers the last order', 'يعرض الطلب الأخير'), t('One “yes” to repeat it.', 'كلمة «نعم» واحدة لتكراره.')], [t('Asks before using the address', 'يسأل قبل استخدام العنوان'), t('Saved addresses are always confirmed.', 'تُؤكَّد العناوين المحفوظة دائماً.')]].map(([h, d]) => (
+          {[[t('Knows the name', 'يعرف الاسم'), t('Greets every customer by their own name.', 'يرحّب بكل عميل باسمه.')], [t('Offers the last order', 'يعرض الطلب الأخير'), t('One “yes” to repeat it. It can recall earlier orders and change them the way the customer asks.', 'كلمة «نعم» واحدة لتكراره. يمكنه تذكر الطلبات السابقة وتعديلها كما يطلب العميل.')], [t('Asks before using the address', 'يسأل قبل استخدام العنوان'), t('Saved addresses are always confirmed. It can also recall previous addresses and suggest the latest one that fits.', 'تُؤكَّد العناوين المحفوظة دائماً. ويمكنه أيضاً تذكر العناوين السابقة واقتراح آخر عنوان مناسب.')]].map(([h, d]) => (
             <li key={h}><span className="rp__tick">✓</span><span><b>{h}</b><i>{d}</i></span></li>
           ))}
         </ul>

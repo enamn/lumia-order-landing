@@ -16,10 +16,10 @@ export function Stats() {
     <section style={{ padding: 'clamp(56px,7vw,96px) 0 0' }}>
       <div className="wrap split" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,440px),1fr))', gap: '20px 64px' }}>
         <h2 className="h2" style={{ fontSize: 'clamp(30px,3.8vw,48px)', letterSpacing: '-0.035em', lineHeight: 1.05 }}>
-          {t('Nothing reaches your restaurant until the customer confirms.', 'لا يصل أي طلب إلى مطعمك قبل أن يؤكده العميل.')}
+          {t('Nothing reaches your restaurant or store until the customer confirms.', 'لا يصل أي طلب إلى مطعمك أو متجرك قبل أن يؤكده العميل.')}
         </h2>
         <p className="lead" style={{ maxWidth: 520 }}>
-          {t('Lumia structures the order, checks it against your menu and shows the final order to the customer before sending it to your restaurant.', 'ينظّم لوميا الطلب ويطابقه مع قائمتك ويعرض الطلب النهائي على العميل قبل إرساله إلى مطعمك.')}
+          {t('Lumia structures the order, checks it against your menu or products and shows the final order to the customer before sending it to you.', 'ينظّم لوميا الطلب ويطابقه مع قائمتك أو منتجاتك ويعرض الطلب النهائي على العميل قبل إرساله إليك.')}
         </p>
       </div>
       <div className="wrap" style={{ marginTop: 'clamp(40px,5vw,64px)' }}>
@@ -72,7 +72,7 @@ export function WhatsAppChaos() {
 
 export function Ownership() {
   const t = useT();
-  const perks = t(['Your WhatsApp', 'Your customer relationship', 'Your menu', 'Your delivery rules', 'Your brand', '0% Lumia commission per order'], ['واتساب الخاص بك', 'علاقتك بعملائك', 'قائمتك', 'قواعد التوصيل لديك', 'علامتك التجارية', '0% عمولة من لوميا على كل طلب']);
+  const perks = t(['Your WhatsApp', 'Your customer relationship', 'Your menu and products', 'Your delivery rules', 'Your brand', '0% Lumia commission per order'], ['واتساب الخاص بك', 'علاقتك بعملائك', 'قائمتك ومنتجاتك', 'قواعد التوصيل لديك', 'علامتك التجارية', '0% عمولة من لوميا على كل طلب']);
   return (
     <section className="section section--soft">
       <div className="wrap">
@@ -84,7 +84,7 @@ export function Ownership() {
             <div className="flow__link" />
             <div className="flow__node flow__node--mid">{t('Marketplace', 'التطبيق الوسيط')}</div>
             <div className="flow__link" />
-            <div className="flow__node">{t('Restaurant', 'المطعم')}</div>
+            <div className="flow__node">{t('Business', 'النشاط التجاري')}</div>
           </div>
           <div className="flow">
             <div className="eyebrow" style={{ marginBottom: 18, color: 'var(--ink)' }}>Lumia Order</div>
@@ -92,7 +92,7 @@ export function Ownership() {
             <div className="flow__link flow__link--brand" style={{ background: 'linear-gradient(#FF5577,#E449B8)' }} />
             <div className="flow__node flow__node--brand">{t('Your WhatsApp', 'واتساب الخاص بك')}</div>
             <div className="flow__link flow__link--brand" style={{ background: 'linear-gradient(#E449B8,#C93DFF)' }} />
-            <div className="flow__node flow__node--brand">{t('Your Restaurant', 'مطعمك')}</div>
+            <div className="flow__node flow__node--brand">{t('Your business', 'نشاطك التجاري')}</div>
           </div>
           <div className="checklist">
             {perks.map((p) => (
@@ -180,7 +180,7 @@ export function Voice() {
             </div>
           </div>
           <div className={`${fade(stage >= 1)} vsay${stage >= 1 && stage < 3 ? ' is-run' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div className="eyebrow">{t('02 · Transcription', '02 · تحويل الصوت إلى نص')}</div>
+            <div className="eyebrow">{t('02 · Lumia AI analyses it and understands the order', '02 · ذكاء لوميا يحلّلها ويفهم الطلب')}</div>
             <p style={{ fontSize: 'clamp(20px,2vw,24px)', lineHeight: 1.45, letterSpacing: '-0.01em', textWrap: 'pretty' }}>
               {t(<>"Give me <span className="hl" style={{ background: 'rgba(255,85,119,.22)' }}>two spicy chicken burgers</span>,{' '}
               <span className="hl" style={{ background: 'rgba(228,73,184,.25)' }}>one without cheese</span>,{' '}

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useLayoutEffect, useMemo, useState, type ReactNode } from 'react';
 
 export type Lang = 'en' | 'ar';
 
@@ -10,7 +10,7 @@ function initial(): Lang {
     const s = localStorage.getItem(KEY);
     if (s === 'ar' || s === 'en') return s;
   } catch { /* storage can be blocked */ }
-  return typeof navigator !== 'undefined' && /^ar/i.test(navigator.language) ? 'ar' : 'en';
+  return 'ar'; // Arabic until the visitor chooses English
 }
 
 const Ctx = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({ lang: 'en', setLang: () => undefined });
@@ -18,7 +18,7 @@ const Ctx = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({ lang: 'e
 export function LangProvider({ children }: { children: ReactNode }) {
   const [lang, set] = useState<Lang>(initial);
   const setLang = useCallback((l: Lang) => { set(l); try { localStorage.setItem(KEY, l); } catch { /* optional */ } }, []);
-  useEffect(() => {
+  useLayoutEffect(() => { // before the browser paints, so the page never shows in the wrong direction
     const el = document.documentElement;
     el.lang = lang; el.dir = lang === 'ar' ? 'rtl' : 'ltr';
     document.title = lang === 'ar' ? 'لوميا أوردر — موظف الطلبات بالذكاء الاصطناعي على واتساب' : 'Lumia Order — Your AI ordering employee on WhatsApp';

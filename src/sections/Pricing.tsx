@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Terminal } from '../components/Terminal';
 import { PLANS, PLANS_AR, SIGNUP_URL, type Billing, type Plan } from '../data';
-import { terminalOf, usePriceInfo, type PriceInfo } from '../pricing';
+import { terminalOf, usePriceInfo, usePricesSettled, type PriceInfo } from '../pricing';
 import { Money } from '../components/Money';
 import { useLang, useT } from '../i18n';
 
@@ -12,9 +12,9 @@ const bookOf = (info: PriceInfo | null, plan: Plan) => info?.plans?.[plan.name.t
 export function Pricing() {
   const t = useT(), { lang } = useLang();
   const [billing, setBilling] = useState<Billing>('yearly');
-  const info = usePriceInfo(), term = terminalOf(info);
+  const info = usePriceInfo(), ready = usePricesSettled(), term = terminalOf(info);
   const topSave = Math.max(...PLANS.map((p) => { const b = bookOf(info, p); return savePct(b.monthly, b.yearly); }));
-  const off = term && term.monthly > 0 ? Math.round((1 - Math.min(...Object.values(term.yearly)) / term.monthly) * 100) : 0;
+  const off = ready && term && term.monthly > 0 ? Math.round((1 - Math.min(...Object.values(term.yearly)) / term.monthly) * 100) : 0;
 
   return (
     <section id="pricing" className="section section--soft">
@@ -34,7 +34,7 @@ export function Pricing() {
               </button>
             </div>
             <div className="muted" style={{ fontSize: 14 }}>{t('0% commission on orders · AI ordering included, subject to fair-use terms', '0% عمولة على الطلبات · الطلب بالذكاء الاصطناعي مشمول وفق شروط الاستخدام العادل')}</div>
-            <div className="muted" style={{ fontSize: 14, marginTop: 6 }}>{priceNote(info, lang)}</div>
+            {priceNote(info, lang) && <div className="muted" style={{ fontSize: 14, marginTop: 6 }}>{priceNote(info, lang)}</div>}
           </div>
         </div>
 
@@ -63,7 +63,7 @@ export function Pricing() {
           </div>
         </div>
         <div className="grid" style={{ ['--min' as string]: '320px', gap: 16, marginTop: 16, alignItems: 'stretch' }}>
-          {PLANS.map((p, i) => <PlanCard key={p.name} plan={lang === 'ar' ? { ...p, ...PLANS_AR[i] } : p} billing={billing} info={info} />)}
+          {PLANS.map((p, i) => <PlanCard key={p.name} plan={lang === 'ar' ? { ...p, ...PLANS_AR[i] } : p} billing={billing} info={info} ready={ready} />)}
         </div>
 
       </div>
@@ -71,21 +71,16 @@ export function Pricing() {
   );
 }
 
-// What the note under the toggle says: where the prices come from, and what is not open yet.
-function priceNote(info: PriceInfo | null, lang: 'en' | 'ar') {
+// The note under the toggle, only for a visitor who sees their own country's prices: the currency, and that paid plans are not open there yet.
+function priceNote(info: PriceInfo | null, lang: 'en' | 'ar'): string | null {
   const ar = lang === 'ar';
   if (info?.local) return ar
     ? `الأسعار بعملة ${info.currency} لـ ${info.countryName}.${info.paidOpen ? '' : ` الباقات المدفوعة في ${info.countryName} تفتح قريباً: يمكنك بدء التجربة المجانية الآن.`}`
     : `Prices in ${info.currency} for ${info.countryName}.${info.paidOpen ? '' : ` Paid plans in ${info.countryName} open soon: you can start your free trial now.`}`;
-  if (info && info.detected && info.detected !== 'AE' && info.countryName !== 'United Arab Emirates') return ar
-    ? `الأسعار بالدرهم الإماراتي (AED). باقات العملة المحلية لـ ${info.countryName} قريباً.`
-    : `Prices in UAE dirhams (AED). Local-currency plans for ${info.countryName} are coming soon.`;
-  return ar
-    ? 'الأسعار بالدرهم الإماراتي (AED). السعودية وعُمان والبحرين وقطر والكويت: باقات العملة المحلية قريباً.'
-    : 'Prices in UAE dirhams (AED). Saudi Arabia, Oman, Bahrain, Qatar and Kuwait: local-currency plans are coming soon.';
+  return null; // dirham prices need no note
 }
 
-function PlanCard({ plan, billing, info }: { plan: Plan; billing: Billing; info: PriceInfo | null }) {
+function PlanCard({ plan, billing, info, ready }: { plan: Plan; billing: Billing; info: PriceInfo | null; ready: boolean }) {
   const t = useT();
   // The amounts come from the admin app (the visitor's own approved prices, or the UAE prices in AED); data.ts only fills in until they arrive or if the request fails.
   const key = plan.name.toLowerCase() as 'starter' | 'plus' | 'pro', live = info?.plans?.[key] ?? null;
@@ -102,7 +97,7 @@ function PlanCard({ plan, billing, info }: { plan: Plan; billing: Billing; info:
       </div>
       <p className="plan__desc">{plan.description}</p>
 
-      <div className="plan__price tabnum">
+      <div className="plan__price tabnum" style={{ opacity: ready ? 1 : 0, transition: 'opacity .25s' }}>
         {billing === 'yearly' ? (
           <>
             <div className="price-strike">{price.month}</div>
@@ -111,7 +106,6 @@ function PlanCard({ plan, billing, info }: { plan: Plan; billing: Billing; info:
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 6, fontSize: 13 }}>
               <span style={{ color: 'var(--ink-2)' }}>{t(<>Billed yearly: {price.year}</>, <>تُدفع سنوياً: {price.year}</>)}</span>
-              {savePct(m, y) > 0 && <span className="pill-ok">{t(`Save ${savePct(m, y)}%`, `وفّر ${savePct(m, y)}%`)}</span>}
             </div>
           </>
         ) : (

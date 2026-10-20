@@ -18,6 +18,7 @@ const asked = () => new URLSearchParams(location.search).get('country') ?? (env?
 const CACHE = `lumia-prices:${asked() ?? ''}`;
 let shared: PriceInfo | null = (() => { if (env?.DEV) return null; /* while developing, prices are always fetched fresh */ try { const v = sessionStorage.getItem(CACHE); return v ? (JSON.parse(v) as PriceInfo) : null; } catch { return null; } })();
 let started = false;
+let settled = !!shared || !ADMIN; // true once the prices arrived or the request failed: until then the page keeps the price numbers hidden so they do not change in front of the visitor
 const listeners = new Set<() => void>();
 function load() {
   if (started || shared || !ADMIN) return;
@@ -25,8 +26,19 @@ function load() {
   const want = asked(); // `?country=SA`, or on a developer's computer VITE_FORCE_COUNTRY=SA, pretends the visitor is in that country
   fetch(`${ADMIN}/api/public/pricing${want ? `?country=${encodeURIComponent(want)}` : ''}`, { credentials: 'omit', cache: env?.DEV ? 'no-store' : 'default' })
     .then(r => (r.ok ? r.json() : null))
-    .then(j => { const d = j?.data as PriceInfo | undefined; if (d) { shared = d; try { sessionStorage.setItem(CACHE, JSON.stringify(d)); } catch { /* optional */ } listeners.forEach(f => f()); } })
-    .catch(() => undefined);
+    .then(j => { const d = j?.data as PriceInfo | undefined; if (d) { shared = d; try { sessionStorage.setItem(CACHE, JSON.stringify(d)); } catch { /* optional */ } } settled = true; listeners.forEach(f => f()); })
+    .catch(() => { settled = true; listeners.forEach(f => f()); });
+}
+
+export function usePricesSettled(): boolean {
+  const [done, setDone] = useState(settled);
+  useEffect(() => {
+    const f = () => setDone(settled);
+    listeners.add(f); load(); f();
+    const cap = setTimeout(() => { settled = true; f(); }, 2500); // never hold the prices back for long
+    return () => { listeners.delete(f); clearTimeout(cap); };
+  }, []);
+  return done;
 }
 
 export function usePriceInfo(): PriceInfo | null {

@@ -9,13 +9,13 @@ const STEPS_AR = [
   { title: 'العميل يرسل رسالة', text: 'نص أو صوت، مباشرة إلى رقم واتساب الخاص بك.' },
   { title: 'لوميا يفهم', text: 'يلتقط كل صنف وكمية ونوع وإضافة وتفصيل للتوصيل.' },
   { title: 'العميل يؤكد', text: 'يرسل لوميا الطلب كاملاً مع الإجمالي. لا يتحرك شيء قبل أن يقول العميل نعم.' },
-  { title: 'المطعم يستلم', text: 'يرنّ الطلب على جهازك أو لوحة التحكم. اقبل، حدد الوقت، ويُطبع الإيصال.' },
+  { title: 'فريقك يستلم', text: 'يرنّ الطلب على جهازك أو لوحة التحكم. اقبل، حدد الوقت، ويُطبع الإيصال.' },
 ];
 const STEPS = [
   { title: 'Customer messages', text: 'Text or voice, straight to your own WhatsApp number.', color: '#ff5577' },
   { title: 'Lumia understands', text: 'Every product, quantity, variant, modifier and delivery detail is picked out.', color: '#ee4f97' },
   { title: 'Customer confirms', text: 'Lumia sends the complete order and total. Nothing moves until the customer says yes.', color: '#dc46c6' },
-  { title: 'Restaurant receives it', text: 'The order rings on your terminal or dashboard. Accept, pick an ETA, and the receipt prints.', color: '#c93dff' },
+  { title: 'Your team receives it', text: 'The order rings on your terminal or dashboard. Accept, pick an ETA, and the receipt prints.', color: '#c93dff' },
 ] as const;
 const AUTO_MS = 5200;
 
@@ -45,7 +45,7 @@ export function HowItWorks() {
   return (
     <section id="how" className="section how2">
       <div className="wrap">
-        <h2 className="h2 how2__title">{t('From message to kitchen in four steps.', 'من الرسالة إلى المطبخ في أربع خطوات.')}</h2>
+        <h2 className="h2 how2__title">{t('From message to ready order in four steps.', 'من الرسالة إلى الطلب الجاهز في أربع خطوات.')}</h2>
         <div ref={ref}>
           <div className="hstage">
             <div className="hbg" aria-hidden="true">
@@ -84,7 +84,7 @@ export function HowItWorks() {
                     <span className="hparse__q">{q}×</span><span>{n}</span><span className="muted">{m}</span>
                   </div>
                 ))}
-                <div className="hparse__row hparse__row--ok" style={{ ['--d' as string]: '3200ms' }}>{t('Checked against your menu and availability ✓', 'تمت مطابقته مع قائمتك وتوفر الأصناف ✓')}</div>
+                <div className="hparse__row hparse__row--ok" style={{ ['--d' as string]: '3200ms' }}>{t('Checked against your menu or products and availability ✓', 'تمت مطابقته مع قائمتك أو منتجاتك وتوفرها ✓')}</div>
               </div>
             </div>
 
@@ -95,7 +95,7 @@ export function HowItWorks() {
                   <b style={{ display: 'block', marginTop: 4 }}>{t(<>Total <Aed n={82} />. Shall I confirm?</>, <>الإجمالي <Aed n={82} />. هل أؤكد الطلب؟</>)}</b>
                 </div>
                 <div className="hpop hpop--out" style={{ ['--d' as string]: '900ms' }}>{t('Yes, confirm ✓', 'نعم، أكّد ✓')}</div>
-                <div className="hbadge" style={{ ['--d' as string]: '1500ms' }}>{t('Confirmed by customer — now it goes to the restaurant', 'أكّده العميل — والآن ينتقل إلى المطعم')}</div>
+                <div className="hbadge" style={{ ['--d' as string]: '1500ms' }}>{t('Confirmed by customer — now it comes to you', 'أكّده العميل — والآن يصل إليك')}</div>
               </div>
             </div>
 

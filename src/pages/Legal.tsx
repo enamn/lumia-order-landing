@@ -58,14 +58,14 @@ export function PrivacyPage() {
       <p className="legal__date">{t('Last updated:', 'آخر تحديث:')} {t(LAST_UPDATED, LAST_UPDATED_AR)}</p>
       <p className="legal__intro">
         {t(
-          'Lumia Order is a restaurant ordering platform developed and operated by Afkar IO FZE LLC. This policy explains how Lumia Order processes personal information when restaurants use the service and when their customers order through WhatsApp. It covers the Lumia Order platform, the web dashboard, the Lumia Order Terminal and this website.',
-          'لوميا أوردر منصة لطلبات المطاعم من تطوير وتشغيل Afkar IO FZE LLC. توضح هذه السياسة كيف يعالج لوميا أوردر المعلومات الشخصية عندما تستخدم المطاعم الخدمة وعندما يطلب عملاؤها عبر واتساب. وتشمل منصة لوميا أوردر ولوحة التحكم على الويب وجهاز لوميا أوردر وهذا الموقع.'
+          'Lumia Order is an ordering platform for restaurants and stores, such as supermarkets, developed and operated by Afkar IO FZE LLC. This policy explains how Lumia Order processes personal information when restaurants and stores use the service and when their customers order through WhatsApp. It covers the Lumia Order platform, the web dashboard, the Lumia Order Terminal and this website.',
+          'لوميا أوردر منصة لطلبات المطاعم والمتاجر، مثل السوبرماركت، من تطوير وتشغيل Afkar IO FZE LLC. توضح هذه السياسة كيف يعالج لوميا أوردر المعلومات الشخصية عندما تستخدم المطاعم والمتاجر الخدمة وعندما يطلب عملاؤها عبر واتساب. وتشمل منصة لوميا أوردر ولوحة التحكم على الويب وجهاز لوميا أوردر وهذا الموقع.'
         )}
       </p>
       <div className="legal__body">
-        <Section title={t('1. Restaurant information', '1. معلومات المطعم')}>
-          <p>{t('When a restaurant uses Lumia Order, we may process:', 'عندما يستخدم المطعم لوميا أوردر، قد نعالج:')}</p>
-          <List items={t(['Restaurant name', 'Account and contact information', 'Branch details', 'Menu items and prices', 'Opening hours', 'Delivery areas and fees', 'Staff accounts', 'Subscription information'], ['اسم المطعم', 'معلومات الحساب والتواصل', 'تفاصيل الفروع', 'أصناف القائمة وأسعارها', 'ساعات العمل', 'مناطق التوصيل ورسومه', 'حسابات الموظفين', 'معلومات الاشتراك'])} />
+        <Section title={t('1. Business information', '1. معلومات النشاط التجاري')}>
+          <p>{t('When a restaurant or store uses Lumia Order, we may process:', 'عندما يستخدم مطعم أو متجر لوميا أوردر، قد نعالج:')}</p>
+          <List items={t(['Business name', 'Account and contact information', 'Branch details', 'Menu or product items and prices', 'Opening hours', 'Delivery areas and fees', 'Staff accounts', 'Subscription information'], ['اسم النشاط التجاري', 'معلومات الحساب والتواصل', 'تفاصيل الفروع', 'أصناف القائمة أو المنتجات وأسعارها', 'ساعات العمل', 'مناطق التوصيل ورسومه', 'حسابات الموظفين', 'معلومات الاشتراك'])} />
         </Section>
         <Section title={t('2. WhatsApp information', '2. معلومات واتساب')}>
           <p>{t('Lumia Order may process data received through the WhatsApp Business Platform, including:', 'قد يعالج لوميا أوردر البيانات الواردة عبر منصة واتساب للأعمال، ومنها:')}</p>
@@ -89,7 +89,7 @@ export function PrivacyPage() {
         </Section>
         <Section title={t('6. Purpose of processing', '6. أغراض المعالجة')}>
           <p>{t('We use this information to:', 'نستخدم هذه المعلومات من أجل:')}</p>
-          <List items={t(['Provide Lumia Order', 'Receive and manage orders', 'Respond through WhatsApp', 'Process AI text and voice requests', 'Show orders to restaurants', 'Print orders', 'Maintain order and customer history', 'Provide support', 'Operate subscriptions', 'Protect against abuse and security issues', 'Meet legal obligations'], ['تقديم لوميا أوردر', 'استقبال الطلبات وإدارتها', 'الرد عبر واتساب', 'معالجة الطلبات النصية والصوتية بالذكاء الاصطناعي', 'عرض الطلبات للمطاعم', 'طباعة الطلبات', 'الاحتفاظ بسجل الطلبات والعملاء', 'تقديم الدعم', 'إدارة الاشتراكات', 'الحماية من إساءة الاستخدام والمشكلات الأمنية', 'الوفاء بالالتزامات القانونية'])} />
+          <List items={t(['Provide Lumia Order', 'Receive and manage orders', 'Respond through WhatsApp', 'Process AI text and voice requests', 'Show orders to restaurants and stores', 'Print orders', 'Maintain order and customer history', 'Provide support', 'Operate subscriptions', 'Protect against abuse and security issues', 'Meet legal obligations'], ['تقديم لوميا أوردر', 'استقبال الطلبات وإدارتها', 'الرد عبر واتساب', 'معالجة الطلبات النصية والصوتية بالذكاء الاصطناعي', 'عرض الطلبات للمطاعم والمتاجر', 'طباعة الطلبات', 'الاحتفاظ بسجل الطلبات والعملاء', 'تقديم الدعم', 'إدارة الاشتراكات', 'الحماية من إساءة الاستخدام والمشكلات الأمنية', 'الوفاء بالالتزامات القانونية'])} />
         </Section>
         <Section title={t('7. WhatsApp Business Platform', '7. منصة واتساب للأعمال')}>
           <p>{t(
@@ -145,7 +145,7 @@ export function DataDeletionPage() {
           </a>
         </div>
         <div style={{ fontSize: 15, lineHeight: 1.6, color: 'var(--ink-2)', marginTop: 14 }}>
-          {t('Please include your restaurant account name or the WhatsApp number you used to order.', 'يرجى ذكر اسم حساب مطعمك أو رقم واتساب الذي استخدمته للطلب.')}
+          {t('Please include your account name or the WhatsApp number you used to order.', 'يرجى ذكر اسم حسابك أو رقم واتساب الذي استخدمته للطلب.')}
         </div>
       </div>
       <p className="muted" style={{ fontSize: 15, marginTop: 28 }}>
@@ -162,21 +162,21 @@ export function TermsPage() {
       <p className="legal__date">{t('Last updated:', 'آخر تحديث:')} {t(LAST_UPDATED, LAST_UPDATED_AR)}</p>
       <p className="legal__intro">
         {t(
-          'These terms govern the use of Lumia Order, including the platform, the web dashboard, the Lumia Order Terminal and this website. Lumia Order is a restaurant ordering platform developed and operated by Afkar IO FZE LLC. By creating an account or using the service, the restaurant ("you") agrees to these terms.',
-          'تحكم هذه الشروط استخدام لوميا أوردر، بما في ذلك المنصة ولوحة التحكم على الويب وجهاز لوميا أوردر وهذا الموقع. لوميا أوردر منصة لطلبات المطاعم من تطوير وتشغيل Afkar IO FZE LLC. بإنشاء حساب أو استخدام الخدمة، يوافق المطعم («أنت») على هذه الشروط.'
+          'These terms govern the use of Lumia Order, including the platform, the web dashboard, the Lumia Order Terminal and this website. Lumia Order is an ordering platform for restaurants and stores, such as supermarkets, developed and operated by Afkar IO FZE LLC. By creating an account or using the service, the restaurant ("you") agrees to these terms.',
+          'تحكم هذه الشروط استخدام لوميا أوردر، بما في ذلك المنصة ولوحة التحكم على الويب وجهاز لوميا أوردر وهذا الموقع. لوميا أوردر منصة لطلبات المطاعم والمتاجر، مثل السوبرماركت، من تطوير وتشغيل Afkar IO FZE LLC. بإنشاء حساب أو استخدام الخدمة، يوافق المطعم («أنت») على هذه الشروط.'
         )}
       </p>
       <div className="legal__body">
         <Section title={t('1. The service', '1. الخدمة')}>
           <p>{t(
-            "Lumia Order lets restaurants receive customer orders through WhatsApp. Lumia uses AI to understand text and voice messages, structure them into orders based on the restaurant's approved menu, confirm them with the customer and deliver them to the restaurant through the web dashboard or the Lumia Order Terminal.",
-            'يتيح لوميا أوردر للمطاعم استقبال طلبات العملاء عبر واتساب. يستخدم لوميا الذكاء الاصطناعي لفهم الرسائل النصية والصوتية، وتنظيمها في طلبات بناءً على قائمة المطعم المعتمدة، وتأكيدها مع العميل، وإيصالها إلى المطعم عبر لوحة التحكم على الويب أو جهاز لوميا أوردر.'
+            "Lumia Order lets restaurants and stores receive customer orders through WhatsApp. Lumia uses AI to understand text and voice messages, structure them into orders based on your approved menu or product list, confirm them with the customer and deliver them to you through the web dashboard or the Lumia Order Terminal.",
+            'يتيح لوميا أوردر للمطاعم والمتاجر استقبال طلبات العملاء عبر واتساب. يستخدم لوميا الذكاء الاصطناعي لفهم الرسائل النصية والصوتية، وتنظيمها في طلبات بناءً على قائمتك أو قائمة منتجاتك المعتمدة، وتأكيدها مع العميل، وإيصالها إليك عبر لوحة التحكم على الويب أو جهاز لوميا أوردر.'
           )}</p>
         </Section>
         <Section title={t('2. Accounts', '2. الحسابات')}>
           <p>{t(
-            'You must provide accurate account and restaurant information and keep your login credentials secure. You are responsible for all activity under your account, including actions taken by your staff accounts.',
-            'يجب عليك تقديم معلومات دقيقة عن الحساب والمطعم والحفاظ على أمان بيانات تسجيل الدخول. أنت مسؤول عن كل نشاط يتم عبر حسابك، بما في ذلك ما تقوم به حسابات موظفيك.'
+            'You must provide accurate account and business information and keep your login credentials secure. You are responsible for all activity under your account, including actions taken by your staff accounts.',
+            'يجب عليك تقديم معلومات دقيقة عن الحساب والنشاط التجاري والحفاظ على أمان بيانات تسجيل الدخول. أنت مسؤول عن كل نشاط يتم عبر حسابك، بما في ذلك ما تقوم به حسابات موظفيك.'
           )}</p>
         </Section>
         <Section title={t('3. Plans, trial and billing', '3. الباقات والتجربة والفوترة')}>
@@ -216,8 +216,8 @@ export function TermsPage() {
         </Section>
         <Section title={t('9. Data and privacy', '9. البيانات والخصوصية')}>
           <p>{t(
-            <>Our <a href="/privacy">Privacy Policy</a> explains how personal information is processed. You keep ownership of your restaurant and customer data, and you grant us the rights needed to process it to provide the service.</>,
-            <>توضح <a href="/privacy">سياسة الخصوصية</a> لدينا كيفية معالجة المعلومات الشخصية. تحتفظ بملكية بيانات مطعمك وعملائك، وتمنحنا الحقوق اللازمة لمعالجتها من أجل تقديم الخدمة.</>
+            <>Our <a href="/privacy">Privacy Policy</a> explains how personal information is processed. You keep ownership of your business and customer data, and you grant us the rights needed to process it to provide the service.</>,
+            <>توضح <a href="/privacy">سياسة الخصوصية</a> لدينا كيفية معالجة المعلومات الشخصية. تحتفظ بملكية بيانات نشاطك وعملائك، وتمنحنا الحقوق اللازمة لمعالجتها من أجل تقديم الخدمة.</>
           )}</p>
         </Section>
         <Section title={t('10. Availability and changes', '10. التوفر والتغييرات')}>

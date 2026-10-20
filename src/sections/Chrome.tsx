@@ -38,7 +38,7 @@ export function Faq() {
     <section id="faq" className="section">
       <div className="wrap grid" style={{ ['--min' as string]: '380px', gap: '40px 72px', alignItems: 'start' }}>
         <h2 className="h2" style={{ fontSize: 'clamp(30px,3.6vw,46px)', letterSpacing: '-0.035em', lineHeight: 1.05 }}>
-          {tr('Questions from restaurant owners.', 'أسئلة من أصحاب المطاعم.')}
+          {tr('Questions from restaurant and store owners.', 'أسئلة من أصحاب المطاعم والمتاجر.')}
         </h2>
         <div style={{ borderTop: '1px solid var(--line)' }}>
           {list.map(([q, a0], i) => {

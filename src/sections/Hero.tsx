@@ -43,7 +43,7 @@ export function Hero() {
           </h1>
           <p className="hero2__tag">{t('It takes the order. Your team makes it.', 'هو يأخذ الطلب، وفريقك يحضّره.')}</p>
           <p className="hero2__lead">
-            {t('Lumia Order handles customer orders through WhatsApp — from text and voice messages to confirmed, structured orders ready for your restaurant.', 'يتولى لوميا أوردر طلبات العملاء عبر واتساب — من الرسائل النصية والصوتية إلى طلبات مؤكدة ومنظّمة جاهزة لمطعمك.')}
+            {t('Lumia Order handles customer orders through WhatsApp — from text and voice messages to confirmed, structured orders ready for your restaurant or store.', 'يتولى لوميا أوردر طلبات العملاء عبر واتساب — من الرسائل النصية والصوتية إلى طلبات مؤكدة ومنظّمة جاهزة لمطعمك أو متجرك.')}
           </p>
           <div className="hero__ctas">
             <a href={SIGNUP_URL} className="btn btn--primary" data-track="free_trial" data-loc="hero">{t('Start free', 'ابدأ مجاناً')}</a>

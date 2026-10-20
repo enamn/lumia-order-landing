@@ -4,14 +4,14 @@ import { TERMINAL_SPECS, TERMINAL_SPECS_AR } from '../data';
 import { useT } from '../i18n';
 import { Aed } from '../components/Money';
 
-const FLOW_AR = ['العميل يطلب عبر واتساب', 'ذكاء لوميا أوردر يفهم الطلب ويؤكده', 'المطعم يستلم الطلب على جهاز لوميا أوردر', 'الموظف يقبل الطلب أو يرفضه', 'يُطبع الإيصال تلقائياً', 'المطبخ يبدأ التحضير'];
+const FLOW_AR = ['العميل يطلب عبر واتساب', 'ذكاء لوميا أوردر يفهم الطلب ويؤكده', 'يصل الطلب إلى جهاز لوميا أوردر', 'الموظف يقبل الطلب أو يرفضه', 'يُطبع الإيصال تلقائياً', 'يبدأ تجهيز الطلب'];
 const FLOW: [string, boolean][] = [
   ['Customer orders on WhatsApp', false],
   ['Lumia Order AI understands and confirms the order', false],
-  ['The restaurant receives the order on the Lumia Order Terminal', true],
+  ['The order arrives on the Lumia Order Terminal', true],
   ['Staff accepts or rejects the order', false],
   ['Receipt prints automatically', true],
-  ['Kitchen starts preparation', false],
+  ['Your team starts preparing the order', false],
 ];
 
 // How long each step stays current (ms). Step 3 is the one where the terminal rings.
@@ -59,7 +59,7 @@ export function TerminalIntro() {
           </div>
         </div>
         <div>
-          <span className="badge" style={{ fontSize: 11, letterSpacing: '.16em' }}>{t('RECOMMENDED FOR RESTAURANTS', 'موصى به للمطاعم')}</span>
+          <span className="badge" style={{ fontSize: 11, letterSpacing: '.16em' }}>{t('RECOMMENDED FOR RESTAURANTS AND STORES', 'موصى به للمطاعم والمتاجر')}</span>
           <h2 className="h2" style={{ marginTop: 18 }}>{t('Your dedicated Lumia Order Terminal', 'جهاز لوميا أوردر المخصص لك')}</h2>
           <p className="lead" style={{ marginTop: 18, maxWidth: 520 }}>
             {t("Receive, accept and print WhatsApp orders from one dedicated device — without relying on an employee's personal phone.", 'استقبل طلبات واتساب واقبلها واطبعها من جهاز واحد مخصص — دون الاعتماد على هاتف موظف الشخصي.')}
@@ -94,7 +94,7 @@ export function Device() {
             <h2 className="h2">{t('Lumia Order Terminal', 'جهاز لوميا أوردر')}</h2>
           </div>
           <p className="lead">
-            {t('A dedicated restaurant order-management terminal with an integrated thermal printer. Orders ring out loud, staff accept at the counter, and the receipt prints automatically. You can still manage everything from the web dashboard.', 'جهاز مخصص لإدارة طلبات المطعم مع طابعة حرارية مدمجة. تُنبَّه بالطلبات بصوت عالٍ، ويقبلها الموظف عند الكاونتر، ويُطبع الإيصال تلقائياً. ويمكنك إدارة كل شيء من لوحة التحكم على الويب أيضاً.')}
+            {t('A dedicated order-management terminal for restaurants and stores, with an integrated thermal printer. Orders ring out loud, staff accept at the counter, and the receipt prints automatically. You can still manage everything from the web dashboard.', 'جهاز مخصص لإدارة طلبات المطاعم والمتاجر مع طابعة حرارية مدمجة. تُنبَّه بالطلبات بصوت عالٍ، ويقبلها الموظف عند الكاونتر، ويُطبع الإيصال تلقائياً. ويمكنك إدارة كل شيء من لوحة التحكم على الويب أيضاً.')}
           </p>
         </div>
 
@@ -159,7 +159,7 @@ export function Channels() {
               <span className="badge" style={{ background: 'var(--ok-bg)', color: 'var(--ok)' }}>{t('EVERY PLAN', 'في كل الباقات')}</span>
             </div>
             <p>
-              {t('Runs in any browser, including on mobile. Menu, restaurant information, delivery areas and fees, opening hours, order and customer history, analytics, staff, WhatsApp configuration, terminal management, billing and settings.', 'تعمل في أي متصفح بما في ذلك الجوال. القائمة، ومعلومات المطعم، ومناطق التوصيل ورسومه، وساعات العمل، وسجل الطلبات والعملاء، والتحليلات، والموظفون، وإعداد واتساب، وإدارة الأجهزة، والفوترة والإعدادات.')}
+              {t('Runs in any browser, including on mobile. Menu and products, business information, delivery areas and fees, opening hours, order and customer history, analytics, staff, WhatsApp configuration, terminal management, billing and settings.', 'تعمل في أي متصفح بما في ذلك الجوال. القائمة والمنتجات، ومعلومات النشاط، ومناطق التوصيل ورسومه، وساعات العمل، وسجل الطلبات والعملاء، والتحليلات، والموظفون، وإعداد واتساب، وإدارة الأجهزة، والفوترة والإعدادات.')}
             </p>
           </div>
         </div>
