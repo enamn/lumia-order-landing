@@ -56,7 +56,7 @@ describe.skipIf(!enabled)("AI replies", () => {
     await inbound("are you open?");
     expect(calls.find(c => c.path === "/internal/whatsapp/send")!.body.text).toBe("Yes, we are open."); // this conversation already has replies
     calls = []; await inbound("from a brand new number", { senderId: "971500005555" });
-    expect(calls.find(c => c.path === "/internal/whatsapp/send")!.body.text).toBe(`${(await getAiSettings(owner, biz)).welcome || `Welcome to AI Test Burgers! 👋\nI'm the restaurant's assistant. Ask me about the menu, or tell me what you'd like to order and I'll take care of it.\n\nأهلاً بك في AI Test Burgers! 👋\nأنا مساعد المطعم. اسألني عن القائمة أو أخبرني بما تريد طلبه وسأساعدك.`}\n\nYes, we are open.`);
+    expect(calls.find(c => c.path === "/internal/whatsapp/send")!.body.text).toBe(`${(await getAiSettings(owner, biz)).welcome || `Welcome to AI Test Burgers! 👋\nI'm the assistant here. Ask me about the menu or products, or tell me what you'd like to order and I'll take care of it.\n\nأهلاً بك في AI Test Burgers! 👋\nأنا المساعد هنا. اسألني عن القائمة أو المنتجات أو أخبرني بما تريد طلبه وسأساعدك.`}\n\nYes, we are open.`);
     calls = []; await inbound("and delivery?", { senderId: "971500005555" });
     expect(calls.find(c => c.path === "/internal/whatsapp/send")!.body.text).toBe("Yes, we are open."); // greeted once
   });

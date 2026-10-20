@@ -92,7 +92,7 @@ export function BillingPage({ businessId, onChoosePlan, onChanged }: { businessI
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}><h2 style={h2}>Orders this month</h2><span style={muted}>Resets {date(u.periodEnd)}</span></div>
         {bar("WhatsApp orders", o.used, o.limit, over, warm)}
         <p style={muted}>{over ? "No orders left this month." : `${num(left)} orders left this month.`}{u.credits > 0 ? ` Includes ${num(u.credits)} extra orders you bought. They are used after your monthly orders and never expire.` : ""}</p>
-        {over && alertBox("You have reached this month’s orders. Customers now get “someone from the restaurant will assist you soon” and you reply yourself from the inbox. Buy more orders below or upgrade your plan.", "alert")}
+        {over && alertBox("You have reached this month’s orders. Customers now get “someone from our team will assist you soon” and you reply yourself from the inbox. Buy more orders below or upgrade your plan.", "alert")}
         {!over && warm && alertBox(`You have used over 80% of this month’s orders.`, "status")}
         {fair.map(([label, x, name]) => alertBox(`You have used ${num(x.used)} of ${num(x.limit)} ${name} included this month.`, "status"))}
         {active && canManage && <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
@@ -154,7 +154,7 @@ export function TaxDetails({ businessId, canManage, onSaved }: { businessId: str
   React.useEffect(() => { api(base).then(fill).catch(e => setErr(e.message)); }, [base]);
   if (!p) return err ? <div role="alert" style={{ color: "#B42318", fontSize: 14 }}>{err}</div> : null;
   const [label, bg, fg] = VAT_COPY[p.vatVerificationStatus] ?? VAT_COPY.NOT_SUBMITTED!;
-  const note = p.vatVerificationStatus === "PENDING" ? "Your VAT details are being reviewed. You can continue preparing your restaurant while we verify your business."
+  const note = p.vatVerificationStatus === "PENDING" ? "Your VAT details are being reviewed. You can continue setting up while we verify your business."
     : p.vatVerificationStatus === "VERIFIED" ? `Your VAT registration is verified${p.validTo ? ` until ${date(p.validTo)}` : ""}.`
     : p.vatVerificationStatus === "REJECTED" ? `We couldn’t verify your VAT details${p.rejectionReason ? `: ${p.rejectionReason}` : ""}. Check them and submit again.`
     : p.vatVerificationStatus === "EXPIRED" ? "Your VAT verification has expired. Submit your details again to renew it."

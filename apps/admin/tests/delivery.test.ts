@@ -259,7 +259,7 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
     // Orders used up: a customer with no order in progress gets a plain notice instead of an AI answer (no AI call), not repeated within the hour.
     await setUsed("orders", limit); const a = "971500000901";
     let r = await turn(() => say("hello", a), id => draft(id));
-    expect(calls.some(c => c.path === "/internal/ai/reply")).toBe(false); expect(r).toContain("Someone from the restaurant will assist you soon"); expect(r).toContain("سيقوم أحد من المطعم بمساعدتك");
+    expect(calls.some(c => c.path === "/internal/ai/reply")).toBe(false); expect(r).toContain("Someone from our team will assist you soon"); expect(r).toContain("سيقوم أحد من فريقنا بمساعدتك");
     r = await turn(() => say("hello?", a), id => draft(id)); expect(r).toBe(""); expect(calls.some(c => c.path === "/internal/ai/reply")).toBe(false);
     // The AI itself fails: the customer is told to send it again (never silence) and no allowance is spent.
     await setUsed("orders", 0); await setUsed("ai", 0); ai = { __fail: true }; calls = []; await say("a failing message", "971500000902"); ai = null;
@@ -289,7 +289,7 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
     await setUsed(before.limit + Math.ceil(before.limit * 0.1));
     const orders = await db.order.count({ where: { businessId: biz } });
     r = await turn(() => say("yes", w3), id => draft(id, { address: "Al Majaz 2, flat 5", emirate: "Sharjah", area: "Al Majaz", confirmed: true }));
-    expect(r).toContain("Someone from the restaurant will assist you soon"); expect(await db.order.count({ where: { businessId: biz } })).toBe(orders);
+    expect(r).toContain("Someone from our team will assist you soon"); expect(await db.order.count({ where: { businessId: biz } })).toBe(orders);
     await setUsed(0);
   });
   it("Pro with a menu per branch: no menu until the branch is known (pickup asks, a pin picks the nearest), then that branch's menu, and the order goes to that branch", async () => {
@@ -386,7 +386,7 @@ describe.skipIf(!enabled)("taking a delivery order over WhatsApp, priced by loca
       await setUsed(used.limit + Math.ceil(used.limit * 0.1));
       try {
         const r = await turn(() => say("Confirm order", b), () => ({}));
-        expect(r).toContain("Someone from the restaurant will assist you soon"); expect(await pendingOf(b)).toHaveLength(1);
+        expect(r).toContain("Someone from our team will assist you soon"); expect(await pendingOf(b)).toHaveLength(1);
       } finally { await setUsed(0); }
     });
   });

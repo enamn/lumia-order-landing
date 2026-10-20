@@ -48,7 +48,7 @@ function sectionsOf(b: Loaded) {
   const s = stored(b.settings), branches = branchesOf(b, s), first = b.locations[0];
   const os = b.orderSettings;
   const profile: Profile = { name: s.profile?.name || b.name, brand: b.name, cuisine: s.profile?.cuisine ?? "", phone: b.phone ?? "", support: s.profile?.support ?? "", email: b.email ?? "", vat: b.vatRegistered, trn: b.taxRegistrationNumber ?? "", lang: s.profile?.lang ?? "both", greet: s.profile?.greet ?? "friendly", logo: b.logoUrl };
-  const delivery: Delivery = s.delivery ?? { status: os && !os.supportsDelivery ? "pickup" : "available", method: null, minOrder: os ? String(fromMinor(os.minimumOrderAmountMinor, b.currencyCode)) : "0", freeAbove: "", eta: "45", pinReq: true, areas: [], ranges: [], freeEm: [], freeAreas: "All areas", freeBranch: first?.id ?? "", manualMsg: "Delivery fee will be confirmed by the restaurant after checking your location.", confirmFirst: true };
+  const delivery: Delivery = s.delivery ?? { status: os && !os.supportsDelivery ? "pickup" : "available", method: null, minOrder: os ? String(fromMinor(os.minimumOrderAmountMinor, b.currencyCode)) : "0", freeAbove: "", eta: "45", pinReq: true, areas: [], ranges: [], freeEm: [], freeAreas: "All areas", freeBranch: first?.id ?? "", manualMsg: "Delivery fee will be confirmed after checking your location.", confirmFirst: true };
   const week = weekOf(first);
   const hours: Hours = s.hours ?? { mode: "custom", scope: "same", sel: first?.id ?? "", every: { ...week[0], day: "Every day" }, closedUntil: "", same: week, per: {} };
   const per = { ...hours.per }; for (const l of b.locations) if (!per[l.id]) per[l.id] = hours.same.map(x => ({ ...x }));

@@ -2,7 +2,8 @@
 // Arabic for the whole dashboard. The screens are built from the designs' English text; with the language on Arabic this turns every
 // English text, placeholder and label on the page into Arabic (dictionary in ar-dict.ts) and puts it back when the language is switched.
 // Text that is already Arabic (the parts translated in code) and brand names are left alone.
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+const useBeforePaint = typeof window === "undefined" ? useEffect : useLayoutEffect; // translate before the browser paints, so the English never shows first
 import { AR, AR_PATTERNS } from "./ar-dict";
 
 const ATTRS = ["placeholder", "aria-label", "title", "alt"];
@@ -46,7 +47,7 @@ function restore(root: Node) {
 
 export function ArabicDom({ lang }: { lang: "en" | "ar" }) {
   const ref = useRef<HTMLSpanElement>(null);
-  useEffect(() => {
+  useBeforePaint(() => {
     const root = ref.current?.parentElement; if (!root) return;
     if (lang !== "ar") { restore(root); return; }
     walk(root);

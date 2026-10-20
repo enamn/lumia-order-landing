@@ -40,7 +40,7 @@ type Tx = Parameters<Parameters<typeof transaction>[0]>[0];
 async function signInPhone(tx: Tx, phoneNumber: string, language: "en" | "ar") {
   const existing = await tx.user.findUnique({ where: { phoneNumber } });
   if (existing && existing.status !== "ACTIVE") return { error: "ACCOUNT_UNAVAILABLE" as const };
-  const user = existing ? await tx.user.update({ where: { id: existing.id }, data: { phoneNumberVerified: true, preferredLanguage: language } }) : await tx.user.create({ data: { name: language === "ar" ? "صاحب المطعم" : "Restaurant owner", preferredLanguage: language, phoneNumber, phoneNumberVerified: true, email: `${randomUUID()}@phone.lumia.invalid`, emailVerified: false } });
+  const user = existing ? await tx.user.update({ where: { id: existing.id }, data: { phoneNumberVerified: true, preferredLanguage: language } }) : await tx.user.create({ data: { name: language === "ar" ? "صاحب النشاط التجاري" : "Business owner", preferredLanguage: language, phoneNumber, phoneNumberVerified: true, email: `${randomUUID()}@phone.lumia.invalid`, emailVerified: false } });
   const membership = await tx.membership.findFirst({ where: { userId: user.id, status: "ACTIVE", organization: { status: "ACTIVE" } } });
   return { user, redirectTo: superAdminPhones().has(user.phoneNumber) ? "/superadmin" : membership ? "/dashboard" : `/onboarding?lang=${language}` }; // super admin numbers go straight to the super admin
 }

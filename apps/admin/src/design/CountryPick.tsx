@@ -7,8 +7,8 @@ import { isCountryCode, MARKETS } from "@/modules/market/countries";
 export function CountryPick({ value, ar, vat = "", onVat }: { value: string; ar?: boolean; vat?: string; onVat?: (v: string) => void }) {
   const c = COUNTRIES.find(x => x.code === value), m = isCountryCode(value) ? MARKETS[value] : null;
   const t = ar
-    ? { label: "الدولة", note: "تتبع دولة مطعمك رقم هاتفك، ولا يمكن تغييرها. العملة: ", vat: "رقم التسجيل في ضريبة القيمة المضافة", vatNote: "يمكن فقط للمطاعم المسجلة في ضريبة القيمة المضافة فتح حساب في هذه الدولة. يراجع فريقنا الرقم قبل تفعيل مطعمك." }
-    : { label: "Country", note: "Your restaurant's country follows your phone number and can't be changed. Currency: ", vat: "VAT registration number", vatNote: "Only VAT-registered restaurants can open an account in this country. Our team checks the number before your restaurant goes live." };
+    ? { label: "الدولة", note: "تتبع دولة نشاطك رقم هاتفك، ولا يمكن تغييرها. العملة: ", vat: "رقم التسجيل في ضريبة القيمة المضافة", vatNote: "يمكن فقط للمطاعم المسجلة في ضريبة القيمة المضافة فتح حساب في هذه الدولة. يراجع فريقنا الرقم قبل تفعيل نشاطك." }
+    : { label: "Country", note: "Your business's country follows your phone number and can't be changed. Currency: ", vat: "VAT registration number", vatNote: "Only VAT-registered businesses can open an account in this country. Our team checks the number before your business goes live." };
   if (!c || !m) return null;
   return (
     <div dir={ar ? "rtl" : "ltr"} style={{ marginTop: 22 }}>

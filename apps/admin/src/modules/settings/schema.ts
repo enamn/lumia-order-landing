@@ -12,7 +12,7 @@ const phone = z.string().trim().transform(v => v.replace(/[\s()-]/g, "")).pipe(z
 const id = z.string().min(1).max(64);
 
 export const profileSection = z.object({
-  name: text(120).min(2, "Enter the legal name."), brand: text(120).min(2, "Enter the restaurant name."), cuisine: text(60), phone, support: phone,
+  name: text(120).min(2, "Enter the legal name."), brand: text(120).min(2, "Enter the business name."), cuisine: text(60), phone, support: phone,
   email: z.union([z.literal(""), z.email()]), vat: z.boolean(), trn: z.string().trim().max(30),
   lang: z.enum(["ar", "en", "both"]), greet: z.enum(["friendly", "formal", "short"]),
   logo: z.string().max(200000).regex(/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/, "Logo must be a PNG or JPG image.").nullable(),

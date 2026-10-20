@@ -20,7 +20,7 @@ export interface EmailContent {
 
 export function brandedEmail(c: EmailContent): { html: string; text: string } {
   const ar = c.lang === "ar", dir = ar ? "rtl" : "ltr", align = ar ? "right" : "left", font = "'Segoe UI',Tahoma,Arial,sans-serif";
-  const footer = ar ? "رسالة تلقائية من لوميا أوردر · استقبال طلبات واتساب لمطعمك" : "An automatic message from Lumia Order · WhatsApp ordering for your restaurant";
+  const footer = ar ? "رسالة تلقائية من لوميا أوردر · استقبال طلبات واتساب لنشاطك" : "An automatic message from Lumia Order · WhatsApp ordering for your business";
   const html = `<!doctype html><html lang="${c.lang}" dir="${dir}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><title>${esc(c.heading)}</title></head>
 <body style="margin:0;padding:0;background:#FBF3F8;font-family:${font};color:#1A0815">
 ${c.preheader ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#FBF3F8">${esc(c.preheader)}</div>` : ""}

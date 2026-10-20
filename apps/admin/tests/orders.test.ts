@@ -78,10 +78,10 @@ describe.skipIf(!enabled)("taking orders over WhatsApp", () => {
     expect(r).toContain("Got it. Pickup or delivery?"); expect(r).toContain("2 × Classic — 56 AED"); expect(r).toContain("1 × Fries — 12 AED"); expect(r).toContain("Total: 68 AED"); expect(r).not.toContain("Reply YES");
     expect(await db.order.count({ where: { businessId: biz } })).toBe(0);
     r = await turn("pickup", id => reply(draft(id, [["Classic", 2], ["Fries", 1]], "pickup"), "Great, pickup it is."));
-    expect(r).toContain("Pickup from the restaurant"); expect(r).toContain("Reply YES to confirm");
+    expect(r).toContain("Pickup"); expect(r).toContain("Reply YES to confirm");
     expect(calls.find(c => c.path === "/internal/ai/reply")!.body.draft).toMatchObject({ items: [{ quantity: 2 }, { quantity: 1 }], fulfillment: null }); // the saved draft is sent back to the model
     r = await turn("yes", id => reply(draft(id, [["Classic", 2], ["Fries", 1]], "pickup", "", true), "Thanks!"));
-    expect(r).toBe("✅ Order #1001 received. Total 68 AED, pickup. We'll message you as soon as the restaurant confirms it.");
+    expect(r).toBe("✅ Order #1001 received. Total 68 AED, pickup. We'll message you as soon as it is confirmed.");
     const o = await db.order.findFirstOrThrow({ where: { businessId: biz }, include: { items: true, history: true } });
     expect(o).toMatchObject({ orderNumber: "1001", status: "AWAITING_BUSINESS_CONFIRMATION", fulfillmentType: "PICKUP", subtotalMinor: 6800, totalMinor: 6800, paymentStatus: "PENDING", channel: "WHATSAPP" });
     expect(o.items.map(i => [i.itemNameSnapshot, i.quantity, i.unitPriceMinor, i.totalMinor]).sort()).toEqual([["Classic", 2, 2800, 5600], ["Fries", 1, 1200, 1200]]); expect(o.history[0]).toMatchObject({ newStatus: "AWAITING_BUSINESS_CONFIRMATION", changedByType: "AI" });
@@ -112,7 +112,7 @@ describe.skipIf(!enabled)("taking orders over WhatsApp", () => {
     r = await turn("نعم أضف 3 كلاسيك", id => ({ ...reply(draft(id, [["Classic", 4], ["Fries", 1]], "delivery", "Al Majaz, building 4"), "تمام!"), language: "ar" }), c3);
     expect(r).not.toContain("تمام!"); expect(r).toContain("راجع التفاصيل"); expect(r).toContain("المجموع: 124 AED"); expect(r).toContain("التوصيل إلى"); expect(r).toContain("نعم");
     r = await turn("نعم", id => ({ ...reply(draft(id, [["Classic", 4], ["Fries", 1]], "delivery", "Al Majaz, building 4", true)), language: "ar" }), c3);
-    expect(r).toBe("✅ تم استلام طلبك رقم 1003. المجموع 124 AED، توصيل. سنراسلك فور تأكيد المطعم.");
+    expect(r).toBe("✅ تم استلام طلبك رقم 1003. المجموع 124 AED، توصيل. سنراسلك فور تأكيد الطلب.");
     const o = await db.order.findFirstOrThrow({ where: { orderNumber: "1003", businessId: biz }, include: { deliveryDetails: true } }); expect(o.deliveryDetails).toMatchObject({ addressText: "Al Majaz, building 4", recipientPhone: "+971500000444" });
   });
   it("lets staff move orders along, tells the customer, and blocks invalid steps and viewers", async () => {

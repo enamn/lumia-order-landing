@@ -114,7 +114,7 @@ export const statusSchema = z.object({ status: z.enum(["ACCEPTED", "REJECTED", "
 
 // The terminal sends one of four reasons as its English label; the customer reads it in their own language (anything else is passed on as typed).
 const REASONS: Record<string, Record<Lang, string>> = {
-  "Sold out": { en: "sold out", ar: "نفدت الكمية" }, "Too busy": { en: "we are too busy", ar: "المطعم مشغول جداً" },
+  "Sold out": { en: "sold out", ar: "نفدت الكمية" }, "Too busy": { en: "we are too busy", ar: "نحن مشغولون جداً" },
   "Closing soon": { en: "we are closing soon", ar: "سنغلق قريباً" }, "Outside delivery area": { en: "outside our delivery area", ar: "خارج منطقة التوصيل" },
 };
 const reasonFor = (reason: string | undefined, lang: Lang) => (reason ? REASONS[reason]?.[lang] ?? reason : "");

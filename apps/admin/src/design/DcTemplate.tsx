@@ -127,7 +127,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                     )}
                     {vm.phoneHint && (
                       <>
-                      <div style={S("margin-top:10px;font-size:14px;line-height:1.45;color:#8A5A6E")}>
+                      <div className="bidi-t" style={S("margin-top:10px;font-size:14px;line-height:1.45;color:#8A5A6E")}>
                         {vm.X.hint}
                       </div>
                       </>
@@ -231,7 +231,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                 )}
                 {vm.is.name && (
                   <>
-                  <form data-screen-label="03 Restaurant name" onSubmit={vm.submitName} noValidate={true} style={S("flex:1;display:flex;flex-direction:column")}>
+                  <form data-screen-label="03 Business name" onSubmit={vm.submitName} noValidate={true} style={S("flex:1;display:flex;flex-direction:column")}>
                     <h1 style={S(`font-size:30px;font-weight:600;letter-spacing:-0.035em;line-height:1.08;margin-top:${vm.L.headTop};text-wrap:balance`)}>
                       {vm.X.nameTitle}
                     </h1>
@@ -2519,7 +2519,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     </div>
                                     <div style={S("background:#fff;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px")}>
                                       <span style={S("font-size:12px;color:#8A5A6E")}>
-                                        Restaurant WhatsApp
+                                        Business WhatsApp
                                       </span>
                                       <span style={S("font-size:14px;color:#3D1C31")}>
                                         Not connected yet

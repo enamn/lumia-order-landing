@@ -20,5 +20,5 @@
 .dc select,.dc textarea{font:inherit;color:inherit;outline:none}
 .dc textarea::placeholder{color:#B89AA8}
 
-/* Sign-in card: the layout is identical in English and Arabic. Arabic text reads right-to-left inside the same left-aligned blocks. */
-.dc--bidi h1, .dc--bidi p, .dc--bidi label, .dc--bidi [role='alert'] > span:last-child { unicode-bidi: plaintext; text-align: left; }
+/* Sign-in card: the card itself (logo, language button, phone field) is identical in English and Arabic; in Arabic the texts read right-to-left and sit against the right edge. */
+.dc--bidi h1, .dc--bidi p, .dc--bidi label, .dc--bidi .bidi-t, .dc--bidi [role='alert'] > span:last-child { unicode-bidi: plaintext; text-align: right; }

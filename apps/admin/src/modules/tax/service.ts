@@ -107,7 +107,7 @@ export async function requireTaxEligible(businessId: string, now = new Date()): 
   const d = await taxDecisionFor(businessId, now);
   if (!d.eligible) {
     const code = refusalCode(d.reasons);
-    const text: Record<string, string> = { VAT_REGISTRATION_REQUIRED: "For this market, Lumia Order currently supports subscriptions for VAT-registered businesses. Enter your business VAT number to continue. If you are not registered, contact sales to discuss future availability.", VAT_VERIFICATION_PENDING: "Your VAT details are being reviewed. You can continue preparing your restaurant while we verify your business.", VAT_VERIFICATION_REJECTED: "We couldn’t verify your VAT details. Check them and submit again, or contact support.", TAX_POLICY_REVIEW_REQUIRED: "This purchase needs a tax review before it can go ahead. Please contact support.", COUNTRY_NOT_SUPPORTED: "This country is not supported." };
+    const text: Record<string, string> = { VAT_REGISTRATION_REQUIRED: "For this market, Lumia Order currently supports subscriptions for VAT-registered businesses. Enter your business VAT number to continue. If you are not registered, contact sales to discuss future availability.", VAT_VERIFICATION_PENDING: "Your VAT details are being reviewed. You can continue setting up while we verify your business.", VAT_VERIFICATION_REJECTED: "We couldn’t verify your VAT details. Check them and submit again, or contact support.", TAX_POLICY_REVIEW_REQUIRED: "This purchase needs a tax review before it can go ahead. Please contact support.", COUNTRY_NOT_SUPPORTED: "This country is not supported." };
     throw new AppError(code, text[code] ?? "This purchase isn’t available for your account yet.", 409, { reasons: d.reasons });
   }
   return d;

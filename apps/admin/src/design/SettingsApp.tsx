@@ -50,7 +50,7 @@ const PAGES = [
   ['payments', 'Payments', 'M2.5 5.5h15v9h-15zM10 12.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4zM5.5 8v4M14.5 8v4'],
 ];
 const KEY: Record<string, string> = { profile: 'profile', branches: 'branches', whatsapp: 'wa', delivery: 'delivery', hours: 'hours', payments: 'pay' };
-const OK: Record<string, string> = { profile: 'Restaurant profile saved.', branches: 'Branches saved.', whatsapp: 'WhatsApp settings saved.', delivery: 'Delivery settings saved.', hours: 'Working hours saved.', payments: 'Payment settings saved.' };
+const OK: Record<string, string> = { profile: 'Business profile saved.', branches: 'Branches saved.', whatsapp: 'WhatsApp settings saved.', delivery: 'Delivery settings saved.', hours: 'Working hours saved.', payments: 'Payment settings saved.' };
 const TONE: Record<string, string[]> = { ok: ['#E6F4EC', '#16704A'], warn: ['#FFF1DC', '#8A4B00'], bad: ['#FDECEC', '#B42318'], neutral: ['#F6EEF2', '#3D1C31'] };
 const clone = (o: any) => JSON.parse(JSON.stringify(o));
 const fmt12 = (t: string) => { if (!t) return ''; let [h, m] = t.split(':').map(Number); const ap = h >= 12 && h < 24 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${String(m).padStart(2, '0')} ${ap}`; };
@@ -187,7 +187,7 @@ class SettingsApp extends React.Component<Props, any> {
     const menuDone = menuLevel >= 3, payDone = sv.pay.cod;
     const MENU_ST = ['No menu uploaded', 'AI extraction in progress', 'Needs review', 'Approved', 'Live'];
     const stepDefs = [
-      ['Restaurant profile', profDone, profDone ? ['Complete', 'ok', 'Edit'] : ['Missing', 'bad', 'Complete profile'], 'profile'],
+      ['Business profile', profDone, profDone ? ['Complete', 'ok', 'Edit'] : ['Missing', 'bad', 'Complete profile'], 'profile'],
       ['Branch location', locDone, locDone ? ['Complete', 'ok', 'Edit'] : ['Missing', 'bad', 'Add location'], 'branches'],
       [ 'WhatsApp number', s.wa.connected, s.wa.connected ? ['Connected', 'ok', 'Manage'] : ['Not connected', 'bad', 'Connect'], 'whatsapp'],
       ['Menu', menuDone, menuDone ? [MENU_ST[menuLevel], 'ok', 'Edit menu'] : [MENU_ST[menuLevel], 'warn', 'Review menu'], 'menu'],
@@ -198,7 +198,7 @@ class SettingsApp extends React.Component<Props, any> {
     const steps = stepDefs.map(([label, done, [status, tone, action], page]) => ({ label, done, todo: !done, status, action, tbg: TONE[tone][0], tfg: TONE[tone][1], ring: tone === 'bad' ? '#E8A0A0' : '#E5B97A',
       bar: done ? '#16704A' : 'rgba(26,8,21,.12)', abd: done ? '#ECD9E0' : 'transparent', abg: done ? '#fff' : '#1A0815', afg: done ? '#1A0815' : '#fff', go: () => this.go(page) }));
     const doneN = steps.filter(x => x.done).length;
-    const NOTE = { 'Branch location': 'Needed to calculate delivery distance and fees.', 'Delivery settings': 'Lumia AI cannot calculate delivery fees yet.', 'Menu': 'Lumia AI answers only from an approved menu.', 'Order device': 'Orders still appear in the dashboard, but they will not print.', 'Restaurant profile': 'Name, phone and VAT details.', 'Payment method': 'Customers need a way to pay.' };
+    const NOTE = { 'Branch location': 'Needed to calculate delivery distance and fees.', 'Delivery settings': 'Lumia AI cannot calculate delivery fees yet.', 'Menu': 'Lumia AI answers only from an approved menu.', 'Order device': 'Orders still appear in the dashboard, but they will not print.', 'Business profile': 'Name, phone and VAT details.', 'Payment method': 'Customers need a way to pay.' };
     const todo = steps.filter(x => !x.done), todoSteps = todo.map((x, i) => ({ ...x, note: NOTE[x.label] || '', hasNote: !!NOTE[x.label], bt: i ? '1px solid #F3EEF1' : '0' }));
     const doneSteps = steps.filter(x => x.done);
     const isReady = profDone && locDone && menuDone && delDone;
@@ -214,7 +214,7 @@ class SettingsApp extends React.Component<Props, any> {
     const nav = navAll;
     const navGroups = [{ hasLabel: true, label: 'Settings', count: '', items: navAll }];
     // profile
-    const pr = d.profile, brand = pr.brand.trim() || 'Your restaurant';
+    const pr = d.profile, brand = pr.brand.trim() || 'Your business';
     const initials = brand.split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
     const GREET = { friendly: `Hi, welcome to ${brand}. What would you like to order today?`, formal: `Welcome to ${brand}. How may we help you with your order today?`, short: `Hi! What can we get you from ${brand}?` };
     const GREET_AR = { friendly: `أهلاً بك في ${brand}. ماذا تحب أن تطلب اليوم؟`, formal: `مرحباً بكم في ${brand}. كيف يمكننا مساعدتكم في طلبكم اليوم؟`, short: `أهلاً! ماذا نحضّر لك من ${brand}؟` };
@@ -269,7 +269,7 @@ class SettingsApp extends React.Component<Props, any> {
       if (D.method === 'area') { const r = D.areas.find(r => r.on && r.emirate === C.emirate && (/^all/i.test(r.area) || !C.area.trim() || r.area.toLowerCase() === C.area.trim().toLowerCase())); if (!r) return bad(`No delivery to ${C.emirate}`, nope); fee = +r.fee || 0; eta = r.eta || D.eta; br = r.branch || C.branch; min = +(r.min || D.minOrder) || 0; }
       else if (D.method === 'distance') { const r = D.ranges.find(r => r.on && dist >= +r.from && (r.to === '' || dist < +r.to)); if (!r) return bad(`No delivery at ${dist} km`, `Sorry, you're outside our delivery range. You can order for pickup from ${bName(C.branch)}.`); fee = +r.fee || 0; eta = r.eta || D.eta; br = C.branch; min = +(r.min || D.minOrder) || 0; }
       else if (D.method === 'free') { if (!D.freeEm.includes(C.emirate)) return bad(`No delivery to ${C.emirate}`, nope); fee = 0; eta = D.eta; br = D.freeBranch; min = +D.minOrder || 0; }
-      else return { ok: true, head: 'Delivery available', fg: '#16704A', rows: [{ k: 'Fee', v: 'Confirmed by restaurant' }, { k: 'Branch', v: bName(C.branch) }], msg: D.manualMsg };
+      else return { ok: true, head: 'Delivery available', fg: '#16704A', rows: [{ k: 'Fee', v: 'Confirmed by the business' }, { k: 'Branch', v: bName(C.branch) }], msg: D.manualMsg };
       if (sub < min) return bad(`Below minimum order (${S(min)})`, `The minimum order for delivery is ${S(min)}. Add ${S(min - sub)} more to continue.`);
       if (D.freeAbove && sub >= +D.freeAbove) fee = 0;
       return { ok: true, head: 'Delivery available', fg: '#16704A', rows: [{ k: 'Fee', v: fee ? `${S(fee)}` : 'Free' }, { k: 'ETA', v: `${eta} minutes` }, { k: 'Branch', v: bName(br) }],
@@ -291,8 +291,8 @@ class SettingsApp extends React.Component<Props, any> {
       ? [{ when: 'While temporarily closed', text: `Sorry, ${brand} is temporarily closed${H.closedUntil ? ` and reopens on ${new Date(H.closedUntil + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}` : ''}. We can't take orders right now.` }]
       : [
         today && today.open ? { when: 'When a customer asks today', text: `We are open today until ${fmt12(today.to)}.` } : { when: 'Today', text: 'We are closed today.' },
-        { when: 'Outside opening hours', text: `Sorry, the restaurant is currently closed. It opens ${nextOpen}.` },
-        today && today.open && { when: 'Near closing time', text: `The restaurant closes at ${fmt12(today.to)}. Please confirm your order now.` },
+        { when: 'Outside opening hours', text: `Sorry, we are currently closed. It opens ${nextOpen}.` },
+        today && today.open && { when: 'Near closing time', text: `We close at ${fmt12(today.to)}. Please confirm your order now.` },
       ].filter(Boolean);
 
     // menu
@@ -318,7 +318,7 @@ class SettingsApp extends React.Component<Props, any> {
       pairQr: ps ? <div style={{ opacity: expired ? 0.25 : 1, transition: 'opacity .2s' }}><QrCode text={ps.qr} /></div> : null, pairTerm: ps ? <TerminalArt scanned={scanned} /> : null,
       pairTitle: scanned ? 'Terminal linked' : expired ? 'This code has expired' : 'Scan to connect your terminal',
       pairSub: scanned ? 'Finishing setup. Keep this page open.' : expired ? 'For safety a code only works for 10 minutes. Get a new one to continue.' : 'Use the camera on the Lumia Order terminal to scan this code.',
-      pairSteps: ['Turn on the terminal and open the Lumia Order app', 'Tap Connect to restaurant', 'Point the camera at this code'].map((label, i) => ({ n: i + 1, label })),
+      pairSteps: ['Turn on the terminal and open the Lumia Order app', 'Tap Connect to business', 'Point the camera at this code'].map((label, i) => ({ n: i + 1, label })),
       pairCode: ps ? `${ps.code.slice(0, 3)} ${ps.code.slice(3)}` : '', pairNote: expired ? 'Expired' : `Expires in ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`,
       pairError: '', pairExpired: expired, newPairCode: () => this.startPair(), startPair: () => this.startPair(), cancelPair: () => this.cancelPair(), finishPair: () => {},
     };

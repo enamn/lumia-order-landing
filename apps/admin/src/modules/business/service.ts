@@ -21,14 +21,14 @@ export async function createBusiness(userId: string, input: unknown, requestId: 
     // A brand in a second country opens a second account with a phone number of that country.
     const own = marketFromDial(owner.phoneNumber)?.code;
     if (!own) throw new AppError("COUNTRY_NOT_SUPPORTED", "Lumia Order is available with phone numbers from the UAE, Saudi Arabia, Oman, Bahrain, Qatar and Kuwait.", 422);
-    if (data.countryCode && data.countryCode !== own) throw new AppError("COUNTRY_MISMATCH", `The country of your restaurant follows your phone number: ${owner.phoneNumber} is ${MARKETS[own].nameEn}.`, 422);
+    if (data.countryCode && data.countryCode !== own) throw new AppError("COUNTRY_MISMATCH", `The country of your business follows your phone number: ${owner.phoneNumber} is ${MARKETS[own].nameEn}.`, 422);
     const chosen = own, market = MARKETS[chosen];
     const existing = await tx.business.findFirst({ where: { organization: { members: { some: { userId, status: "ACTIVE" } } } }, orderBy: { createdAt: "asc" } });
     if (existing) return existing;
     await requireRegistration(chosen);
     // Saudi Arabia, Oman and Bahrain: only VAT-registered restaurants can open an account. The number is saved for review; the restaurant goes live once the review verifies it.
     const vatNumber = (data.vatNumber ?? "").toUpperCase().replace(/[\s.-]/g, "");
-    if (market.requiresVerifiedVatForSaas && !/^[A-Z0-9]{8,20}$/.test(vatNumber)) throw new AppError("VAT_REGISTRATION_REQUIRED", `Only VAT-registered restaurants can open an account in ${market.nameEn}. Enter your VAT registration number (8 to 20 letters or digits).`, 422);
+    if (market.requiresVerifiedVatForSaas && !/^[A-Z0-9]{8,20}$/.test(vatNumber)) throw new AppError("VAT_REGISTRATION_REQUIRED", `Only VAT-registered businesses can open an account in ${market.nameEn}. Enter your VAT registration number (8 to 20 letters or digits).`, 422);
     const user = await tx.user.findFirst({ where: { id: userId, status: "ACTIVE" } });
     if (!user) throw new AppError("UNAUTHENTICATED", "Please sign in.", 401);
     const org = await tx.organization.create({ data: { name: data.name, slug: `org-${crypto.randomUUID()}`, members: { create: { userId, role: "OWNER" } } } });

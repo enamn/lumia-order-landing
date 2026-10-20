@@ -128,13 +128,13 @@ export function SettingsTemplate({ vm }: { vm: any }) {
             <div style={S(`max-width:1240px;margin:0;padding:${vm.L.pad};display:flex;flex-direction:column;gap:20px`)}>
               {vm.pg.profile && (
                 <>
-                <div data-screen-label="02 Restaurant profile" style={S("display:flex;flex-direction:column;gap:20px")}>
+                <div data-screen-label="02 Business profile" style={S("display:flex;flex-direction:column;gap:20px")}>
                   <div>
                     <h1 style={S("font-size:22px;font-weight:600;letter-spacing:-0.025em")}>
-                      Restaurant profile
+                      Business profile
                     </h1>
                     <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
-                      How your restaurant appears to customers on WhatsApp and on receipts.
+                      How your business appears to customers on WhatsApp and on receipts.
                     </p>
                   </div>
                   <div style={S(`display:grid;grid-template-columns:${vm.L.split};gap:20px;align-items:start`)}>
@@ -172,7 +172,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                             <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px 16px")}>
                               <label style={S("display:flex;flex-direction:column;gap:6px")}>
                                 <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                                  Restaurant name
+                                  Business name
                                 </span>
                                 <input value={vm.prof.name.v} onChange={vm.prof.name.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
                                 <span style={S("font-size:13px;color:#8A5A6E")}>
@@ -190,9 +190,9 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                               </label>
                               <label style={S("display:flex;flex-direction:column;gap:6px")}>
                                 <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                                  Cuisine type
+                                  Cuisine / store type
                                 </span>
-                                <input value={vm.prof.cuisine.v} onChange={vm.prof.cuisine.set} placeholder="e.g. Burgers, Lebanese, Pizza" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
+                                <input value={vm.prof.cuisine.v} onChange={vm.prof.cuisine.set} placeholder="e.g. Burgers, Lebanese, Supermarket" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
                               </label>
                             </div>
                           </div>
@@ -730,7 +730,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                       Delivery settings
                     </h1>
                     <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:640px;line-height:1.5;text-wrap:pretty")}>
-                      Where you deliver and what customers pay. Your restaurant does the delivery. Lumia calculates the fee and includes it in the order summary.
+                      Where you deliver and what customers pay. You do the delivery. Lumia calculates the fee and includes it in the order summary.
                     </p>
                   </div>
                   <div style={S(`display:grid;grid-template-columns:${vm.L.split};gap:20px;align-items:start`)}>
@@ -773,7 +773,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                 Delivery handled by
                               </span>
                               <span style={S("font-weight:600")}>
-                                Your restaurant
+                                Your business
                               </span>
                               <span style={S("color:#8A5A6E")}>
                                 · Lumia doesn't provide drivers yet.
@@ -1166,7 +1166,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                 <div style={S("display:flex;align-items:center;justify-content:space-between;gap:16px")}>
                                   <div>
                                     <span style={S("font-size:15px;font-weight:500")}>
-                                      Send order to restaurant before final confirmation
+                                      Send order to the business before final confirmation
                                     </span>
                                     <p style={S("font-size:13px;color:#8A5A6E;margin-top:2px")}>
                                       You set the fee on the device, then Lumia sends the customer the final total.
@@ -1630,7 +1630,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         Lumia Order devices
                       </h1>
                       <p style={S("font-size:14px;color:#8A5A6E;margin-top:4px;max-width:620px;line-height:1.5;text-wrap:pretty")}>
-                        Devices inside the restaurant that receive and print orders.
+                        Devices at your business that receive and print orders.
                       </p>
                     </div>
                     {vm.hasDevices && (
@@ -1713,7 +1713,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         No Lumia Order device connected yet.
                       </h2>
                       <p style={S("font-size:15px;color:#3D1C31;margin-top:6px;max-width:380px;line-height:1.5")}>
-                        Connect a device so orders can appear and print inside the restaurant.
+                        Connect a device so orders can appear and print at your business.
                       </p>
                       <button type="button" onClick={vm.startPair} style={S("margin-top:20px;height:46px;padding:0 20px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px")} className="dcs6">
                         Connect device

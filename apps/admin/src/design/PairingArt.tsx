@@ -18,7 +18,7 @@ export function TerminalArt({ scanned }: { scanned: boolean }) {
         ['border' + (cy ? 'Bottom' : 'Top')]: '5px solid #FF5577', ['border' + (cx ? 'Right' : 'Left')]: '5px solid #FF5577',
         ['border' + (cy ? 'Bottom' : 'Top') + (cx ? 'Right' : 'Left') + 'Radius']: 12, animation: 'lo-breathe 1.6s ease-in-out infinite' } }); });
     const scanning = ce('div', { key: 'sc', style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 22, textAlign: 'center' } },
-      ce('div', { style: { fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em' } }, 'Scan restaurant code'),
+      ce('div', { style: { fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em' } }, 'Scan business code'),
       ce('div', { style: { position: 'relative', width: 210, height: 210, borderRadius: 22, background: '#fff', boxShadow: '0 10px 24px -14px rgba(120,20,80,.45)', overflow: 'hidden' } },
         mini, ...corners,
         ce('div', { style: { position: 'absolute', left: 14, right: 14, top: 0, height: 34, background: 'linear-gradient(180deg,rgba(255,85,119,0),rgba(255,85,119,.22) 70%,#FF5577 96%,rgba(255,85,119,0))', animation: 'lo-tscan 1.8s ease-in-out infinite' } })),

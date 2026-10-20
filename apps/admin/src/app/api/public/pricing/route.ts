@@ -8,7 +8,10 @@ export const dynamic = "force-dynamic";
 
 // The plan prices the landing page shows for a visitor: their country's approved prices when the visitor is in the Gulf and the prices exist, otherwise the UAE prices in AED.
 // Only the country is looked up (from the IP, in memory); nothing is stored.
-const allowed = () => new Set([(process.env.NEXT_PUBLIC_MARKETING_URL ?? "").replace(/\/$/, ""), ...(process.env.NODE_ENV === "production" ? [] : ["http://localhost:5173", "http://localhost:3000"])].filter(Boolean));
+const allowed = () => { // the landing page's own address; while developing, the landing page may run on any local port (Vite moves to the next one when 5173 is busy)
+  const fixed = new Set([(process.env.NEXT_PUBLIC_MARKETING_URL ?? "").replace(/\/$/, "")].filter(Boolean));
+  return { has: (o: string) => fixed.has(o) || (process.env.NODE_ENV !== "production" && /^http:\/\/localhost:\d+$/.test(o)) };
+};
 const cors = (origin: string | null) => ({ "Access-Control-Allow-Origin": origin ?? "", "Access-Control-Allow-Methods": "GET, OPTIONS", "Access-Control-Allow-Headers": "Content-Type", Vary: "Origin" });
 
 export function OPTIONS(request: Request) { const origin = request.headers.get("origin"); return new Response(null, { status: 204, headers: origin && allowed().has(origin) ? cors(origin) : {} }); }

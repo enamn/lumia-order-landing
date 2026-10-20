@@ -246,7 +246,7 @@ const TYPE_ONLY = "Sorry, I can only read text messages for now. Please type you
 const UNSUPPORTED_LANGUAGE = "Sorry, I can only understand voice messages in Arabic or English. Please send your message in Arabic or English, or type it 🙏\nعذراً، أفهم الرسائل الصوتية بالعربية والإنجليزية فقط. فضلاً أرسل رسالتك بالعربية أو الإنجليزية أو اكتبها 🙏";
 const NOT_CLEAR = "Sorry, I couldn't hear that clearly. Could you send it again, or type your message? 🙏\nعذراً، لم أستطع سماع الرسالة بوضوح. هل يمكنك إعادة إرسالها أو كتابتها؟ 🙏";
 const SLOW_DOWN = "You're sending messages very quickly. Please wait a moment and I'll reply 🙏\nأنت ترسل الرسائل بسرعة كبيرة. فضلاً انتظر قليلاً وسأرد عليك 🙏";
-const BUSY = "Thanks for your message! Someone from the restaurant will assist you soon 🙏\nشكراً لرسالتك! سيقوم أحد من المطعم بمساعدتك قريباً 🙏";
+const BUSY = "Thanks for your message! Someone from our team will assist you soon 🙏\nشكراً لرسالتك! سيقوم أحد من فريقنا بمساعدتك قريباً 🙏";
 const TRY_AGAIN = "Sorry, I couldn't process that. Please send your message again 🙏\nعذراً، لم أتمكن من معالجة رسالتك. فضلاً أرسلها مرة أخرى 🙏";
 type Target = { businessId: string; conversationId: string; externalMessageId: string };
 
