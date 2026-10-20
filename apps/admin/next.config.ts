@@ -6,27 +6,5 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
   { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
 ];
-const config: NextConfig = {
-  poweredByHeader: false,
-  turbopack: { root: process.cwd() },
-  experimental: { cpus: 2 },
-  async headers() {
-    return [
-      { source: "/:path*", headers: securityHeaders },
-      {
-        source: "/__/auth/:path*",
-        headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }],
-      },
-    ];
-  },
-  async rewrites() {
-    return [
-      {
-        source: "/__/auth/:path*",
-        destination:
-          "https://e-commerce-8000c.firebaseapp.com/__/auth/:path*",
-      },
-    ];
-  },
-};
+const config: NextConfig = { poweredByHeader: false, turbopack: { root: process.cwd() }, experimental: { cpus: 2 }, async headers() { return [{ source: "/:path*", headers: securityHeaders }]; } };
 export default config;

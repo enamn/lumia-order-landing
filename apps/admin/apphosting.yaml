@@ -21,7 +21,7 @@ env:
     value: AIzaSyCrdlSYZSonS0UM1-XLOdy_zRdRGEmGcjo
     availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: app.order.lumia.ae
+    value: e-commerce-8000c.firebaseapp.com
     availability: [BUILD, RUNTIME]
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
     value: e-commerce-8000c
