@@ -16,19 +16,6 @@ env:
   - variable: NEXT_PUBLIC_MARKETING_URL
     value: https://order.lumia.ae
     availability: [BUILD, RUNTIME]
-  # --- SMS sign-in codes: Firebase Phone Authentication (public web config of the Firebase project). In the Firebase console turn on Authentication > Phone, add app.order.lumia.ae to the authorized domains and limit SMS to the Gulf countries. ---
-  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    value: AIzaSyCrdlSYZSonS0UM1-XLOdy_zRdRGEmGcjo
-    availability: [BUILD, RUNTIME]
-  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: e-commerce-8000c.firebaseapp.com
-    availability: [BUILD, RUNTIME]
-  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    value: e-commerce-8000c
-    availability: [BUILD, RUNTIME]
-  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-    value: 1:445206340283:web:e0f8c1a0042bd1c6df7f9e
-    availability: [BUILD, RUNTIME]
   # --- super admin: phone numbers (comma-separated) that may open /superadmin after the normal phone-code sign-in ---
   - variable: SUPER_ADMIN_PHONES
     value: "+971588031592"

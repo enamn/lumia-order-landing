@@ -17,7 +17,6 @@ import { marketOf, isCountryCode, MARKETS } from "@/modules/market/countries";
 import { AccountMenu, PlanBadge } from "./AccountMenu";
 import { BillingPage } from "./BillingPage";
 import { ArabicDom } from "./ArabicDom";
-import { confirmFirebaseCode, firebaseSmsEnabled, sendFirebaseSms, smsFailure } from "./firebase-phone";
 import { mountEmbeddedCheckout } from "@/lib/stripe-embed";
 import { authClient } from "@/lib/auth-client";
 import { logoToDataUrl } from "@/lib/logo";
@@ -482,24 +481,19 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       this.setState({ resendAt: Date.now() + (r.resendAfter ?? 30) * 1000, note: r.testMode ? "Test mode: no message was sent. Enter 111111." : null });
     } catch (err) { this.setState({ sending: false, invalid: true, srvErr: err instanceof Error ? err.message : "We couldn’t send the code. Please try again." }); }
   };
-  private fbConfirm: any = null; // the pending Firebase SMS confirmation (SMS sign-in)
   async verify(code: string) {
     if (this.state.verifying || this.state.otpErr === "expired") return;
     this.setState({ verifying: true, otpErr: null, otpFail: "", note: null });
     try {
-      let r: any;
-      if (this.state.smsMode && this.fbConfirm) {
-        const idToken = await confirmFirebaseCode(this.fbConfirm, code);
-        r = await api("/api/auth/firebase/verify", "POST", { idToken, language: this.state.lang });
-      } else r = await api("/api/auth/whatsapp/verify-code", "POST", { phoneNumber: this.state.e164, code });
+      const r: any = await api("/api/auth/whatsapp/verify-code", "POST", { phoneNumber: this.state.e164, code });
       if (String(r.redirectTo).startsWith("/superadmin")) { window.location.assign("/superadmin"); return; }
       if (String(r.redirectTo).startsWith("/dashboard")) { window.location.assign("/dashboard"); return; }
       this.setState({ verifying: false }); this.go("verified"); this.later(1300, () => this.go("name"));
     } catch (err: any) {
-      const f = this.state.smsMode ? smsFailure(err) : null, bad = err.code === "INVALID_CODE" || f === "incorrect", old = err.code === "CODE_EXPIRED" || f === "expired";
+      const bad = err.code === "INVALID_CODE", old = err.code === "CODE_EXPIRED";
       if (bad) { this.setState({ verifying: false, otpErr: "incorrect" }); this.focus(this.otpRef); }
       else if (old) this.setState({ verifying: false, otpErr: "expired", resendAt: 0 });
-      else this.setState({ verifying: false, otpFail: this.state.smsMode && !err.code ? this.smsMessage(f ?? "failed") : err.message, digits: "" });
+      else this.setState({ verifying: false, otpFail: err.message, digits: "" });
     }
   }
   smsMessage(f: string) {
@@ -512,20 +506,12 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     } as Record<string, string>)[f] ?? "";
   }
   async resend(channel: "whatsapp" | "sms") {
-    const ar = this.state.lang === "ar", viaFirebase = channel === "sms" && !this.props.testMode && firebaseSmsEnabled();
+    const ar = this.state.lang === "ar";
     try {
-      if (viaFirebase) { // SMS through Firebase Phone Authentication
-        this.setState({ sending: true });
-        this.fbConfirm = await sendFirebaseSms(this.state.e164, this.state.lang);
-        this.setState({ sending: false, smsMode: true, digits: "", otpErr: null, otpFail: "", resendAt: Date.now() + 60 * 1000, now: Date.now(), note: ar ? `تم إرسال الرمز برسالة نصية إلى ${maskPhone(this.state.e164)}.` : `Code sent by SMS to ${maskPhone(this.state.e164)}.` });
-        this.focus(this.otpRef);
-        return;
-      }
       const r = await api("/api/auth/whatsapp/send-code", "POST", { phoneNumber: this.state.e164, language: this.state.lang, channel });
-      this.fbConfirm = null;
-      this.setState({ smsMode: false, digits: "", otpErr: null, otpFail: "", resendAt: Date.now() + (r.resendAfter ?? 30) * 1000, now: Date.now(), note: r.testMode ? "Test mode: no message was sent. Enter 111111." : channel === "sms" ? (ar ? `تم إرسال الرمز برسالة نصية إلى ${maskPhone(this.state.e164)}.` : `Code sent by SMS to ${maskPhone(this.state.e164)}.`) : (ar ? "تم إرسال رمز جديد إلى واتساب." : "New code sent to your WhatsApp.") });
+      this.setState({ smsMode: channel === "sms", digits: "", otpErr: null, otpFail: "", resendAt: Date.now() + (r.resendAfter ?? 30) * 1000, now: Date.now(), note: r.testMode ? "Test mode: no message was sent. Enter 111111." : channel === "sms" ? (ar ? `تم إرسال الرمز برسالة نصية إلى ${maskPhone(this.state.e164)}.` : `Code sent by SMS to ${maskPhone(this.state.e164)}.`) : (ar ? "تم إرسال رمز جديد إلى واتساب." : "New code sent to your WhatsApp.") });
       this.focus(this.otpRef);
-    } catch (err) { this.setState({ sending: false, otpFail: viaFirebase ? this.smsMessage(smsFailure(err)) : err instanceof Error ? err.message : "We couldn’t send the code. Please try again.", note: null }); }
+    } catch (err) { this.setState({ sending: false, otpFail: err instanceof Error ? err.message : "We couldn’t send the code. Please try again.", note: null }); }
   }
   // ---- name / menu
   submitName = async (e: any) => {

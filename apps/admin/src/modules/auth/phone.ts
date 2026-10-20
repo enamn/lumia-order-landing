@@ -5,7 +5,6 @@ export const phoneSchema = z.string().regex(/^\+[1-9]\d{7,14}$/, "Enter a valid 
 const supportedMobile = z.string().refine(isSupportedMobile, "Enter a valid mobile number.");
 export const sendCodeSchema = z.object({ phoneNumber: supportedMobile, language: z.enum(["en", "ar"]).default("en"), channel: z.enum(["whatsapp", "sms"]).default("whatsapp") }).strict();
 export const verifyCodeSchema = z.object({ phoneNumber: supportedMobile, code: z.string().regex(/^\d{6}$/, "Enter the 6-digit code.") }).strict();
-export const firebaseVerifySchema = z.object({ idToken: z.string().min(20).max(8000), language: z.enum(["en", "ar"]).default("en") }).strict();
 export const OTP_SECONDS = 300;
 export const RESEND_SECONDS = 60;
 export const MAX_ATTEMPTS = 5;

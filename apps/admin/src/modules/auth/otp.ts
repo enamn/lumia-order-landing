@@ -4,7 +4,6 @@ import { db } from "@/server/db";
 import { transaction } from "@/server/transaction";
 import { AppError } from "@/server/errors";
 import { sendWhatsAppCode, sendSmsCode } from "@/modules/whatsapp/verification";
-import { verifiedFirebasePhone } from "@/server/firebase-admin";
 import { phoneSchema, verifyCodeSchema, OTP_SECONDS, RESEND_SECONDS, MAX_ATTEMPTS, MAX_SENDS_PER_HOUR, TEST_CODE, authTestMode } from "./phone";
 function digest(phone: string, nonce: string, code: string) {
   const secret = process.env.BETTER_AUTH_SECRET;
@@ -36,7 +35,7 @@ export async function requestCode(phoneNumber: string, language: "en" | "ar" = "
   return { expiresIn: OTP_SECONDS, resendAfter: RESEND_SECONDS, deliveryLanguage: delivery.deliveryLanguage, ...(testMode ? { testMode: true } : {}) };
 }
 type Tx = Parameters<Parameters<typeof transaction>[0]>[0];
-// Creates or reuses the account of a verified phone number and says where to send it next. Used by the WhatsApp code and the Firebase SMS check.
+// Creates or reuses the account of a verified phone number and says where to send it next.
 async function signInPhone(tx: Tx, phoneNumber: string, language: "en" | "ar") {
   const existing = await tx.user.findUnique({ where: { phoneNumber } });
   if (existing && existing.status !== "ACTIVE") return { error: "ACCOUNT_UNAVAILABLE" as const };
@@ -65,12 +64,5 @@ export async function verifyCode(phoneNumber: string, code: string) {
     const messages = { INVALID_CODE: "That code isn’t correct. Check the latest message and try again.", CODE_EXPIRED: "This code has expired. Request a new code.", ATTEMPTS_EXCEEDED: "Too many attempts. Request a new code.", ACCOUNT_UNAVAILABLE: "This account is unavailable. Contact support." };
     throw new AppError(result.error!, messages[result.error!], result.error === "ATTEMPTS_EXCEEDED" ? 429 : 400);
   }
-  return result;
-}
-/** SMS sign-in: Firebase Phone Authentication sent and checked the code in the browser; here the signed token proves the number. */
-export async function verifyFirebaseSignIn(idToken: string, language: "en" | "ar" = "en") {
-  const phone = phoneSchema.parse(await verifiedFirebasePhone(idToken));
-  const result = await transaction(tx => signInPhone(tx, phone, language));
-  if ("error" in result) throw new AppError("ACCOUNT_UNAVAILABLE", "This account is unavailable. Contact support.", 400);
   return result;
 }

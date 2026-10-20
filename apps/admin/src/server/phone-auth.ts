@@ -1,7 +1,7 @@
 import { createAuthEndpoint, APIError } from "better-auth/api";
 import { setSessionCookie } from "better-auth/cookies";
-import { requestCode, verifyCode, verifyFirebaseSignIn } from "@/modules/auth/otp";
-import { sendCodeSchema, verifyCodeSchema, firebaseVerifySchema } from "@/modules/auth/phone";
+import { requestCode, verifyCode } from "@/modules/auth/otp";
+import { sendCodeSchema, verifyCodeSchema } from "@/modules/auth/phone";
 import { AppError } from "./errors";
 function publicError(error: unknown): never {
   if (error instanceof AppError) throw new APIError(({ 400: "BAD_REQUEST", 401: "UNAUTHORIZED", 403: "FORBIDDEN", 429: "TOO_MANY_REQUESTS", 502: "BAD_GATEWAY", 503: "SERVICE_UNAVAILABLE" } as const)[error.status as 400 | 401 | 403 | 429 | 502 | 503] ?? "INTERNAL_SERVER_ERROR", { code: error.code, message: error.message });
@@ -19,15 +19,6 @@ export function whatsappAuth() {
        if (!session) throw new AppError("SESSION_FAILED", "Please request a new code and try again.", 500);
        await setSessionCookie(ctx, { session, user });
        // Session token is in a signed HttpOnly cookie, never in JSON/localStorage.
-       return ctx.json({ redirectTo });
-     } catch (error) { publicError(error); }
-   }),
-   verifyFirebaseSms: createAuthEndpoint("/firebase/verify", { method: "POST", body: firebaseVerifySchema }, async ctx => {
-     try {
-       const { user, redirectTo } = await verifyFirebaseSignIn(ctx.body.idToken, ctx.body.language);
-       const session = await ctx.context.internalAdapter.createSession(user.id, false);
-       if (!session) throw new AppError("SESSION_FAILED", "Please request a new code and try again.", 500);
-       await setSessionCookie(ctx, { session, user });
        return ctx.json({ redirectTo });
      } catch (error) { publicError(error); }
    }),
