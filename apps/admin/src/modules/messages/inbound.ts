@@ -36,7 +36,7 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
     if (m.type === "request_welcome") {
       if (!live) continue;
       // Someone just opened the chat: greet them. A failed greeting must not fail the whole batch.
-      const sent = await sendWelcome({ businessId: account.businessId, messageId: m.messageId, senderId: m.senderId, ...(m.senderName ? { senderName: m.senderName } : {}), timestamp: m.timestamp }).catch((e: { code?: unknown }) => { console.error(JSON.stringify({ level: "error", code: "WELCOME_FAILED", reason: typeof e?.code === "string" ? e.code : "UNKNOWN" })); return "skipped" as const; });
+      const sent = await sendWelcome({ businessId: account.businessId, messageId: m.messageId, senderId: m.senderId, ...(m.senderName ? { senderName: m.senderName } : {}), timestamp: m.timestamp, phoneNumberId: m.phoneNumberId }).catch((e: { code?: unknown }) => { console.error(JSON.stringify({ level: "error", code: "WELCOME_FAILED", reason: typeof e?.code === "string" ? e.code : "UNKNOWN" })); return "skipped" as const; });
       if (sent === "sent") result.welcomed = (result.welcomed ?? 0) + 1;
       continue;
     }
@@ -47,7 +47,7 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
         const customer = await tx.customer.upsert({ where: { businessId_phone: { businessId: account.businessId, phone } }, create: { businessId: account.businessId, phone, ...(m.senderName ? { displayName: m.senderName } : {}) }, update: {} });
         if (m.senderName && !customer.displayName) await tx.customer.update({ where: { id: customer.id }, data: { displayName: m.senderName } });
         const open = await tx.conversation.findFirst({ where: { businessId: account.businessId, customerId: customer.id, status: "OPEN" }, orderBy: { lastMessageAt: "desc" } });
-        const conversation = open ?? await tx.conversation.create({ data: { businessId: account.businessId, customerId: customer.id, lastMessageAt: at } });
+        const conversation = open ?? await tx.conversation.create({ data: { businessId: account.businessId, customerId: customer.id, phoneNumberId: m.phoneNumberId, lastMessageAt: at } });
         // A shared location pin is kept on the conversation (for delivery pricing) and shown in the chat as readable text.
         const loc = m.type.toLowerCase() === "location" ? m.location : undefined;
         const shown = loc ? pinText(loc) : (m.textBody ?? null);
@@ -62,7 +62,8 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
         else if (m.type.toLowerCase() === "text" && m.textBody) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "text" };
         else if (m.type.toLowerCase() === "audio" && m.mediaId) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "voice", mediaId: m.mediaId };
         else if (UNREADABLE_TYPES.has(m.type.toUpperCase())) pending = { businessId: account.businessId, conversationId: conversation.id, externalMessageId: m.messageId, kind: "unreadable" };
-        if (at > conversation.lastMessageAt) await tx.conversation.update({ where: { id: conversation.id }, data: { lastMessageAt: at } });
+        // Replies go out from the number the customer wrote to most recently (a restaurant can have several).
+        if (at > conversation.lastMessageAt || conversation.phoneNumberId !== m.phoneNumberId) await tx.conversation.update({ where: { id: conversation.id }, data: { ...(at > conversation.lastMessageAt ? { lastMessageAt: at } : {}), phoneNumberId: m.phoneNumberId } });
       });
       // Look the pin up (emirate, area, street) so the chat and the delivery pricing use real place names instead of coordinates. A failed lookup changes nothing.
       if (pending && live && m.type.toLowerCase() === "location" && m.location) await resolvePin(pending.conversationId, m.messageId, m.location).catch(() => undefined);

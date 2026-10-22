@@ -6,6 +6,7 @@ import { AppError } from "@/server/errors";
 import { decryptSecret } from "@/server/crypto";
 import { lumiaApi } from "@/server/lumia-api";
 import { linkTestMode } from "@/modules/auth/phone";
+import { sendingAccount } from "@/modules/whatsapp/accounts";
 
 // Staff replies to customers from the dashboard. The message goes out through lumia-order-api from the restaurant's own linked number;
 // we store it only after Meta accepted it. Meta allows free-form text only within 24 hours of the customer's last message.
@@ -59,7 +60,7 @@ export async function sendReply(userId: string, businessId: string, conversation
   const { business } = await authorize(userId, businessId, "operations.manage");
   const conversation = await db.conversation.findFirst({ where: { id: conversationId, businessId }, include: { customer: { select: { phone: true } } } });
   if (!conversation) throw new AppError("NOT_FOUND", "Conversation not found.", 404);
-  const account = await db.whatsAppAccount.findFirst({ where: { businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
+  const account = await sendingAccount(businessId, conversationId);
   if (!account?.phoneNumberId || !account.accessTokenEncrypted) throw new AppError("WHATSAPP_NOT_CONNECTED", "Connect WhatsApp before replying to customers.", 409);
   const lastInbound = await db.message.findFirst({ where: { conversationId, direction: "INBOUND" }, orderBy: { createdAt: "desc" }, select: { createdAt: true } });
   if (!lastInbound || lastInbound.createdAt.getTime() + WINDOW_MS < Date.now()) throw new AppError(...ERRORS.REPLY_WINDOW_CLOSED!);

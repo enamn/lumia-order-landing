@@ -80,6 +80,8 @@ export const AR: Record<string, string> = {
  "Disconnect": "قطع الاتصال",
  "Disconnect WhatsApp": "قطع ربط واتساب",
  "Disconnect WhatsApp?": "قطع ربط واتساب؟",
+ "Disconnect number": "فصل الرقم",
+ "Customers who message this number won’t get replies from Lumia, and no orders will come in from it. Your other numbers keep working. Your menu, orders and customer data stay in Lumia.": "العملاء الذين يراسلون هذا الرقم لن يتلقوا ردوداً من لوميا، ولن تصل منه أي طلبات. أرقامك الأخرى تستمر بالعمل، وتبقى قائمتك وطلباتك وبيانات عملائك في لوميا.",
  "Display name": "الاسم المعروض",
  "Business portfolio": "حساب النشاط التجاري",
  "Your menu, orders and customer data are still in Lumia.": "قائمتك وطلباتك وبيانات عملائك تبقى محفوظة في لوميا.",

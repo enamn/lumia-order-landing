@@ -10,6 +10,7 @@ import { AppError } from "@/server/errors";
 import { deliverText } from "@/modules/messages/reply";
 import { langOf, type Lang, type Resolved } from "./draft";
 import { emitOrder } from "@/modules/devices/orders";
+import { sendingAccount } from "@/modules/whatsapp/accounts";
 
 type Tx = Parameters<Parameters<typeof transaction>[0]>[0];
 
@@ -158,7 +159,7 @@ export const setOrderStatusByDevice = (device: { id: string; businessId: string;
 async function notifyCustomer(businessId: string, conversationId: string | null, phone: string, status: OrderStatus, number: string, pickup: boolean, prep?: number, reason?: string) {
   const notice = NOTICE[status]; if (!notice || !conversationId) return;
   try {
-    const account = await db.whatsAppAccount.findFirst({ where: { businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
+    const account = await sendingAccount(businessId, conversationId);
     const lastInbound = await db.message.findFirst({ where: { conversationId, direction: "INBOUND" }, orderBy: { createdAt: "desc" }, select: { textContent: true, createdAt: true } });
     if (!account || !lastInbound || Date.now() - lastInbound.createdAt.getTime() > 24 * 3600 * 1000) return;
     const lang = langOf(lastInbound.textContent ?? ""); const text = notice[lang](number, pickup, prep, reasonFor(reason, lang));

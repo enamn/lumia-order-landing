@@ -31,6 +31,8 @@ export const LIMITS: Record<PlanId, Limits> = { starter: { orders: 100, voice: 6
 export const TRIAL_LIMITS: Limits = { orders: 20, voice: 20, imports: 2, campaigns: 0 };
 // Branches: Starter 1, Plus 3 (fixed), Pro 3 and more at AED 99 a month each (AED 990 a year). Every extra branch adds some orders to the monthly limit.
 export const INCLUDED_BRANCHES: Record<PlanId, number> = { starter: 1, plus: 3, pro: 3 };
+// WhatsApp numbers a restaurant can link at the same time (the free trial and ended plans get one).
+export const WHATSAPP_NUMBERS: Record<PlanId, number> = { starter: 1, plus: 2, pro: 3 };
 export const EXTRA_BRANCH = { monthly: 99, yearly: 990, orders: 80, max: 27 };
 // Fair use: AI replies allowed per order of the monthly limit (a normal order takes about 7).
 export const REPLIES_PER_ORDER = 15;

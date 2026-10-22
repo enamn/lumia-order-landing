@@ -61,8 +61,9 @@ describe.skipIf(!enabled)("campaigns", () => {
     expect((await usageSummary(biz)).campaigns.used).toBe(3);
     expect((await listCampaigns(owner, biz)).campaigns[0]).toMatchObject({ id: r.id, sent: 3 });
   });
-  it("a custom offer goes to the picked customers with a code (created, valid for the chosen days), and a code is required", async () => {
-    await expect(send({ mode: "offer", customerIds: [ids.sara] })).rejects.toMatchObject({ code: "CODE_REQUIRED" });
+  it("a custom offer goes to the picked customers with a code (created, valid for the chosen days); a code is optional", async () => {
+    calls = []; const plain = await send({ mode: "offer", customerIds: [ids.sara], message: "Hi {name}, we have something new this week." });
+    expect(plain).toMatchObject({ mode: "offer", sent: 1 }); expect(sent().at(-1)!.body.offer).toBe("Reply to this message to order.");
     await expect(send({ mode: "offer", customerIds: [] , code: { code: "TWO20", percent: 20, days: 7 } })).rejects.toMatchObject({ code: "NO_RECIPIENTS" });
     calls = []; const code = "OFR" + suffix.toUpperCase().slice(0, 6);
     const r = await send({ mode: "offer", customerIds: [ids.sara, ids.stopped, "no-such-id"], message: "Hi {name}, thanks! Your code is below.", code: { code: code.toLowerCase(), percent: 15, days: 14 } });

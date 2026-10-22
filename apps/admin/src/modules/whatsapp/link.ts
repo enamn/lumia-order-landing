@@ -8,6 +8,7 @@ import { decryptSecret, encryptSecret } from "@/server/crypto";
 import { linkTestMode, devLinkMode } from "@/modules/auth/phone";
 import { SHARED } from "@/modules/menu/catalog";
 import { saveMenu, type SaveCategory } from "@/modules/menu/import";
+import { entitlementsFor } from "@/modules/billing/service";
 
 // Links the owner's own WhatsApp Business account (Meta Embedded Signup). Meta calls run in lumia-order-api;
 // this module authorizes, stores the encrypted token and applies imports. Nothing here sends or stores customer messages.
@@ -15,6 +16,7 @@ const id = z.string().regex(/^\d{5,30}$/);
 export const connectSchema = z.object({ code: z.string().min(1).max(2048), wabaId: id.optional(), phoneNumberId: id.optional(), businessPortfolioId: id.optional(), mode: z.enum(["existing", "new"]).default("existing") }).strict();
 export const applySchema = z.object({ name: z.enum(["lumia", "wa"]).optional(), logo: z.enum(["lumia", "wa"]).optional(), address: z.enum(["lumia", "wa"]).optional() }).strict();
 export const catalogUseSchema = z.object({ mode: z.enum(["use", "replace"]) }).strict();
+export const disconnectSchema = z.object({ accountId: z.string().min(1).max(64).optional() }).strict();
 
 // Deterministic sample data so every screen can be exercised locally without Meta (WHATSAPP_LINK_TEST_MODE only, never production).
 const TEST_PROFILE = { name: "Burger House Sharjah", phone: "+971 55 XXX 8210", address: "Al Majaz, Sharjah", logoUrl: null as string | null };
@@ -26,13 +28,21 @@ const TEST_CATALOG = { categories: [
 ].map(c => ({ name: c.name, items: c.items.map(([name, price]) => ({ name: name as string, price: price as number })) })) };
 const isTestAccount = (a: { phoneNumberId: string | null }) => Boolean(a.phoneNumberId?.startsWith("test-")) && linkTestMode();
 
-async function currentAccount(businessId: string) { return db.whatsAppAccount.findFirst({ where: { businessId }, orderBy: { createdAt: "desc" } }); }
+// The number used for the profile and catalog import: the one linked most recently.
+async function currentAccount(businessId: string) { return db.whatsAppAccount.findFirst({ where: { businessId }, orderBy: [{ connectedAt: "desc" }, { createdAt: "desc" }] }); }
+const connectedCount = (businessId: string, except?: string) => db.whatsAppAccount.count({ where: { businessId, status: "CONNECTED", ...(except ? { NOT: { phoneNumberId: except } } : {}) } });
+const LIMIT_MESSAGE = "Your plan's WhatsApp numbers are all in use. Upgrade your plan or disconnect a number first.";
 
 export async function getWhatsAppStatus(userId: string, businessId: string) {
   await authorize(userId, businessId);
-  const a = await currentAccount(businessId);
-  if (!a) return { status: "none" as const };
-  return { status: a.status === "CONNECTED" ? "connected" as const : "disconnected" as const, displayPhoneNumber: a.displayPhoneNumber ?? "", verifiedName: a.verifiedName ?? "", businessPortfolioName: a.businessPortfolioName ?? "", connectedAt: a.connectedAt };
+  const all = await db.whatsAppAccount.findMany({ where: { businessId }, orderBy: [{ connectedAt: "desc" }, { createdAt: "desc" }] });
+  const limit = (await entitlementsFor(businessId)).whatsappNumbers;
+  // Every number the restaurant linked, connected ones first. A disconnected number stays listed so it can be linked again.
+  const numbers = [...all.filter(a => a.status === "CONNECTED"), ...all.filter(a => a.status !== "CONNECTED")].map(a => ({ id: a.id, status: a.status === "CONNECTED" ? "connected" as const : "disconnected" as const, displayPhoneNumber: a.displayPhoneNumber ?? "", verifiedName: a.verifiedName ?? "", businessPortfolioName: a.businessPortfolioName ?? "", connectedAt: a.connectedAt, disconnectedAt: a.disconnectedAt }));
+  const used = numbers.filter(n => n.status === "connected").length;
+  const a = numbers[0];
+  if (!a) return { status: "none" as const, numbers, limit, used };
+  return { status: a.status, displayPhoneNumber: a.displayPhoneNumber, verifiedName: a.verifiedName, businessPortfolioName: a.businessPortfolioName, connectedAt: a.connectedAt, numbers, limit, used };
 }
 
 async function fetchCatalog(a: { phoneNumberId: string | null; wabaId: string | null; accessTokenEncrypted: string | null }) {
@@ -50,14 +60,18 @@ const linkErrors: Record<string, [string, string, number]> = {
   WHATSAPP_LINK_NO_NUMBER: ["WHATSAPP_LINK_NO_NUMBER", "That WhatsApp Business account needs exactly one phone number. Select an account with a single number.", 400],
   WHATSAPP_LINK_NOT_CONFIGURED: ["WHATSAPP_LINK_NOT_CONFIGURED", "WhatsApp linking is not available yet. Please try again later.", 503],
 };
+const TEST_PHONES = ["+971 55 XXX 8210", "+971 50 XXX 4417", "+971 52 XXX 9035"];
 
 export async function connectWhatsApp(userId: string, businessId: string, input: unknown, requestId: string) {
   const data = connectSchema.parse(input);
   await authorize(userId, businessId, "business.manage");
   if ((data.code === "dev" && !devLinkMode()) || (data.code === "test" && !linkTestMode())) throw new AppError("WHATSAPP_LINK_INVALID_CODE", "Permission was cancelled before setup finished.", 400); // simulated codes only exist in local development modes
+  const limit = (await entitlementsFor(businessId)).whatsappNumbers;
+  if (await connectedCount(businessId) >= limit) throw new AppError("WHATSAPP_NUMBER_LIMIT", LIMIT_MESSAGE, 403); // checked before Meta so the owner isn't sent through the popup for nothing
   let link: { accessToken: string; wabaId: string; phoneNumberId: string; displayPhoneNumber: string; verifiedName: string; businessPortfolioId?: string; businessPortfolioName?: string; permissions: string[] };
   if (data.code === "test" && linkTestMode()) {
-    link = { accessToken: "test-token", wabaId: "100000000000001", phoneNumberId: `test-${businessId}`, displayPhoneNumber: TEST_PROFILE.phone, verifiedName: TEST_PROFILE.name, businessPortfolioId: "100000000000002", businessPortfolioName: "Test Restaurant Portfolio", permissions: ["business_management", "whatsapp_business_management", "whatsapp_business_messaging"] };
+    const n = await db.whatsAppAccount.count({ where: { businessId, status: "CONNECTED" } }); // each simulated link adds a different number
+    link = { accessToken: "test-token", wabaId: "100000000000001", phoneNumberId: `test-${businessId}-${n}`, displayPhoneNumber: TEST_PHONES[n % TEST_PHONES.length]!, verifiedName: TEST_PROFILE.name, businessPortfolioId: "100000000000002", businessPortfolioName: "Test Restaurant Portfolio", permissions: ["business_management", "whatsapp_business_management", "whatsapp_business_messaging"] };
   } else {
     const r = await lumiaApi<typeof link>("/internal/whatsapp/connect", { code: data.code, ...(data.wabaId ? { wabaId: data.wabaId } : {}), ...(data.phoneNumberId ? { phoneNumberId: data.phoneNumberId } : {}), ...(data.businessPortfolioId ? { businessPortfolioId: data.businessPortfolioId } : {}), mode: data.mode }, 60000);
     if (!r.ok) { const e = r.code ? linkErrors[r.code] : undefined; throw new AppError(e?.[0] ?? "WHATSAPP_LINK_FAILED", e?.[1] ?? "We couldn't connect WhatsApp. Please try again.", e?.[2] ?? 502); }
@@ -72,7 +86,8 @@ export async function connectWhatsApp(userId: string, businessId: string, input:
       await tx.whatsAppAccount.delete({ where: { id: owner.id } }); // released by a previous owner
     }
     const fields = { provider: "META_CLOUD_API", phoneNumberId: link.phoneNumberId, wabaId: link.wabaId, displayPhoneNumber: link.displayPhoneNumber, verifiedName: link.verifiedName, businessPortfolioId: link.businessPortfolioId ?? null, businessPortfolioName: link.businessPortfolioName ?? null, permissions: link.permissions, status: "CONNECTED", accessTokenEncrypted: encrypted, connectedAt: new Date(), disconnectedAt: null };
-    const mine = await tx.whatsAppAccount.findFirst({ where: { businessId }, orderBy: { createdAt: "desc" } });
+    if (await tx.whatsAppAccount.count({ where: { businessId, status: "CONNECTED", NOT: { phoneNumberId: link.phoneNumberId } } }) >= limit) throw new AppError("WHATSAPP_NUMBER_LIMIT", LIMIT_MESSAGE, 403);
+    const mine = await tx.whatsAppAccount.findFirst({ where: { businessId, phoneNumberId: link.phoneNumberId } }); // linking the same number again updates it; a new number gets its own record
     if (mine) await tx.whatsAppAccount.update({ where: { id: mine.id }, data: fields }); else await tx.whatsAppAccount.create({ data: { businessId, ...fields } });
     await tx.onboardingSession.updateMany({ where: { businessId }, data: { lastActivityAt: new Date() } });
     const session = await tx.onboardingSession.findUnique({ where: { businessId } });
@@ -136,9 +151,10 @@ export async function useCatalog(userId: string, businessId: string, input: unkn
   return transaction(async tx => { const { business } = await authorize(userId, businessId, "operations.manage", tx); return saveMenu(tx, business, userId, businessId, categories, requestId, "menu.imported.whatsapp", mode === "replace", branchId); });
 }
 
-export async function disconnectWhatsApp(userId: string, businessId: string, requestId: string) {
+export async function disconnectWhatsApp(userId: string, businessId: string, input: unknown, requestId: string) {
+  const { accountId } = disconnectSchema.parse(input ?? {});
   await authorize(userId, businessId, "business.manage");
-  const a = await currentAccount(businessId);
+  const a = accountId ? await db.whatsAppAccount.findFirst({ where: { id: accountId, businessId } }) : await db.whatsAppAccount.findFirst({ where: { businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
   if (!a || a.status !== "CONNECTED") return { status: "disconnected" as const };
   if (!isTestAccount(a) && a.accessTokenEncrypted && a.wabaId) {
     const r = await lumiaApi("/internal/whatsapp/disconnect", { accessToken: decryptSecret(a.accessTokenEncrypted), wabaId: a.wabaId }, 30000);
@@ -148,7 +164,8 @@ export async function disconnectWhatsApp(userId: string, businessId: string, req
     const { business } = await authorize(userId, businessId, "business.manage", tx);
     await tx.whatsAppAccount.update({ where: { id: a.id }, data: { status: "DISCONNECTED", accessTokenEncrypted: null, disconnectedAt: new Date() } });
     const session = await tx.onboardingSession.findUnique({ where: { businessId } });
-    if (session) await tx.onboardingStep.updateMany({ where: { onboardingSessionId: session.id, stepKey: "WHATSAPP" }, data: { status: "PENDING", completedAt: null } });
+    const left = await tx.whatsAppAccount.count({ where: { businessId, status: "CONNECTED" } });
+    if (session && !left) await tx.onboardingStep.updateMany({ where: { onboardingSessionId: session.id, stepKey: "WHATSAPP" }, data: { status: "PENDING", completedAt: null } });
     await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "WhatsAppAccount", entityId: a.phoneNumberId ?? a.id, action: "whatsapp.disconnected", requestId } });
   });
   return { status: "disconnected" as const };

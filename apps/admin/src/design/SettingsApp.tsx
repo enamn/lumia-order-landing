@@ -19,6 +19,8 @@ export interface SettingsProps {
   businessId: string;
   query: string;
   onPremium?: () => void; onSaved?: () => void;
+  /** When the page is shown inside the dashboard menu, the menu picks the section and this page hides its own tab strip. */
+  sub?: string; onPage?: (page: string) => void;
   initial: { sections: any; country?: string; currency?: string; emailVerified?: boolean; branchLimit?: number; branchBuy?: { priceAed: number; period: string; payNowMinor: number; card: string | null; hasCard: boolean } | null; menu: { categories: number; items: number; missingPrices: number; soldOut: number; updatedAt: string | null }; whatsapp: { connected: boolean; displayPhoneNumber: string } };
 }
 type Props = SettingsProps;
@@ -62,7 +64,7 @@ class SettingsApp extends React.Component<Props, any> {
   constructor(props: Props) {
     super(props);
     const d = props.initial.sections, hp = typeof location !== 'undefined' ? location.hash.slice(1) : '';
-    this.state = { w: 1200, page: PAGES.some(p => p[0] === hp) ? hp : 'profile', draft: clone(d), saved: clone(d), toast: '', error: '', blocked: null, saving: false, adding: false, nb: newBranch(regionNames(isCountryCode(props.initial.country) ? props.initial.country : 'AE')[0]), pinMode: 'current', pinQ: '', calc: { branch: d.branches[0]?.id ?? '', emirate: regionNames(isCountryCode(props.initial.country) ? props.initial.country : 'AE')[0], area: '', dist: '7', sub: '45' }, menu: props.initial.menu, wa: props.initial.whatsapp };
+    this.state = { w: 1200, page: props.sub && PAGES.some(p => p[0] === props.sub) ? props.sub : PAGES.some(p => p[0] === hp) ? hp : 'profile', draft: clone(d), saved: clone(d), toast: '', error: '', blocked: null, saving: false, adding: false, nb: newBranch(regionNames(isCountryCode(props.initial.country) ? props.initial.country : 'AE')[0]), pinMode: 'current', pinQ: '', calc: { branch: d.branches[0]?.id ?? '', emirate: regionNames(isCountryCode(props.initial.country) ? props.initial.country : 'AE')[0], area: '', dist: '7', sub: '45' }, menu: props.initial.menu, wa: props.initial.whatsapp };
   }
 
   componentDidMount() {
@@ -72,7 +74,10 @@ class SettingsApp extends React.Component<Props, any> {
     window.addEventListener('resize', this.onResize);
     history.replaceState(null, '', location.pathname + location.search + '#' + this.state.page);
   }
-  componentDidUpdate() {
+  componentDidUpdate(prev: Props, prevState: any) {
+    const sub = this.props.sub;
+    if (sub && sub !== prev.sub && sub !== this.state.page) this.go(sub);
+    if (prevState && prevState.page !== this.state.page) this.props.onPage?.(this.state.page);
     if (this._lastPage !== this.state.page) { this._lastPage = this.state.page; if (this.mainRef.current) this.mainRef.current.scrollTop = 0; }
   }
   wrap = React.createRef<HTMLDivElement>();
@@ -133,7 +138,7 @@ class SettingsApp extends React.Component<Props, any> {
 
   upd(k, fn) { this.setState(s => { const v = clone(s.draft[k]); fn(v); return { draft: { ...s.draft, [k]: v }, toast: '', error: '' }; }); }
   dirtyOf(s, page) { const k = KEY[page]; return !!k && JSON.stringify(s.draft[k]) !== JSON.stringify(s.saved[k]); }
-  go(p: string) { const s = this.state; if (p === s.page) return; if (this.dirtyOf(s, s.page)) { this.setState({ blocked: p }); return; } this.setState({ page: p, blocked: null, toast: '', error: '', adding: false }); history.replaceState(null, '', location.pathname + location.search + '#' + p); }
+  go(p: string) { const s = this.state; if (p === s.page) return; if (this.dirtyOf(s, s.page)) { this.setState({ blocked: p }); this.props.onPage?.(s.page); return; } this.setState({ page: p, blocked: null, toast: '', error: '', adding: false }); history.replaceState(null, '', location.pathname + location.search + '#' + p); }
   // Pro: another branch for a monthly fee, paid with the card on file; the limit grows as soon as the payment goes through.
   async buyBranch(then: () => void) {
     const bb = this.props.initial.branchBuy; if (!bb) return;
@@ -332,7 +337,7 @@ class SettingsApp extends React.Component<Props, any> {
 
     const PV = d.pay;
     return {
-      rootRef: this.rootRef, mainRef: this.mainRef, wide, narrow: !wide, tblWide, showAside: false, showTop: true, standalone: false, rootH: '100%', topTitleSize: wide ? '20px' : '16px',
+      rootRef: this.rootRef, mainRef: this.mainRef, wide, narrow: !wide, tblWide, showAside: false, showTop: !this.props.sub, standalone: false, rootH: '100%', topTitleSize: wide ? '20px' : '16px',
       L: { split2: wide ? 'minmax(0,1.6fr) minmax(0,1fr)' : 'minmax(0,1fr)', barGap: '10px', pad: wide ? '24px 32px 48px' : '16px 16px 40px', split: s.w >= 560 ? `minmax(0,1fr) ${s.w >= 1000 ? 340 : 260}px` : 'minmax(0,1fr)',
         areaCols: tblWide ? '1.2fr 1.1fr .8fr .8fr .7fr 1.3fr 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
         rangeCols: tblWide ? 'repeat(5,minmax(0,1fr)) 56px 40px' : 'minmax(0,1fr) minmax(0,1fr)',
@@ -423,7 +428,7 @@ export function prefetchSettings(businessId: string) {
 }
 function rememberSaved(businessId: string, key: string, value: unknown) { const d = cache.get(businessId)?.data; if (d) { d.sections[key] = value; const e = cache.get(businessId)!; e.at = Date.now(); } }
 
-export function SettingsLoader({ businessId, query, onPremium, onSaved }: { businessId: string; query: string; onPremium?: () => void; onSaved?: () => void }) {
+export function SettingsLoader({ businessId, query, onPremium, onSaved, sub, onPage }: { businessId: string; query: string; onPremium?: () => void; onSaved?: () => void; sub?: string; onPage?: (page: string) => void }) {
   const [initial, setInitial] = React.useState<Loaded | null>(() => prefetchSettings(businessId).data ?? null);
   const [error, setError] = React.useState("");
   const [slow, setSlow] = React.useState(false);
@@ -435,5 +440,5 @@ export function SettingsLoader({ businessId, query, onPremium, onSaved }: { busi
   }, [businessId]);
   if (error) return <div className="dc" style={{ padding: 32, color: "#B42318", fontSize: 15 }}>{error}</div>;
   if (!initial) return <div className="dc" style={{ opacity: slow ? 1 : 0, transition: "opacity .2s" }}><ContentLoader/></div>;
-  return <SettingsApp businessId={businessId} query={query} initial={initial} onPremium={onPremium} onSaved={onSaved}/>;
+  return <SettingsApp businessId={businessId} query={query} initial={initial} onPremium={onPremium} onSaved={onSaved} sub={sub} onPage={onPage}/>;
 }

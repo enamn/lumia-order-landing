@@ -56,6 +56,29 @@ describe.skipIf(!enabled)("working hours: a closed restaurant does not take orde
     (globalThis as any).__TEST_NOW = DUBAI("2026-10-19T23:00:00");
     expect(await turn("how much is a classic?", question, "971500000666")).toContain("A Classic is 28 AED.");
   });
+  it("answers a greeting while closed with the hours, not an invitation to order", async () => {
+    (globalThis as any).__TEST_NOW = DUBAI("2026-10-19T23:00:00");
+    const r = await turn("hi", question, "971500000611");
+    expect(r).toContain("is closed right now"); expect(r).toContain("We open tomorrow at 9:00 AM"); expect(r).not.toContain("What would you like to order");
+    expect(calls.some(c => c.path === "/internal/ai/reply")).toBe(false);
+  });
+  it("tells the assistant the hours and whether the restaurant is open", async () => {
+    (globalThis as any).__TEST_NOW = DUBAI("2026-10-19T23:00:00");
+    await turn("when do you open?", question, "971500000622");
+    const closedAsk = calls.find(c => c.path === "/internal/ai/reply")!.body.instructions as string;
+    expect(closedAsk).toContain("CLOSED right now"); expect(closedAsk).toContain("opens tomorrow at 9:00 AM"); expect(closedAsk).toContain("Mon–Sun: 9:00 AM – 10:00 PM");
+    (globalThis as any).__TEST_NOW = DUBAI("2026-10-20T13:00:00");
+    await turn("when do you close?", question, "971500000622");
+    const openAsk = calls.find(c => c.path === "/internal/ai/reply")!.body.instructions as string;
+    expect(openAsk).toContain("open now"); expect(openAsk).not.toContain("CLOSED");
+  });
+  it("greets a new chat with the closed notice while closed", async () => {
+    (globalThis as any).__TEST_NOW = DUBAI("2026-10-19T23:00:00");
+    calls = [];
+    await recordInbound({ messages: [{ phoneNumberId: PNID, messageId: `wamid.${suffix}.w${++n}`, senderId: "971500000633", timestamp: String(Math.floor(Date.now() / 1000)), type: "request_welcome", senderName: "Sara" } as never] });
+    const r = sent().at(-1) ?? "";
+    expect(r).toContain("is closed right now"); expect(r).toContain("Working hours");
+  });
   it("takes the order again once the restaurant is open", async () => {
     (globalThis as any).__TEST_NOW = DUBAI("2026-10-20T13:00:00");
     const r = await turn("2 classic please", order(), "971500000777");

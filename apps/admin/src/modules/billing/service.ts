@@ -4,7 +4,7 @@ import { db } from "@/server/db";
 import { authorize } from "@/server/authorization";
 import { AppError } from "@/server/errors";
 import { lumiaApi } from "@/server/lumia-api";
-import { EXTRA_BRANCH, INCLUDED_BRANCHES, PLANS, RETRY_DAYS, TOPUPS, TOPUP_IDS, addPeriod, isUpgrade, quoteExtraBranch, quoteRenewal, quoteSignup, quoteTopUp, quoteUpgrade, withTax, type PriceBook, type Billing, type PlanId, type Quote } from "./plans";
+import { EXTRA_BRANCH, INCLUDED_BRANCHES, PLANS, RETRY_DAYS, TOPUPS, TOPUP_IDS, WHATSAPP_NUMBERS, addPeriod, isUpgrade, quoteExtraBranch, quoteRenewal, quoteSignup, quoteTopUp, quoteUpgrade, withTax, type PriceBook, type Billing, type PlanId, type Quote } from "./plans";
 import { addCredits, usageSummary } from "./usage";
 import { requireTaxEligible, taxDecisionFor } from "../tax/service";
 import { priceBookFor, priceBookForBusiness, priceBookOrNull, providerAmountOk, uaeBook } from "./pricing";
@@ -25,7 +25,7 @@ export function entitlements(sub: (Pick<Subscription, "status" | "plan"> & { ext
   const plan = isActive(sub) ? (sub!.plan as PlanId) : undefined;
   // Starter 1 branch, Plus 3 (fixed), Pro 3 plus the extra branches bought. Only Pro can have a separate menu for each branch.
   const branches = plan ? INCLUDED_BRANCHES[plan] + (plan === "pro" ? Math.max(0, sub!.extraBranches ?? 0) : 0) : 1;
-  return { plan: plan ?? null, branches, includedBranches: plan ? INCLUDED_BRANCHES[plan] : 1, canBuyBranches: plan === "pro", menuPerBranch: plan === "pro", customers: plan === "plus" || plan === "pro", campaigns: plan === "plus" || plan === "pro", staff: plan === "pro" ? 10 : plan === "plus" ? 3 : 1 };
+  return { plan: plan ?? null, branches, includedBranches: plan ? INCLUDED_BRANCHES[plan] : 1, canBuyBranches: plan === "pro", menuPerBranch: plan === "pro", customers: plan === "plus" || plan === "pro", campaigns: plan === "plus" || plan === "pro", staff: plan === "pro" ? 10 : plan === "plus" ? 3 : 1, whatsappNumbers: plan ? WHATSAPP_NUMBERS[plan] : 1 };
 }
 export const trialInfo = (createdAt: Date, now = Date.now()) => {
   const endsAt = new Date(createdAt.getTime() + TRIAL_DAYS * 86_400_000);

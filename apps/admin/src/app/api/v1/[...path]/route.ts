@@ -98,7 +98,7 @@ async function handle(request: Request, context: Context) {
       if (method === "GET" && subId === "import" && path.length === 4) return getImportInfo(userId, businessId);
       if (method === "POST" && subId === "import" && subId2 === "apply" && path.length === 5) return applyImport(userId, businessId, await jsonBody(request), requestId);
       if (method === "POST" && subId === "catalog" && subId2 === "use" && path.length === 5) return useCatalog(userId, businessId, await jsonBody(request), requestId);
-      if (method === "POST" && subId === "disconnect" && path.length === 4) return disconnectWhatsApp(userId, businessId, requestId);
+      if (method === "POST" && subId === "disconnect" && path.length === 4) return disconnectWhatsApp(userId, businessId, await jsonBody(request).catch(() => ({})), requestId);
       if (method === "POST" && subId === "templates" && path.length === 4) return createMessageTemplate(userId, businessId, await jsonBody(request), requestId);
     }
     if (section === "orders") {

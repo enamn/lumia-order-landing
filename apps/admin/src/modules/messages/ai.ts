@@ -18,8 +18,9 @@ import { checkCode } from "@/modules/campaigns/codes";
 import { confirmPendingOrder, createOrderFromDraft, discardPendingOrders, findPendingOrder } from "@/modules/orders/service";
 import { showTyping } from "@/modules/whatsapp/typing";
 import { greetingText, isGreeting } from "./greeting";
-import { closedText, hoursFrom, openStatus } from "./hours";
+import { closedText, hoursForAi, hoursFrom, openStatus } from "./hours";
 import type { Hours } from "@/modules/settings/schema";
+import { sendingAccount } from "@/modules/whatsapp/accounts";
 
 // The AI assistant answers customers' WhatsApp messages from the restaurant's own menu. It only replies when the owner turned it on,
 // never keeps talking once a person has taken over, and hands anything it cannot answer (orders, complaints, unknown facts) to staff.
@@ -64,7 +65,7 @@ async function loadMenu(businessId: string, branchId?: string | null): Promise<(
 export async function autoReply(t: { businessId: string; conversationId: string; externalMessageId: string }): Promise<"sent" | "skipped"> {
   const agent = await agentFor(t.businessId);
   if (!isOn(agent)) return "skipped";
-  const account = await db.whatsAppAccount.findFirst({ where: { businessId: t.businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
+  const account = await sendingAccount(t.businessId, t.conversationId);
   if (!account?.phoneNumberId || !account.accessTokenEncrypted) return "skipped";
   const conversation = await db.conversation.findFirst({ where: { id: t.conversationId, businessId: t.businessId }, include: { customer: { select: { phone: true, displayName: true, lastBranchId: true } }, business: { select: { name: true } } } });
   if (!conversation) return "skipped";
@@ -105,7 +106,8 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const branchNeeded = perBranch && !branchId;
   // Working hours (in the restaurant's time zone): an order is never taken while the restaurant is closed; the customer is told so, with the hours.
   const hoursRows = await db.businessHours.findMany({ where: { location: { businessId: t.businessId, status: "ACTIVE" } }, orderBy: { createdAt: "asc" }, take: 7 });
-  const openNow = openStatus(hoursFrom((bizRow.settings as { hours?: Hours } | null)?.hours, hoursRows), branchId ?? conversation.branchId ?? null, marketOf(bizRow.countryCode).timezone);
+  const hoursSet = hoursFrom((bizRow.settings as { hours?: Hours } | null)?.hours, hoursRows), hoursBranch = branchId ?? conversation.branchId ?? null;
+  const openNow = openStatus(hoursSet, hoursBranch, marketOf(bizRow.countryCode).timezone);
   const menu = branchNeeded ? [] : await loadMenu(t.businessId, perBranch ? branchId : null);
   const byItem = new Map(menu.map(m => [m.itemId, m.index]));
   const savedRows = await db.customerAddress.findMany({ where: { customerId: conversation.customerId }, orderBy: { isDefault: "desc" }, take: 6 });
@@ -126,6 +128,8 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   // The plan's monthly orders (then bought ones). Someone halfway through an order may finish it; everyone else gets a plain notice and the owner sees the message in the inbox.
   if (!stored && !await canStartOrder(t.businessId)) return sendNotice(t, BUSY, 3600000);
   // A plain greeting with no order in progress: answer at once with a fixed welcome (no AI call, so no cold start, no wait, nothing counted against the AI allowance).
+  // Closed: a plain greeting gets the closed notice with the hours, never an invitation to order.
+  if (!stored && isGreeting(latestInbound.textContent) && !openNow.open) return sendNotice(t, closedText(openNow, langOf(latestInbound.textContent), conversation.business.name), 0);
   if (!stored && isGreeting(latestInbound.textContent)) return sendNotice(t, greetingText(langOf(latestInbound.textContent), conversation.business.name, useName ? conversation.customer.displayName ?? "" : ""), 0);
   // Behind that, a fair-use pool of AI replies so endless chatting cannot run up costs.
   const taken = await consume(t.businessId, "ai", { inProgress: Boolean(stored) });
@@ -143,7 +147,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   }
   const lastBranch = branchNeeded ? branches.find(b => b.id === conversation.customer.lastBranchId)?.name : undefined;
   const branchList = branches.map((b, i) => ({ id: String(i + 1), realId: b.id, name: b.name }));
-  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; branch?: string; askLocation?: boolean; locationConfirmed?: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; discountCode?: string; confirmed: boolean } | null }>("/internal/ai/reply", { market: { country: marketOf(bizRow.countryCode).nameEn, currency: bizRow.currencyCode, regionLabel: marketOf(bizRow.countryCode).regionLabelEn.toLowerCase(), regions: regionNames(marketOf(bizRow.countryCode).code) }, businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: agent?.instructions ?? "", menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: fromMinor(m.priceMinor, options.currency), available: m.available })), draft: apiDraft, delivery: deliveryHint, ...(branchNeeded ? { branchNeeded: true, branches: branchList.map(b => ({ id: b.id, name: b.name })), ...(lastBranch ? { lastBranch } : {}) } : {}), ...(wantsPin && candidate ? { candidate: candidate.formatted } : {}), customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: fromMinor(options.minimumMinor, options.currency) }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
+  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; branch?: string; askLocation?: boolean; locationConfirmed?: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; discountCode?: string; confirmed: boolean } | null }>("/internal/ai/reply", { market: { country: marketOf(bizRow.countryCode).nameEn, currency: bizRow.currencyCode, regionLabel: marketOf(bizRow.countryCode).regionLabelEn.toLowerCase(), regions: regionNames(marketOf(bizRow.countryCode).code) }, businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: [hoursForAi(hoursSet, hoursBranch, openNow), agent?.instructions ?? ""].filter(Boolean).join("\n\n").slice(0, 1500), menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: fromMinor(m.priceMinor, options.currency), available: m.available })), draft: apiDraft, delivery: deliveryHint, ...(branchNeeded ? { branchNeeded: true, branches: branchList.map(b => ({ id: b.id, name: b.name })), ...(lastBranch ? { lastBranch } : {}) } : {}), ...(wantsPin && candidate ? { candidate: candidate.formatted } : {}), customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: fromMinor(options.minimumMinor, options.currency) }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
   if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "AI_REPLY_REJECTED", status: r.status, apiCode: r.code })); await refund(t.businessId, "ai", taken); return sendNotice(t, TRY_AGAIN, 300000).catch(() => "skipped" as const); } // an AI failure must never leave the customer in silence
   // Closed: whatever the assistant understood as an order is not taken. The customer gets the closed notice with the working hours, and no draft is kept.
   const orderAttempt = r.data.intent === "order_request" || Boolean(r.data.order?.items?.length);
@@ -254,7 +258,7 @@ type Target = { businessId: string; conversationId: string; externalMessageId: s
 async function sendNotice(t: Target, text: string, repeatAfterMs = 600000): Promise<"sent" | "skipped"> {
   const agent = await agentFor(t.businessId);
   if (!isOn(agent)) return "skipped";
-  const account = await db.whatsAppAccount.findFirst({ where: { businessId: t.businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
+  const account = await sendingAccount(t.businessId, t.conversationId);
   const conversation = await db.conversation.findFirst({ where: { id: t.conversationId, businessId: t.businessId }, include: { customer: { select: { phone: true } } } });
   if (!account || !conversation || (conversation.aiPausedUntil && conversation.aiPausedUntil.getTime() > Date.now())) return "skipped";
   const now = Date.now();
@@ -300,7 +304,7 @@ async function handleReviewTap(t: Target, tap: "confirm" | "change", pending: { 
 }
 // Confirms that offers were switched off (STOP) or on again (START). Sent even when the assistant is off: it is the customer's choice, and the 24-hour window is open (they just wrote).
 export async function replyToOptChange(t: Target, optedOut: boolean): Promise<"sent" | "skipped"> {
-  const account = await db.whatsAppAccount.findFirst({ where: { businessId: t.businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
+  const account = await sendingAccount(t.businessId, t.conversationId);
   const conversation = await db.conversation.findFirst({ where: { id: t.conversationId, businessId: t.businessId }, include: { customer: { select: { phone: true } } } });
   if (!account || !conversation) return "skipped";
   const text = optedOut ? "You won't receive offers from us anymore. Reply START to receive them again.\nلن تصلك عروضنا بعد الآن. أرسل «اشتراك» إذا أردت استقبالها من جديد." : "Great, you'll receive our offers again. Reply STOP any time to stop them.\nتم! ستصلك عروضنا من جديد. أرسل «إيقاف» في أي وقت لإيقافها.";
@@ -312,7 +316,7 @@ export const replyToUnreadable = (t: Target) => sendNotice(t, TYPE_ONLY);
 export async function handleVoice(t: Target & { mediaId: string }): Promise<"sent" | "skipped"> {
   const agent = await agentFor(t.businessId);
   if (!isOn(agent)) return "skipped";
-  const account = await db.whatsAppAccount.findFirst({ where: { businessId: t.businessId, status: "CONNECTED" }, orderBy: { connectedAt: "desc" } });
+  const account = await sendingAccount(t.businessId, t.conversationId);
   if (!account?.accessTokenEncrypted) return "skipped";
   const voice = await consume(t.businessId, "voice"); // over the plan's voice notes: ask the customer to type instead
   if (!voice.ok) return sendNotice(t, TYPE_ONLY);

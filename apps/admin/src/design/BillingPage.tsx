@@ -13,7 +13,7 @@ async function api(path: string, method = "GET", body?: unknown) {
   if (!res.ok) throw new Error(json.error?.message ?? json.message ?? "Something went wrong. Please try again.");
   return json.data ?? json;
 }
-const PLANS: [string, string, number, number][] = [["starter", "Starter", 149, 1490], ["plus", "Plus", 249, 2490], ["pro", "Pro", 399, 3990]];
+const PLANS: [string, string, number, number][] = [["starter", "Starter", 149, 1548], ["plus", "Plus", 249, 2508], ["pro", "Pro", 399, 3948]];
 const RANK: Record<string, number> = { starter: 1, plus: 2, pro: 3 };
 const date = (iso?: string) => (iso ? new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "");
 const card: React.CSSProperties = { border: "1px solid #F0E4E8", borderRadius: 16, padding: "18px 22px", display: "flex", flexDirection: "column", gap: 14, minWidth: 0 };
@@ -23,7 +23,7 @@ const outline: React.CSSProperties = { height: 40, padding: "0 16px", borderRadi
 const gradient: React.CSSProperties = { height: 40, padding: "0 18px", borderRadius: 12, border: 0, background: "linear-gradient(90deg,#FF5577,#C93DFF)", color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer" };
 const pill = (bg: string, fg: string): React.CSSProperties => ({ display: "inline-flex", alignItems: "center", height: 24, padding: "0 10px", borderRadius: 999, fontSize: 12, fontWeight: 600, background: bg, color: fg, whiteSpace: "nowrap" });
 
-export function BillingPage({ businessId, onChoosePlan, onChanged }: { businessId: string; onChoosePlan: () => void; onChanged: () => void }) {
+export function BillingPage({ businessId, onChoosePlan, onChanged, focus }: { businessId: string; onChoosePlan: () => void; onChanged: () => void; focus?: string }) {
   const base = `/api/v1/businesses/${businessId}/subscription`;
   const [sub, setSub] = React.useState<any>(null), [invoices, setInvoices] = React.useState<any[]>([]), [error, setError] = React.useState(""), [busy, setBusy] = React.useState(""), [note, setNote] = React.useState("");
   const [cycle, setCycle] = React.useState<"monthly" | "yearly">("monthly"), [quotes, setQuotes] = React.useState<Record<string, any>>({}), [cardForm, setCardForm] = React.useState<null | { secret: string; key: string; id: string }>(null);
@@ -48,37 +48,53 @@ export function BillingPage({ businessId, onChoosePlan, onChanged }: { businessI
   const planName = PLANS.find(p => p[0] === sub.plan)?.[1] ?? "";
   const status = pastDue ? ["Payment failed", "#FFF1DC", "#8A4B00"] : sub.status === "ENDED" ? ["Lapsed", "#FDECEC", "#B42318"] : sub.status === "CANCELED" ? ["Cancelled", "#F6EEF2", "#3D1C31"] : sub.cancelAtPeriodEnd ? ["Cancels " + date(sub.currentPeriodEnd), "#F6EEF2", "#3D1C31"] : active ? ["Active", "#E6F4EC", "#16704A"] : ["Free trial", "#FDEAF2", "#8A2040"];
 
-  return <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 1000 }}>
-    <div><h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.035em", margin: 0 }}>Billing</h1><p style={{ ...muted, marginTop: 6 }}>Your plan, payment card and invoices.</p></div>
-    {error && <div role="alert" style={{ fontSize: 14, color: "#B42318" }}>{error}</div>}
-    {note && <div role="status" style={{ fontSize: 14, color: "#16704A", fontWeight: 500 }}>{note}</div>}
-    <TaxDetails businessId={businessId} canManage={!!canManage} onSaved={() => { load(); onChanged(); }} />
+  const tile: React.CSSProperties = { background: "#fff", border: "1px solid #F0E4E8", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 4, minWidth: 0 };
+  const tileK: React.CSSProperties = { fontSize: 13, color: "#8A5A6E", margin: 0 };
+  const tileV: React.CSSProperties = { fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em", margin: 0, fontVariantNumeric: "tabular-nums", overflowWrap: "anywhere" };
+  const link: React.CSSProperties = { alignSelf: "flex-start", padding: 0, border: 0, background: "none", fontSize: 14, fontWeight: 600, color: "#C0284F", textDecoration: "underline", textUnderlineOffset: 3, cursor: "pointer" };
+  const taxFirst = focus === "tax";
+  const taxNode = <div id="billing-tax"><TaxDetails businessId={businessId} canManage={!!canManage} onSaved={() => { load(); onChanged(); }} /></div>;
+  const noPlan = !active && sub.status === "NONE", ended = sub.status === "ENDED" || sub.status === "CANCELED";
 
-    <section style={card}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}><h2 style={h2}>{active || sub.status !== "NONE" ? `${planName} plan` : "No plan yet"}</h2><span style={pill(status[1]!, status[2]!)}>{status[0]}</span></div>
-      {!active && sub.status === "NONE" && <><p style={muted}>{sub.trial.started === false ? "Your free trial starts once your VAT registration is verified." : sub.trial.daysLeft ? `Your free trial ends on ${date(sub.trial.endsAt)}.` : "Your free trial has ended."} Choose a plan to keep receiving WhatsApp orders.</p><div><button type="button" style={gradient} onClick={onChoosePlan}>Choose a plan</button></div></>}
-      {(sub.status === "ENDED" || sub.status === "CANCELED") && <><p style={muted}>{sub.status === "ENDED" ? "Your last renewal could not be paid, so the plan lapsed." : "Your plan was cancelled."} You can subscribe again at any time.</p><div><button type="button" style={gradient} onClick={onChoosePlan}>Choose a plan</button></div></>}
-      {active && <>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 12 }}>
-          <div><p style={muted}>Billing</p><p style={{ fontSize: 16, fontWeight: 600, margin: 0, textTransform: "capitalize" }}>{sub.billing}</p></div>
-          <div><p style={muted}>{sub.cancelAtPeriodEnd ? "Plan ends" : "Next payment"}</p><p style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>{sub.cancelAtPeriodEnd ? date(sub.currentPeriodEnd) : sub.nextCharge ? `${aed(sub.nextCharge.amountMinor)} on ${date(sub.nextCharge.at)}` : "—"}</p></div>
-          <div><p style={muted}>Current period</p><p style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>{date(sub.currentPeriodStart)} – {date(sub.currentPeriodEnd)}</p></div>
+  return <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 1000 }}>
+    <div><h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.035em", margin: 0 }}>Billing</h1><p style={{ ...muted, marginTop: 6 }}>Your plan, payment card and invoices.</p></div>
+    {error && <div role="alert" style={{ fontSize: 14, color: "#B42318", padding: "10px 14px", borderRadius: 12, background: "#FDECEC" }}>{error}</div>}
+    {note && <div role="status" style={{ fontSize: 14, color: "#16704A", fontWeight: 500, padding: "10px 14px", borderRadius: 12, background: "#E6F4EC" }}>{note}</div>}
+    {taxFirst && taxNode}
+
+    <section style={{ ...card, gap: 18, padding: "22px 24px", background: "linear-gradient(180deg,#FFF7FA,#fff 70%)", borderColor: "#F6D9E3" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>
+          <p style={tileK}>Your plan</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <h2 style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.03em", margin: 0 }}>{noPlan ? "No plan yet" : planName}</h2>
+            <span style={pill(status[1]!, status[2]!)}>{status[0]}</span>
+          </div>
+          {active && <p style={muted}>Billed {sub.billing === "yearly" ? "yearly" : "monthly"}</p>}
         </div>
+        {(noPlan || ended) && <button type="button" style={{ ...gradient, height: 44 }} onClick={onChoosePlan}>Choose a plan</button>}
+      </div>
+      {noPlan && <p style={muted}>{sub.trial.started === false ? "Your free trial starts once your VAT registration is verified." : sub.trial.daysLeft ? `Your free trial ends on ${date(sub.trial.endsAt)}.` : "Your free trial has ended."} Choose a plan to keep receiving WhatsApp orders.</p>}
+      {ended && <p style={muted}>{sub.status === "ENDED" ? "Your last renewal could not be paid, so the plan lapsed." : "Your plan was cancelled."} You can subscribe again at any time.</p>}
+      {active && <>
         {pastDue && <div role="alert" style={{ padding: "12px 14px", borderRadius: 12, background: "#FFF1DC", color: "#6B3A00", fontSize: 14, lineHeight: 1.45 }}>The last payment didn’t go through{sub.lastFailure ? ` (${String(sub.lastFailure).replace(/\.$/, "")})` : ""}. We’ll try again automatically{sub.failedAttempts ? ` (attempt ${sub.failedAttempts} of 4 failed)` : ""}. Update your card to fix it now.</div>}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 12 }}>
+          <div style={tile}><p style={tileK}>{sub.cancelAtPeriodEnd ? "Plan ends" : "Next payment"}</p>
+            <p style={tileV}>{sub.cancelAtPeriodEnd ? date(sub.currentPeriodEnd) : sub.nextCharge ? aed(sub.nextCharge.amountMinor) : "—"}</p>
+            {!sub.cancelAtPeriodEnd && sub.nextCharge && <p style={tileK}>on {date(sub.nextCharge.at)}</p>}</div>
+          <div style={tile}><p style={tileK}>Current period</p><p style={{ ...tileV, fontSize: 16 }}>{date(sub.currentPeriodStart)}</p><p style={tileK}>to {date(sub.currentPeriodEnd)}</p></div>
+          <div style={tile}><p style={tileK}>Payment card</p>
+            {sub.card ? <><p style={tileV}><span style={{ textTransform: "capitalize" }}>{sub.card.brand}</span> •••• {sub.card.last4}</p><p style={tileK}>expires {String(sub.card.expMonth).padStart(2, "0")}/{String(sub.card.expYear).slice(-2)}</p></> : <p style={{ ...tileV, color: "#8A5A6E", fontWeight: 500 }}>No card on file</p>}
+            {canManage && !cardForm && <button type="button" style={{ ...link, marginTop: 4 }} disabled={!!busy} onClick={() => run("card", async () => { const r = await api(`${base}/card`, "POST"); if (r.clientSecret) setCardForm({ secret: r.clientSecret, key: r.publishableKey, id: r.sessionId }); else window.location.assign(r.url); }, "")}>{sub.card ? "Update card" : "Add card"}</button>}</div>
+        </div>
+        {cardForm && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}><div ref={slot} style={{ minHeight: 300, border: "1.5px solid #ECD9E0", borderRadius: 16, padding: 12, background: "#fff" }} /><div><button type="button" style={outline} onClick={() => setCardForm(null)}>Cancel</button></div></div>}
         {sub.pendingPlan && <p style={muted}>Changes to <b>{PLANS.find(p => p[0] === sub.pendingPlan)?.[1]}</b> ({sub.pendingBilling}) on {date(sub.currentPeriodEnd)}.</p>}
-        {canManage && <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        {canManage && <div style={{ borderTop: "1px solid #F3EEF1", paddingTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
           {sub.cancelAtPeriodEnd ? <button type="button" style={outline} disabled={!!busy} onClick={() => run("resume", () => api(`${base}/resume`, "POST"), "Your plan will keep renewing.")}>Keep my plan</button>
-            : <button type="button" style={outline} disabled={!!busy} onClick={() => { if (window.confirm(`Cancel your plan? It stays active until ${date(sub.currentPeriodEnd)}, then stops. You won’t be charged again.`)) run("cancel", () => api(`${base}/cancel`, "POST"), "Your plan will end at the end of this period."); }}>Cancel plan</button>}
+            : <button type="button" style={{ ...link, color: "#8A5A6E" }} disabled={!!busy} onClick={() => { if (window.confirm(`Cancel your plan? It stays active until ${date(sub.currentPeriodEnd)}, then stops. You won’t be charged again.`)) run("cancel", () => api(`${base}/cancel`, "POST"), "Your plan will end at the end of this period."); }}>Cancel plan</button>}
         </div>}
       </>}
     </section>
-
-    {active && <section style={card}>
-      <h2 style={h2}>Payment card</h2>
-      {sub.card ? <p style={{ fontSize: 15, margin: 0, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}><b style={{ textTransform: "capitalize" }}>{sub.card.brand}</b> •••• {sub.card.last4} <span style={{ color: "#8A5A6E" }}>expires {String(sub.card.expMonth).padStart(2, "0")}/{String(sub.card.expYear).slice(-2)}</span></p> : <p style={muted}>No card on file.</p>}
-      {canManage && !cardForm && <div><button type="button" style={outline} disabled={!!busy} onClick={() => run("card", async () => { const r = await api(`${base}/card`, "POST"); if (r.clientSecret) setCardForm({ secret: r.clientSecret, key: r.publishableKey, id: r.sessionId }); else window.location.assign(r.url); }, "")}>{sub.card ? "Update card" : "Add card"}</button></div>}
-      {cardForm && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}><div ref={slot} style={{ minHeight: 300, border: "1.5px solid #ECD9E0", borderRadius: 16, padding: 12, background: "#fff" }} /><div><button type="button" style={outline} onClick={() => setCardForm(null)}>Cancel</button></div></div>}
-    </section>}
 
     {sub.usage && (() => { const u = sub.usage, o = u.orders, num = (n: number) => n.toLocaleString("en-US"), left = Math.max(0, o.limit - o.used) + u.credits, over = o.used >= o.limit && u.credits === 0, warm = o.limit > 0 && o.used / o.limit >= 0.8;
       // Voice notes, menu imports and the AI-reply pool are fair-use limits behind the order limit: they only show when one is nearly used up.
@@ -139,6 +155,7 @@ export function BillingPage({ businessId, onChoosePlan, onChanged }: { businessI
         </div>)}
       </div>}
     </section>
+    {!taxFirst && taxNode}
   </div>;
 }
 

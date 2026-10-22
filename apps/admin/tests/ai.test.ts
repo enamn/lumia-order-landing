@@ -43,7 +43,7 @@ describe.skipIf(!enabled)("AI replies", () => {
     calls = []; ai = { intent: "price_question", language: "en", reply: "The Classic is 28 AED.", needsHuman: false }; setup();
     await inbound("How much is the classic?");
     const ask = calls.find(c => c.path === "/internal/ai/reply")!.body;
-    expect(ask).toMatchObject({ businessName: "AI Test Burgers", instructions: "Open until midnight.", message: "How much is the classic?" });
+    expect(ask).toMatchObject({ businessName: "AI Test Burgers", instructions: expect.stringContaining("Open until midnight."), message: "How much is the classic?" });
     expect(ask.menu.map(({ id, ...m }: any) => ({ ...m, hasId: Boolean(id) }))).toEqual([{ category: "Burgers", name: "Classic", nameAr: "كلاسيك", price: 28, available: true, hasId: true }, { category: "Burgers", name: "Spicy", nameAr: "", price: 32, available: false, hasId: true }]);
     const send = calls.find(c => c.path === "/internal/whatsapp/send")!.body;
     expect(send).toMatchObject({ accessToken: "biz-token", phoneNumberId: PNID, to: "+971504074115" });

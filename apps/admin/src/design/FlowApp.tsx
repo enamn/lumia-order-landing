@@ -16,6 +16,9 @@ import { currencySign, formatMoneyUi, fromMinor, moneyUi, parseAmount, scaleOf, 
 import { marketOf, isCountryCode, MARKETS } from "@/modules/market/countries";
 import { AccountMenu, PlanBadge } from "./AccountMenu";
 import { BillingPage } from "./BillingPage";
+import { CustomersPage } from "./CustomersPage";
+import { CampaignsPage, type SendInput } from "./CampaignsPage";
+import { WhatsAppNumbers, WhatsAppLinkGuide, type WaNumber, type LinkMode } from "./WhatsAppPage";
 import { ArabicDom } from "./ArabicDom";
 import { mountEmbeddedCheckout } from "@/lib/stripe-embed";
 import { authClient } from "@/lib/auth-client";
@@ -38,7 +41,7 @@ export interface FlowProps {
   business?: { id: string; name: string; logoUrl: string | null; address: string };
   menu: MenuCat[];
   canEdit: boolean;
-  wa: { status: "none" | "connected" | "disconnected"; displayPhoneNumber: string; verifiedName: string; businessPortfolioName?: string };
+  wa: { status: "none" | "connected" | "disconnected"; displayPhoneNumber: string; verifiedName: string; businessPortfolioName?: string; numbers?: WaNumber[]; limit?: number };
   meta: { appId: string; configId: string; graphVersion: string };
   marketingUrl: string;
   initialPage?: "Overview" | "Orders" | "Menu" | "WhatsApp" | "Settings" | "Billing" | "Customers" | "Campaigns";
@@ -49,6 +52,7 @@ type Cat = { id: string; cat: string; catAr: string; items: Item[] };
 type Draft = { cat: string; catAr: string; arOnly: boolean; items: { n: string; ar: string; arOnly: boolean; p: string; flag: boolean }[] };
 
 const PHASES = ["Reading your menu", "Finding categories", "Extracting items and prices", "Organizing your menu"];
+const SETUP_SUBS = ["delivery", "branches", "hours", "devices", "payments", "profile"];
 const NAV_AR: Record<string, string> = { Overview: "نظرة عامة", Orders: "الطلبات", Menu: "القائمة والمنتجات", Messages: "الرسائل", WhatsApp: "واتساب", Customers: "العملاء", Campaigns: "الحملات", Delivery: "التوصيل", Settings: "الإعدادات", "Sign out": "تسجيل الخروج" };
 const T_EN = { menu: "Menu & products", items: "items", categories: "categories", created: "Created by Lumia AI", addItem: "Add item", search: "Search items", all: "All items", soldOut: "Sold out", addAr: "Add Arabic name", noResults: "No items match your search.", setupTitle: "Get Lumia ready to receive orders", continueSetup: "Continue setup", setup: ["Business created", "Menu added", ["Connect WhatsApp", "WhatsApp connected"], "Set delivery & order settings", "Test Lumia"] as any[] };
 const T_AR = { menu: "القائمة والمنتجات", items: "صنف", categories: "فئات", created: "أنشأتها Lumia AI", addItem: "إضافة صنف", search: "ابحث عن صنف", all: "كل الأصناف", soldOut: "نفد", addAr: "أضف الاسم بالعربية", noResults: "لا توجد أصناف مطابقة لبحثك.", setupTitle: "جهّز Lumia لاستقبال الطلبات", continueSetup: "متابعة الإعداد", setup: ["تم إنشاء النشاط التجاري", "تمت إضافة القائمة", ["ربط واتساب", "تم ربط واتساب"], "إعداد التوصيل والطلبات", "تجربة Lumia"] as any[] };
@@ -117,7 +121,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       currency: "", opCountry: "", opVat: "", digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu, props.currency)) > 0, cat: "All", menu: toCats(props.menu, props.currency), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
-      page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", embedId: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waPortfolio: props.wa.businessPortfolioName ?? "", waInfo: null, catOpen: false, confirmReplace: false, confirmDisc: false, choices: {} as Record<string, string>,
+      page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", billFocus: "", setSub: (typeof location !== "undefined" && SETUP_SUBS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "profile"), subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", embedId: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waPortfolio: props.wa.businessPortfolioName ?? "", waInfo: null, waNumbers: (props.wa.numbers ?? []) as WaNumber[], waLimit: props.wa.limit ?? 1, waGuide: 0, catOpen: false, confirmReplace: false, confirmDisc: false as false | WaNumber, choices: {} as Record<string, string>,
       custList: null as any, custErr: "", custSel: [] as string[], custOpen: null as any, custQ: "", campMode: "all", campCode: true, campPct: 20, campDays: 7, campMsgAll: campDefaults(props.lang, business?.name ?? "our business").all, campMsgOffer: campDefaults(props.lang, business?.name ?? "us").offer, campCodeTxt: "WEEKEND20", campImg: "", campImgFile: null as any, campImgName: "", campSending: false, campToast: "", campErr: "", campHist: null as any,
       menuScope: null as Scope | null, menuBranch: "", scopeBusy: false, scopeErr: "", smsMode: false, lang: props.lang, q: "", w: 1200, mounted: false, stats: null as null | { messagesReceived: number; aiReplies: number; ordersCreated: number }, dashErr: "", dlg: { open: false } as any,
     };
@@ -151,7 +155,8 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     if (this.state.step === "phone") this.focus(this.phoneRef); if (this.state.step === "name") this.focus(this.nameRef);
   }
   componentWillUnmount() { window.removeEventListener("resize", this.onResize); this.ro?.disconnect(); clearInterval(this.tick); clearInterval(this.statsTimer); clearInterval(this.ordersTimer); this.unmountStripe(); this.clearTimers(); }
-  componentDidUpdate() { if (this.state.embedSecret) this.mountStripe(); if (this.prevStep !== this.state.step) { this.prevStep = this.state.step; if (this.devRef.current) this.devRef.current.scrollTop = 0; window.scrollTo(0, 0); } }
+  prevNav = "";
+  componentDidUpdate() { if (this.state.embedSecret) this.mountStripe(); const navKey = this.state.page + "|" + this.state.setSub; if (this.prevNav !== navKey) { this.prevNav = navKey; document.querySelector('[data-navon="1"]')?.scrollIntoView?.({ inline: "center", block: "nearest" }); } if (this.prevStep !== this.state.step) { this.prevStep = this.state.step; if (this.devRef.current) this.devRef.current.scrollTop = 0; window.scrollTo(0, 0); } }
   /** The restaurant's order currency: from its account, or (while it is being created) from the chosen country. */
   get cur(): string { return this.state.currency || this.props.currency || marketOf(this.state.opCountry || countryOf(this.state.e164 || this.props.userPhone || "")?.code).currency; }
   focus(ref: React.RefObject<HTMLElement | null>) { setTimeout(() => ref.current?.focus(), 60); }
@@ -350,11 +355,29 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       pagePlans: s.page === "Plans",
     };
   }
+  // Setup (delivery, branches, hours, devices, payments) sits in the main menu; Business profile and Billing sit at the bottom.
+  setupNav(s: any, ar: boolean) {
+    const A = (en: string, arT: string) => (ar ? arT : en);
+    const mk = (key: string, label: string, icon: string, on: boolean, pick: () => void, extra: any = {}) => ({ label, icon, on, pick: (e: any) => { e?.preventDefault?.(); pick(); }, fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, bg: on ? "#FDEAF2" : "transparent", bd: on ? "#FF5577" : "transparent", ...extra });
+    const inSet = (k: string) => s.page === "Settings" && s.setSub === k;
+    const rows: [string, string, string, string][] = [
+      ["delivery", "Delivery", "التوصيل", "M2.5 5.5h9v8h-9zM11.5 8.5h3l3 3v2h-6M7 15a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM16 15a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"],
+      ["branches", "Branches", "الفروع", "M10 17.5s5.5-4.8 5.5-9a5.5 5.5 0 0 0-11 0c0 4.2 5.5 9 5.5 9zM10 10.3a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6z"],
+      ["hours", "Working hours", "ساعات العمل", "M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM10 6.5V10l2.5 1.5"],
+      ["devices", "Devices", "الأجهزة", "M5.5 8V3.5h9V8M5.5 14H3V8h14v6h-2.5M6 11h8v6H6z"],
+      ["payments", "Payments", "المدفوعات", "M2.5 5.5h15v9h-15zM10 12.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4zM5.5 8v4M14.5 8v4"],
+    ];
+    return [
+      ...rows.map(([k, en, arT, icon], i) => mk(k, A(en, arT), icon, inSet(k), () => this.openSettings(k), i === 0 ? { group: A("Setup", "الإعداد") } : {})),
+      mk("profile", A("Business profile", "ملف النشاط"), "M4 8h12l-1.2-4H5.2zM5 8v8.5h10V8M8.5 16.5v-4h3v4", inSet("profile"), () => this.openSettings("profile"), { bottom: true, first: true }),
+      mk("billing", A("Billing", "الفوترة"), "M3.5 6.5a1.5 1.5 0 0 1 1.5-1.5h10a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5zM3.5 8.5h13M6.5 12h2.5", s.page === "Billing", () => this.openBilling(), { bottom: true }),
+    ];
+  }
   // The restaurant chip: plan badge, and a menu with Settings, Billing and Log out.
   accountMenu(variant: "sidebar" | "header", s: any, name: string, initials: string, ar: boolean) {
     const bid = s.businessId, A = (en: string, arT: string) => (ar ? arT : en);
     const items = [
-      { key: "settings", icon: "settings", label: A("Settings", "الإعدادات"), onPick: () => { this.setState({ page: "Settings" }); history.replaceState(null, "", `/dashboard?page=settings&businessId=${bid}`); } },
+      { key: "settings", icon: "settings", label: A("Business profile", "ملف النشاط"), onPick: () => this.openSettings("profile") },
       { key: "billing", icon: "billing", label: A("Billing", "الفوترة"), onPick: () => this.openBilling() },
       ...(this.props.superAdmin ? [{ key: "superadmin", icon: "billing", label: A("Super admin", "المشرف العام"), onPick: () => { window.location.assign("/superadmin"); } }] : []),
       { key: "logout", icon: "logout", label: A("Log out", "تسجيل الخروج"), danger: true, onPick: () => { this.signOut(); } },
@@ -362,7 +385,8 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const avatar = s.logo ? <img src={s.logo} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} /> : initials;
     return <AccountMenu variant={variant} name={name} avatar={avatar} active={s.page === "Settings" || s.page === "Billing"} ar={ar} items={items} />;
   }
-  openBilling = () => { history.replaceState(null, "", `/dashboard?page=billing&businessId=${this.state.businessId}`); this.setState({ page: "Billing" }); };
+  openSettings = (sub: string) => { history.replaceState(null, "", `/dashboard?page=settings&businessId=${this.state.businessId}#${sub}`); this.setState({ page: "Settings", setSub: sub }); };
+  openBilling = () => { history.replaceState(null, "", `/dashboard?page=billing&businessId=${this.state.businessId}`); this.setState({ page: "Billing", billFocus: "" }); };
   // The plan as a small word next to the logo (nothing for a restaurant still on its trial: it has the trial banner).
   planBadge(s: any, ar: boolean) {
     const d = s.subData; if (!d || !(d.status === "ACTIVE" || d.status === "PAST_DUE")) return null;
@@ -578,7 +602,9 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const was = { all: campDefaults(from, name ?? "our business").all, offer: campDefaults(from, name ?? "us").offer }, now = { all: campDefaults(lang, name ?? "our business").all, offer: campDefaults(lang, name ?? "us").offer };
     this.setState({ lang, ...(st.campMsgAll === was.all ? { campMsgAll: now.all } : {}), ...(st.campMsgOffer === was.offer ? { campMsgOffer: now.offer } : {}) }); try { localStorage.setItem("lumia_lang", lang); } catch { /* optional */ } document.cookie = `lumia_lang=${lang}; path=/; max-age=31536000; samesite=lax`; document.documentElement.lang = lang; api("/api/v1/me", "PATCH", { language: lang }).catch(() => undefined); }
   // ---- WhatsApp
-  openWA = (e?: any) => { e?.preventDefault?.(); if (this.devRef.current) this.devRef.current.scrollTop = 0; this.setState({ wa: "intro", catOpen: false, confirmReplace: false, waErrText: "" }); };
+  openWA = (e?: any) => { e?.preventDefault?.(); if (this.devRef.current) this.devRef.current.scrollTop = 0; this.setState({ wa: "intro", waGuide: this.state.waGuide + 1, catOpen: false, confirmReplace: false, waErrText: "" }); };
+  // Every linked number with its status, and how many the plan allows.
+  refreshWA = () => api(`/api/v1/businesses/${this.state.businessId}/whatsapp`).then((w: any) => this.setState({ waNumbers: w.numbers ?? [], waLimit: w.limit ?? 1, waStatus: w.status, ...(w.status !== "none" ? { waPhone: w.displayPhoneNumber, waName: w.verifiedName, waPortfolio: w.businessPortfolioName ?? "" } : {}) })).catch(() => undefined);
   loadFb(): Promise<any> {
     return new Promise((resolve, reject) => {
       const { appId, graphVersion } = this.props.meta;
@@ -590,7 +616,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   }
   // Opens Meta's popup (Facebook Login for Business with the Embedded Signup configuration). The one-time code is all we need:
   // the API reads which WhatsApp account and number the owner shared from the token itself. If Meta also posts the ids we pass them along.
-  embeddedSignup(): Promise<{ code: string; wabaId?: string; phoneNumberId?: string; businessPortfolioId?: string }> {
+  embeddedSignup(mode: LinkMode): Promise<{ code: string; wabaId?: string; phoneNumberId?: string; businessPortfolioId?: string }> {
     const { appId, configId } = this.props.meta;
     if (!appId || !configId) return Promise.reject(Object.assign(Error("WhatsApp linking is not available yet. Please try again later."), { code: "WHATSAPP_LINK_NOT_CONFIGURED" }));
     return this.loadFb().then(FB => new Promise((resolve, reject) => {
@@ -604,16 +630,18 @@ export default class FlowApp extends React.Component<FlowProps, any> {
         const finish = () => window.removeEventListener("message", onMessage);
         if (resp?.authResponse?.code) { setTimeout(() => { finish(); resolve({ code: resp.authResponse.code, ...ids }); }, 1200); } // brief grace period for the optional ids message
         else { finish(); reject(Object.assign(Error("Permission was cancelled before setup finished."), { code: "CANCELLED" })); }
-      }, { config_id: configId, response_type: "code", override_default_response_type: true, extras: { setup: {}, featureType: this.props.linkMode === "existing" ? "whatsapp_business_app_onboarding" : "", sessionInfoVersion: "3" } });
+      }, { config_id: configId, response_type: "code", override_default_response_type: true, extras: { setup: {}, featureType: mode === "existing" ? "whatsapp_business_app_onboarding" : "", sessionInfoVersion: "3" } });
     }));
   }
-  startConnect = async () => {
+  // mode: "existing" links a number that stays in the owner's WhatsApp Business app (Meta coexistence); "new" registers a number that isn't on WhatsApp.
+  startConnect = async (mode: LinkMode = this.props.linkMode) => {
     const token = ++this.connectToken; this.clearTimers(); this.setState({ wa: "connecting", waErrText: "" });
     try {
-      const input = this.props.linkTestMode ? { code: "test" } : this.props.devLink ? { code: "dev" } : { ...(await this.embeddedSignup()), mode: this.props.linkMode };
+      const input = this.props.linkTestMode ? { code: "test" } : this.props.devLink ? { code: "dev" } : { ...(await this.embeddedSignup(mode)), mode };
       const r = await api(`/api/v1/businesses/${this.state.businessId}/whatsapp/connect`, "POST", input);
       if (token !== this.connectToken) return;
       this.setState({ wa: "success", waStatus: "connected", waName: r.verifiedName, waPhone: r.displayPhoneNumber, waPortfolio: r.businessPortfolioName || "", waCatalog: r.catalogItems > 0, waInfo: null });
+      this.refreshWA();
       api(`/api/v1/businesses/${this.state.businessId}/whatsapp/import`).then(info => token === this.connectToken && this.setState({ waInfo: info })).catch(() => undefined);
     } catch (err: any) {
       if (token !== this.connectToken) return;
@@ -633,10 +661,29 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     catch (err) { this.setState({ wa: "error", waErrText: err instanceof Error ? err.message : "Could not import the catalog.", confirmReplace: false }); }
   };
   doDisconnect = async () => {
-    this.setState({ confirmDisc: false, busy: true });
-    try { await api(`/api/v1/businesses/${this.state.businessId}/whatsapp/disconnect`, "POST", {}); this.setState({ busy: false, waStatus: "disconnected" }); }
+    const target = this.state.confirmDisc; this.setState({ confirmDisc: false, busy: true });
+    try { await api(`/api/v1/businesses/${this.state.businessId}/whatsapp/disconnect`, "POST", target ? { accountId: target.id } : {}); this.setState({ busy: false }); await this.refreshWA(); }
     catch (err) { this.setState({ busy: false }); this.fail(err); }
   };
+
+  campaignsPage(ar: boolean) {
+    const s = this.state, u = s.subData?.usage?.campaigns;
+    const send = async (input: SendInput) => {
+      const body = { mode: input.mode, customerIds: input.customerIds, message: input.message, ...(input.code ? { code: input.code } : {}), ...(input.image ? { image: { name: input.image.name, mimeType: input.image.type, data: await toBase64(input.image) } } : {}) };
+      const row = await api(`/api/v1/businesses/${s.businessId}/campaigns`, "POST", body);
+      this.setState((st: any) => ({ campHist: [row, ...(st.campHist ?? [])] })); this.loadSub();
+      return row;
+    };
+    const goCustomers = () => { this.setState({ page: "Customers" }); history.replaceState(null, "", `/dashboard?page=customers&businessId=${s.businessId}`); };
+    return <CampaignsPage key={s.lang} ar={ar} customers={s.custList} selected={s.custSel} onSelect={(ids: string[]) => this.setState({ custSel: ids })} history={s.campHist ?? null} usage={u ? { used: u.used, limit: u.limit } : null}
+      businessName={s.name || this.props.business?.name || (ar ? "مطعمنا" : "our restaurant")} defaults={campDefaults(s.lang, s.name || this.props.business?.name || (ar ? "مطعمنا" : "us"))} waConnected={s.waStatus === "connected"} onConnect={this.openWA} onCustomers={goCustomers} onSend={send}/>;
+  }
+  waPage(ar: boolean) {
+    const s = this.state; const plan: string | null = s.subData?.entitlements?.plan ?? null;
+    const planName = plan ? plan[0]!.toUpperCase() + plan.slice(1) : ar ? "التجربة المجانية" : "free trial";
+    const stats = [[ar ? "رسائل مستلمة" : "Messages received", s.stats?.messagesReceived ?? 0], [ar ? "ردود الذكاء الاصطناعي" : "AI replies", s.stats?.aiReplies ?? 0], [ar ? "طلبات جديدة" : "Orders created", s.stats?.ordersCreated ?? 0]].map(([label, v]) => ({ label: label as string, v: v as number }));
+    return <WhatsAppNumbers ar={ar} numbers={s.waNumbers} limit={s.waLimit} planName={planName} canUpgrade={plan !== "pro"} stats={stats} onAdd={this.openWA} onDisconnect={n => this.setState({ confirmDisc: n })} onUpgrade={() => (plan ? this.openBilling() : this.setState({ page: "Plans", planStep: "plans" }))}/>;
+  }
 
   renderVals() {
     const s = this.state; const p = this.props; const c = COUNTRIES[s.cc];
@@ -699,7 +746,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     }).filter(g => g.items.length);
     const langFor = (short: boolean) => [["en", "EN"], ["ar", short ? "ع" : "العربية"]].map(([k, label]) => { const on = s.lang === k; return { label, on, fw: on ? 600 : 500, bg: on ? "#fff" : "transparent", fg: on ? "#1A0815" : "#8A5A6E", sh: on ? "0 1px 2px rgba(26,8,21,.12)" : "none", pick: () => this.setLang(k as any) }; });
     const nm = s.name.trim() || "Burger House"; const initials = nm.split(/\s+/).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase();
-    const setupItems: [string, boolean, any?][] = [["Business created", true], ["Menu added", s.menuDone], [waOn ? "WhatsApp connected" : "Connect WhatsApp", waOn, this.openWA], ["Set delivery & order settings", !!s.overview?.setup?.delivery, () => { history.replaceState(null, "", `/dashboard?page=settings&businessId=${this.state.businessId}#delivery`); this.setState({ page: "Settings" }); }], ["Test Lumia", !!s.overview?.setup?.tested, () => { const n = String(s.waPhone || this.props.wa.displayPhoneNumber || "").replace(/\D/g, ""); if (n) window.open("https://wa.me/" + n, "_blank"); }]];
+    const setupItems: [string, boolean, any?][] = [["Business created", true], ["Menu added", s.menuDone], [waOn ? "WhatsApp connected" : "Connect WhatsApp", waOn, this.openWA], ["Set delivery & order settings", !!s.overview?.setup?.delivery, () => this.openSettings("delivery")], ["Test Lumia", !!s.overview?.setup?.tested, () => { const n = String(s.waPhone || this.props.wa.displayPhoneNumber || "").replace(/\D/g, ""); if (n) window.open("https://wa.me/" + n, "_blank"); }]];
     const doneN = setupItems.filter(x => x[1]).length;
     // WhatsApp import screens
     const info = s.waInfo; const waInitials = (s.waName || nm).split(/\s+/).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase();
@@ -754,16 +801,16 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       q: s.q, hasQ: !!s.q, onSearch: (e: any) => this.setState({ q: e.target.value }), clearSearch: () => this.setState({ q: "" }), sections, noResults: sections.length === 0, dashErr: s.dashErr,
       cats: [["All", T.all, count(M)], ...M.map(g => [g.id, catName(g), g.items.length])].map(([k, label, n]: any) => { const on = !q && s.cat === k; return { label, count: n, on, pick: () => this.setState({ cat: k, q: "" }), bg: on ? "#FDEAF2" : "transparent", fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, countFg: on ? "#8A2040" : "#8A5A6E", chipBg: on ? "#1A0815" : "#fff", chipFg: on ? "#fff" : "#3D1C31", chipBd: on ? "#1A0815" : "#ECD9E0" }; }),
       menuDone: s.menuDone && count(M) > 0, menuEmpty: !(s.menuDone && count(M) > 0), dashNarrow: narrow, dashWide: !narrow, openAddItem: p.canEdit ? this.openAddItem : noop, dlg,
-      nav: NAV.map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l === "Menu" ? "Menu & products" : l, icon, pick: (e: any) => { e?.preventDefault?.(); if (l === "Overview" || l === "Orders" || l === "Menu" || l === "WhatsApp" || l === "Settings") { this.setState({ page: l }); if (l === "WhatsApp") this.loadStats(); if (l === "Overview") { this.loadOverview(); this.showOverviewLoader(); } if (l === "Orders") { this.loadOrders(); this.showOrdersLoader(); } history.replaceState(null, "", `/dashboard?page=${l.toLowerCase()}&businessId=${this.state.businessId}`); } else if (l === "Customers" || l === "Campaigns") { if (!this.state.subData?.entitlements?.customers) this.setState({ lock: l === "Customers" ? "customers" : "campaigns" }); else { this.setState({ page: l, campErr: "" }); this.loadCustomers(); if (l === "Campaigns") this.loadCampaigns(); history.replaceState(null, "", `/dashboard?page=${l.toLowerCase()}&businessId=${this.state.businessId}`); } } else if (l === "Sign out") this.signOut(); }, fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, bg: on ? "#FDEAF2" : "transparent", bd: on ? "#FF5577" : "transparent" }; }),
+      nav: [...NAV.map(([l, icon]) => { const on = l === s.page; return { label: ar ? NAV_AR[l] : l === "Menu" ? "Menu & products" : l, icon, pick: (e: any) => { e?.preventDefault?.(); if (l === "Overview" || l === "Orders" || l === "Menu" || l === "WhatsApp" || l === "Settings") { this.setState({ page: l }); if (l === "WhatsApp") this.loadStats(); if (l === "Overview") { this.loadOverview(); this.showOverviewLoader(); } if (l === "Orders") { this.loadOrders(); this.showOrdersLoader(); } history.replaceState(null, "", `/dashboard?page=${l.toLowerCase()}&businessId=${this.state.businessId}`); } else if (l === "Customers" || l === "Campaigns") { if (!this.state.subData?.entitlements?.customers) this.setState({ lock: l === "Customers" ? "customers" : "campaigns" }); else { this.setState({ page: l, campErr: "" }); this.loadCustomers(); if (l === "Campaigns") this.loadCampaigns(); history.replaceState(null, "", `/dashboard?page=${l.toLowerCase()}&businessId=${this.state.businessId}`); } } else if (l === "Sign out") this.signOut(); }, fg: on ? "#8A2040" : "#3D1C31", fw: on ? 600 : 400, bg: on ? "#FDEAF2" : "transparent", bd: on ? "#FF5577" : "transparent", on }; }), ...this.setupNav(s, ar)],
       setup: setupItems.map(([label0, done, fn], i) => { const lb = T.setup[i]; const label = Array.isArray(lb) ? lb[done ? 1 : 0] : lb; return { label, done, todo: !done, fg: done ? "#1A0815" : "#3D1C31", ul: !done && fn ? "underline" : "none", pick: fn || this.noopFn, bar: i < doneN ? "#16704A" : "rgba(26,8,21,.12)" }; }),
       setupLabel: ar ? `${doneN} من 5 مكتملة` : `${doneN} of 5 completed`, waSetupLabel: `${doneN} of 5 completed`,
       // whatsapp
       menuScopeNode: <MenuScope scope={s.menuScope} branchId={s.menuBranch} busy={s.scopeBusy} error={s.scopeErr} onPick={id => this.setState({ menuBranch: id, scopeErr: "" }, () => this.refreshMenu().catch(e => this.setState({ scopeErr: e.message })))} onCreate={copy => this.scopeAct(() => api(`/api/v1/businesses/${s.businessId}/menu/branches/${s.menuBranch}`, "POST", { copy }))} ar={s.lang === "ar"} onRemove={() => this.scopeAct(() => api(`/api/v1/businesses/${s.businessId}/menu/branches/${s.menuBranch}`, "DELETE"))}/>,
-      emailBannerNode: <>{s.subData?.access?.reason === "setup" && s.page !== "Plans" ? <StatusBanner ar={ar} title={ar ? "نشاطك لا يستقبل طلبات العملاء بعد" : "Your business isn’t taking customer orders yet"} body={ar ? "في هذه السوق نقدّم الاشتراكات حالياً للمنشآت المسجّلة في ضريبة القيمة المضافة. أضف الرقم الضريبي من الفوترة ← البيانات الضريبية. تتم مراجعة بياناتك، ويمكنك متابعة الإعداد خلال ذلك." : "For this market, Lumia Order currently supports subscriptions for VAT-registered businesses. Add your business VAT number under Billing → Tax details. Your VAT details are reviewed, and meanwhile you can keep setting up."} action={ar ? "فتح البيانات الضريبية" : "Open tax details"} onAction={this.openBilling}/> : null}{s.subData?.contactEmail && !s.subData.contactEmail.verified && s.subData.access?.active !== false && s.page !== "Plans" ? <EmailVerify key="email-banner" businessId={s.businessId} email={s.subData.contactEmail.email} verified={false} ar={ar} variant="banner" onVerified={() => this.loadSub()}/> : null}</>,
-      pageCustomers: s.page === "Customers", pageCampaigns: s.page === "Campaigns", ...this.custVals(s),
-      pageMenu: s.page === "Menu", pageOverview: s.page === "Overview", pageOrders: s.page === "Orders", pageBilling: s.page === "Billing", billingNode: s.page === "Billing" ? <BillingPage businessId={s.businessId} onChoosePlan={() => this.setState({ page: "Plans", planStep: "plans" })} onChanged={() => this.loadSub()}/> : null, ...this.subVals(ar, narrow), ordLoading: s.orders === null && !s.ordErr && s.ordSlow, loaderNode: <ContentLoader/>, ovLoading: s.overview === null && s.ovSlow, ovReady: s.overview !== null, pageSettings: s.page === "Settings", notSettings: s.page !== "Settings", settingsNode: s.page === "Settings" ? <SettingsLoader businessId={s.businessId} query={`?businessId=${s.businessId}`} onPremium={() => this.setState({ lock: "branches" })} onSaved={() => this.loadOverview()}/> : null, ...this.overviewVm(ar, narrow), ...this.ordersVals(ar, narrow), pageWA: s.page === "WhatsApp", waOpen: !!s.wa, wa: { intro: s.wa === "intro", connecting: s.wa === "connecting", success: s.wa === "success", import: s.wa === "import", review: s.wa === "review", catalog: s.wa === "catalog", error: s.wa === "error", inUse: s.wa === "inUse" },
+      emailBannerNode: <>{s.subData?.access?.reason === "setup" && s.page !== "Plans" ? <StatusBanner ar={ar} title={ar ? "نشاطك لا يستقبل طلبات العملاء بعد" : "Your business isn’t taking customer orders yet"} body={ar ? "في هذه السوق نقدّم الاشتراكات حالياً للمنشآت المسجّلة في ضريبة القيمة المضافة. أضف الرقم الضريبي من الفوترة ← البيانات الضريبية. تتم مراجعة بياناتك، ويمكنك متابعة الإعداد خلال ذلك." : "For this market, Lumia Order currently supports subscriptions for VAT-registered businesses. Add your business VAT number under Billing → Tax details. Your VAT details are reviewed, and meanwhile you can keep setting up."} action={ar ? "فتح البيانات الضريبية" : "Open tax details"} onAction={() => { this.openBilling(); this.setState({ billFocus: "tax" }); }}/> : null}{s.subData?.contactEmail && !s.subData.contactEmail.verified && s.subData.access?.active !== false && s.page !== "Plans" ? <EmailVerify key="email-banner" businessId={s.businessId} email={s.subData.contactEmail.email} verified={false} ar={ar} variant="banner" onVerified={() => this.loadSub()}/> : null}</>,
+      cpNode: s.page === "Campaigns" ? this.campaignsPage(ar) : null, cuNode: s.page === "Customers" ? <CustomersPage ar={ar} list={s.custList} error={s.custErr} money={(m: number) => formatMoneyUi(m, this.cur)} selected={s.custSel} onSelect={(ids: string[]) => this.setState({ custSel: ids })} onSendOffer={(ids?: string[]) => { this.setState({ ...(ids ? { custSel: ids } : {}), page: "Campaigns", campMode: "offer", campErr: "" }); this.loadCampaigns(); history.replaceState(null, "", `/dashboard?page=campaigns&businessId=${this.state.businessId}`); }}/> : null, pageCustomers: s.page === "Customers", pageCampaigns: s.page === "Campaigns", ...this.custVals(s),
+      pageMenu: s.page === "Menu", pageOverview: s.page === "Overview", pageOrders: s.page === "Orders", pageBilling: s.page === "Billing", billingNode: s.page === "Billing" ? <BillingPage focus={s.billFocus} businessId={s.businessId} onChoosePlan={() => this.setState({ page: "Plans", planStep: "plans" })} onChanged={() => this.loadSub()}/> : null, ...this.subVals(ar, narrow), ordLoading: s.orders === null && !s.ordErr && s.ordSlow, loaderNode: <ContentLoader/>, ovLoading: s.overview === null && s.ovSlow, ovReady: s.overview !== null, pageSettings: s.page === "Settings", notSettings: s.page !== "Settings", settingsNode: s.page === "Settings" ? <SettingsLoader businessId={s.businessId} query={`?businessId=${s.businessId}`} sub={s.setSub} onPage={(p: string) => { if (p === "whatsapp") { this.setState({ page: "WhatsApp" }); this.loadStats(); } else if (p === "menu") this.setState({ page: "Menu" }); else if (p !== this.state.setSub) { history.replaceState(null, "", `/dashboard?page=settings&businessId=${this.state.businessId}#${p}`); this.setState({ setSub: p }); } }} onPremium={() => this.setState({ lock: "branches" })} onSaved={() => this.loadOverview()}/> : null, ...this.overviewVm(ar, narrow), ...this.ordersVals(ar, narrow), pageWA: s.page === "WhatsApp", waOpen: !!s.wa, wa: { intro: s.wa === "intro", connecting: s.wa === "connecting", success: s.wa === "success", import: s.wa === "import", review: s.wa === "review", catalog: s.wa === "catalog", error: s.wa === "error", inUse: s.wa === "inUse" },
       waLabel: ({ intro: "08 WhatsApp · Connect", connecting: "08a WhatsApp · Connecting", success: "08b WhatsApp · Connected", import: "08c WhatsApp · Import info", review: "08d WhatsApp · Review differences", catalog: "08e WhatsApp · Catalog found", error: "08g WhatsApp · Error", inUse: "08h WhatsApp · Number in use" } as any)[s.wa] || "08 WhatsApp",
-      waClose: () => { this.connectToken++; this.clearTimers(); this.setState({ wa: null, confirmReplace: false }); }, openWA: this.openWA, startConnect: this.startConnect, continueSetup: () => { const f = s.overview?.setup; if (!waOn) this.openWA(); else if (!s.menuDone) this.setState({ page: "Menu" }); else if (!f?.delivery) { history.replaceState(null, "", `/dashboard?page=settings&businessId=${this.state.businessId}#delivery`); this.setState({ page: "Settings" }); } else if (!f?.tested) { const n = String(s.waPhone || this.props.wa.displayPhoneNumber || "").replace(/\D/g, ""); if (n) window.open("https://wa.me/" + n, "_blank"); } },
+      waClose: () => { this.connectToken++; this.clearTimers(); this.setState({ wa: null, confirmReplace: false }); }, openWA: this.openWA, startConnect: this.startConnect, continueSetup: () => { const f = s.overview?.setup; if (!waOn) this.openWA(); else if (!s.menuDone) this.setState({ page: "Menu" }); else if (!f?.delivery) this.openSettings("delivery"); else if (!f?.tested) { const n = String(s.waPhone || this.props.wa.displayPhoneNumber || "").replace(/\D/g, ""); if (n) window.open("https://wa.me/" + n, "_blank"); } },
       setupShow: s.overview !== null && doneN < 5,
       cancelConnect: () => { this.connectToken++; this.setState({ wa: "intro" }); },
       waRing: ce("div", { key: "war", style: { position: "absolute", inset: 0, borderRadius: "50%", background: "conic-gradient(from 0deg,rgba(255,85,119,0),#FF5577 40%,#C93DFF 70%,rgba(201,61,255,0) 72%)", WebkitMask: "radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px))", mask: "radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px))", animation: "lo-rot 1.4s linear infinite" } }),
@@ -777,10 +824,11 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       waCatList: waCat.map((g, i) => ({ cat: g.name, label: `${g.count} products`, sample: g.sample.join(", ") + (g.count > g.sample.length ? "…" : ""), bt: i ? "1px solid #F3EEF1" : "0" })),
       askReplace: () => this.setState({ confirmReplace: true }), cancelReplace: () => this.setState({ confirmReplace: false }), confirmReplace: s.confirmReplace, useCatalog: this.useCatalog, waFinish: () => this.setState({ wa: null }),
       waErrText: s.waErrText || "The business account you selected isn't available right now.",
+      waPageNode: s.page === "WhatsApp" ? this.waPage(ar) : null, waIntroNode: s.wa === "intro" ? <WhatsAppLinkGuide key={s.waGuide} ar={ar} loginPhone={masked} adding={s.waNumbers.some((n: WaNumber) => n.status === "connected")} onStart={m => this.startConnect(m)} onLater={() => this.setState({ wa: null })}/> : null,
       waIsConnected: waOn, waIsDisconnected: s.waStatus === "disconnected", waIsNone: s.waStatus === "none", waPagePhone: s.waStatus === "none" ? "Not connected yet" : s.waPhone,
       waStat: waOn ? { label: "Connected", fg: "#16704A", dot: "#25D366", ring: "#25D366" } : s.waStatus === "disconnected" ? { label: "Disconnected", fg: "#3D1C31", dot: "transparent", ring: "#8A5A6E" } : { label: "Not connected", fg: "#3D1C31", dot: "transparent", ring: "#B79AA6" },
-      waShowToday: waOn, waToday: [["Messages received", s.stats?.messagesReceived ?? 0], ["AI replies", s.stats?.aiReplies ?? 0], ["Orders created", s.stats?.ordersCreated ?? 0]].map(([label, v], i) => ({ label, v, bt: i ? "1px solid #EFE3E9" : "0" })), confirmDisc: s.confirmDisc, askDisconnect: () => this.setState({ confirmDisc: true }), cancelDisconnect: () => this.setState({ confirmDisc: false }), doDisconnect: this.doDisconnect,
-      reconnect: () => { this.openWA(); this.startConnect(); },
+      waShowToday: waOn, waToday: [["Messages received", s.stats?.messagesReceived ?? 0], ["AI replies", s.stats?.aiReplies ?? 0], ["Orders created", s.stats?.ordersCreated ?? 0]].map(([label, v], i) => ({ label, v, bt: i ? "1px solid #EFE3E9" : "0" })), confirmDisc: !!s.confirmDisc, discPhone: s.confirmDisc ? s.confirmDisc.displayPhoneNumber : "", askDisconnect: () => this.setState({ confirmDisc: s.waNumbers.find((n: WaNumber) => n.status === "connected") ?? false }), cancelDisconnect: () => this.setState({ confirmDisc: false }), doDisconnect: this.doDisconnect,
+      reconnect: () => this.openWA(),
       openTemplates: () => window.location.assign(`/dashboard/whatsapp/templates?businessId=${s.businessId}`),
     };
   }

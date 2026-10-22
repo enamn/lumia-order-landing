@@ -35,7 +35,7 @@ describe.skipIf(!enabled)("WhatsApp linking", () => {
 
   it("connects: stores the token encrypted, never returns it, completes the WHATSAPP step", async () => {
     const result = await connectWhatsApp(owner, a, meta, "t");
-    expect(result).toEqual({ status: "connected", displayPhoneNumber: "+971 55 123 8210", verifiedName: "Real Name", catalogItems: 2 });
+    expect(result).toEqual({ status: "connected", displayPhoneNumber: "+971 55 123 8210", verifiedName: "Real Name", businessPortfolioName: "", catalogItems: 2 });
     expect(calls[0]).toMatchObject({ url: "/internal/whatsapp/connect", body: meta });
     const row = await db.whatsAppAccount.findFirstOrThrow({ where: { businessId: a } });
     expect(row.status).toBe("CONNECTED"); expect(row.accessTokenEncrypted).not.toContain("biz-token"); expect(decryptSecret(row.accessTokenEncrypted!)).toBe("biz-token-abc");
@@ -65,9 +65,9 @@ describe.skipIf(!enabled)("WhatsApp linking", () => {
   it("rejects a number already connected to another restaurant, and maps API failures to friendly errors", async () => {
     await expect(connectWhatsApp(other, b, meta, "t")).rejects.toMatchObject({ code: "WHATSAPP_NUMBER_IN_USE", status: 409 });
     mockApi({ "/internal/whatsapp/connect": () => Response.json({ error: { code: "WHATSAPP_LINK_PERMISSIONS_MISSING" } }, { status: 403 }) });
-    await expect(connectWhatsApp(owner, a, meta, "t")).rejects.toMatchObject({ status: 403, message: "Permission was cancelled before setup finished." });
+    await expect(connectWhatsApp(other, b, meta, "t")).rejects.toMatchObject({ status: 403, message: "Permission was cancelled before setup finished." }); // b has no number yet, so the plan limit doesn't get in the way
     mockApi({ "/internal/whatsapp/connect": () => Response.json({ error: { code: "WHATSAPP_LINK_MISMATCH" } }, { status: 403 }) });
-    await expect(connectWhatsApp(owner, a, meta, "t")).rejects.toMatchObject({ message: "The business account you selected isn't available right now." });
+    await expect(connectWhatsApp(other, b, meta, "t")).rejects.toMatchObject({ message: "The business account you selected isn't available right now." });
     await expect(connectWhatsApp(owner, a, { code: "test" }, "t")).rejects.toMatchObject({ code: "WHATSAPP_LINK_INVALID_CODE" }); // no test bypass outside AUTH_TEST_MODE
   });
   it("import info compares WhatsApp against Lumia; apply re-reads the profile server-side", async () => {
@@ -90,28 +90,55 @@ describe.skipIf(!enabled)("WhatsApp linking", () => {
     await expect(useCatalog(owner, a, { mode: "use" }, "t")).rejects.toMatchObject({ code: "WHATSAPP_CATALOG_EMPTY" });
   });
   it("disconnect unsubscribes, drops the token, keeps business data and allows reconnecting", async () => {
-    await disconnectWhatsApp(owner, a, "t");
+    await disconnectWhatsApp(owner, a, {}, "t");
     expect(calls.at(-1)).toMatchObject({ url: "/internal/whatsapp/disconnect", body: { accessToken: "biz-token-abc", wabaId: meta.wabaId } });
     const row = await db.whatsAppAccount.findFirstOrThrow({ where: { businessId: a } }); expect(row.status).toBe("DISCONNECTED"); expect(row.accessTokenEncrypted).toBeNull();
     expect((await getWhatsAppStatus(owner, a)).status).toBe("disconnected");
     expect((await getMenu(owner, a)).length).toBeGreaterThan(0);
     // the released number can now be linked by another restaurant
     await connectWhatsApp(other, b, meta, "t"); expect((await getWhatsAppStatus(other, b)).status).toBe("connected");
-    await disconnectWhatsApp(other, b, "t"); await connectWhatsApp(owner, a, meta, "t"); expect((await getWhatsAppStatus(owner, a)).status).toBe("connected");
+    await disconnectWhatsApp(other, b, {}, "t"); await connectWhatsApp(owner, a, meta, "t"); expect((await getWhatsAppStatus(owner, a)).status).toBe("connected");
   });
   it("the dev code is refused unless dev link is on, and works (via the API) when it is", async () => {
     await expect(connectWhatsApp(other, b, { code: "dev" }, "t")).rejects.toMatchObject({ code: "WHATSAPP_LINK_INVALID_CODE" });
-    await disconnectWhatsApp(owner, a, "t"); // free the number used by earlier tests
+    await disconnectWhatsApp(owner, a, {}, "t"); // free the number used by earlier tests
     vi.stubEnv("WHATSAPP_DEV_LINK", "true"); const n = calls.length; const r = await connectWhatsApp(other, b, { code: "dev" }, "t");
     expect(r.verifiedName).toBe("Real Name"); expect(calls[n]).toMatchObject({ url: "/internal/whatsapp/connect", body: { code: "dev", mode: "existing" } });
-    await disconnectWhatsApp(other, b, "t"); vi.stubEnv("NODE_ENV", "production"); await expect(connectWhatsApp(other, b, { code: "dev" }, "t")).rejects.toMatchObject({ code: "WHATSAPP_LINK_INVALID_CODE" }); vi.unstubAllEnvs();
+    await disconnectWhatsApp(other, b, {}, "t"); vi.stubEnv("NODE_ENV", "production"); await expect(connectWhatsApp(other, b, { code: "dev" }, "t")).rejects.toMatchObject({ code: "WHATSAPP_LINK_INVALID_CODE" }); vi.unstubAllEnvs();
   });
   it("test mode simulates a full connection without Meta, and is ignored in production", async () => {
     vi.stubEnv("WHATSAPP_LINK_TEST_MODE", "true"); const before = calls.length;
     const r = await connectWhatsApp(other, b, { code: "test" }, "t");
     expect(r).toMatchObject({ verifiedName: "Burger House Sharjah", catalogItems: 12 }); expect(calls.length).toBe(before);
     expect((await getImportInfo(other, b)).catalog.total).toBe(12);
-    await disconnectWhatsApp(other, b, "t"); expect(calls.length).toBe(before);
+    await disconnectWhatsApp(other, b, {}, "t"); expect(calls.length).toBe(before);
     vi.stubEnv("NODE_ENV", "production"); await expect(connectWhatsApp(other, b, { code: "test" }, "t")).rejects.toMatchObject({ code: "WHATSAPP_LINK_INVALID_CODE" }); vi.unstubAllEnvs();
+  });
+  it("links several numbers up to the plan's limit, lists them, and disconnects one at a time", async () => {
+    const user = (await db.user.create({ data: { name: "multi", email: `multi-${suffix}@test.invalid`, phoneNumber: `+97150888${String(serial++).padStart(4, "0")}`, phoneNumberVerified: true } })).id;
+    const biz = (await createBusiness(user, { name: "Gamma", locationName: "Main" }, "t")).id;
+    const numberFor = (n: number) => ({ ...link, phoneNumberId: `90000000000000${n}`, displayPhoneNumber: `+971 55 000 000${n}` });
+    let next = 1; mockApi({ "/internal/whatsapp/connect": () => Response.json(numberFor(next)) });
+    await connectWhatsApp(user, biz, { code: "c" }, "t");
+    // free trial: one number. A second is refused before Meta is called.
+    next = 2; const before = calls.length;
+    await expect(connectWhatsApp(user, biz, { code: "c" }, "t")).rejects.toMatchObject({ code: "WHATSAPP_NUMBER_LIMIT", status: 403 });
+    expect(calls.length).toBe(before);
+    // Plus: two numbers, each its own record; the first one stays connected.
+    await db.subscription.create({ data: { businessId: biz, plan: "plus", billing: "monthly", status: "ACTIVE", currentPeriodStart: new Date(), currentPeriodEnd: new Date(Date.now() + 30 * 86400000), startedAt: new Date() } });
+    await connectWhatsApp(user, biz, { code: "c" }, "t");
+    let status = await getWhatsAppStatus(user, biz);
+    expect(status).toMatchObject({ status: "connected", limit: 2, used: 2 });
+    expect(status.numbers.map(n => [n.displayPhoneNumber, n.status]).sort()).toEqual([["+971 55 000 0001", "connected"], ["+971 55 000 0002", "connected"]]);
+    next = 3; await expect(connectWhatsApp(user, biz, { code: "c" }, "t")).rejects.toMatchObject({ code: "WHATSAPP_NUMBER_LIMIT" });
+    // Disconnecting one number leaves the other connected and the WhatsApp setup step done.
+    const first = status.numbers.find(n => n.displayPhoneNumber === "+971 55 000 0001")!;
+    await disconnectWhatsApp(user, biz, { accountId: first.id }, "t");
+    status = await getWhatsAppStatus(user, biz);
+    expect(status).toMatchObject({ status: "connected", used: 1, displayPhoneNumber: "+971 55 000 0002" });
+    expect(status.numbers.map(n => n.status)).toEqual(["connected", "disconnected"]);
+    // Another restaurant's number id is never disconnected through this business.
+    const theirs = await db.whatsAppAccount.findFirstOrThrow({ where: { businessId: { not: biz }, status: "CONNECTED" } }).catch(() => null);
+    if (theirs) { await disconnectWhatsApp(user, biz, { accountId: theirs.id }, "t"); expect((await db.whatsAppAccount.findUniqueOrThrow({ where: { id: theirs.id } })).status).toBe("CONNECTED"); }
   });
 });

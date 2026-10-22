@@ -85,3 +85,11 @@ export function hoursFrom(saved: Hours | null | undefined, rows: { dayOfWeek: nu
   const week: Day[] = names.map((d, i) => { const r = rows.find(x => x.dayOfWeek === (i + 1) % 7); return { day: d, open: !!r && !r.isClosed, from: r?.openTime ?? "12:00", to: r?.closeTime ?? "23:30", last: r?.closeTime ?? "23:30", brk: false, bFrom: "16:00", bTo: "17:00" }; });
   return { mode: "custom", scope: "same", sel: "", every: { ...week[0]!, day: "Every day" }, closedUntil: "", same: week, per: {} };
 }
+/** What the assistant is told about the hours, so it can answer "when do you open?" and never invites an order while the restaurant is closed. */
+export function hoursForAi(hours: Hours | null, branchId: string | null, state: OpenState): string {
+  if (!hours) return "";
+  const week = state.open ? weeksOf(hours, branchId)[0]! : state.week, lines = hoursLines(week, "en").join("; ");
+  if (state.open) return `Working hours (restaurant's local time): ${lines}. The restaurant is open now and taking orders. Use these hours when a customer asks when you open or close.`;
+  const when = state.reopenOn ? ` It reopens on ${state.reopenOn}.` : state.next ? ` It opens ${state.next.dayOffset === 0 ? "today" : state.next.dayOffset === 1 ? "tomorrow" : `on ${WEEKDAY.en[state.next.weekday]}`} at ${clock(state.next.time, "en")}.` : "";
+  return `IMPORTANT: The restaurant is CLOSED right now and is not taking orders.${when} Working hours: ${lines}. Do not start or take an order and do not ask what the customer would like to order. Answer their questions politely and tell them when the restaurant opens.`;
+}

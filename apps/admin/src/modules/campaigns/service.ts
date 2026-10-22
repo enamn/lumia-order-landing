@@ -58,7 +58,6 @@ export async function sendCampaign(userId: string, businessId: string, input: un
   if (!picked.length) throw new AppError("NO_RECIPIENTS", body.mode === "all" ? "You have no customers to message yet." : "Select at least one customer.", 400);
   if (picked.length > MAX_RECIPIENTS) throw new AppError("TOO_MANY_RECIPIENTS", `You can send an offer to up to ${MAX_RECIPIENTS} customers at a time.`, 400);
   const code = body.code ? { code: normalizeCode(body.code.code), percent: body.code.percent, days: body.code.days } : null;
-  if (body.mode === "offer" && !code) throw new AppError("CODE_REQUIRED", "Add a discount code to a custom offer.", 400);
   if (code && code.code.length < 3) throw new AppError("VALIDATION_FAILED", "The code needs 3 to 14 letters or numbers.", 400);
   if (body.image && (!/^[A-Za-z0-9+/=]+$/.test(body.image.data) || body.image.data.length * 0.75 > 5 * 1048576)) throw new AppError("FILE_TOO_LARGE", "Use an image under 5 MB.", 413);
 
