@@ -13,7 +13,8 @@ import type { TaxDecision } from "../tax/policy";
 
 // Subscriptions are run by Lumia: the plan, the billing period, renewals, retries, plan changes, cancellation and invoices all live here.
 // Stripe only takes each payment and keeps the card on file (through lumia-order-api). Card details never reach Lumia.
-export const TRIAL_DAYS = 14;
+// Length of the free trial. 14 days; a local or test environment can set TRIAL_DAYS to keep its restaurants unlocked longer (leave it unset in production).
+export const TRIAL_DAYS = Number(process.env.TRIAL_DAYS) > 0 ? Math.round(Number(process.env.TRIAL_DAYS)) : 14;
 export type { PlanId, Billing } from "./plans";
 export type SubStatus = "NONE" | "ACTIVE" | "PAST_DUE" | "CANCELED" | "ENDED";
 interface Card { brand: string; last4: string; expMonth: number; expYear: number }

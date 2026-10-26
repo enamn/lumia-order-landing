@@ -162,3 +162,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 @keyframes lo-tbob{0%,100%{transform:translateX(0) rotate(-4deg)}50%{transform:translateX(-10px) rotate(-1deg)}}
 @keyframes lo-pop{0%{opacity:0;transform:scale(.6)}70%{transform:scale(1.06)}100%{opacity:1;transform:scale(1)}}
 @keyframes lo-breathe{0%,100%{transform:scale(.85);opacity:.55}50%{transform:scale(1.08);opacity:1}}
+
+/* The address search (branch form, first branch while signing up): the same border as the other inputs and a clear focus ring */
+.place-input{outline:none;transition:border-color .15s,box-shadow .15s}
+.place-input:focus{border-color:#C93DFF!important;box-shadow:0 0 0 3px rgba(201,61,255,.14)}
+.place-input::placeholder{color:#8A5A6E}
+
+/* Phone numbers are typed and read left to right, also in Arabic; in an Arabic page the box keeps the number on the right */
+[dir="rtl"] .tel-ltr{text-align:right}
+

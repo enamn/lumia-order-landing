@@ -65,7 +65,7 @@ export function WhatsAppNumbers(p: { ar: boolean; numbers: WaNumber[]; limit: nu
         {p.numbers.length > 0 && <section aria-labelledby="wa-numbers" style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
             <h2 id="wa-numbers" style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em", margin: 0 }}>{A("Your numbers", "أرقامك")}</h2>
-            <span style={{ fontSize: 14, color: MUTED, ...num }}>{A(`${live.length} of ${p.limit} in use`, `${live.length} من ${p.limit} مستخدم`)}</span>
+            <span style={{ fontSize: 14, color: MUTED, fontVariantNumeric: "tabular-nums" }}>{A(`${live.length} of ${p.limit} in use`, `${live.length} من ${p.limit} مستخدم`)}</span>
           </div>
           {p.numbers.map(n => {
             const on = n.status === "connected";
@@ -74,7 +74,7 @@ export function WhatsAppNumbers(p: { ar: boolean; numbers: WaNumber[]; limit: nu
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 14px", minWidth: 0 }}>
                   <span style={{ width: 46, height: 46, borderRadius: 14, background: on ? "#EAF8EF" : SOFT, display: "flex", alignItems: "center", justifyContent: "center", flex: "none", filter: on ? undefined : "grayscale(1)", opacity: on ? 1 : 0.7 }}><WaGlyph size={26} /></span>
                   <div style={{ flex: "1 1 150px", minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-                    <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em", whiteSpace: "nowrap", ...num, textAlign: p.ar ? "right" : "left" }}>{n.displayPhoneNumber || A("WhatsApp number", "رقم واتساب")}</span>
+                    <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em", whiteSpace: "nowrap", ...(n.displayPhoneNumber ? num : {}), textAlign: p.ar ? "right" : "left" }}>{n.displayPhoneNumber || A("WhatsApp number", "رقم واتساب")}</span>
                     <span style={{ fontSize: 14, color: BODY, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.verifiedName || A("Name pending", "الاسم قيد المراجعة")}</span>
                   </div>
                   <span style={on ? pill("#E4F4EC", GREEN) : pill("#F3EEF1", BODY)}><span style={{ width: 7, height: 7, borderRadius: "50%", background: on ? "#25D366" : "#B79AA6" }} />{on ? A("Connected", "متصل") : A("Disconnected", "غير متصل")}</span>
@@ -173,7 +173,7 @@ export function WhatsAppLinkGuide(p: { ar: boolean; loginPhone: string; adding: 
       <h2 tabIndex={-1} style={h2}>{p.adding ? A("Add a WhatsApp number", "إضافة رقم واتساب") : A("Which number will customers message?", "على أي رقم سيراسلك العملاء؟")}</h2>
       <p style={lead}>{A("This is the number customers send their orders to. Lumia replies from it automatically.", "هذا هو الرقم الذي يرسل إليه العملاء طلباتهم. سيرد Lumia منه تلقائياً.")}</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <Choice ar={p.ar} onPick={() => setWhich("login")} title={A("The number I signed in with", "الرقم الذي سجّلت به")} detail={p.loginPhone ? A(`${p.loginPhone}, the number you use to sign in to Lumia.`, `${p.loginPhone}، الرقم الذي تسجّل به في Lumia.`) : A("The number you use to sign in to Lumia.", "الرقم الذي تسجّل به في Lumia.")} />
+        <Choice ar={p.ar} onPick={() => setWhich("login")} title={A("The number I signed in with", "الرقم الذي سجّلت به")} detail={p.loginPhone ? A(`${p.loginPhone}, the number you use to sign in to Lumia.`, `\u2066${p.loginPhone}\u2069، الرقم الذي تسجّل به في Lumia.`) : A("The number you use to sign in to Lumia.", "الرقم الذي تسجّل به في Lumia.")} />
         <Choice ar={p.ar} onPick={() => setWhich("other")} title={A("A different number", "رقم آخر")} detail={A("For example a separate WhatsApp for the restaurant, or a new SIM.", "مثل رقم واتساب منفصل للمطعم، أو شريحة جديدة.")} />
       </div>
       <Note><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ flex: "none", marginTop: 2 }}><circle cx="8" cy="8" r="7" stroke={MUTED} strokeWidth="1.4" /><path d="M8 7.2v4" stroke={MUTED} strokeWidth="1.5" strokeLinecap="round" /><circle cx="8" cy="4.9" r=".85" fill={MUTED} /></svg><span>{A("Your Lumia sign-in doesn't change. Linking only lets Lumia read and answer this number's customer chats.", "تسجيل دخولك إلى Lumia لا يتغير. الربط يسمح فقط لـ Lumia بقراءة محادثات العملاء على هذا الرقم والرد عليها.")}</span></Note>

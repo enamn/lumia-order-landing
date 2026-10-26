@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Lumia Order pre-dashboard flow + dashboard. Logic ported from the design's script (design/flow-v2.dc.html) and wired to the real APIs.
 // The markup comes from the generated DcTemplate; this component only builds the view-model it binds to.
+import PlacePicker from "./PlacePicker";
 import React from "react";
 import "./dc-base.css";
 import "./dc-hover.css";
@@ -118,7 +119,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const business = props.business;
     this.state = {
       step: props.initialStep, num: "", cc: Math.max(0, COUNTRIES.findIndex(c => c.code === props.initialCountry)), focused: false, invalid: false, srvErr: "", sending: false, ccOpen: false, e164: "",
-      currency: "", opCountry: "", opVat: "", digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
+      currency: "", loc: null, opCountry: "", opVat: "", digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
       name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu, props.currency)) > 0, cat: "All", menu: toCats(props.menu, props.currency), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
       page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", billFocus: "", setSub: (typeof location !== "undefined" && SETUP_SUBS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "profile"), subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", embedId: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waPortfolio: props.wa.businessPortfolioName ?? "", waInfo: null, waNumbers: (props.wa.numbers ?? []) as WaNumber[], waLimit: props.wa.limit ?? 1, waGuide: 0, catOpen: false, confirmReplace: false, confirmDisc: false as false | WaNumber, choices: {} as Record<string, string>,
@@ -533,11 +534,16 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const ar = this.state.lang === "ar";
     try {
       const r = await api("/api/auth/whatsapp/send-code", "POST", { phoneNumber: this.state.e164, language: this.state.lang, channel });
-      this.setState({ smsMode: channel === "sms", digits: "", otpErr: null, otpFail: "", resendAt: Date.now() + (r.resendAfter ?? 30) * 1000, now: Date.now(), note: r.testMode ? "Test mode: no message was sent. Enter 111111." : channel === "sms" ? (ar ? `تم إرسال الرمز برسالة نصية إلى ${maskPhone(this.state.e164)}.` : `Code sent by SMS to ${maskPhone(this.state.e164)}.`) : (ar ? "تم إرسال رمز جديد إلى واتساب." : "New code sent to your WhatsApp.") });
+      this.setState({ smsMode: channel === "sms", digits: "", otpErr: null, otpFail: "", resendAt: Date.now() + (r.resendAfter ?? 30) * 1000, now: Date.now(), note: r.testMode ? "Test mode: no message was sent. Enter 111111." : channel === "sms" ? (ar ? `تم إرسال الرمز برسالة نصية إلى \u2066${maskPhone(this.state.e164)}\u2069.` : `Code sent by SMS to ${maskPhone(this.state.e164)}.`) : (ar ? "تم إرسال رمز جديد إلى واتساب." : "New code sent to your WhatsApp.") });
       this.focus(this.otpRef);
     } catch (err) { this.setState({ sending: false, otpFail: err instanceof Error ? err.message : "We couldn’t send the code. Please try again.", note: null }); }
   }
   // ---- name / menu
+  // The first branch the owner picked on the map while signing up (optional: the pin can be added later in Settings).
+  locationBody() {
+    const l = this.state.loc as { coords: string; address?: string; area?: string; region?: string } | null, m = l ? /^(-?[\d.]+),\s*(-?[\d.]+)$/.exec(l.coords) : null;
+    return l && m ? { location: { latitude: +m[1]!, longitude: +m[2]!, ...(l.address ? { address: l.address } : {}), ...(l.area ? { area: l.area } : {}), ...(l.region ? { region: l.region } : {}) } } : {};
+  }
   submitName = async (e: any) => {
     e.preventDefault(); const name = this.state.name.trim();
     if (!name) { this.setState({ nameErr: true, nameFail: "" }); this.focus(this.nameRef); return; }
@@ -545,7 +551,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     if (vatOn && !/^[A-Z0-9]{8,20}$/.test(this.state.opVat.toUpperCase().replace(/[\s.-]/g, ""))) { this.setState({ nameErr: true, nameFail: "Only VAT-registered businesses can open an account in this country. Enter your VAT registration number (8 to 20 letters or digits)." }); return; }
     this.setState({ busy: true });
     try {
-      const b = await api("/api/v1/businesses", "POST", { name, locationName: "Main branch", businessType: "RESTAURANT", ...(vatOn ? { vatNumber: this.state.opVat } : {}), ...(this.state.logo?.startsWith("data:") ? { logoUrl: this.state.logo } : {}) });
+      const b = await api("/api/v1/businesses", "POST", { name, locationName: "Main branch", businessType: "RESTAURANT", ...this.locationBody(), ...(vatOn ? { vatNumber: this.state.opVat } : {}), ...(this.state.logo?.startsWith("data:") ? { logoUrl: this.state.logo } : {}) });
       this.setState({ busy: false, businessId: b.id, currency: b.currencyCode ?? "" }); this.go("menu", { menuErr: "" });
     } catch (err) { this.setState({ busy: false, nameErr: true, nameFail: err instanceof Error ? err.message : "Please try again." }); }
   };
@@ -784,6 +790,10 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       resend: () => this.resend("whatsapp"), sms: () => this.resend("sms"), changeNumber: () => { this.clearTimers(); this.setState({ verifying: false }); this.go("phone"); },
       // name
       nameRef: this.nameRef, name: s.name, nameErr: s.nameErr, nameErrText: s.nameFail || (la ? "أدخل اسم نشاطك التجاري للمتابعة" : "Enter your business name to continue"), nf: ring(s.nameErr, s.nameFocused, false), onName: (e: any) => this.setState({ name: e.target.value, nameErr: false, nameFail: "" }),
+      locationNode: <div style={{ marginTop: 26 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}><span style={{ fontSize: 14, fontWeight: 500, color: "#3D1C31" }}>{ar ? "موقع الفرع الرئيسي" : "Main branch location"}</span><span style={{ fontSize: 12, fontWeight: 500, padding: "2px 8px", borderRadius: 999, background: "#F3EEF1", color: "#8A5A6E" }}>{X.optional}</span></div>
+        <PlacePicker key={opCountry} country={opCountry} ar={ar} showLabel={false} height={220} coords={(s.loc as any)?.coords ?? ""} address={(s.loc as any)?.address ?? ""} onPick={(pk: any) => this.setState((st: any) => ({ loc: { ...(st.loc ?? {}), ...pk } }))} />
+      </div>,
       countryNode: <CountryPick value={opCountry} ar={ar} vat={s.opVat} onVat={v => this.setState({ opVat: v })}/>,
       nameFocus: () => this.setState({ nameFocused: true }), nameBlur: () => this.setState({ nameFocused: false }), submitName: this.submitName,
       planBadge: this.planBadge(s, ar), accountNode: this.accountMenu("sidebar", s, nm, initials, ar), accountNodeMobile: this.accountMenu("header", s, nm, initials, ar),

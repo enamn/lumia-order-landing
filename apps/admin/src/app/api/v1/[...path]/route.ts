@@ -18,7 +18,7 @@ import { getBillingTax, saveBillingTax } from "@/modules/tax/service";
 import { listMarkets } from "@/modules/market/service";
 import { requireAccess } from "@/modules/billing/service";
 import { printOrder } from "@/modules/devices/orders";
-import { searchPlaces } from "@/modules/settings/geocode";
+import { reversePlace, searchPlaces, searchPlacesIn } from "@/modules/settings/geocode";
 import { cancelPairing, disconnectDevice, getPairing, listDevices, realtimeTicket, startPairing, testPrint, updateDevice } from "@/modules/devices/service";
 import { createBusiness, getBusiness, listBusinesses, updateBusiness, updateLocation, readiness, completeOnboarding, members, setMember } from "@/modules/business/service";
 export const dynamic = "force-dynamic";
@@ -30,6 +30,7 @@ async function handle(request: Request, context: Context) {
     const method = request.method;
     if (resource === "me" && path.length === 1 && method === "PATCH") return setLanguage(userId, await jsonBody(request));
     if (resource === "markets" && path.length === 1 && method === "GET") return (await listMarkets()).map(m => ({ code: m.code, nameEn: m.nameEn, nameAr: m.nameAr, flag: m.flag, dial: m.dial, currency: m.currency, timezone: m.timezone, registrationEnabled: m.registrationEnabled, paidActivationEnabled: m.paidActivationEnabled, state: m.state, stateNote: m.stateNote }));
+    if (resource === "geocode" && path.length === 1 && method === "GET") { const u = new URL(request.url).searchParams; if (u.has("lat")) return reversePlace(Number(u.get("lat")), Number(u.get("lng"))); return searchPlacesIn(u.get("country") ?? "", u.get("q") ?? ""); }
     if (resource !== "businesses") throw new AppError("NOT_FOUND", "Endpoint not found.", 404);
     if (path.length === 1) {
       if (method === "GET") return listBusinesses(userId);

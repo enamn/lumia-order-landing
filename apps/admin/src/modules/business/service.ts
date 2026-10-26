@@ -8,6 +8,7 @@ import { profileInclude, listBusinesses } from "./repository";
 import { announceBranch } from "@/modules/devices/service";
 import { createBusinessSchema, profileSchema, locationUpdateSchema, memberSchema } from "./validators";
 import { steps, evaluateReadiness } from "../onboarding/readiness";
+import { isRegionOf } from "../market/regions";
 import { MARKETS, isCountryCode, marketFromDial } from "../market/countries";
 import { requireRegistration } from "../market/service";
 
@@ -35,7 +36,7 @@ export async function createBusiness(userId: string, input: unknown, requestId: 
     const org = await tx.organization.create({ data: { name: data.name, slug: `org-${crypto.randomUUID()}`, members: { create: { userId, role: "OWNER" } } } });
     const business = await tx.business.create({ data: { organizationId: org.id, name: data.name, logoUrl: data.logoUrl, phone: owner.phoneNumber, slug: `business-${crypto.randomUUID()}`, businessType: data.businessType,
       countryCode: market.code, currencyCode: market.currency, timezone: market.timezone,
-      locations: { create: { name: data.locationName, code: "MAIN", countryCode: market.code, timezone: market.timezone, hours: { create: Array.from({ length: 7 }, (_, dayOfWeek) => ({ dayOfWeek, isClosed: false, openTime: "09:00", closeTime: "22:00" })) } } },
+      locations: { create: { name: data.locationName, code: "MAIN", countryCode: market.code, timezone: market.timezone, ...(data.location ? { addressLine1: data.location.address ?? "", city: data.location.area ?? "", emirate: data.location.region && isRegionOf(market.code, data.location.region) ? data.location.region : "", latitude: data.location.latitude, longitude: data.location.longitude } : {}), hours: { create: Array.from({ length: 7 }, (_, dayOfWeek) => ({ dayOfWeek, isClosed: false, openTime: "09:00", closeTime: "22:00" })) } } },
       onboarding: { create: { steps: { create: steps.map(stepKey => ({ stepKey, status: stepKey === "BUSINESS" ? "IN_PROGRESS" : "PENDING" })) } } },
     } });
     if (market.requiresVerifiedVatForSaas) await tx.billingTaxProfile.create({ data: { businessId: business.id, billingCountry: market.code, legalName: data.name, vatRegistered: true, vatNumber, vatCountry: market.code, vatVerificationStatus: "PENDING", submittedAt: new Date() } });

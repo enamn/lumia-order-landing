@@ -218,13 +218,13 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                                 <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                   Business phone
                                 </span>
-                                <input value={vm.prof.phone.v} onChange={vm.prof.phone.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                <input dir="ltr" value={vm.prof.phone.v} onChange={vm.prof.phone.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2 tel-ltr" />
                               </label>
                               <label style={S("display:flex;flex-direction:column;gap:6px")}>
                                 <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                                   Support WhatsApp number
                                 </span>
-                                <input value={vm.prof.support.v} onChange={vm.prof.support.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2" />
+                                <input dir="ltr" value={vm.prof.support.v} onChange={vm.prof.support.set} style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px;font-variant-numeric:tabular-nums")} className="dcs2 tel-ltr" />
                                 <span style={S("font-size:13px;color:#8A5A6E")}>
                                   Customers are sent here if they ask for a person.
                                 </span>
@@ -396,6 +396,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                       <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
                         {vm.formTitle}
                       </h2>
+                      {vm.pickerEl}
                       <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px 16px")}>
                         <label style={S("display:flex;flex-direction:column;gap:6px")}>
                           <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
@@ -425,7 +426,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                             Phone number
                           </span>
-                          <input value={vm.nb.phone.v} onChange={vm.nb.phone.set} placeholder="+971 4 000 0000" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
+                          <input dir="ltr" value={vm.nb.phone.v} onChange={vm.nb.phone.set} placeholder="+971 4 000 0000" style={S("height:44px;width:100%;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2 tel-ltr" />
                         </label>
                         <label style={S("display:flex;flex-direction:column;gap:6px")}>
                           <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
@@ -448,54 +449,11 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           </div>
                         </div>
                       </div>
-                      <div style={S("display:flex;flex-direction:column;gap:10px")}>
-                        <div>
-                          <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
-                            Location pin
-                          </span>
-                          <p style={S("font-size:13px;color:#8A5A6E;margin-top:2px")}>
-                            Required for distance-based delivery pricing.
-                          </p>
+                      {vm.formError && (
+                        <div role="alert" style={S("font-size:14px;line-height:1.45;color:#B42318;background:#FDECEA;border-radius:10px;padding:10px 12px")}>
+                          {vm.formError}
                         </div>
-                        <div style={S("display:flex;flex-wrap:wrap;gap:8px")}>
-                          {(vm.pinModes as any[]).map((o: any, __i: number) => (
-                            <Fragment key={__i}>
-                              <button type="button" onClick={o.pick} style={S(`height:38px;padding:0 14px;border-radius:999px;font-size:14px;font-weight:500;white-space:nowrap;background:${o.bg};color:${o.fg};border:1.5px solid ${o.bd}`)}>
-                                {o.label}
-                              </button>
-                            </Fragment>
-                          ))}
-                        </div>
-                        {vm.pm.search && vm.searchEl}
-                        {vm.pm.paste && (
-                          <>
-                          <div style={S("display:flex;gap:8px;flex-wrap:wrap")}>
-                            <input value={vm.pinQ} onChange={vm.onPinQ} placeholder="https://maps.app.goo.gl/\u2026" style={S("flex:1 1 240px;height:44px;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
-                            <button type="button" onClick={vm.setPin} style={S("height:44px;padding:0 16px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
-                              Use link
-                            </button>
-                          </div>
-                          </>
-                        )}
-                        {vm.pm.current && (
-                          <>
-                          <button type="button" onClick={vm.setPin} style={S("align-self:flex-start;height:44px;padding:0 16px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
-                            Use my current location
-                          </button>
-                          <span style={S("font-size:13px;color:#8A5A6E")}>
-                            Do this from inside the branch for the most accurate pin.
-                          </span>
-                          </>
-                        )}
-                        {vm.mapEl}
-                        {vm.nbPinned && (
-                          <>
-                          <span style={S("font-size:14px;color:#16704A;font-weight:500;font-variant-numeric:tabular-nums")}>
-                            {"Pin set \u00b7 "}{vm.nbCoords}
-                          </span>
-                          </>
-                        )}
-                      </div>
+                      )}
                       <div style={S("display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;border-top:1px solid #F3EEF1;padding-top:16px")}>
                         <button type="button" onClick={vm.cancelAdd} style={S("height:44px;padding:0 18px;border-radius:12px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:15px")} className="dcs1">
                           Cancel

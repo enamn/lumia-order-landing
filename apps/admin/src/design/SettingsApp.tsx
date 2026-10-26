@@ -3,7 +3,7 @@
 "use client";
 // Restaurant settings: the markup is generated from the design (SettingsTemplate); this component keeps the page state,
 // saves each page through /api/v1/businesses/:id/settings/:section and feeds the template its view-model.
-import PinMap from "./PinMap";
+import PlacePicker from "./PlacePicker";
 import React from "react";
 import "./dc-base.css";
 import "./settings-hover.css";
@@ -34,13 +34,6 @@ async function api(path: string, method = "GET", body?: unknown) {
   return json.data ?? json;
 }
 // Pulls "latitude, longitude" out of a pasted Google Maps link or plain coordinates.
-function coordsFromText(text: string): string | null {
-  const t = decodeURIComponent(text.trim());
-  const m = /@(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/.exec(t) ?? /!3d(-?\d{1,3}\.\d+)!4d(-?\d{1,3}\.\d+)/.exec(t) ?? /[?&](?:q|ll|query)=(-?\d{1,3}\.\d+),\s*(-?\d{1,3}\.\d+)/.exec(t) ?? /^(-?\d{1,3}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)$/.exec(t);
-  if (!m || Math.abs(+m[1]) > 90 || Math.abs(+m[2]) > 180) return null;
-  return `${m[1]}, ${m[2]}`;
-}
-
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const PAGES = [
   ['profile', 'Profile', 'M4 8h12l-1.2-4H5.2zM5 8v8.5h10V8M8.5 16.5v-4h3v4'],
@@ -65,7 +58,7 @@ class SettingsApp extends React.Component<Props, any> {
   constructor(props: Props) {
     super(props);
     const d = props.initial.sections, hp = typeof location !== 'undefined' ? location.hash.slice(1) : '';
-    this.state = { w: 1200, page: props.sub && PAGES.some(p => p[0] === props.sub) ? props.sub : PAGES.some(p => p[0] === hp) ? hp : 'profile', draft: clone(d), saved: clone(d), toast: '', error: '', blocked: null, saving: false, adding: false, editId: null, geo: { busy: false, results: [], msg: '' }, nb: newBranch(regionNames(isCountryCode(props.initial.country) ? props.initial.country : 'AE')[0]), pinMode: 'current', pinQ: '', calc: { branch: d.branches[0]?.id ?? '', emirate: regionNames(isCountryCode(props.initial.country) ? props.initial.country : 'AE')[0], area: '', dist: '7', sub: '45' }, menu: props.initial.menu, wa: props.initial.whatsapp };
+    this.state = { w: 1200, page: props.sub && PAGES.some(p => p[0] === props.sub) ? props.sub : PAGES.some(p => p[0] === hp) ? hp : 'profile', draft: clone(d), saved: clone(d), toast: '', error: '', blocked: null, saving: false, adding: false, editId: null, nb: newBranch(regionNames(isCountryCode(props.initial.country) ? props.initial.country : 'AE')[0]), pinMode: 'current', pinQ: '', calc: { branch: d.branches[0]?.id ?? '', emirate: regionNames(isCountryCode(props.initial.country) ? props.initial.country : 'AE')[0], area: '', dist: '7', sub: '45' }, menu: props.initial.menu, wa: props.initial.whatsapp };
   }
 
   componentDidMount() {
@@ -160,6 +153,19 @@ class SettingsApp extends React.Component<Props, any> {
       if (k === 'branches') this.refreshAfterBranches();
     } catch (e: any) { this.setState({ error: e?.message ?? 'We couldn’t save. Please try again.', saving: false }); }
   }
+  // "Add branch" / "Save branch" in the branch form save at once (no second "Save changes" step): the list is saved with the new or edited branch, and the form closes when that worked.
+  async commitBranch() {
+    const s = this.state; if (s.saving || !s.nb.name.trim()) return;
+    const b = { ...s.nb, id: s.editId ?? String(Date.now()) }, list = clone(s.draft.branches), i = s.editId ? list.findIndex((y: any) => y.id === s.editId) : -1;
+    if (i >= 0) list[i] = { ...list[i], ...b }; else list.push(b);
+    this.setState({ saving: true, error: '' });
+    try {
+      const res = await api(`/api/v1/businesses/${this.props.businessId}/settings/branches`, 'PUT', list);
+      this.setState((st: any) => ({ draft: { ...st.draft, branches: clone(res.value) }, saved: { ...st.saved, branches: clone(res.value) }, adding: false, editId: null, saving: false, error: '' }));
+      this.flash(s.editId ? 'Branch saved.' : 'Branch added.'); rememberSaved(this.props.businessId, 'branches', res.value); this.props.onSaved?.();
+      this.refreshAfterBranches();
+    } catch (e: any) { this.setState({ error: e?.message ?? 'We couldn’t save the branch. Please try again.', saving: false }); } // the form stays open with the message
+  }
   // New branches get real ids on save; pick up the sections that refer to branches unless the owner is mid-edit.
   async refreshAfterBranches() {
     try {
@@ -230,20 +236,16 @@ class SettingsApp extends React.Component<Props, any> {
     // branches
     const pinMissing = d.branches.some(b => b.active && !b.pin);
     const branchCards = d.branches.map(b => ({ name: b.name, addr: `${b.area}, ${b.emirate}`, status: b.active ? 'Active' : 'Inactive', sbg: b.active ? TONE.ok[0] : TONE.neutral[0], sfg: b.active ? TONE.ok[1] : TONE.neutral[1], noPin: !b.pin,
-            addPin: () => this.startEdit(b, 'search'), edit: () => this.startEdit(b, b.pin ? 'map' : 'search'),
+            addPin: () => this.startEdit(b), edit: () => this.startEdit(b),
       rows: [
         { k: 'Location pin', v: b.pin ? 'Added' : 'Missing', fg: b.pin ? '#16704A' : '#B42318' },
-        { k: 'WhatsApp', v: s.wa.connected ? s.wa.displayPhoneNumber : 'Not connected', fg: s.wa.connected ? '#1A0815' : '#8A4B00' },
+        { k: 'WhatsApp', v: s.wa.connected ? '\u2066' + s.wa.displayPhoneNumber + '\u2069' : 'Not connected', fg: s.wa.connected ? '#1A0815' : '#8A4B00' },
         { k: 'Delivery', v: d.delivery.status === 'available' ? 'Active' : d.delivery.status === 'pickup' ? 'Pickup only' : 'Paused', fg: '#1A0815' },
         { k: 'Working hours', v: 'Set', fg: '#1A0815' },
       ] }));
     const nbS = s.nb, setNb = (key, v) => this.setState(st => ({ nb: { ...st.nb, [key]: v } }));
     const nb = Object.fromEntries(['name', 'area', 'address', 'phone', 'eta'].map(k => [k, { v: nbS[k], set: (e) => setNb(k, e.target.value) }]));
     nb.emSel = sel(nbS.emirate, emOpts, (e) => setNb('emirate', e.target.value), false, this.REGION_LABEL);
-    const setPin = () => {
-      if (s.pinMode === 'paste') { const c = coordsFromText(s.pinQ); if (c) this.setState((st: any) => ({ nb: { ...st.nb, pin: true, coords: c }, error: '' })); else this.setState({ error: 'We couldn’t find a location in that link. Paste a Google Maps link that shows the pin, or "latitude, longitude".' }); }
-      else this.locate((c: string) => this.setState((st: any) => ({ nb: { ...st.nb, pin: true, coords: c } })));
-    };
 
     // whatsapp
     const W = d.wa;
@@ -331,7 +333,7 @@ class SettingsApp extends React.Component<Props, any> {
     // save bar
     const dirty = this.dirtyOf(s, s.page);
     const pageLabel = (PAGES.find(p => p[0] === s.page) || [])[1];
-    const bar = { show: dirty || !!s.toast || !!s.error || s.saving, dirty, ok: !!s.toast && !dirty, okText: s.toast, err: !!s.error, errText: s.error,
+    const bar = { show: dirty || !!s.toast || (!!s.error && !s.adding) || (s.saving && !s.adding), dirty, ok: !!s.toast && !dirty, okText: s.toast, err: !!s.error, errText: s.error,
       fg: s.blocked ? '#8A4B00' : '#3D1C31',
       dirtyText: s.blocked ? `Save or discard your ${pageLabel.toLowerCase()} changes before leaving.` : 'You have unsaved changes.',
       discardLabel: s.blocked ? 'Leave without saving' : 'Discard', save: () => this.save(), discard: () => this.discard() };
@@ -362,16 +364,13 @@ class SettingsApp extends React.Component<Props, any> {
       greetOpts: radio([['friendly', 'Friendly', 'Warm and casual'], ['formal', 'Formal', 'Polite and professional'], ['short', 'Short', 'Straight to the order']], pr.greet, (v) => this.upd('profile', x => { x.greet = v; })),
       greetBubbles,
       pinMissing, branchCards, adding: s.adding, notAdding: !s.adding,
-      startAdd: () => { const open = () => this.setState({ adding: true, editId: null, nb: newBranch(this.EMR[0]), pinQ: '', pinMode: 'search', geo: { busy: false, results: [], msg: '' } }); if (d.branches.filter((b: any) => b.active).length < (this.props.initial.branchLimit ?? 1)) return open(); const bb = this.props.initial.branchBuy; if (bb) return this.buyBranch(open); if (this.props.onPremium) return this.props.onPremium(); open(); }, cancelAdd: () => this.setState({ adding: false, editId: null }),
-      confirmAdd: () => { const b = { ...s.nb, id: s.editId ?? String(Date.now()) }; this.upd('branches', x => { const i = s.editId ? x.findIndex((y: any) => y.id === s.editId) : -1; if (i >= 0) x[i] = { ...x[i], ...b }; else x.push(b); }); this.setState({ adding: false, editId: null }); },
-      formTitle: s.editId ? 'Edit branch' : 'New branch', confirmLabel: s.editId ? 'Save branch' : 'Add branch',
+      startAdd: () => { const open = () => this.setState({ adding: true, editId: null, nb: newBranch(this.EMR[0]) }); if (d.branches.filter((b: any) => b.active).length < (this.props.initial.branchLimit ?? 1)) return open(); const bb = this.props.initial.branchBuy; if (bb) return this.buyBranch(open); if (this.props.onPremium) return this.props.onPremium(); open(); }, cancelAdd: () => this.setState({ adding: false, editId: null }),
+      confirmAdd: () => this.commitBranch(),
+      formTitle: s.editId ? 'Edit branch' : 'New branch', confirmLabel: s.saving ? 'Saving…' : s.editId ? 'Save branch' : 'Add branch', formError: s.adding ? s.error : '',
       nb, nbStatus: seg([[true, 'Active'], [false, 'Inactive']], nbS.active, (v) => setNb('active', v)),
-      pinModes: [['search', 'Search address'], ['map', 'Drop pin on map'], ['paste', 'Paste Google Maps link'], ['current', 'Use my current location']].map(([k, l]) => ({ ...chip(l, s.pinMode === k, () => this.setState({ pinMode: k })) })),
-      pm: { search: s.pinMode === 'search', paste: s.pinMode === 'paste', current: s.pinMode === 'current', map: s.pinMode === 'map' },
-      pinQ: s.pinQ, onPinQ: (e) => this.setState({ pinQ: e.target.value }), setPin,
-      mapEl: <PinMap value={nbS.pin ? nbS.coords : ''} center={this.mapCenter(d)} onPick={(c: string) => this.setState((st: any) => ({ nb: { ...st.nb, pin: true, coords: c } }))} />,
-      searchEl: this.searchEl(),
-      nbPinned: nbS.pin, nbNoPin: !nbS.pin, nbCoords: nbS.coords, nbInvalid: !nbS.name.trim(), nbOp: nbS.name.trim() ? 1 : 0.45,
+      pickerEl: <PlacePicker key={s.editId ?? 'new'} country={this.props.initial.country ?? 'AE'} businessId={this.props.businessId} coords={nbS.pin ? nbS.coords : ''} address={nbS.pin ? nbS.address : ''}
+        onPick={(p: any) => this.setState((st: any) => ({ nb: { ...st.nb, pin: true, coords: p.coords, ...(p.address !== undefined ? { address: p.address } : {}), ...(p.area !== undefined ? { area: p.area } : {}), ...(p.region && this.EMR.includes(p.region) ? { emirate: p.region } : {}), ...(p.label && !st.nb.name.trim() ? { name: p.label } : {}) } }))} />,
+      nbPinned: nbS.pin, nbNoPin: !nbS.pin, nbCoords: nbS.coords, nbInvalid: !nbS.name.trim() || s.saving, nbOp: nbS.name.trim() && !s.saving ? 1 : 0.45,
       routeOpts, routeBranches, waMap, route, waFor: waMap[0],
       dStatusOpts: radio([['available', 'Delivery available', 'Lumia offers delivery and pickup.'], ['pickup', 'Pickup only', 'No delivery. Customers collect from the branch.'], ['paused', 'Delivery temporarily paused', 'Use when you are short on drivers.']], D.status, (v) => setD('status', v)),
       dl: { on: D.status === 'available', pickup: D.status === 'pickup', paused: D.status === 'paused', noMethod: !D.method, area: D.method === 'area', distance: D.method === 'distance', free: D.method === 'free', manual: D.method === 'manual' },
@@ -402,53 +401,11 @@ class SettingsApp extends React.Component<Props, any> {
     };
   }
 
-  // Browser location for a branch pin ("lat, lng").
   // Opens the branch form filled with an existing branch (the same form that adds one).
-  startEdit(b: any, mode: string) {
-    this.setState({ adding: true, editId: b.id, nb: { ...b }, pinQ: '', pinMode: mode, geo: { busy: false, results: [], msg: '' } });
+  startEdit(b: any) {
+    this.setState({ adding: true, editId: b.id, nb: { ...b } });
     try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch { /* the form is still open */ }
   }
-  // Where the map opens before a pin exists: the first branch that has one, else the country's main city.
-  mapCenter(d: any): [number, number] {
-    const pinned = d.branches.find((x: any) => x.pin && x.coords), m = pinned ? /^\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)/.exec(pinned.coords) : null;
-    if (m) return [+m[1], +m[2]];
-    return ({ AE: [25.2048, 55.2708], SA: [24.7136, 46.6753], OM: [23.588, 58.3829], BH: [26.2285, 50.586], QA: [25.2854, 51.531], KW: [29.3759, 47.9774] } as Record<string, [number, number]>)[this.props.initial.country ?? 'AE'] ?? [25.2048, 55.2708];
-  }
-  async geocode() {
-    const q = this.state.pinQ.trim();
-    if (q.length < 3) { this.setState({ geo: { busy: false, results: [], msg: 'Type at least 3 letters of the address.' } }); return; }
-    this.setState({ geo: { busy: true, results: [], msg: '' } });
-    try {
-      const r = await api(`/api/v1/businesses/${this.props.businessId}/geocode?q=${encodeURIComponent(q)}`);
-      this.setState({ geo: { busy: false, results: r, msg: r.length ? '' : 'No match. Try the building or area name, or drop the pin on the map.' } });
-    } catch (e: any) { this.setState({ geo: { busy: false, results: [], msg: e?.message ?? 'Address search is not available right now.' } }); }
-  }
-  searchEl() {
-    const g = this.state.geo, box = 'height:44px;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px';
-    const css = (t: string) => Object.fromEntries(t.split(';').filter(Boolean).map(x => { const i = x.indexOf(':'); return [x.slice(0, i).replace(/-([a-z])/g, (_, c) => c.toUpperCase()), x.slice(i + 1)]; }));
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <input value={this.state.pinQ} onChange={e => this.setState({ pinQ: e.target.value })} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); this.geocode(); } }} placeholder="Search address, building or area" style={{ ...css(box), flex: '1 1 240px' }} />
-          <button type="button" onClick={() => this.geocode()} disabled={g.busy} style={{ ...css('height:44px;padding:0 16px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px') }}>{g.busy ? 'Searching…' : 'Search'}</button>
-        </div>
-        {g.msg && <span style={{ fontSize: 13, color: '#8A4B00' }}>{g.msg}</span>}
-        {g.results.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', border: '1px solid #F0E4E8', borderRadius: 12, overflow: 'hidden' }}>
-            {g.results.map((r: any, i: number) => (
-              <button key={i} type="button" onClick={() => this.setState((st: any) => ({ nb: { ...st.nb, pin: true, coords: `${r.latitude.toFixed(6)}, ${r.longitude.toFixed(6)}` }, geo: { busy: false, results: [], msg: '' } }))} style={{ textAlign: 'start', padding: '10px 12px', fontSize: 14, lineHeight: 1.4, background: '#fff', borderTop: i ? '1px solid #F3EEF1' : 'none' }}>{r.label}</button>
-            ))}
-          </div>
-        )}
-        <span style={{ fontSize: 13, color: '#8A5A6E' }}>Pick a result, then drag the pin on the map to the exact door.</span>
-      </div>
-    );
-  }
-  locate(done: (coords: string) => void) {
-    if (!navigator.geolocation) { this.setState({ error: 'This browser can’t share its location. Paste a Google Maps link instead.' }); return; }
-    navigator.geolocation.getCurrentPosition(p => done(`${p.coords.latitude.toFixed(6)}, ${p.coords.longitude.toFixed(6)}`), () => this.setState({ error: 'We couldn’t get your location. Allow location access, or paste a Google Maps link instead.' }), { enableHighAccuracy: true, timeout: 15000 });
-  }
-
   render() {
     // The layout depends on the width, so render only once it is known.
     return <div className="dc" ref={this.wrap} style={{ height: '100%' }}>{this.state.mounted ? <SettingsTemplate vm={this.renderVals()}/> : <div style={{ minHeight: '60vh' }}/>}</div>;

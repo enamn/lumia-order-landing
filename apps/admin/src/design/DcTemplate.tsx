@@ -165,7 +165,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                       {vm.X.otpSent}
                     </p>
                     <div style={S("display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin-top:4px")}>
-                      <span style={S("font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.01em")}>
+                      <span style={S("font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.01em;direction:ltr;unicode-bidi:isolate")}>
                         {vm.masked}
                       </span>
                       <button type="button" onClick={vm.changeNumber} style={S("font-size:14px;font-weight:500;color:#8A2040;text-decoration:underline;text-decoration-color:#E3CBD4;text-underline-offset:3px")} className="dch2">
@@ -247,6 +247,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                       </>
                     )}
                     {vm.countryNode}
+                    {vm.locationNode}
                     <div style={S("display:flex;align-items:center;gap:8px;margin-top:26px")}>
                       <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
                         {vm.X.logo}
