@@ -47,10 +47,10 @@ export interface FlowProps {
   marketingUrl: string;
   initialPage?: "Overview" | "Orders" | "Menu" | "WhatsApp" | "Settings" | "Billing" | "Customers" | "Campaigns";
 }
-export interface MenuCat { id: string; name: string; nameAr: string; items: { id: string; name: string; nameAr: string; priceMinor: number; isAvailable: boolean }[] }
-type Item = { id: string; n: string; ar: string; p: number; on: boolean };
+export interface MenuCat { id: string; name: string; nameAr: string; items: { id: string; name: string; nameAr: string; priceMinor: number; isAvailable: boolean; imageUrl?: string }[] }
+type Item = { id: string; n: string; ar: string; p: number; on: boolean; img?: string };
 type Cat = { id: string; cat: string; catAr: string; items: Item[] };
-type Draft = { cat: string; catAr: string; arOnly: boolean; items: { n: string; ar: string; arOnly: boolean; p: string; flag: boolean }[] };
+type Draft = { cat: string; catAr: string; arOnly: boolean; items: { n: string; ar: string; arOnly: boolean; p: string; flag: boolean; img?: string; d?: string; dAr?: string }[] };
 
 const PHASES = ["Reading your menu", "Finding categories", "Extracting items and prices", "Organizing your menu"];
 const SETUP_SUBS = ["delivery", "branches", "hours", "devices", "payments", "profile"];
@@ -66,7 +66,7 @@ const taxMsg = (reason: string | undefined, ar: boolean) => ({
   VAT_VERIFICATION_REJECTED: ["We couldn’t verify your VAT details. Check them under Billing → Tax details and submit again.", "تعذّر التحقق من بياناتك الضريبية. راجعها من الفوترة ← البيانات الضريبية وأعد الإرسال."],
 } as Record<string, [string, string]>)[reason ?? ""]?.[ar ? 1 : 0] ?? (reason ? (ar ? "هذه العملية تحتاج مراجعة ضريبية قبل المتابعة. تواصل مع الدعم." : "This purchase needs a tax review before it can go ahead. Please contact support.") : "");
 const money = (minor: number) => (minor % 100 ? (minor / 100).toFixed(2) : String(minor / 100));
-const toCats = (menu: MenuCat[], cur = "AED"): Cat[] => menu.map(c => ({ id: c.id, cat: c.name || c.nameAr, catAr: c.name ? c.nameAr : "", items: c.items.map(i => ({ id: i.id, n: i.name || i.nameAr, ar: i.name ? i.nameAr : "", p: fromMinor(i.priceMinor, cur), on: i.isAvailable })) }));
+const toCats = (menu: MenuCat[], cur = "AED"): Cat[] => menu.map(c => ({ id: c.id, cat: c.name || c.nameAr, catAr: c.name ? c.nameAr : "", items: c.items.map(i => ({ id: i.id, n: i.name || i.nameAr, ar: i.name ? i.nameAr : "", p: fromMinor(i.priceMinor, cur), on: i.isAvailable, img: i.imageUrl ?? "" })) }));
 const count = (m: { items: unknown[] }[]) => m.reduce((a, c) => a + c.items.length, 0);
 const priceNum = (v: string) => (v.trim() === "" ? null : parseAmount(v));
 const toBase64 = (file: File) => new Promise<string>((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result).split(",")[1] ?? ""); r.onerror = () => reject(Error("We couldn’t read that file.")); r.readAsDataURL(file); });
@@ -570,7 +570,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   }
   // The draft the review screen shows, from a read menu (a file, or a link).
   showDraft(draft: any) {
-    const cats: Draft[] = draft.categories.map((c: any) => ({ cat: c.name || c.nameAr, catAr: c.name ? c.nameAr : "", arOnly: !c.name, items: c.items.map((i: any) => ({ n: i.name || i.nameAr, ar: i.name ? i.nameAr : "", arOnly: !i.name, p: i.price == null ? "" : String(i.price), flag: Boolean(i.flagged) })) }));
+    const cats: Draft[] = draft.categories.map((c: any) => ({ cat: c.name || c.nameAr, catAr: c.name ? c.nameAr : "", arOnly: !c.name, items: c.items.map((i: any) => ({ n: i.name || i.nameAr, ar: i.name ? i.nameAr : "", arOnly: !i.name, p: i.price == null ? "" : String(i.price), flag: Boolean(i.flagged), img: i.image ?? "", d: i.description ?? "", dAr: i.descriptionAr ?? "" })) }));
       const r = draft.restaurant, found = r && (r.name || r.nameAr || r.logo) ? { name: r.name ?? "", nameAr: r.nameAr ?? "", logo: r.logo ?? "" } : null;
       this.setState({ step: "ready", draft: cats, open: { 0: true, 1: true }, readyErr: "", found, useLogo: !!found?.logo && !this.state.logo, useName: false });
   }
@@ -591,7 +591,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const f = this.state.found as { name: string; nameAr: string; logo: string } | null, ar0 = this.state.lang === "ar", cand = f ? (ar0 ? f.nameAr || f.name : f.name || f.nameAr) : "";
     const use = f && ((this.state.useName && cand) || (this.state.useLogo && f.logo)) ? { ...(this.state.useName && cand ? { name: cand } : {}), ...(this.state.useLogo && f.logo ? { logo: f.logo } : {}) } : null;
     try {
-      await api(`/api/v1/businesses/${this.state.businessId}/menu/import/confirm${this.menuQuery(true)}`, "POST", { categories: draft.map(c => ({ name: c.arOnly ? "" : c.cat, nameAr: c.arOnly ? c.cat : c.catAr, items: c.items.map(i => ({ name: i.arOnly ? "" : i.n, nameAr: i.arOnly ? i.n : i.ar, price: priceNum(i.p) ?? 0 })) })), ...(use ? { restaurant: use } : {}) });
+      await api(`/api/v1/businesses/${this.state.businessId}/menu/import/confirm${this.menuQuery(true)}`, "POST", { categories: draft.map(c => ({ name: c.arOnly ? "" : c.cat, nameAr: c.arOnly ? c.cat : c.catAr, items: c.items.map(i => ({ name: i.arOnly ? "" : i.n, nameAr: i.arOnly ? i.n : i.ar, price: priceNum(i.p) ?? 0, ...(i.img ? { image: i.img } : {}), ...(i.d ? { description: i.d } : {}), ...(i.dAr ? { descriptionAr: i.dAr } : {}) })) })), ...(use ? { restaurant: use } : {}) });
       await this.refreshMenu(); this.setState({ busy: false, ...(use?.name ? { name: use.name } : {}), ...(use?.logo ? { logo: use.logo } : {}) }); this.go("dash", { cat: "All" });
     } catch (err) { this.setState({ busy: false, readyErr: err instanceof Error ? err.message : "Could not save the menu." }); }
   };
@@ -766,7 +766,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const sections = M.filter(g => q || s.cat === "All" || g.id === s.cat).map(g => {
       const its = g.items.filter(i => !q || match(i)); const soldN = its.filter(i => !i.on).length;
       return { name: catName(g), alt: ar ? (g.catAr ? g.cat : "") : g.catAr, meta: its.length + " " + (!ar && its.length === 1 ? "item" : T.items) + (soldN ? " · " + soldN + " " + T.soldOut : ""),
-        items: its.map((i, idx) => { const alt = ar ? (i.ar ? i.n : null) : (i.ar || null); return { main: ar ? (i.ar || i.n) : i.n, alt, hasAlt: !!alt, noAlt: !alt && p.canEdit, on: i.on, sold: !i.on, price: formatMoneyUi(toMinor(i.p, this.cur), this.cur), bt: idx ? "1px solid #F3EEF1" : "0", nameFg: i.on ? "#1A0815" : "#8A5A6E", tBg: i.on ? "linear-gradient(90deg,#FF5577,#C93DFF)" : "#EAD9E1", knob: i.on ? (ar ? "-20px" : "20px") : "0px", toggle: () => p.canEdit && this.toggleItem(i), editAr: () => this.editAr(i) }; }) };
+        items: its.map((i, idx) => { const alt = ar ? (i.ar ? i.n : null) : (i.ar || null); return { img: i.img || "", main: ar ? (i.ar || i.n) : i.n, alt, hasAlt: !!alt, noAlt: !alt && p.canEdit, on: i.on, sold: !i.on, price: formatMoneyUi(toMinor(i.p, this.cur), this.cur), bt: idx ? "1px solid #F3EEF1" : "0", nameFg: i.on ? "#1A0815" : "#8A5A6E", tBg: i.on ? "linear-gradient(90deg,#FF5577,#C93DFF)" : "#EAD9E1", knob: i.on ? (ar ? "-20px" : "20px") : "0px", toggle: () => p.canEdit && this.toggleItem(i), editAr: () => this.editAr(i) }; }) };
     }).filter(g => g.items.length);
     const langFor = (short: boolean) => [["en", "EN"], ["ar", short ? "ع" : "العربية"]].map(([k, label]) => { const on = s.lang === k; return { label, on, fw: on ? 600 : 500, bg: on ? "#fff" : "transparent", fg: on ? "#1A0815" : "#8A5A6E", sh: on ? "0 1px 2px rgba(26,8,21,.12)" : "none", pick: () => this.setLang(k as any) }; });
     const nm = s.name.trim() || "Burger House"; const initials = nm.split(/\s+/).slice(0, 2).map((w: string) => w[0]).join("").toUpperCase();

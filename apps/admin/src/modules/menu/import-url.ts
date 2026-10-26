@@ -21,8 +21,12 @@ export function talabatPages(raw: string): { ar: string; en: string } | null {
   return { ar: at("ar"), en: at("en") };
 }
 
-export interface TalabatItem { id: number; name: string; price: number | null }
+export interface TalabatItem { id: number; name: string; price: number | null; image: string; description: string }
 export interface TalabatCategory { id: number; name: string; items: TalabatItem[] }
+// The item photo's address: only an image on Talabat's own image server, in full size (the page also carries a small thumbnail with a size in its address).
+export function itemImage(raw: unknown): string {
+  try { const u = new URL(String(raw ?? "").replace(/&amp;/g, "&")); return u.protocol === "https:" && LOGO_HOSTS.has(u.hostname) && /\.(jpe?g|png|webp)$/i.test(u.pathname) && u.href.length <= 400 ? `${u.origin}${u.pathname}` : ""; } catch { return ""; }
+}
 // Sections a restaurant adds only to promote items that already sit in their real category ("Picks for you", "Special offers", "30 or less"...).
 const PROMO = /pick|recommend|popular|best.?sell|top.?rated|offer|deal|discount|promo|under|or less|less than|trending|عرض|عروض|خصم|اختيارات|مختارات|الأكثر|مقترح|أقل|اقل/i;
 
@@ -43,7 +47,7 @@ export function parseTalabatMenu(html: string): { restaurant: string; logoUrl: s
     for (const i of c.items) {
       const id = Number(i?.id); if (!Number.isFinite(id) || placed.has(id)) continue;
       const name = clean(i.name, 120); if (!name) continue;
-      const p = Number(i.price); placed.add(id); items.push({ id, name, price: Number.isFinite(p) && p > 0 && p <= 100000 ? p : null });
+      const p = Number(i.price); placed.add(id); items.push({ id, name, price: Number.isFinite(p) && p > 0 && p <= 100000 ? p : null, image: itemImage(i.originalImage || i.image), description: clean(i.description, 400) });
     }
     if (items.length) out.push({ id: Number(c.id), name: clean(c.name, 60).replace(/[\u{1F300}-\u{1FAFF}☀-➿️]/gu, "").trim() || clean(c.name, 60), items });
   }
@@ -60,7 +64,7 @@ export function mergeLanguages(ar: ReturnType<typeof parseTalabatMenu>, en: Retu
   const restaurant: DraftRestaurant = { name: en?.restaurant ?? (ar ? "" : base.restaurant), nameAr: ar?.restaurant ?? "" };
   const categories = base.categories.slice(0, MAX_CATEGORIES).map(c => ({
     name: ar ? enCats.get(c.id)?.name ?? "" : c.name, nameAr: ar ? c.name : "",
-    items: c.items.slice(0, MAX_PER_CATEGORY).map(i => { const e = enItems.get(i.id); const price = i.price ?? e?.price ?? null; return { name: ar ? e?.name ?? "" : i.name, nameAr: ar ? i.name : "", price, flagged: price == null }; }),
+    items: c.items.slice(0, MAX_PER_CATEGORY).map(i => { const e = enItems.get(i.id); const price = i.price ?? e?.price ?? null; return { name: ar ? e?.name ?? "" : i.name, nameAr: ar ? i.name : "", price, flagged: price == null, image: i.image || e?.image || "", description: ar ? e?.description ?? "" : i.description, descriptionAr: ar ? i.description : "" }; }),
   }));
   let left = MAX_ITEMS; // a menu this large is not a restaurant's menu: stop at a sensible size
   return { categories: categories.map(c => { const items = c.items.slice(0, Math.max(0, left)); left -= items.length; return { ...c, items }; }).filter(c => c.items.length), restaurant };

@@ -27,4 +27,11 @@ describe.skipIf(!enabled)("using the name and logo found with a menu", () => {
     await expect(confirmImport(other, b.id, { ...menu, restaurant: { name: "Hijacked" } }, "t")).rejects.toBeTruthy();
     expect((await db.business.findUniqueOrThrow({ where: { id: b.id }, select: { name: true } })).name).toBe("Guarded");
   });
+  it("saves item photos and descriptions with the menu, and refuses a photo from anywhere but Talabat's image server", async () => {
+    const owner = await user("mr-owner3"), b = await createBusiness(owner, { name: "Photo Grill", locationName: "Main" }, "t");
+    const withPhoto = (image: string) => ({ categories: [{ name: "Food", nameAr: "", items: [{ name: "Burger", nameAr: "برجر", price: 20, image, description: "Beef and cheese", descriptionAr: "لحم وجبن" }] }] });
+    await confirmImport(owner, b.id, withPhoto("https://talabat.dhmedia.io/image/x/1.jpg"), "t");
+    expect(await db.catalogItem.findFirstOrThrow({ where: { catalog: { businessId: b.id }, name: "Burger" }, select: { imageUrl: true, description: true, descriptionAr: true } })).toEqual({ imageUrl: "https://talabat.dhmedia.io/image/x/1.jpg", description: "Beef and cheese", descriptionAr: "لحم وجبن" });
+    for (const bad of ["https://evil.example/a.jpg", "http://talabat.dhmedia.io/a.jpg", "javascript:alert(1)"]) await expect(confirmImport(owner, b.id, withPhoto(bad), "t")).rejects.toBeTruthy();
+  });
 });

@@ -11,11 +11,11 @@ const MAX_FILE_BYTES = 8 * 1048576;
 const uploadSchema = z.object({ fileName: z.string().trim().min(1).max(200), mediaType: z.enum(["application/pdf", "image/png", "image/jpeg"]), data: z.string().min(1) }).strict();
 const en = (max: number) => z.string().trim().max(max).optional().default("");
 const named = <T extends { name: string; nameAr: string }>(v: T) => Boolean(v.name || v.nameAr);
-export const confirmSchema = z.object({ categories: z.array(z.object({ name: en(60), nameAr: en(60), items: z.array(z.object({ name: en(120), nameAr: en(120), price: z.number().min(0).max(100000) }).strict().refine(named, "Each item needs a name.")).min(1).max(300) }).strict().refine(named, "Each category needs a name.")).min(1).max(40), restaurant: z.object({ name: z.string().trim().min(2).max(120).optional(), logo: z.string().max(200000).regex(/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/, "Logo must be a PNG or JPG image.").optional() }).strict().optional() }).strict();
+export const confirmSchema = z.object({ categories: z.array(z.object({ name: en(60), nameAr: en(60), items: z.array(z.object({ name: en(120), nameAr: en(120), price: z.number().min(0).max(100000), image: z.string().max(400).regex(/^https:\/\/talabat\.dhmedia\.io\/[A-Za-z0-9_\-./]+\.(jpe?g|png|webp)$/i, "That photo address is not supported.").optional(), description: en(400), descriptionAr: en(400) }).strict().refine(named, "Each item needs a name.")).min(1).max(300) }).strict().refine(named, "Each category needs a name.")).min(1).max(40), restaurant: z.object({ name: z.string().trim().min(2).max(120).optional(), logo: z.string().max(200000).regex(/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/, "Logo must be a PNG or JPG image.").optional() }).strict().optional() }).strict();
 
 // `restaurant` is what the menu itself told us about the restaurant: its name (printed on a PDF/photo, or on the delivery page) and, from a delivery page, its logo as a small image.
 export interface DraftRestaurant { name: string; nameAr: string; logo?: string | null }
-export interface DraftMenu { categories: { name: string; nameAr: string; items: { name: string; nameAr: string; price: number | null; flagged: boolean }[] }[]; restaurant?: DraftRestaurant }
+export interface DraftMenu { categories: { name: string; nameAr: string; items: { name: string; nameAr: string; price: number | null; flagged: boolean; image?: string; description?: string; descriptionAr?: string }[] }[]; restaurant?: DraftRestaurant }
 
 // Reading the menu file (Claude) happens in lumia-order-api; this app only authorizes, forwards and later saves the confirmed draft.
 export async function extractMenu(userId: string, businessId: string, input: unknown): Promise<DraftMenu> {
@@ -33,7 +33,7 @@ export async function extractMenu(userId: string, businessId: string, input: unk
 }
 
 type Tx = Parameters<Parameters<typeof transaction>[0]>[0];
-export interface SaveItem { name: string; nameAr?: string; price: number }
+export interface SaveItem { name: string; nameAr?: string; price: number; image?: string; description?: string; descriptionAr?: string }
 export interface SaveCategory { name: string; nameAr?: string; items: SaveItem[] }
 // Writes categories/items into the business's active catalog. `replace` archives the existing active items first.
 export async function saveMenu(tx: Tx, business: { organizationId: string }, userId: string, businessId: string, categories: SaveCategory[], requestId: string, action: string, replace = false, branchId?: string | null) {
@@ -47,7 +47,7 @@ export async function saveMenu(tx: Tx, business: { organizationId: string }, use
     const key = (c.name || c.nameAr || "").toLowerCase();
     const category = catalog.categories.find(x => (x.name || x.nameAr || "").toLowerCase() === key) ?? await tx.catalogCategory.create({ data: { catalogId: catalog.id, name: c.name, nameAr: c.nameAr || null, sortOrder: order++ } });
     const fresh = c.items.filter(i => !existing.has(`${category.id}|${(i.name || i.nameAr || "").toLowerCase()}`));
-    if (fresh.length) await tx.catalogItem.createMany({ data: fresh.map((i, n) => ({ catalogId: catalog.id, categoryId: category.id, name: i.name, nameAr: i.nameAr || null, basePriceMinor: toMinor(i.price, currencyCode), currencyCode, status: "ACTIVE", sortOrder: n })) });
+    if (fresh.length) await tx.catalogItem.createMany({ data: fresh.map((i, n) => ({ catalogId: catalog.id, categoryId: category.id, name: i.name, nameAr: i.nameAr || null, basePriceMinor: toMinor(i.price, currencyCode), currencyCode, status: "ACTIVE", sortOrder: n, ...(i.image ? { imageUrl: i.image } : {}), ...(i.description ? { description: i.description } : {}), ...(i.descriptionAr ? { descriptionAr: i.descriptionAr } : {}) })) });
     created += fresh.length;
   }
   await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "Catalog", entityId: catalog.id, action, requestId, afterData: { items: created, replace } } });

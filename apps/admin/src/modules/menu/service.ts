@@ -12,7 +12,7 @@ export const addItemSchema = z.object({ name: opt(120), nameAr: opt(120), catego
   .refine(v => v.name || v.nameAr, "Enter the item name in English or Arabic.").refine(v => v.category || v.categoryAr, "Enter a category in English or Arabic.");
 export const availabilitySchema = z.object({ isAvailable: z.boolean().optional(), nameAr: z.string().trim().max(120).optional() }).strict().refine(v => v.isAvailable !== undefined || v.nameAr !== undefined, "Nothing to update.");
 
-export interface MenuItem { id: string; name: string; nameAr: string; priceMinor: number; currency: string; isAvailable: boolean }
+export interface MenuItem { id: string; name: string; nameAr: string; priceMinor: number; currency: string; isAvailable: boolean; imageUrl?: string }
 export interface MenuCategory { id: string; name: string; nameAr: string; items: MenuItem[] }
 
 // Read-only members can see the menu; changing it needs operations.manage.
@@ -24,7 +24,7 @@ export async function getMenu(userId: string, businessId: string, branchId?: str
   const groups = catalog.categories.map(c => ({ id: c.id, name: c.name, nameAr: c.nameAr ?? "", items: [] as MenuItem[] }));
   const other: MenuCategory = { id: "other", name: "Other", nameAr: "أخرى", items: [] };
   for (const i of catalog.items) {
-    const item = { id: i.id, name: i.name, nameAr: i.nameAr ?? "", priceMinor: i.basePriceMinor, currency: i.currencyCode, isAvailable: i.isAvailable };
+    const item = { id: i.id, name: i.name, nameAr: i.nameAr ?? "", priceMinor: i.basePriceMinor, currency: i.currencyCode, isAvailable: i.isAvailable, ...(i.imageUrl ? { imageUrl: i.imageUrl } : {}) };
     (groups.find(g => g.id === i.categoryId) ?? other).items.push(item);
   }
   return [...groups, other].filter(g => g.items.length);

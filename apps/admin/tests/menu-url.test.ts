@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { mergeLanguages, parseTalabatMenu, talabatPages } from "../src/modules/menu/import-url";
+import { itemImage, mergeLanguages, parseTalabatMenu, talabatPages } from "../src/modules/menu/import-url";
 
 const page = (cats: unknown, name = "Test Restaurant", logo = "https://talabat.dhmedia.io/image/talabat/restaurants/logo.jpg?width=180&amp;x=1") => `<html><script id="__NEXT_DATA__" type="application/json">${JSON.stringify({ props: { pageProps: { initialMenuState: { restaurant: { name, logo }, menuData: { categories: cats } } } } })}</script></html>`;
-const item = (id: number, name: string, price: number) => ({ id, name, price, hasChoices: false });
+const item = (id: number, name: string, price: number) => ({ id, name, price, hasChoices: false, description: `About ${name}`, originalImage: `https://talabat.dhmedia.io/image/x/${id}.jpg`, image: `https://talabat.dhmedia.io/image/x/${id}.jpg?width=172&amp;height=172` });
 const arCats = [
   { id: -1, name: "اختيارات على ذوقك 🔥", items: [item(1, "وجبة ملكية", 43)] },
   { id: 10, name: "عروض خاصة", items: [item(2, "عرض الغداء", 30), item(1, "وجبة ملكية", 43)] },
@@ -34,7 +34,7 @@ describe("menu from a Talabat link", () => {
     const d = mergeLanguages(parseTalabatMenu(page(arCats)), parseTalabatMenu(page(enCats)));
     const chicken = d.categories.find(c => c.nameAr === "بروستد دجاج")!;
     expect(chicken).toMatchObject({ name: "Broasted Chicken" });
-    expect(chicken.items[0]).toEqual({ name: "Royal Meal", nameAr: "وجبة ملكية", price: 43, flagged: false });
+    expect(chicken.items[0]).toMatchObject({ name: "Royal Meal", nameAr: "وجبة ملكية", price: 43, flagged: false });
     expect(chicken.items[1]).toMatchObject({ name: "Grill Meal", price: null, flagged: true });
     expect(mergeLanguages(null, parseTalabatMenu(page(enCats))).categories[0]!.items[0]).toMatchObject({ name: "Lunch Deal", nameAr: "" }); // only English was reachable
   });
@@ -44,6 +44,12 @@ describe("menu from a Talabat link", () => {
     expect(mergeLanguages(ar, en).restaurant).toEqual({ name: "Test Place", nameAr: "مطعم الاختبار" });
     expect(mergeLanguages(null, en).restaurant).toEqual({ name: "Test Place", nameAr: "" });
     expect(parseTalabatMenu(page(arCats, "x", "javascript:alert(1)"))!.logoUrl).toBe(""); // only a web address is kept
+  });
+  it("keeps each item's photo and description in both languages, and only photos from Talabat's own image server", () => {
+    const d = mergeLanguages(parseTalabatMenu(page(arCats)), parseTalabatMenu(page(enCats)));
+    expect(d.categories.flatMap(c => c.items).find(i => i.name === "Cola")).toMatchObject({ image: "https://talabat.dhmedia.io/image/x/4.jpg", description: "About Cola", descriptionAr: "About كولا" });
+    expect(itemImage("https://talabat.dhmedia.io/image/x/1.jpg?width=172&amp;height=172")).toBe("https://talabat.dhmedia.io/image/x/1.jpg");
+    for (const bad of ["http://talabat.dhmedia.io/a.jpg", "https://evil.com/a.jpg", "https://talabat.dhmedia.io.evil.com/a.jpg", "https://talabat.dhmedia.io/a.html", "javascript:alert(1)", "", null, undefined]) expect(itemImage(bad)).toBe("");
   });
   it("returns nothing for a page without a menu", () => {
     expect(parseTalabatMenu("<html>nothing</html>")).toBeNull();

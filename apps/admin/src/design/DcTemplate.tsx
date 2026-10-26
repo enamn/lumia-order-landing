@@ -1014,6 +1014,8 @@ export function DcTemplate({ vm }: { vm: any }) {
                                     {(g.items as any[]).map((it: any, __i: number) => (
                                       <Fragment key={__i}>
                                         <div style={S(`display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:16px;min-height:60px;padding:9px 18px;border-top:${it.bt}`)} className="dch9">
+                                          <div style={S("min-width:0;display:flex;align-items:center;gap:12px")}>
+                                          {it.img ? <img src={`${it.img}?width=96&height=96`} alt="" width={44} height={44} loading="lazy" referrerPolicy="no-referrer" style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover", flex: "none", background: "#F6EEF2" }} /> : null}
                                           <div style={S("min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px")}>
                                             <span style={S(`font-size:15px;font-weight:500;color:${it.nameFg}`)}>
                                               {it.main}
@@ -1032,6 +1034,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                                               </button>
                                               </>
                                             )}
+                                          </div>
                                           </div>
                                           <div style={S("display:flex;flex-direction:column;align-items:flex-end;gap:1px")}>
                                             <span style={S("font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap")}>
