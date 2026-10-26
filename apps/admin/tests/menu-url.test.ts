@@ -42,5 +42,7 @@ describe("menu from a Talabat link", () => {
     expect(parseTalabatMenu("<html>nothing</html>")).toBeNull();
     expect(parseTalabatMenu(page([]))).toBeNull();
     expect(parseTalabatMenu('<script id="__NEXT_DATA__">{broken')).toBeNull();
+    const whole = page(arCats); // a download cut off in the middle of the data (seen on large menus) is not read as a menu
+    expect(parseTalabatMenu(whole.slice(0, whole.length - 200))).toBeNull();
   });
 });

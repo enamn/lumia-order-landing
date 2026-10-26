@@ -523,6 +523,7 @@ export const AR: Record<string, string> = {
  "We couldn’t find a menu on that page. Check the link, or upload a file instead.": "لم نجد قائمة في هذه الصفحة. تحقق من الرابط أو ارفع ملفًا بدلًا من ذلك.",
  "We couldn’t open that link right now. Try again in a minute, or upload a file instead.": "تعذّر فتح الرابط الآن. حاول بعد دقيقة أو ارفع ملفًا بدلًا من ذلك.",
  "We couldn’t read that link.": "تعذّرت قراءة هذا الرابط.",
+ "We couldn’t read a menu from that link right now. Check the link and try again in a minute, or upload a file instead.": "تعذّرت قراءة قائمة من هذا الرابط الآن. تحقق من الرابط وحاول بعد دقيقة، أو ارفع ملفًا بدلًا من ذلك.",
  "Edit branch": "تعديل الفرع",
  "Save branch": "حفظ الفرع",
  "Branch added.": "تمت إضافة الفرع.",

@@ -63,14 +63,20 @@ export function mergeLanguages(ar: ReturnType<typeof parseTalabatMenu>, en: Retu
   return { categories: categories.map(c => { const items = c.items.slice(0, Math.max(0, left)); left -= items.length; return { ...c, items }; }).filter(c => c.items.length) };
 }
 
+// Big menus (hundreds of items) are large pages that Talabat now and then cuts off or serves slowly. A page that did not arrive whole, or whose menu cannot be read, is fetched again.
 async function page(url: string): Promise<string | null> {
-  try {
-    const res = await fetch(url, { headers: { "User-Agent": "LumiaOrder/1.0 (menu import; +https://order.lumia.ae)", Accept: "text/html" }, redirect: "follow", signal: AbortSignal.timeout(15000) });
-    const host = new URL(res.url).hostname;
-    if (!res.ok || !HOSTS.has(host)) return null;
-    const text = await res.text();
-    return text.length > MAX_HTML ? null : text;
-  } catch { return null; }
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await fetch(url, { headers: { "User-Agent": "LumiaOrder/1.0 (menu import; +https://order.lumia.ae)", Accept: "text/html" }, redirect: "follow", signal: AbortSignal.timeout(20000) });
+      if (!HOSTS.has(new URL(res.url).hostname)) return null;
+      if (res.status === 404 || res.status === 403) return null; // not a page we can read: retrying will not help
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (text.length > MAX_HTML) return null;
+      if (/<\/html>\s*$/i.test(text) && parseTalabatMenu(text)) return text;
+    } catch { /* a stalled or cut-off download: try again */ }
+  }
+  return null;
 }
 
 export async function extractMenuFromUrl(userId: string, businessId: string, input: unknown): Promise<DraftMenu> {
@@ -80,6 +86,6 @@ export async function extractMenuFromUrl(userId: string, businessId: string, inp
   if (!pages) throw new AppError("UNSUPPORTED_LINK", "Paste the link of your restaurant's Talabat page (it looks like talabat.com/uae/restaurant/…).", 422);
   const [arHtml, enHtml] = await Promise.all([page(pages.ar), page(pages.en)]);
   const ar = arHtml ? parseTalabatMenu(arHtml) : null, en = enHtml ? parseTalabatMenu(enHtml) : null;
-  if (!ar && !en) throw new AppError(arHtml || enHtml ? "NO_MENU_FOUND" : "LINK_UNREACHABLE", arHtml || enHtml ? "We couldn’t find a menu on that page. Check the link, or upload a file instead." : "We couldn’t open that link right now. Try again in a minute, or upload a file instead.", arHtml || enHtml ? 422 : 502);
+  if (!ar && !en) throw new AppError("LINK_UNREACHABLE", "We couldn’t read a menu from that link right now. Check the link and try again in a minute, or upload a file instead.", 502);
   return mergeLanguages(ar, en);
 }
