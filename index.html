@@ -1,10 +1,20 @@
 <!doctype html>
-<html lang="en">
+<html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Lumia Order — Your AI ordering employee on WhatsApp</title>
-    <meta name="description" content="Lumia Order handles customer orders through WhatsApp — from text and voice messages to confirmed, structured orders ready for your restaurant." />
+    <title>لوميا أوردر — موظف الطلبات بالذكاء الاصطناعي على واتساب</title>
+    <meta name="description" content="Lumia Order handles customer orders through WhatsApp — from text and voice messages to confirmed, structured orders ready for your restaurant or store." />
+    <script>
+      // Arabic unless the visitor chose English (?lang=en, or the saved choice): set before anything paints so the page never flips direction.
+      (function () {
+        try {
+          var q = new URLSearchParams(location.search).get('lang'), s = localStorage.getItem('lumia-lang'), l = q === 'en' || q === 'ar' ? q : s === 'en' || s === 'ar' ? s : 'ar';
+          var e = document.documentElement; e.lang = l; e.dir = l === 'ar' ? 'rtl' : 'ltr';
+          if (l === 'en') document.title = 'Lumia Order — Your AI ordering employee on WhatsApp';
+        } catch (x) {}
+      })();
+    </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

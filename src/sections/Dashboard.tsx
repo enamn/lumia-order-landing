@@ -1,187 +1,221 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LogoMark } from '../components/Logo';
 import { Aed } from '../components/Money';
+import { useT } from '../i18n';
 
-type DashState = 'new' | 'eta' | 'done' | 'rejected';
+type Item = { name: string; price: number; on: boolean };
+const MENU: [string, Item[]][] = [
+  ['Burgers', [
+    { name: 'Chicken Burger', price: 25, on: true },
+    { name: 'Spicy Chicken Burger', price: 27, on: true },
+    { name: 'Beef Burger', price: 29, on: true },
+  ]],
+  ['Sides & drinks', [
+    { name: 'Fries', price: 12, on: true },
+    { name: 'Coca-Cola', price: 6, on: true },
+  ]],
+];
+const BEEF = 'Beef Burger';
+const AR_CAT: Record<string, string> = { Burgers: 'البرجر', 'Sides & drinks': 'جانبيات ومشروبات' };
+const AR_NAME: Record<string, string> = { 'Chicken Burger': 'برجر دجاج', 'Spicy Chicken Burger': 'برجر دجاج حار', 'Beef Burger': 'برجر لحم', Fries: 'بطاطس', 'Coca-Cola': 'كوكاكولا' };
 
-const CHIP: Record<DashState, [string, string, string]> = {
-  new: ['NEW', '#FF9B3D', '#1A0815'],
-  eta: ['NEW', '#FF9B3D', '#1A0815'],
-  done: ['ACCEPTED', '#E4F4EC', '#16704A'],
-  rejected: ['REJECTED', '#F3EEF1', '#8A5A6E'],
-};
-
-function Toggle({ on, onClick, label }: { on: boolean; onClick: () => void; label: string }) {
-  return <button className={`toggle${on ? ' is-on' : ''}`} onClick={onClick} role="switch" aria-checked={on} aria-label={label} />;
+function Toggle({ on, onClick, label, auto }: { on: boolean; onClick: () => void; label: string; auto?: string }) {
+  return <button className={`toggle${on ? ' is-on' : ''}`} data-auto={auto} onClick={onClick} role="switch" aria-checked={on} aria-label={label} />;
 }
 
 export function Dashboard() {
-  const [dash, setDash] = useState<DashState>('new');
-  const [eta, setEta] = useState<number | null>(null);
+  const t = useT();
   const [accepting, setAccepting] = useState(true);
-  const [avail, setAvail] = useState([
-    { name: 'Chicken Burger', on: true },
-    { name: 'Beef Burger', on: false },
-    { name: 'Fries', on: true },
-  ]);
+  const [items, setItems] = useState<Record<string, boolean>>(() => Object.fromEntries(MENU.flatMap(([, l]) => l.map((i) => [i.name, i.on]))));
+  const [flash, setFlash] = useState('');
 
-  const isPending = dash === 'new' || dash === 'eta';
-  const tabs: [string, number][] = [
-    ['NEW', isPending ? 2 : 1],
-    ['ACCEPTED', dash === 'done' ? 2 : 1],
-    ['PREPARING', 1],
-    ['COMPLETED', 2],
-  ];
-  const [chip, chipBg, chipFg] = CHIP[dash];
-  const selRing = dash === 'done' ? '#3CC48A' : dash === 'rejected' ? '#E3CBD4' : '#FF5577';
-  const stateLabel = { new: 'New', eta: 'New', done: `Accepted · ${eta} min`, rejected: 'Rejected' }[dash];
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [auto, setAuto] = useState(true);
+  const [visible, setVisible] = useState(false);
+  const [cur, setCur] = useState({ x: 20, y: 300, show: false, click: false });
+
+  const flip = (name: string) => {
+    setItems((m) => ({ ...m, [name]: !m[name] }));
+    setFlash(name); window.setTimeout(() => setFlash(''), 700);
+  };
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el || !('IntersectionObserver' in window)) { setVisible(true); return; }
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.35 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!auto || !visible || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const ids: number[] = [];
+    const at = (ms: number, fn: () => void) => { ids.push(window.setTimeout(fn, ms)); };
+    const moveTo = (sel: string) => {
+      const root = wrapRef.current, t = root?.querySelector<HTMLElement>(sel);
+      if (!root || !t) return;
+      const a = root.getBoundingClientRect(), b = t.getBoundingClientRect();
+      setCur((c) => ({ ...c, show: true, x: b.left - a.left + b.width * 0.55, y: b.top - a.top + b.height * 0.6 }));
+    };
+    const click = () => { setCur((c) => ({ ...c, click: true })); at(280, () => setCur((c) => ({ ...c, click: false }))); };
+    const loop = () => {
+      setItems((m) => ({ ...m, [BEEF]: true })); setCur((c) => ({ ...c, show: false }));
+      at(1800, () => moveTo('[data-auto=beef]'));
+      at(2700, () => { click(); flip(BEEF); });
+      at(6200, () => moveTo('[data-auto=beef]'));
+      at(7000, () => { click(); flip(BEEF); });
+      at(7900, () => setCur((c) => ({ ...c, show: false })));
+      at(10600, loop);
+    };
+    loop();
+    return () => ids.forEach((id) => window.clearTimeout(id));
+  }, [auto, visible]);
+
+  const all = MENU.flatMap(([, l]) => l);
+  const offN = all.filter((i) => !items[i.name]).length;
+  const beefOn = items[BEEF];
 
   return (
     <section className="section section--soft" style={{ paddingBlock: 'clamp(72px,10vw,120px)' }}>
       <div className="wrap">
         <div className="split">
-          <h2 className="h2">You're always in control.</h2>
-          <p className="lead">Orders, availability and delivery rules in one dashboard. Accept order #1048 below to try it.</p>
+          <h2 className="h2">{t("You're always in control.", 'أنت دائماً المتحكّم.')}</h2>
+          <p className="lead">{t("Sold out of something? One tap and Lumia stops offering it — instantly, on every chat. Tap it back on when it's ready.", 'نفد صنف؟ لمسة واحدة ويتوقف لوميا عن عرضه فوراً في كل المحادثات. أعده بلمسة عندما يتوفر.')}</p>
         </div>
 
-        <div className="dash">
+        <div className="dash" ref={wrapRef} onPointerDown={() => { if (auto) { setAuto(false); setCur((c) => ({ ...c, show: false })); } }}>
+          <span className={`dcursor${cur.show ? ' is-show' : ''}${cur.click ? ' is-click' : ''}`} style={{ transform: `translate(${cur.x}px, ${cur.y}px)` }} aria-hidden="true"><svg width="22" height="26" viewBox="0 0 22 26"><path d="M2 2l16 10-7 2 4 9-3 1.5-4-9-6 5z" fill="#1a0815" stroke="#fff" strokeWidth="1.6" strokeLinejoin="round" /></svg></span>
           <div className="dash__top">
             <LogoMark size={24} />
-            <span style={{ fontWeight: 600, fontSize: 15 }}>Burger House</span>
-            <span className="muted" style={{ fontSize: 13 }}>Al Majaz, Sharjah</span>
+            <span style={{ fontWeight: 600, fontSize: 15 }}>{t('Burger House', 'بيت البرجر')}</span>
+            <span className="muted" style={{ fontSize: 13 }}>{t('Al Majaz, Sharjah', 'المجاز، الشارقة')}</span>
             <div style={{ marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-              {isPending && <span className="dash__alert">🔊 New Order Alert</span>}
-              <button className="dash__reset" onClick={() => { setDash('new'); setEta(null); }}>RESET</button>
+              <button className="dash__reset" onClick={() => { setItems(Object.fromEntries(all.map((i) => [i.name, true]))); setAuto(true); }}>{t('RESET', 'إعادة')}</button>
             </div>
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap' }}>
             <nav className="dash__side" aria-label="Dashboard">
-              {['Orders', 'Menu', 'Customers', 'Delivery', 'Settings'].map((n, i) => (
-                <div key={n} className={i === 0 ? 'is-on' : ''}>{n}</div>
+              {[['Orders', 'الطلبات'], ['Menu', 'القائمة'], ['Customers', 'العملاء'], ['Delivery', 'التوصيل'], ['Settings', 'الإعدادات']].map(([n, a]) => (
+                <div key={n} className={n === 'Menu' ? 'is-on' : ''}>{t(n!, a!)}</div>
               ))}
             </nav>
 
             <div className="dash__main">
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {tabs.map(([label, n], i) => (
-                  <div key={label} className={`dash__tab${i === 0 ? ' is-on' : ''}`}>{label}<b>{n}</b></div>
-                ))}
+              <div className="mc__head">
+                <h3>{t('Menu', 'القائمة')}</h3>
+                <div className="mc__counts tabnum"><span>{all.length - offN} {t('available', 'متاح')}</span><span>{offN} {t('sold out', 'نفد')}</span></div>
               </div>
-              <div className="grid tabnum" style={{ ['--min' as string]: '220px', gap: 14, marginTop: 16, alignItems: 'start' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div className="ocard" style={{ boxShadow: `0 0 0 2px ${selRing}` }}>
-                    <div className="row-between"><span className="mono" style={{ fontWeight: 500 }}>#1048</span><span style={{ fontWeight: 600 }}><Aed n={82} /></span></div>
-                    <div className="muted" style={{ marginTop: 4 }}>Samer · {stateLabel}</div>
+              <div className="mc__list">
+                {MENU.map(([cat, list]) => (
+                  <div key={cat}>
+                    <div className="mc__cat">{t(cat, AR_CAT[cat] ?? cat)}</div>
+                    {list.map((it) => {
+                      const on = items[it.name];
+                      return (
+                        <div key={it.name} className={`mc__item${on ? '' : ' is-off'}${flash === it.name ? ' is-flash' : ''}`}>
+                          <span className="mc__name">{t(it.name, AR_NAME[it.name] ?? it.name)}</span>
+                          <span className="mc__price tabnum"><Aed n={it.price} /></span>
+                          <span className="mc__st">{on ? t('Available', 'متاح') : t('Sold out', 'نفد')}</span>
+                          <Toggle on={on} auto={it.name === BEEF ? 'beef' : undefined} onClick={() => flip(it.name)} label={`Toggle ${it.name} availability`} />
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="ocard">
-                    <div className="row-between"><span className="mono">#1049</span><span style={{ fontWeight: 600 }}><Aed n={46} /></span></div>
-                    <div className="muted" style={{ marginTop: 4 }}>Fatima · New</div>
-                  </div>
-                  <div className="ocard muted">
-                    <div className="row-between"><span className="mono">#1046</span><span><Aed n={58} /></span></div>
-                    <div style={{ marginTop: 4 }}>Omar · Preparing</div>
-                  </div>
-                </div>
-
-                <div className="odetail">
-                  <div className="row-between" style={{ alignItems: 'center' }}>
-                    <span className="mono" style={{ fontSize: 15, fontWeight: 500 }}>#1048</span>
-                    <span className="ochip" style={{ background: chipBg, color: chipFg }}>{chip}</span>
-                  </div>
-                  <div style={{ fontWeight: 600, fontSize: 17, marginTop: 12 }}>Samer</div>
-                  <div style={{ fontSize: 14, color: 'var(--ink-2)', marginTop: 6, lineHeight: 1.6 }}>
-                    2 Chicken Burgers<br />1 Fries<br />2 Coca-Cola
-                  </div>
-                  <div style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.02em', marginTop: 10 }}><Aed n={82} /></div>
-                  <div className="muted" style={{ fontSize: 12, marginTop: 10 }}>Delivery</div>
-                  <div style={{ fontSize: 14 }}>Al Majaz 2, Sharjah</div>
-
-                  {dash === 'new' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 16 }}>
-                      <button className="obtn obtn--line" onClick={() => setDash('rejected')}>Reject</button>
-                      <button className="obtn btn--primary" onClick={() => { setDash('eta'); setEta(null); }}>Accept</button>
-                    </div>
-                  )}
-                  {dash === 'eta' && (
-                    <div style={{ marginTop: 16 }}>
-                      <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>Select ETA</div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6 }}>
-                        {[30, 45, 60].map((n) => (
-                          <button key={n} className={`obtn obtn--eta${eta === n ? ' is-on' : ''}`} onClick={() => setEta(n)} aria-pressed={eta === n}>
-                            {n} min
-                          </button>
-                        ))}
-                      </div>
-                      <button
-                        className="obtn"
-                        disabled={!eta}
-                        onClick={() => eta && setDash('done')}
-                        style={{ width: '100%', marginTop: 8, background: eta ? 'var(--grad)' : 'var(--wa-bg)', color: eta ? '#fff' : 'var(--muted)', cursor: eta ? 'pointer' : 'not-allowed' }}
-                      >
-                        Confirm
-                      </button>
-                    </div>
-                  )}
-                  {dash === 'done' && <div className="note note--ok">✓ Accepted · ETA {eta} min · Customer notified</div>}
-                  {dash === 'rejected' && <div className="note note--off">Rejected · Samer was notified on WhatsApp</div>}
-                </div>
+                ))}
               </div>
             </div>
 
             <div className="dash__panel">
-              <div className="eyebrow">RESTAURANT STATUS</div>
-              <div className="dash__line" style={{ padding: '10px 0 14px' }}>
-                <span style={{ fontWeight: 500 }}>Accepting orders</span>
+              <div className="eyebrow">{t('WHAT YOUR CUSTOMER SEES', 'ما يراه عميلك')}</div>
+              <div className="mc__chat" aria-live="polite">
+                <div className="sbub sbub--out">{t('Can I get a Beef Burger?', 'أبغى برجر لحم؟')}<span className="sbub__time">21:20 ✓✓</span></div>
+                {beefOn ? (
+                  <div key="yes" className="sbub sbub--in">{t(<>Sure! The Beef Burger is <b><Aed n={29} /></b>. How many would you like?</>, <>أكيد! برجر اللحم بسعر <b><Aed n={29} /></b>. كم تريد؟</>)}<span className="sbub__time">21:20</span></div>
+                ) : (
+                  <div key="no" className="sbub sbub--in">{t(<>Sorry, the Beef Burger is sold out today. Would you like the Chicken Burger (<Aed n={25} />) instead?</>, <>عذراً، برجر اللحم نفد اليوم. هل تريد برجر الدجاج (<Aed n={25} />) بدلاً منه؟</>)}<span className="sbub__time">21:20</span></div>
+                )}
+              </div>
+              <div className="mc__cap">{t('Lumia reads this list live. It never offers a sold-out item.', 'يقرأ لوميا هذه القائمة مباشرة، ولا يعرض أبداً صنفاً نفد.')}</div>
+              <div className="dash__line" style={{ padding: '12px 0 8px', marginTop: 12 }}>
+                <span style={{ fontWeight: 500 }}>{t('Accepting orders', 'استقبال الطلبات')}</span>
                 <Toggle on={accepting} onClick={() => setAccepting((a) => !a)} label="Toggle accepting orders" />
               </div>
-              <div className="eyebrow" style={{ marginTop: 16 }}>MENU AVAILABILITY</div>
-              {avail.map((it, i) => (
-                <div key={it.name} className="dash__line">
-                  <div>
-                    <div style={{ fontWeight: 500 }}>{it.name}</div>
-                    <div style={{ fontSize: 12, color: it.on ? 'var(--ok)' : 'var(--muted)' }}>{it.on ? 'Available' : 'Sold Out'}</div>
-                  </div>
-                  <Toggle
-                    on={it.on}
-                    label={`Toggle ${it.name} availability`}
-                    onClick={() => setAvail((list) => list.map((a, j) => (j === i ? { ...a, on: !a.on } : a)))}
-                  />
-                </div>
-              ))}
-              <div className="eyebrow" style={{ marginTop: 16 }}>DELIVERY AREAS</div>
-              <div className="price-row"><span>Sharjah</span><span style={{ fontWeight: 500 }}><Aed n={8} /></span></div>
-              <div className="price-row"><span>Ajman</span><span style={{ fontWeight: 500 }}><Aed n={12} /></span></div>
-              <div className="price-row muted" style={{ borderBottom: 0 }}><span>Dubai</span><span>Not available</span></div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
-                <div className="mini">
-                  <div className="muted" style={{ fontSize: 11.5 }}>Minimum Order</div>
-                  <div style={{ fontSize: 17, fontWeight: 600, marginTop: 2 }}><Aed n={40} /></div>
-                </div>
-                <div className="mini">
-                  <div className="muted" style={{ fontSize: 11.5 }}>Payment</div>
-                  <div style={{ fontSize: 13, fontWeight: 500, marginTop: 4 }}>Cash on Delivery ✓</div>
-                </div>
-              </div>
+              <div className="eyebrow" style={{ marginTop: 10 }}>{t('DELIVERY AREAS', 'مناطق التوصيل')}</div>
+              <div className="price-row"><span>{t('Sharjah', 'الشارقة')}</span><span style={{ fontWeight: 500 }}><Aed n={8} /></span></div>
+              <div className="price-row"><span>{t('Ajman', 'عجمان')}</span><span style={{ fontWeight: 500 }}><Aed n={12} /></span></div>
+              <div className="price-row muted" style={{ borderBottom: 0 }}><span>{t('Dubai', 'دبي')}</span><span>{t('Not available', 'غير متاح')}</span></div>
             </div>
           </div>
         </div>
 
-        <div className="grid" style={{ ['--min' as string]: '360px', marginTop: 'clamp(28px,3vw,40px)', gap: '20px 48px', alignItems: 'center' }}>
-          <div>
-            <h3 style={{ fontSize: 'clamp(24px,2.4vw,30px)', fontWeight: 600, letterSpacing: '-0.03em' }}>Make repeat orders easier.</h3>
-            <p className="lead" style={{ fontSize: 16, marginTop: 10, maxWidth: 460 }}>
-              With confirmed customer information, Lumia can make future orders faster. It always asks before reusing a saved address.
-            </p>
-          </div>
-          <div style={{ background: 'var(--wa-bg)', borderRadius: 18, padding: 16, display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14 }}>
-            <div style={{ alignSelf: 'flex-start', background: '#fff', borderRadius: 12, padding: '8px 12px' }}>Welcome back, Samer 👋</div>
-            <div style={{ alignSelf: 'flex-start', background: '#fff', borderRadius: 12, padding: '8px 12px', maxWidth: '90%' }}>
-              Would you like delivery to your previously confirmed address in Al Majaz?
-            </div>
-          </div>
-        </div>
+        <RepeatOrder />
       </div>
     </section>
+  );
+}
+
+const RP_MS = [700, 1000, 1000, 2800, 1300, 1000, 2600, 1200, 1000, 4500];
+const RP_LAST = RP_MS.length - 1;
+
+/** A returning customer: Lumia knows the name, offers the last order and asks before reusing the saved address. */
+function RepeatOrder() {
+  const t = useT();
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  const [s, setS] = useState(RP_LAST);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !('IntersectionObserver' in window)) { setVisible(true); return; }
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.4 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !visible) { window.clearTimeout(timer.current); return; }
+    const run = (n: number) => { setS(n); timer.current = window.setTimeout(() => run(n >= RP_LAST ? 0 : n + 1), RP_MS[n]); };
+    run(0);
+    return () => window.clearTimeout(timer.current);
+  }, [visible]);
+  const on = (n: number) => (s >= n ? ' is-on' : '');
+
+  return (
+    <div className="rp" ref={ref}>
+      <div className="rp__copy">
+        <h3>{t('Make repeat orders easier.', 'اجعل الطلبات المتكررة أسهل.')}</h3>
+        <p className="lead">{t('Lumia remembers every customer. Regulars get greeted by name, offered their usual order, and asked before a saved address is reused.', 'يتعرّف لوميا على كل عميل. يُرحَّب بالعملاء الدائمين بأسمائهم، ويُعرض عليهم طلبهم المعتاد، ويُسألون قبل إعادة استخدام عنوان محفوظ.')}</p>
+        <ul className="rp__facts">
+          {[[t('Knows the name', 'يعرف الاسم'), t('Greets every customer by their own name.', 'يرحّب بكل عميل باسمه.')], [t('Offers the last order', 'يعرض الطلب الأخير'), t('One “yes” to repeat it. It can recall earlier orders and change them the way the customer asks.', 'كلمة «نعم» واحدة لتكراره. يمكنه تذكر الطلبات السابقة وتعديلها كما يطلب العميل.')], [t('Asks before using the address', 'يسأل قبل استخدام العنوان'), t('Saved addresses are always confirmed. It can also recall previous addresses and suggest the latest one that fits.', 'تُؤكَّد العناوين المحفوظة دائماً. ويمكنه أيضاً تذكر العناوين السابقة واقتراح آخر عنوان مناسب.')]].map(([h, d]) => (
+            <li key={h}><span className="rp__tick">✓</span><span><b>{h}</b><i>{d}</i></span></li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="rp__phone" role="img" aria-label={t('WhatsApp chat with a returning customer, Samer', 'محادثة واتساب مع عميل عائد اسمه سامر')}>
+        <div className="story__head">
+          <span className="story__avatar">BH</span>
+          <span><b>{t('Burger House', 'بيت البرجر')}</b><i>{t('Business account', 'حساب تجاري')}</i></span>
+        </div>
+        <div className="rp__body">
+          <div className={`sbub sbub--out${on(1)}`}>{t('Hi', 'مرحبا')}<span className="sbub__time">19:42 ✓✓</span></div>
+          <div className={`sbub sbub--in${on(3)}`}>
+            {t('Welcome back, Samer 👋 Same as your last order?', 'أهلاً بعودتك يا سامر 👋 نفس طلبك الأخير؟')}
+            <span className="sbub__time">19:42</span>
+          </div>
+          <div className={`sbub sbub--out${on(4)}`}>{t('Yes, deliver to home', 'نعم، وصّله للبيت')}<span className="sbub__time">19:43 ✓✓</span></div>
+          <div className={`sbub sbub--in${on(6)}`}>
+            {t(<>Delivering to your saved home address, right? Total <b><Aed n={82} /></b>. Shall I confirm?</>, <>التوصيل إلى عنوان بيتك المحفوظ، صحيح؟ الإجمالي <b><Aed n={82} /></b>. هل أؤكد الطلب؟</>)}
+            <span className="sbub__time">19:43</span>
+          </div>
+          <div className={`sbub sbub--out${on(7)}`}>{t('Confirm ✓', 'أكّد ✓')}<span className="sbub__time">19:43 ✓✓</span></div>
+          <div className={`sbub sbub--in${on(9)}`}>
+            {t(<>Confirmed ✓ Your order number is <b>#1052</b>. The restaurant has it now.</>, <>تم التأكيد ✓ رقم طلبك <b>#1052</b>. المطعم استلمه الآن.</>)}
+            <span className="sbub__time">19:44</span>
+          </div>
+          <div className={`rp__typing${s === 2 || s === 5 || s === 8 ? ' is-on' : ''}`}><i /><i /><i /></div>
+        </div>
+      </div>
+    </div>
   );
 }

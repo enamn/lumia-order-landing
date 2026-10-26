@@ -21,7 +21,7 @@ export function Terminal({ screen = 'ready', eta = null, ring = false, receipt =
   const etaLabel = `${eta ?? 45} min`;
 
   return (
-    <div className="term" role="img" aria-label={`Lumia Order Terminal showing the ${screen} screen`}>
+    <div className="term" dir="ltr" role="img" aria-label={`Lumia Order Terminal showing the ${screen} screen`}>
       <div className="term__ring" style={{ opacity: ring ? 1 : 0 }} />
       <div className="term__shadow" />
 
@@ -216,6 +216,22 @@ function ScreenContent({ screen, eta, etaLabel }: { screen: TerminalScreen; eta:
         </>
       );
   }
+}
+
+/** The terminal app's own screen (262×525.5), for placing over the real device photo. */
+export function TerminalApp({ screen, eta = null }: { screen: TerminalScreen; eta?: number | null }) {
+  return (
+    <div className="ts" style={{ width: 262, height: 525.5, color: 'var(--ink)', fontFamily: 'var(--sans)' }}>
+      <div className="ts__status">
+        <span>21:05</span>
+        <span style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#3CC48A' }} />
+          <span className="ts__batt"><i /></span>
+        </span>
+      </div>
+      <ScreenContent screen={screen} eta={eta} etaLabel={`${eta ?? 45} min`} />
+    </div>
+  );
 }
 
 /** Terminal scaled down inside a centered stage (the design reuses it at several sizes). */
