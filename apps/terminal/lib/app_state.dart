@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:android_id/android_id.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'alarm/alarm.dart';
@@ -67,12 +68,13 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     _rt = Realtime(
       url: s.realtime, key: s.key, version: appVersion, since: store.lastEvent, saveSince: store.setLastEvent,
       onState: (v) { online = v; if (v) c.load(); notifyListeners(); _status(); }, // catch up each time we (re)connect
-      onRevoked: _revoked, onEvent: _onEvent)..start();
+      onRevoked: _revoked, onEvent: _onEvent, onHello: _hello)..start();
   }
 
   Future<void> _onEvent(String id, String event, Map<String, dynamic> p, int at) async {
     orders?.onEvent(event, p);
     if (event == 'device.revoked') { await _revoked(); }
+    if (event == 'device.updated') await _updated(p);
     if (event == 'print.test') {
       final r = await printer.printTest(lang: lang);
       _rt?.send({'type': 'print.result', 'ok': r.ok, if (r.reason != null) 'reason': r.reason});
@@ -81,6 +83,25 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
       final r = await printer.printOrder(Order.fromJson(p), lang: lang);
       _rt?.send({'type': 'print.result', 'ok': r.ok, if (r.reason != null) 'reason': r.reason, 'jobId': p['jobId'], 'orderId': p['orderId']});
     }
+  }
+
+  // The restaurant renamed its branch or itself, or moved this terminal to another branch: show the names and load that branch's orders.
+  Future<void> _updated(Map<String, dynamic> p) async {
+    await _setNames('${p['business'] ?? ''}', '${p['branch'] ?? ''}');
+    orders?.clear(); await orders?.load(); notifyListeners(); // the branch may have changed: show that branch's open orders
+  }
+
+  // Every (re)connection starts with the server's own view of this terminal: whatever was missed while offline is corrected here.
+  void _hello(Map<String, dynamic> m) {
+    final b = (m['business'] as Map?)?['name'], br = (m['branch'] as Map?)?['name'];
+    _setNames('${b ?? ''}', '${br ?? ''}');
+  }
+
+  Future<void> _setNames(String business, String branch) async {
+    final s = session; if (s == null) return;
+    final nb = business.isNotEmpty ? business : s.business, nr = branch.isNotEmpty ? branch : s.branch;
+    if (nb == s.business && nr == s.branch) return;
+    s.business = nb; s.branch = nr; await store.saveNames(nb, nr); _status(); notifyListeners();
   }
 
   // The restaurant disconnected this terminal: forget the key and show the connect screen.
@@ -135,13 +156,21 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> setAutoPrint(bool v) async { await store.setAutoPrint(v); notifyListeners(); }
   Future<void> setAlarmOn(bool v) async { await store.setAlarmOn(v); orders?.refreshAlarm(); notifyListeners(); }
 
-  Future<void> unpair() async => _revoked();
+  // Disconnect on the terminal: tell the dashboard first (best effort; offline, the terminal still forgets its key), then forget.
+  Future<void> unpair() async {
+    final s = session;
+    if (s != null) { try { await Api(base: s.api.isEmpty ? defaultApp : s.api, key: s.key).unpair(); } catch (_) {} }
+    await _revoked();
+  }
 
   // The offline banner's Retry: do not wait for the next automatic attempt.
   void retry() { _rt?.reconnectNow(); orders?.load(); }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) { _rt?.reconnectNow(); orders?.load(); }
+    if (state == AppLifecycleState.resumed) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky); // system prompts (camera permission...) bring the bars back: hide them again
+      _rt?.reconnectNow(); orders?.load();
+    }
   }
 }

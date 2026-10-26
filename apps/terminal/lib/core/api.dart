@@ -46,6 +46,9 @@ class Api {
       realtime: d['realtime'], api: (d['api'] as String?) ?? base);
   }
 
+  // Disconnect on the terminal: tells the restaurant's dashboard this terminal is leaving.
+  Future<void> unpair() async { await _send(() => _http.post(Uri.parse('$base/api/device/unpair'), headers: _headers, body: '{}')); }
+
   Future<List<Map<String, dynamic>>> openOrders() async {
     final d = await _send(() => _http.get(Uri.parse('$base/api/device/orders'), headers: _headers)) as List;
     return d.cast<Map<String, dynamic>>();

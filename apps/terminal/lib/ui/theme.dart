@@ -16,7 +16,7 @@ const softGradient = LinearGradient(begin: Alignment.topLeft, end: Alignment.bot
 // Geist for Latin (a variable font: the weight is its "wght" axis), IBM Plex Sans Arabic as the fallback for Arabic letters.
 // [ls] is letter spacing in em (the design uses -0.02 for headings).
 TextStyle ts(double size, {int w = 500, Color color = ink, double ls = 0, double? h, bool tabular = false, bool italic = false}) => TextStyle(
-      fontFamily: 'Geist', fontFamilyFallback: const ['IBMPlexSansArabic'], fontSize: size, color: color, height: h, letterSpacing: size * ls,
+      fontFamily: 'Geist', fontFamilyFallback: const ['IBMPlexSansArabic', 'DirhamSign', 'Riyal'], fontSize: size, color: color, height: h, letterSpacing: size * ls,
       fontWeight: FontWeight.values[((w ~/ 100) - 1).clamp(0, 8)], fontVariations: [FontVariation('wght', w.toDouble())],
       fontFeatures: tabular ? const [FontFeature.tabularFigures()] : null, fontStyle: italic ? FontStyle.italic : FontStyle.normal, decoration: TextDecoration.none);
 

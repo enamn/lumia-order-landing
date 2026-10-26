@@ -8,11 +8,12 @@ typedef EventHandler = void Function(String id, String event, Map<String, dynami
 
 // The live connection (TERMINAL_PROTOCOL.md section 2): stays open, answers pings, reconnects with backoff and asks for what it missed.
 class Realtime {
-  Realtime({required this.url, required this.key, required this.onEvent, required this.onState, required this.onRevoked, required this.since, required this.saveSince, required this.version});
+  Realtime({required this.url, required this.key, required this.onEvent, required this.onState, required this.onRevoked, this.onHello, required this.since, required this.saveSince, required this.version});
   final String url, key, version;
   final EventHandler onEvent;
   final void Function(bool connected) onState;
   final void Function() onRevoked;
+  final void Function(Map<String, dynamic> hello)? onHello; // the server's greeting: the terminal's current name, restaurant and branch
   final int since;
   final void Function(int ms) saveSince;
 
@@ -37,7 +38,7 @@ class Realtime {
       try { m = jsonDecode(raw as String) as Map<String, dynamic>; } catch (_) { return; }
       switch (m['type']) {
         case 'hello':
-          _delay = 1000; _setConnected(true); _startPing();
+          _delay = 1000; _setConnected(true); _startPing(); onHello?.call(m);
         case 'event':
           final id = m['id'] as String;
           _send({'type': 'ack', 'id': id});

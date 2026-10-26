@@ -58,9 +58,16 @@ class Order {
 }
 
 // Money is sent in minor units (fils/baisa); OMR, BHD and KWD have three decimals.
-String money(int minor, String currency) {
+String amountText(int minor, String currency) {
   final d = const {'OMR', 'BHD', 'KWD'}.contains(currency) ? 3 : 2;
   var p = 1; for (var i = 0; i < d; i++) { p *= 10; }
   final v = minor / p;
-  return '$currency ${v.toStringAsFixed(v == v.roundToDouble() ? 0 : d)}';
+  if (v == v.roundToDouble()) return v.toStringAsFixed(0); // 209, not 209.000
+  final t = v.toStringAsFixed(d);
+  return d == 3 && t.endsWith('0') ? t.substring(0, t.length - 1) : t; // 12.90 and 2.345: two decimals at least, the currency's own at most (as in the dashboard)
 }
+
+// What the screen shows in front of an amount: the dirham sign (U+20C3) for AED, the riyal sign (U+20C1) for SAR, the code for the other Gulf currencies
+// (QAR, KWD, OMR, BHD have no sign of their own in English). The signs come from the DirhamSign and Riyal fonts (see ts() and the receipt text style).
+String currencySign(String currency) => switch (currency) { 'AED' => '\u20C3', 'SAR' => '\u20C1', _ => currency };
+String money(int minor, String currency) => '${currencySign(currency)}${currency == 'AED' || currency == 'SAR' ? '\u2009' : ' '}${amountText(minor, currency)}';

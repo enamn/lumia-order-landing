@@ -12,7 +12,8 @@ void main() {
     final o = Order.fromJson(snap(fulfillment: 'DELIVERY'));
     expect(o.number, '1002'); expect(o.isNew, true); expect(o.stage, Stage.fresh); expect(o.isDelivery, true);
     expect(o.items.single.modifiers, ['Cheese']); expect(o.address, 'Home: Al Majaz');
-    expect(money(5000, 'AED'), 'AED 50'); expect(money(5050, 'AED'), 'AED 50.50'); expect(money(12345, 'OMR'), 'OMR 12.345');
+    expect(money(5000, 'AED'), '\u20C3\u200950'); expect(money(5050, 'AED'), '\u20C3\u200950.50'); expect(money(12345, 'OMR'), 'OMR 12.345'); expect(money(12900, 'OMR'), 'OMR 12.90'); expect(money(209000, 'KWD'), 'KWD 209');
+    expect(money(7525, 'SAR'), '\u20C1\u200975.25'); expect(money(1250, 'KWD'), 'KWD 1.25'); expect(money(900, 'QAR'), 'QAR 9'); expect(amountText(5050, 'AED'), '50.50');
     expect(Order.fromJson(snap(status: 'PREPARING')).stage, Stage.kitchen); expect(Order.fromJson(snap(status: 'COMPLETED')).stage, Stage.done);
   });
 

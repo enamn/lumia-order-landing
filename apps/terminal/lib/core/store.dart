@@ -4,7 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 // What the terminal remembers: its key (encrypted storage) and its settings.
 class Session {
   Session({required this.key, required this.deviceId, required this.business, required this.branch, required this.realtime, required this.api});
-  final String key, deviceId, business, branch, realtime, api;
+  final String key, deviceId, realtime, api;
+  String business, branch; // the restaurant can rename the branch or move this terminal to another one
 }
 
 class Store {
@@ -21,6 +22,8 @@ class Store {
       key: key, deviceId: _prefs.getString('deviceId') ?? '', business: _prefs.getString('business') ?? '', branch: _prefs.getString('branch') ?? '',
       realtime: _prefs.getString('realtime') ?? '', api: _prefs.getString('api') ?? '');
   }
+
+  Future<void> saveNames(String business, String branch) async { await _prefs.setString('business', business); await _prefs.setString('branch', branch); }
 
   Future<void> saveSession(Session s) async {
     await _secure.write(key: 'key', value: s.key);
