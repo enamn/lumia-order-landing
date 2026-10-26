@@ -429,6 +429,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                         </span>
                       </div>
                     </div>
+                    {vm.foundNode}
                     {vm.hasFlags && (
                       <>
                       <div style={S("margin-top:12px;border-radius:14px;background:#FFF4E5;padding:12px 16px;display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45;color:#6B3A00")}>

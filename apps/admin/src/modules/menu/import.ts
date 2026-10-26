@@ -11,9 +11,11 @@ const MAX_FILE_BYTES = 8 * 1048576;
 const uploadSchema = z.object({ fileName: z.string().trim().min(1).max(200), mediaType: z.enum(["application/pdf", "image/png", "image/jpeg"]), data: z.string().min(1) }).strict();
 const en = (max: number) => z.string().trim().max(max).optional().default("");
 const named = <T extends { name: string; nameAr: string }>(v: T) => Boolean(v.name || v.nameAr);
-export const confirmSchema = z.object({ categories: z.array(z.object({ name: en(60), nameAr: en(60), items: z.array(z.object({ name: en(120), nameAr: en(120), price: z.number().min(0).max(100000) }).strict().refine(named, "Each item needs a name.")).min(1).max(300) }).strict().refine(named, "Each category needs a name.")).min(1).max(40) }).strict();
+export const confirmSchema = z.object({ categories: z.array(z.object({ name: en(60), nameAr: en(60), items: z.array(z.object({ name: en(120), nameAr: en(120), price: z.number().min(0).max(100000) }).strict().refine(named, "Each item needs a name.")).min(1).max(300) }).strict().refine(named, "Each category needs a name.")).min(1).max(40), restaurant: z.object({ name: z.string().trim().min(2).max(120).optional(), logo: z.string().max(200000).regex(/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/, "Logo must be a PNG or JPG image.").optional() }).strict().optional() }).strict();
 
-export interface DraftMenu { categories: { name: string; nameAr: string; items: { name: string; nameAr: string; price: number | null; flagged: boolean }[] }[] }
+// `restaurant` is what the menu itself told us about the restaurant: its name (printed on a PDF/photo, or on the delivery page) and, from a delivery page, its logo as a small image.
+export interface DraftRestaurant { name: string; nameAr: string; logo?: string | null }
+export interface DraftMenu { categories: { name: string; nameAr: string; items: { name: string; nameAr: string; price: number | null; flagged: boolean }[] }[]; restaurant?: DraftRestaurant }
 
 // Reading the menu file (Claude) happens in lumia-order-api; this app only authorizes, forwards and later saves the confirmed draft.
 export async function extractMenu(userId: string, businessId: string, input: unknown): Promise<DraftMenu> {
@@ -52,6 +54,15 @@ export async function saveMenu(tx: Tx, business: { organizationId: string }, use
   return { created };
 }
 export async function confirmImport(userId: string, businessId: string, input: unknown, requestId: string, branchId?: string | null) {
-  const { categories } = confirmSchema.parse(input);
-  return transaction(async tx => { const { business } = await authorize(userId, businessId, "operations.manage", tx); return saveMenu(tx, business, userId, businessId, categories, requestId, "menu.imported", false, branchId); });
+  const { categories, restaurant } = confirmSchema.parse(input);
+  return transaction(async tx => {
+    const { business } = await authorize(userId, businessId, "operations.manage", tx);
+    // The owner chose to use the name and/or logo found with the menu: that changes the restaurant itself, so it needs the permission to manage the business.
+    if (restaurant && (restaurant.name || restaurant.logo)) {
+      await authorize(userId, businessId, "business.manage", tx);
+      await tx.business.update({ where: { id: businessId }, data: { ...(restaurant.name ? { name: restaurant.name } : {}), ...(restaurant.logo ? { logoUrl: restaurant.logo } : {}) } });
+      await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "Business", entityId: businessId, action: "business.details.imported", requestId, afterData: { name: restaurant.name ?? null, logo: Boolean(restaurant.logo) } } });
+    }
+    return saveMenu(tx, business, userId, businessId, categories, requestId, "menu.imported", false, branchId);
+  });
 }

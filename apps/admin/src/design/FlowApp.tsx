@@ -120,7 +120,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     this.state = {
       step: props.initialStep, num: "", cc: Math.max(0, COUNTRIES.findIndex(c => c.code === props.initialCountry)), focused: false, invalid: false, srvErr: "", sending: false, ccOpen: false, e164: "",
       currency: "", loc: null, opCountry: "", opVat: "", digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
-      name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, menuUrl: "", fileName: "", menuErr: "", readyErr: "", busy: false,
+      name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, menuUrl: "", found: null, useLogo: false, useName: false, fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu, props.currency)) > 0, cat: "All", menu: toCats(props.menu, props.currency), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
       page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", billFocus: "", setSub: (typeof location !== "undefined" && SETUP_SUBS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "profile"), subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", embedId: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waPortfolio: props.wa.businessPortfolioName ?? "", waInfo: null, waNumbers: (props.wa.numbers ?? []) as WaNumber[], waLimit: props.wa.limit ?? 1, waGuide: 0, catOpen: false, confirmReplace: false, confirmDisc: false as false | WaNumber, choices: {} as Record<string, string>,
       custList: null as any, custErr: "", custSel: [] as string[], custOpen: null as any, custQ: "", campMode: "all", campCode: true, campPct: 20, campDays: 7, campMsgAll: campDefaults(props.lang, business?.name ?? "our business").all, campMsgOffer: campDefaults(props.lang, business?.name ?? "us").offer, campCodeTxt: "WEEKEND20", campImg: "", campImgFile: null as any, campImgName: "", campSending: false, campToast: "", campErr: "", campHist: null as any,
@@ -571,7 +571,8 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   // The draft the review screen shows, from a read menu (a file, or a link).
   showDraft(draft: any) {
     const cats: Draft[] = draft.categories.map((c: any) => ({ cat: c.name || c.nameAr, catAr: c.name ? c.nameAr : "", arOnly: !c.name, items: c.items.map((i: any) => ({ n: i.name || i.nameAr, ar: i.name ? i.nameAr : "", arOnly: !i.name, p: i.price == null ? "" : String(i.price), flag: Boolean(i.flagged) })) }));
-      this.setState({ step: "ready", draft: cats, open: { 0: true, 1: true }, readyErr: "" });
+      const r = draft.restaurant, found = r && (r.name || r.nameAr || r.logo) ? { name: r.name ?? "", nameAr: r.nameAr ?? "", logo: r.logo ?? "" } : null;
+      this.setState({ step: "ready", draft: cats, open: { 0: true, 1: true }, readyErr: "", found, useLogo: !!found?.logo && !this.state.logo, useName: false });
   }
   // Import from the restaurant's own Talabat page: no file needed; both Arabic and English names are read.
   async takeUrl() {
@@ -587,9 +588,11 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   confirmMenu = async () => {
     const draft: Draft[] = this.state.draft; if (draft.some(c => c.items.some(i => i.flag)) || this.state.busy) return;
     this.setState({ busy: true, readyErr: "" });
+    const f = this.state.found as { name: string; nameAr: string; logo: string } | null, ar0 = this.state.lang === "ar", cand = f ? (ar0 ? f.nameAr || f.name : f.name || f.nameAr) : "";
+    const use = f && ((this.state.useName && cand) || (this.state.useLogo && f.logo)) ? { ...(this.state.useName && cand ? { name: cand } : {}), ...(this.state.useLogo && f.logo ? { logo: f.logo } : {}) } : null;
     try {
-      await api(`/api/v1/businesses/${this.state.businessId}/menu/import/confirm${this.menuQuery(true)}`, "POST", { categories: draft.map(c => ({ name: c.arOnly ? "" : c.cat, nameAr: c.arOnly ? c.cat : c.catAr, items: c.items.map(i => ({ name: i.arOnly ? "" : i.n, nameAr: i.arOnly ? i.n : i.ar, price: priceNum(i.p) ?? 0 })) })) });
-      await this.refreshMenu(); this.setState({ busy: false }); this.go("dash", { cat: "All" });
+      await api(`/api/v1/businesses/${this.state.businessId}/menu/import/confirm${this.menuQuery(true)}`, "POST", { categories: draft.map(c => ({ name: c.arOnly ? "" : c.cat, nameAr: c.arOnly ? c.cat : c.catAr, items: c.items.map(i => ({ name: i.arOnly ? "" : i.n, nameAr: i.arOnly ? i.n : i.ar, price: priceNum(i.p) ?? 0 })) })), ...(use ? { restaurant: use } : {}) });
+      await this.refreshMenu(); this.setState({ busy: false, ...(use?.name ? { name: use.name } : {}), ...(use?.logo ? { logo: use.logo } : {}) }); this.go("dash", { cat: "All" });
     } catch (err) { this.setState({ busy: false, readyErr: err instanceof Error ? err.message : "Could not save the menu." }); }
   };
   // ---- dashboard actions
@@ -818,6 +821,19 @@ export default class FlowApp extends React.Component<FlowProps, any> {
         </div>
         <p style={{ fontSize: 13, color: "#8A5A6E", marginTop: 6, lineHeight: 1.45 }}>{ar ? "استورد فقط قائمة تخص مطعمك." : "Only import a menu that belongs to your restaurant."}</p>
       </div>,
+      foundNode: s.found && (() => {
+        const f = s.found as { name: string; nameAr: string; logo: string }, cand = ar ? f.nameAr || f.name : f.name || f.nameAr, row: React.CSSProperties = { display: "flex", alignItems: "center", gap: 10, fontSize: 15, color: "#1A0815", cursor: "pointer", minHeight: 36 };
+        return (
+          <div style={{ marginTop: 16, border: "1.5px solid #ECD9E0", borderRadius: 16, padding: "14px 16px", display: "flex", gap: 14, alignItems: "flex-start" }}>
+            {f.logo ? <img src={f.logo} alt="" width={56} height={56} style={{ width: 56, height: 56, borderRadius: 14, objectFit: "cover", border: "1px solid #F0E4E8", flex: "none" }} /> : null}
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 15, fontWeight: 600 }}>{ar ? "وجدنا أيضًا بيانات مطعمك" : "We also found your restaurant details"}</div>
+              {f.logo ? <label style={row}><input type="checkbox" checked={s.useLogo} onChange={(e: any) => this.setState({ useLogo: e.target.checked })} style={{ width: 20, height: 20, accentColor: "#C93DFF" }} />{ar ? "استخدام هذا الشعار" : "Use this logo"}</label> : null}
+              {cand ? <label style={row}><input type="checkbox" checked={s.useName} onChange={(e: any) => this.setState({ useName: e.target.checked })} style={{ width: 20, height: 20, accentColor: "#C93DFF" }} /><span style={{ minWidth: 0 }}>{ar ? "استخدام الاسم" : "Use the name"} <b dir="auto">{cand}</b></span></label> : null}
+            </div>
+          </div>
+        );
+      })(),
       countryNode: <CountryPick value={opCountry} ar={ar} vat={s.opVat} onVat={v => this.setState({ opVat: v })}/>,
       nameFocus: () => this.setState({ nameFocused: true }), nameBlur: () => this.setState({ nameFocused: false }), submitName: this.submitName,
       planBadge: this.planBadge(s, ar), accountNode: this.accountMenu("sidebar", s, nm, initials, ar), accountNodeMobile: this.accountMenu("header", s, nm, initials, ar),

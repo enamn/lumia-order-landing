@@ -1,12 +1,13 @@
 import { z } from "zod";
 import { authorize } from "@/server/authorization";
 import { AppError } from "@/server/errors";
-import type { DraftMenu } from "./import";
+import type { DraftMenu, DraftRestaurant } from "./import";
 
 // Reading a menu from a restaurant's own Talabat page. The page carries its menu as data (no AI needed): categories with items, names and prices, in the page's language.
 // The Arabic and English versions of the page are both read, so each item gets both names. Only talabat.com is fetched (never an address the visitor can point elsewhere).
 const HOSTS = new Set(["talabat.com", "www.talabat.com"]);
-const MAX_HTML = 6 * 1048576, MAX_ITEMS = 1200, MAX_CATEGORIES = 120;
+const MAX_HTML = 6 * 1048576, MAX_ITEMS = 1200, MAX_CATEGORIES = 40, MAX_PER_CATEGORY = 300; // the limits the saved menu accepts
+const LOGO_HOSTS = new Set(["talabat.dhmedia.io"]), MAX_LOGO_BYTES = 140_000; // a restaurant logo is small; the dashboard stores it as a data address of at most 200,000 characters
 const urlSchema = z.object({ url: z.string().trim().min(10).max(500) }).strict();
 
 // "https://www.talabat.com/ar/uae/restaurant/728554/omar-laffah-restaurant?aid=1525" -> the same page in Arabic and in English. null when it is not a Talabat restaurant page.
@@ -26,7 +27,7 @@ export interface TalabatCategory { id: number; name: string; items: TalabatItem[
 const PROMO = /pick|recommend|popular|best.?sell|top.?rated|offer|deal|discount|promo|under|or less|less than|trending|عرض|عروض|خصم|اختيارات|مختارات|الأكثر|مقترح|أقل|اقل/i;
 
 // The menu inside the page's data: categories in order, each item once (in its real category rather than a promotional one).
-export function parseTalabatMenu(html: string): { restaurant: string; categories: TalabatCategory[] } | null {
+export function parseTalabatMenu(html: string): { restaurant: string; logoUrl: string; categories: TalabatCategory[] } | null {
   const m = /<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/.exec(html);
   if (!m) return null;
   let data: any; try { data = JSON.parse(m[1]!); } catch { return null; }
@@ -49,18 +50,20 @@ export function parseTalabatMenu(html: string): { restaurant: string; categories
   // Keep the page's own order for the categories (promotional ones last only because they came last in this pass).
   const order = new Map(cats.map((c, n) => [Number(c.id), n]));
   out.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
-  return out.length ? { restaurant: clean(state?.restaurant?.name, 120), categories: out } : null;
+  const logo = String(state?.restaurant?.logo ?? "").replace(/&amp;/g, "&");
+  return out.length ? { restaurant: clean(state?.restaurant?.name, 80), logoUrl: /^https:\/\//.test(logo) ? logo : "", categories: out } : null;
 }
 
 // Both languages into one draft: names from the English page, Arabic names from the Arabic page, matched by id.
 export function mergeLanguages(ar: ReturnType<typeof parseTalabatMenu>, en: ReturnType<typeof parseTalabatMenu>): DraftMenu {
   const base = ar ?? en!, enCats = new Map((en?.categories ?? []).map(c => [c.id, c])), enItems = new Map((en?.categories ?? []).flatMap(c => c.items).map(i => [i.id, i]));
+  const restaurant: DraftRestaurant = { name: en?.restaurant ?? (ar ? "" : base.restaurant), nameAr: ar?.restaurant ?? "" };
   const categories = base.categories.slice(0, MAX_CATEGORIES).map(c => ({
     name: ar ? enCats.get(c.id)?.name ?? "" : c.name, nameAr: ar ? c.name : "",
-    items: c.items.map(i => { const e = enItems.get(i.id); const price = i.price ?? e?.price ?? null; return { name: ar ? e?.name ?? "" : i.name, nameAr: ar ? i.name : "", price, flagged: price == null }; }),
+    items: c.items.slice(0, MAX_PER_CATEGORY).map(i => { const e = enItems.get(i.id); const price = i.price ?? e?.price ?? null; return { name: ar ? e?.name ?? "" : i.name, nameAr: ar ? i.name : "", price, flagged: price == null }; }),
   }));
   let left = MAX_ITEMS; // a menu this large is not a restaurant's menu: stop at a sensible size
-  return { categories: categories.map(c => { const items = c.items.slice(0, Math.max(0, left)); left -= items.length; return { ...c, items }; }).filter(c => c.items.length) };
+  return { categories: categories.map(c => { const items = c.items.slice(0, Math.max(0, left)); left -= items.length; return { ...c, items }; }).filter(c => c.items.length), restaurant };
 }
 
 // Big menus (hundreds of items) are large pages that Talabat now and then cuts off or serves slowly. A page that did not arrive whole, or whose menu cannot be read, is fetched again.
@@ -79,6 +82,19 @@ async function page(url: string): Promise<string | null> {
   return null;
 }
 
+// The logo as a small data address, the way the dashboard keeps a restaurant's logo. Only Talabat's own image host; anything else, too large or not a PNG/JPG is skipped.
+export async function logoDataUrl(logoUrl: string): Promise<string | null> {
+  try {
+    const u = new URL(logoUrl);
+    if (u.protocol !== "https:" || !LOGO_HOSTS.has(u.hostname)) return null;
+    const res = await fetch(u, { headers: { "User-Agent": "LumiaOrder/1.0 (menu import; +https://order.lumia.ae)" }, redirect: "error", signal: AbortSignal.timeout(10000) });
+    const type = (res.headers.get("content-type") ?? "").split(";")[0]!.trim().toLowerCase();
+    if (!res.ok || (type !== "image/jpeg" && type !== "image/png")) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    return buf.length > 0 && buf.length <= MAX_LOGO_BYTES ? `data:${type};base64,${buf.toString("base64")}` : null;
+  } catch { return null; }
+}
+
 export async function extractMenuFromUrl(userId: string, businessId: string, input: unknown): Promise<DraftMenu> {
   await authorize(userId, businessId, "operations.manage");
   const { url } = urlSchema.parse(input);
@@ -87,5 +103,7 @@ export async function extractMenuFromUrl(userId: string, businessId: string, inp
   const [arHtml, enHtml] = await Promise.all([page(pages.ar), page(pages.en)]);
   const ar = arHtml ? parseTalabatMenu(arHtml) : null, en = enHtml ? parseTalabatMenu(enHtml) : null;
   if (!ar && !en) throw new AppError("LINK_UNREACHABLE", "We couldn’t read a menu from that link right now. Check the link and try again in a minute, or upload a file instead.", 502);
-  return mergeLanguages(ar, en);
+  const draft = mergeLanguages(ar, en), logoUrl = ar?.logoUrl || en?.logoUrl || "";
+  if (draft.restaurant && logoUrl) draft.restaurant.logo = await logoDataUrl(logoUrl);
+  return draft;
 }

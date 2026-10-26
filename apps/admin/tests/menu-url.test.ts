@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { mergeLanguages, parseTalabatMenu, talabatPages } from "../src/modules/menu/import-url";
 
-const page = (cats: unknown, name = "Test Restaurant") => `<html><script id="__NEXT_DATA__" type="application/json">${JSON.stringify({ props: { pageProps: { initialMenuState: { restaurant: { name }, menuData: { categories: cats } } } } })}</script></html>`;
+const page = (cats: unknown, name = "Test Restaurant", logo = "https://talabat.dhmedia.io/image/talabat/restaurants/logo.jpg?width=180&amp;x=1") => `<html><script id="__NEXT_DATA__" type="application/json">${JSON.stringify({ props: { pageProps: { initialMenuState: { restaurant: { name, logo }, menuData: { categories: cats } } } } })}</script></html>`;
 const item = (id: number, name: string, price: number) => ({ id, name, price, hasChoices: false });
 const arCats = [
   { id: -1, name: "اختيارات على ذوقك 🔥", items: [item(1, "وجبة ملكية", 43)] },
@@ -37,6 +37,13 @@ describe("menu from a Talabat link", () => {
     expect(chicken.items[0]).toEqual({ name: "Royal Meal", nameAr: "وجبة ملكية", price: 43, flagged: false });
     expect(chicken.items[1]).toMatchObject({ name: "Grill Meal", price: null, flagged: true });
     expect(mergeLanguages(null, parseTalabatMenu(page(enCats))).categories[0]!.items[0]).toMatchObject({ name: "Lunch Deal", nameAr: "" }); // only English was reachable
+  });
+  it("takes the restaurant's name in both languages and its logo address from the page", () => {
+    const ar = parseTalabatMenu(page(arCats, "مطعم الاختبار")), en = parseTalabatMenu(page(enCats, "Test Place"));
+    expect(en).toMatchObject({ restaurant: "Test Place", logoUrl: "https://talabat.dhmedia.io/image/talabat/restaurants/logo.jpg?width=180&x=1" });
+    expect(mergeLanguages(ar, en).restaurant).toEqual({ name: "Test Place", nameAr: "مطعم الاختبار" });
+    expect(mergeLanguages(null, en).restaurant).toEqual({ name: "Test Place", nameAr: "" });
+    expect(parseTalabatMenu(page(arCats, "x", "javascript:alert(1)"))!.logoUrl).toBe(""); // only a web address is kept
   });
   it("returns nothing for a page without a menu", () => {
     expect(parseTalabatMenu("<html>nothing</html>")).toBeNull();

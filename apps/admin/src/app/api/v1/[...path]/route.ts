@@ -129,7 +129,7 @@ async function handle(request: Request, context: Context) {
       if (subId === "branches" && method === "DELETE" && path.length === 5) return removeBranchMenu(userId, businessId, subId2, requestId);
       if (subId === "import" && subId2 === "url" && method === "POST" && path.length === 5) return extractMenuFromUrl(userId, businessId!, await jsonBody(request));
       if (subId === "import" && method === "POST" && path.length === 4) return extractMenu(userId, businessId, await jsonBody(request, 12 * 1048576));
-      if (subId === "import" && subId2 === "confirm" && method === "POST" && path.length === 5) return confirmImport(userId, businessId, await jsonBody(request, 262144), requestId, branchId);
+      if (subId === "import" && subId2 === "confirm" && method === "POST" && path.length === 5) return confirmImport(userId, businessId, await jsonBody(request, 450000), requestId, branchId);
       if (subId === "items" && method === "POST" && path.length === 4) return addItem(userId, businessId, await jsonBody(request), requestId, branchId);
       if (subId === "items" && method === "PATCH" && path.length === 5) return setItemAvailability(userId, businessId, subId2, await jsonBody(request), requestId);
     }
