@@ -317,6 +317,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                       </span>
                       <input type="file" accept="application/pdf,image/png,image/jpeg" onChange={vm.onMenuFile} style={S("display:none")} />
                     </label>
+                    {vm.menuLinkNode}
                     {vm.menuErr && (
                       <>
                       <div role="alert" style={S("margin-top:12px;font-size:14px;color:#B4233B")}>

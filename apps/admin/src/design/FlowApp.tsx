@@ -120,7 +120,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     this.state = {
       step: props.initialStep, num: "", cc: Math.max(0, COUNTRIES.findIndex(c => c.code === props.initialCountry)), focused: false, invalid: false, srvErr: "", sending: false, ccOpen: false, e164: "",
       currency: "", loc: null, opCountry: "", opVat: "", digits: "", otpFocused: false, otpErr: null, otpFail: "", verifying: false, resendAt: 0, now: Date.now(), note: null,
-      name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, fileName: "", menuErr: "", readyErr: "", busy: false,
+      name: business?.name ?? "", nameFocused: false, nameErr: false, nameFail: "", logo: business?.logoUrl ?? null, drag: false, menuUrl: "", fileName: "", menuErr: "", readyErr: "", busy: false,
       phase: 0, menuDone: count(toCats(props.menu, props.currency)) > 0, cat: "All", menu: toCats(props.menu, props.currency), draft: [] as Draft[], open: {} as Record<number, boolean>, businessId: business?.id ?? null, address: business?.address ?? "",
       page: props.initialPage ?? "Overview", period: "week", overview: null as any, orders: null as any, ordTab: "new", ordSel: null as any, ordQ: "", ordReject: false, ordReason: "", ordPrep: 25, ordFlash: null as any, ordErr: "", ordBusy: false, ordSlow: false, ovSlow: false, settingsPage: "", billFocus: "", setSub: (typeof location !== "undefined" && SETUP_SUBS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "profile"), subData: null as any, sub: null as any, planStep: "plans", lock: null as any, plan: "plus", bill: "yearly", termQty: 1, addr: null as null | string, addrTry: false, subErr: "", embedSecret: null as null | string, embedKey: "", embedId: "", wa: null, waStatus: props.wa.status, waErrText: "", waCatalog: false, waName: props.wa.verifiedName, waPhone: props.wa.displayPhoneNumber, waPortfolio: props.wa.businessPortfolioName ?? "", waInfo: null, waNumbers: (props.wa.numbers ?? []) as WaNumber[], waLimit: props.wa.limit ?? 1, waGuide: 0, catOpen: false, confirmReplace: false, confirmDisc: false as false | WaNumber, choices: {} as Record<string, string>,
       custList: null as any, custErr: "", custSel: [] as string[], custOpen: null as any, custQ: "", campMode: "all", campCode: true, campPct: 20, campDays: 7, campMsgAll: campDefaults(props.lang, business?.name ?? "our business").all, campMsgOffer: campDefaults(props.lang, business?.name ?? "us").offer, campCodeTxt: "WEEKEND20", campImg: "", campImgFile: null as any, campImgName: "", campSending: false, campToast: "", campErr: "", campHist: null as any,
@@ -565,9 +565,24 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     try {
       const draft = await api(`/api/v1/businesses/${this.state.businessId}/menu/import`, "POST", { fileName: f.name, mediaType: f.type, data: await toBase64(f) });
       this.clearTimers();
-      const cats: Draft[] = draft.categories.map((c: any) => ({ cat: c.name || c.nameAr, catAr: c.name ? c.nameAr : "", arOnly: !c.name, items: c.items.map((i: any) => ({ n: i.name || i.nameAr, ar: i.name ? i.nameAr : "", arOnly: !i.name, p: i.price == null ? "" : String(i.price), flag: Boolean(i.flagged) })) }));
-      this.setState({ step: "ready", draft: cats, open: { 0: true, 1: true }, readyErr: "" });
+      this.showDraft(draft);
     } catch (err) { this.clearTimers(); this.setState({ step: "menu", menuErr: err instanceof Error ? err.message : "We couldn’t read that menu." }); }
+  }
+  // The draft the review screen shows, from a read menu (a file, or a link).
+  showDraft(draft: any) {
+    const cats: Draft[] = draft.categories.map((c: any) => ({ cat: c.name || c.nameAr, catAr: c.name ? c.nameAr : "", arOnly: !c.name, items: c.items.map((i: any) => ({ n: i.name || i.nameAr, ar: i.name ? i.nameAr : "", arOnly: !i.name, p: i.price == null ? "" : String(i.price), flag: Boolean(i.flagged) })) }));
+      this.setState({ step: "ready", draft: cats, open: { 0: true, 1: true }, readyErr: "" });
+  }
+  // Import from the restaurant's own Talabat page: no file needed; both Arabic and English names are read.
+  async takeUrl() {
+    const url = this.state.menuUrl.trim(); if (!url || this.state.step !== "menu") return;
+    let host = "talabat.com"; try { host = new URL(url).hostname.replace(/^www\./, ""); } catch { /* the server explains what is wrong with the link */ }
+    this.clearTimers(); this.setState({ fileName: host, drag: false, step: "processing", phase: 0, menuErr: "" });
+    this.later(1800, () => this.setState({ phase: 1 })); this.later(3600, () => this.setState({ phase: 2 })); this.later(5400, () => this.setState({ phase: 3 }));
+    try {
+      const draft = await api(`/api/v1/businesses/${this.state.businessId}/menu/import/url`, "POST", { url });
+      this.clearTimers(); this.showDraft(draft);
+    } catch (err) { this.clearTimers(); this.setState({ step: "menu", menuErr: err instanceof Error ? err.message : "We couldn’t read that link." }); }
   }
   confirmMenu = async () => {
     const draft: Draft[] = this.state.draft; if (draft.some(c => c.items.some(i => i.flag)) || this.state.busy) return;
@@ -793,6 +808,15 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       locationNode: <div style={{ marginTop: 26 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}><span style={{ fontSize: 14, fontWeight: 500, color: "#3D1C31" }}>{ar ? "موقع الفرع الرئيسي" : "Main branch location"}</span><span style={{ fontSize: 12, fontWeight: 500, padding: "2px 8px", borderRadius: 999, background: "#F3EEF1", color: "#8A5A6E" }}>{X.optional}</span></div>
         <PlacePicker key={opCountry} country={opCountry} ar={ar} showLabel={false} height={220} coords={(s.loc as any)?.coords ?? ""} address={(s.loc as any)?.address ?? ""} onPick={(pk: any) => this.setState((st: any) => ({ loc: { ...(st.loc ?? {}), ...pk } }))} />
+      </div>,
+      menuLinkNode: <div style={{ marginTop: 18 }}>
+        <label htmlFor="pd-menu-url" style={{ display: "block", fontSize: 14, fontWeight: 500, color: "#3D1C31" }}>{ar ? "أو الصق رابط قائمتك على طلبات" : "Or paste your Talabat menu link"}</label>
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <input id="pd-menu-url" type="url" inputMode="url" dir="ltr" autoComplete="off" placeholder="https://www.talabat.com/…" value={s.menuUrl} onChange={(e: any) => this.setState({ menuUrl: e.target.value, menuErr: "" })} onKeyDown={(e: any) => { if (e.key === "Enter") { e.preventDefault(); this.takeUrl(); } }}
+            style={{ flex: 1, minWidth: 0, height: 48, padding: "0 12px", borderRadius: 12, border: "1.5px solid #ECD9E0", background: "#fff", fontSize: 15, textAlign: ar ? "right" : "left" }} className="place-input" />
+          <button type="button" onClick={() => this.takeUrl()} disabled={!s.menuUrl.trim()} style={{ height: 48, padding: "0 18px", borderRadius: 12, border: "1.5px solid #ECD9E0", background: "#fff", fontWeight: 600, fontSize: 15, opacity: s.menuUrl.trim() ? 1 : 0.5 }}>{ar ? "استيراد" : "Import"}</button>
+        </div>
+        <p style={{ fontSize: 13, color: "#8A5A6E", marginTop: 6, lineHeight: 1.45 }}>{ar ? "استورد فقط قائمة تخص مطعمك." : "Only import a menu that belongs to your restaurant."}</p>
       </div>,
       countryNode: <CountryPick value={opCountry} ar={ar} vat={s.opVat} onVat={v => this.setState({ opVat: v })}/>,
       nameFocus: () => this.setState({ nameFocused: true }), nameBlur: () => this.setState({ nameFocused: false }), submitName: this.submitName,

@@ -3,6 +3,7 @@ import { getMenu, addItem, setItemAvailability, getMenuScopes, createBranchMenu,
 import { listCustomers } from "@/modules/customers/service";
 import { listCampaigns, sendCampaign } from "@/modules/campaigns/service";
 import { extractMenu, confirmImport } from "@/modules/menu/import";
+import { extractMenuFromUrl } from "@/modules/menu/import-url";
 import { setLanguage } from "@/modules/auth/profile";
 import { connectWhatsApp, getWhatsAppStatus, getImportInfo, applyImport, useCatalog, disconnectWhatsApp } from "@/modules/whatsapp/link";
 import { createMessageTemplate } from "@/modules/whatsapp/templates";
@@ -126,6 +127,7 @@ async function handle(request: Request, context: Context) {
       if (method === "GET" && subId === "scopes" && path.length === 4) return getMenuScopes(userId, businessId);
       if (subId === "branches" && method === "POST" && path.length === 5) return createBranchMenu(userId, businessId, subId2, await jsonBody(request), requestId);
       if (subId === "branches" && method === "DELETE" && path.length === 5) return removeBranchMenu(userId, businessId, subId2, requestId);
+      if (subId === "import" && subId2 === "url" && method === "POST" && path.length === 5) return extractMenuFromUrl(userId, businessId!, await jsonBody(request));
       if (subId === "import" && method === "POST" && path.length === 4) return extractMenu(userId, businessId, await jsonBody(request, 12 * 1048576));
       if (subId === "import" && subId2 === "confirm" && method === "POST" && path.length === 5) return confirmImport(userId, businessId, await jsonBody(request, 262144), requestId, branchId);
       if (subId === "items" && method === "POST" && path.length === 4) return addItem(userId, businessId, await jsonBody(request), requestId, branchId);
