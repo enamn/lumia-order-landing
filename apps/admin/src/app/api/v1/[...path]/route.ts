@@ -18,6 +18,7 @@ import { getBillingTax, saveBillingTax } from "@/modules/tax/service";
 import { listMarkets } from "@/modules/market/service";
 import { requireAccess } from "@/modules/billing/service";
 import { printOrder } from "@/modules/devices/orders";
+import { searchPlaces } from "@/modules/settings/geocode";
 import { cancelPairing, disconnectDevice, getPairing, listDevices, realtimeTicket, startPairing, testPrint, updateDevice } from "@/modules/devices/service";
 import { createBusiness, getBusiness, listBusinesses, updateBusiness, updateLocation, readiness, completeOnboarding, members, setMember } from "@/modules/business/service";
 export const dynamic = "force-dynamic";
@@ -58,6 +59,7 @@ async function handle(request: Request, context: Context) {
       if (method === "GET") return members(userId, businessId);
       if (method === "POST") return setMember(userId, businessId, await jsonBody(request), requestId);
     }
+    if (section === "geocode" && method === "GET" && path.length === 3) return searchPlaces(userId, businessId!, new URL(request.url).searchParams.get("q") ?? "");
     if (section === "realtime-ticket" && method === "POST" && path.length === 3) return realtimeTicket(userId, businessId!);
     if (section === "devices") {
       if (path.length === 3 && method === "GET") return listDevices(userId, businessId!);

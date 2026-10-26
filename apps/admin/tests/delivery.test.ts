@@ -33,6 +33,24 @@ describe("finding the branch without a location pin", () => {
   });
 });
 
+describe("the nearest branch serves the order", () => {
+  it("with a location pin, the nearest branch wins whatever the delivery method (an area rule or the first branch no longer decides)", () => {
+    const nearAjman = { emirate: "Sharjah", area: "Al Majaz", latitude: 25.4052, longitude: 55.4467 }; // the pin is at the Ajman branch, the area rule names Sharjah
+    expect(quoteDelivery(rules(), branches, nearAjman, 5000, 0)).toMatchObject({ status: "ok", branchId: "b2" });
+    expect(quoteDelivery(rules({ method: "manual" }), branches, { ...nearAjman }, 5000, 0)).toMatchObject({ branchId: "b2" });
+    expect(quoteDelivery(rules({ method: "free" }), branches, { ...nearAjman, emirate: "Sharjah" }, 0, 0)).toMatchObject({ branchId: "b2" });
+    expect(quoteDelivery(null, branches, { ...nearAjman }, 5000, 0)).toMatchObject({ branchId: "b2" });
+    expect(quoteDelivery(rules(), branches, { emirate: "Sharjah", area: "Al Majaz", latitude: 25.3302, longitude: 55.3901 }, 5000, 0)).toMatchObject({ branchId: "b1" });
+  });
+  it("without a pin the rule's branch is used; a switched-off or pin-less branch is never the nearest", () => {
+    expect(quoteDelivery(rules(), branches, place("Ajman"), 5000, 0)).toMatchObject({ branchId: "b2" });
+    const off = branches.map(b => (b.id === "b2" ? { ...b, active: false } : b));
+    expect(quoteDelivery(rules(), off, { emirate: "Sharjah", area: "Al Majaz", latitude: 25.4052, longitude: 55.4467 }, 5000, 0)).toMatchObject({ branchId: "b1" });
+    const noPins = branches.map(b => ({ ...b, latitude: null, longitude: null }));
+    expect(quoteDelivery(rules(), noPins, { emirate: "Sharjah", area: "Al Majaz", latitude: 25.4052, longitude: 55.4467 }, 5000, 0)).toMatchObject({ branchId: "b1" }); // the area rule's branch
+  });
+});
+
 describe("delivery fee rules", () => {
   it("finds the emirate in English or Arabic text", () => {
     expect(emirateFrom("Dubai")).toBe("Dubai"); expect(emirateFrom(null, "Al Majaz, الشارقة")).toBe("Sharjah"); expect(emirateFrom("بناية 4، أبو ظبي")).toBe("Abu Dhabi"); expect(emirateFrom("ras al khaimah")).toBe("Ras Al Khaimah"); expect(emirateFrom("Somewhere")).toBeNull();

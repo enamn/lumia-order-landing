@@ -394,7 +394,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                     <>
                     <section style={S("border:1.5px solid #E3CBD4;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:18px")}>
                       <h2 style={S("font-size:17px;font-weight:600;letter-spacing:-0.015em")}>
-                        New branch
+                        {vm.formTitle}
                       </h2>
                       <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px 16px")}>
                         <label style={S("display:flex;flex-direction:column;gap:6px")}>
@@ -466,16 +466,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                             </Fragment>
                           ))}
                         </div>
-                        {vm.pm.search && (
-                          <>
-                          <div style={S("display:flex;gap:8px;flex-wrap:wrap")}>
-                            <input value={vm.pinQ} onChange={vm.onPinQ} placeholder="Search address or building" style={S("flex:1 1 240px;height:44px;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px")} className="dcs2" />
-                            <button type="button" onClick={vm.setPin} style={S("height:44px;padding:0 16px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
-                              Use this address
-                            </button>
-                          </div>
-                          </>
-                        )}
+                        {vm.pm.search && vm.searchEl}
                         {vm.pm.paste && (
                           <>
                           <div style={S("display:flex;gap:8px;flex-wrap:wrap")}>
@@ -496,23 +487,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           </span>
                           </>
                         )}
-                        <div onClick={vm.mapClick} style={S(`height:200px;border-radius:14px;border:1px solid #ECEAEB;background-color:#F4F2EF;background-image:repeating-linear-gradient(0deg,transparent 0 39px,#E7E3DE 39px 40px),repeating-linear-gradient(90deg,transparent 0 39px,#E7E3DE 39px 40px);display:flex;align-items:center;justify-content:center;cursor:${vm.mapCursor};position:relative`)}>
-                          {vm.nbPinned && (
-                            <>
-                            <svg width="34" height="34" viewBox="0 0 20 20" fill="none">
-                              <path d="M10 18s6-5.2 6-9.6A6 6 0 0 0 4 8.4C4 12.8 10 18 10 18z" fill="#FF5577" />
-                              <circle cx="10" cy="8.4" r="2.3" fill="#fff" />
-                            </svg>
-                            </>
-                          )}
-                          {vm.nbNoPin && (
-                            <>
-                            <span style={S("font-size:14px;color:#6E6468;background:#fff;padding:6px 12px;border-radius:999px")}>
-                              {vm.mapHint}
-                            </span>
-                            </>
-                          )}
-                        </div>
+                        {vm.mapEl}
                         {vm.nbPinned && (
                           <>
                           <span style={S("font-size:14px;color:#16704A;font-weight:500;font-variant-numeric:tabular-nums")}>
@@ -526,7 +501,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           Cancel
                         </button>
                         <button type="button" onClick={vm.confirmAdd} disabled={!!vm.nbInvalid} style={S(`height:44px;padding:0 18px;border-radius:12px;background:linear-gradient(90deg,#FF5577,#C93DFF);color:#fff;font-weight:600;font-size:15px;opacity:${vm.nbOp}`)}>
-                          Add branch
+                          {vm.confirmLabel}
                         </button>
                       </div>
                     </section>
@@ -570,6 +545,9 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                             </button>
                             </>
                           )}
+                          <button type="button" onClick={b.edit} style={S("height:40px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px")} className="dcs1">
+                            Edit branch
+                          </button>
                         </article>
                       </Fragment>
                     ))}

@@ -3,6 +3,7 @@
 "use client";
 // Restaurant settings: the markup is generated from the design (SettingsTemplate); this component keeps the page state,
 // saves each page through /api/v1/businesses/:id/settings/:section and feeds the template its view-model.
+import PinMap from "./PinMap";
 import React from "react";
 import "./dc-base.css";
 import "./settings-hover.css";
@@ -64,7 +65,7 @@ class SettingsApp extends React.Component<Props, any> {
   constructor(props: Props) {
     super(props);
     const d = props.initial.sections, hp = typeof location !== 'undefined' ? location.hash.slice(1) : '';
-    this.state = { w: 1200, page: props.sub && PAGES.some(p => p[0] === props.sub) ? props.sub : PAGES.some(p => p[0] === hp) ? hp : 'profile', draft: clone(d), saved: clone(d), toast: '', error: '', blocked: null, saving: false, adding: false, nb: newBranch(regionNames(isCountryCode(props.initial.country) ? props.initial.country : 'AE')[0]), pinMode: 'current', pinQ: '', calc: { branch: d.branches[0]?.id ?? '', emirate: regionNames(isCountryCode(props.initial.country) ? props.initial.country : 'AE')[0], area: '', dist: '7', sub: '45' }, menu: props.initial.menu, wa: props.initial.whatsapp };
+    this.state = { w: 1200, page: props.sub && PAGES.some(p => p[0] === props.sub) ? props.sub : PAGES.some(p => p[0] === hp) ? hp : 'profile', draft: clone(d), saved: clone(d), toast: '', error: '', blocked: null, saving: false, adding: false, editId: null, geo: { busy: false, results: [], msg: '' }, nb: newBranch(regionNames(isCountryCode(props.initial.country) ? props.initial.country : 'AE')[0]), pinMode: 'current', pinQ: '', calc: { branch: d.branches[0]?.id ?? '', emirate: regionNames(isCountryCode(props.initial.country) ? props.initial.country : 'AE')[0], area: '', dist: '7', sub: '45' }, menu: props.initial.menu, wa: props.initial.whatsapp };
   }
 
   componentDidMount() {
@@ -229,7 +230,7 @@ class SettingsApp extends React.Component<Props, any> {
     // branches
     const pinMissing = d.branches.some(b => b.active && !b.pin);
     const branchCards = d.branches.map(b => ({ name: b.name, addr: `${b.area}, ${b.emirate}`, status: b.active ? 'Active' : 'Inactive', sbg: b.active ? TONE.ok[0] : TONE.neutral[0], sfg: b.active ? TONE.ok[1] : TONE.neutral[1], noPin: !b.pin,
-            addPin: () => this.locate(c => this.upd('branches', x => { const t = x.find((y: any) => y.id === b.id); t.pin = true; t.coords = c; })),
+            addPin: () => this.startEdit(b, 'search'), edit: () => this.startEdit(b, b.pin ? 'map' : 'search'),
       rows: [
         { k: 'Location pin', v: b.pin ? 'Added' : 'Missing', fg: b.pin ? '#16704A' : '#B42318' },
         { k: 'WhatsApp', v: s.wa.connected ? s.wa.displayPhoneNumber : 'Not connected', fg: s.wa.connected ? '#1A0815' : '#8A4B00' },
@@ -361,14 +362,15 @@ class SettingsApp extends React.Component<Props, any> {
       greetOpts: radio([['friendly', 'Friendly', 'Warm and casual'], ['formal', 'Formal', 'Polite and professional'], ['short', 'Short', 'Straight to the order']], pr.greet, (v) => this.upd('profile', x => { x.greet = v; })),
       greetBubbles,
       pinMissing, branchCards, adding: s.adding, notAdding: !s.adding,
-      startAdd: () => { const open = () => this.setState({ adding: true, nb: newBranch(this.EMR[0]), pinQ: '', pinMode: 'current' }); if (d.branches.filter((b: any) => b.active).length < (this.props.initial.branchLimit ?? 1)) return open(); const bb = this.props.initial.branchBuy; if (bb) return this.buyBranch(open); if (this.props.onPremium) return this.props.onPremium(); open(); }, cancelAdd: () => this.setState({ adding: false }),
-      confirmAdd: () => { const b = { ...s.nb, id: String(Date.now()) }; this.upd('branches', x => { x.push(b); }); this.setState({ adding: false }); },
+      startAdd: () => { const open = () => this.setState({ adding: true, editId: null, nb: newBranch(this.EMR[0]), pinQ: '', pinMode: 'search', geo: { busy: false, results: [], msg: '' } }); if (d.branches.filter((b: any) => b.active).length < (this.props.initial.branchLimit ?? 1)) return open(); const bb = this.props.initial.branchBuy; if (bb) return this.buyBranch(open); if (this.props.onPremium) return this.props.onPremium(); open(); }, cancelAdd: () => this.setState({ adding: false, editId: null }),
+      confirmAdd: () => { const b = { ...s.nb, id: s.editId ?? String(Date.now()) }; this.upd('branches', x => { const i = s.editId ? x.findIndex((y: any) => y.id === s.editId) : -1; if (i >= 0) x[i] = { ...x[i], ...b }; else x.push(b); }); this.setState({ adding: false, editId: null }); },
+      formTitle: s.editId ? 'Edit branch' : 'New branch', confirmLabel: s.editId ? 'Save branch' : 'Add branch',
       nb, nbStatus: seg([[true, 'Active'], [false, 'Inactive']], nbS.active, (v) => setNb('active', v)),
-      pinModes: [['current', 'Use current location'], ['paste', 'Paste Google Maps link']].map(([k, l]) => ({ ...chip(l, s.pinMode === k, () => this.setState({ pinMode: k })) })),
+      pinModes: [['search', 'Search address'], ['map', 'Drop pin on map'], ['paste', 'Paste Google Maps link'], ['current', 'Use my current location']].map(([k, l]) => ({ ...chip(l, s.pinMode === k, () => this.setState({ pinMode: k })) })),
       pm: { search: s.pinMode === 'search', paste: s.pinMode === 'paste', current: s.pinMode === 'current', map: s.pinMode === 'map' },
       pinQ: s.pinQ, onPinQ: (e) => this.setState({ pinQ: e.target.value }), setPin,
-      mapClick: () => {}, mapCursor: 'default',
-      mapHint: 'No pin yet',
+      mapEl: <PinMap value={nbS.pin ? nbS.coords : ''} center={this.mapCenter(d)} onPick={(c: string) => this.setState((st: any) => ({ nb: { ...st.nb, pin: true, coords: c } }))} />,
+      searchEl: this.searchEl(),
       nbPinned: nbS.pin, nbNoPin: !nbS.pin, nbCoords: nbS.coords, nbInvalid: !nbS.name.trim(), nbOp: nbS.name.trim() ? 1 : 0.45,
       routeOpts, routeBranches, waMap, route, waFor: waMap[0],
       dStatusOpts: radio([['available', 'Delivery available', 'Lumia offers delivery and pickup.'], ['pickup', 'Pickup only', 'No delivery. Customers collect from the branch.'], ['paused', 'Delivery temporarily paused', 'Use when you are short on drivers.']], D.status, (v) => setD('status', v)),
@@ -401,6 +403,47 @@ class SettingsApp extends React.Component<Props, any> {
   }
 
   // Browser location for a branch pin ("lat, lng").
+  // Opens the branch form filled with an existing branch (the same form that adds one).
+  startEdit(b: any, mode: string) {
+    this.setState({ adding: true, editId: b.id, nb: { ...b }, pinQ: '', pinMode: mode, geo: { busy: false, results: [], msg: '' } });
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch { /* the form is still open */ }
+  }
+  // Where the map opens before a pin exists: the first branch that has one, else the country's main city.
+  mapCenter(d: any): [number, number] {
+    const pinned = d.branches.find((x: any) => x.pin && x.coords), m = pinned ? /^\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)/.exec(pinned.coords) : null;
+    if (m) return [+m[1], +m[2]];
+    return ({ AE: [25.2048, 55.2708], SA: [24.7136, 46.6753], OM: [23.588, 58.3829], BH: [26.2285, 50.586], QA: [25.2854, 51.531], KW: [29.3759, 47.9774] } as Record<string, [number, number]>)[this.props.initial.country ?? 'AE'] ?? [25.2048, 55.2708];
+  }
+  async geocode() {
+    const q = this.state.pinQ.trim();
+    if (q.length < 3) { this.setState({ geo: { busy: false, results: [], msg: 'Type at least 3 letters of the address.' } }); return; }
+    this.setState({ geo: { busy: true, results: [], msg: '' } });
+    try {
+      const r = await api(`/api/v1/businesses/${this.props.businessId}/geocode?q=${encodeURIComponent(q)}`);
+      this.setState({ geo: { busy: false, results: r, msg: r.length ? '' : 'No match. Try the building or area name, or drop the pin on the map.' } });
+    } catch (e: any) { this.setState({ geo: { busy: false, results: [], msg: e?.message ?? 'Address search is not available right now.' } }); }
+  }
+  searchEl() {
+    const g = this.state.geo, box = 'height:44px;padding:0 12px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-size:15px';
+    const css = (t: string) => Object.fromEntries(t.split(';').filter(Boolean).map(x => { const i = x.indexOf(':'); return [x.slice(0, i).replace(/-([a-z])/g, (_, c) => c.toUpperCase()), x.slice(i + 1)]; }));
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <input value={this.state.pinQ} onChange={e => this.setState({ pinQ: e.target.value })} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); this.geocode(); } }} placeholder="Search address, building or area" style={{ ...css(box), flex: '1 1 240px' }} />
+          <button type="button" onClick={() => this.geocode()} disabled={g.busy} style={{ ...css('height:44px;padding:0 16px;border-radius:10px;border:1.5px solid #ECD9E0;background:#fff;font-weight:500;font-size:14px') }}>{g.busy ? 'Searching…' : 'Search'}</button>
+        </div>
+        {g.msg && <span style={{ fontSize: 13, color: '#8A4B00' }}>{g.msg}</span>}
+        {g.results.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', border: '1px solid #F0E4E8', borderRadius: 12, overflow: 'hidden' }}>
+            {g.results.map((r: any, i: number) => (
+              <button key={i} type="button" onClick={() => this.setState((st: any) => ({ nb: { ...st.nb, pin: true, coords: `${r.latitude.toFixed(6)}, ${r.longitude.toFixed(6)}` }, geo: { busy: false, results: [], msg: '' } }))} style={{ textAlign: 'start', padding: '10px 12px', fontSize: 14, lineHeight: 1.4, background: '#fff', borderTop: i ? '1px solid #F3EEF1' : 'none' }}>{r.label}</button>
+            ))}
+          </div>
+        )}
+        <span style={{ fontSize: 13, color: '#8A5A6E' }}>Pick a result, then drag the pin on the map to the exact door.</span>
+      </div>
+    );
+  }
   locate(done: (coords: string) => void) {
     if (!navigator.geolocation) { this.setState({ error: 'This browser can’t share its location. Paste a Google Maps link instead.' }); return; }
     navigator.geolocation.getCurrentPosition(p => done(`${p.coords.latitude.toFixed(6)}, ${p.coords.longitude.toFixed(6)}`), () => this.setState({ error: 'We couldn’t get your location. Allow location access, or paste a Google Maps link instead.' }), { enableHighAccuracy: true, timeout: 15000 });

@@ -53,7 +53,7 @@ Events sent today:
 | event | payload | what to do |
 |---|---|---|
 | `print.test` | `{ at }` | print a short test receipt, then send `print.result` |
-| `device.updated` | `{ name, locationId }` | the restaurant renamed or moved this terminal to another branch |
+| `device.updated` | `{ name, locationId, branch }` | the restaurant renamed this terminal, moved it to another branch, or edited its branch (`branch` is the branch name): show the new name and reload the open orders |
 | `device.revoked` | `{}` | disconnected from the dashboard: forget the key (the socket closes with 4403) |
 
 | `order.new` | order snapshot (below) | a customer confirmed an order for this branch: **sound the alarm**, show Accept / Reject, `ack` it |
@@ -86,6 +86,10 @@ POST {api}/api/device/orders/:orderId/status      { "status": "ACCEPTED", "prepM
 `prepMinutes` (5-180) is the time the customer is told (and is saved as `promisedAt`). Same rules as the dashboard: the first to decide wins; a late change gets `409 INVALID_TRANSITION`: refresh the card from the next `order.updated`. A terminal only handles orders of its own branch (`404` otherwise). `401` = key revoked: forget it.
 
 Close codes: `4403` revoked (forget the key); `4409` another connection of this terminal replaced this one (a terminal keeps one live connection: reconnect after 5+ s, and never run two apps with one key); `1001` the service is restarting (reconnect with backoff, replay fills the gap); `1008` too many messages (max 120 per 10 s, messages max 16 KB). HTTP `503` on the upgrade: this instance is full, retry.
+
+### Leaving from the terminal
+
+`POST {api}/api/device/unpair` with `Authorization: Bearer lumd_...` (empty body). The key stops working and the terminal disappears from the dashboard list at once. Then forget the key locally. If the terminal is offline it can still forget locally; the restaurant then removes it from the dashboard.
 
 ## 3. How the pieces run
 

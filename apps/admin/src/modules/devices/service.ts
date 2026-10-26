@@ -126,8 +126,29 @@ export async function updateDevice(userId: string, businessId: string, deviceId:
   if (!d) throw new AppError("NOT_FOUND", "Device not found.", 404);
   if (b.locationId && !(await db.location.findFirst({ where: { id: b.locationId, businessId }, select: { id: true } }))) throw new AppError("NOT_FOUND", "Branch not found.", 404);
   const u = await db.device.update({ where: { id: d.id }, data: { ...(b.name ? { name: b.name } : {}), ...(b.locationId ? { locationId: b.locationId } : {}) } });
-  if (b.locationId && b.locationId !== d.locationId) await publish(deviceChannel(d.id), "device.updated", { name: u.name, locationId: u.locationId });
+  if (u.name !== d.name || u.locationId !== d.locationId) await announceDevice(u);
   return { id: u.id, name: u.name, locationId: u.locationId };
+}
+// Tells a terminal its name and branch (new or unchanged) so it can show them: sent when the restaurant renames or moves it, or edits its branch.
+export async function announceDevice(d: { id: string; name: string; locationId: string; businessId?: string }) {
+  const [branch, business] = await Promise.all([db.location.findUnique({ where: { id: d.locationId }, select: { name: true, businessId: true } }), db.business.findFirst({ where: { locations: { some: { id: d.locationId } } }, select: { name: true } })]);
+  await publish(deviceChannel(d.id), "device.updated", { name: d.name, locationId: d.locationId, branch: branch?.name ?? "", business: business?.name ?? "" });
+}
+export async function announceBranch(businessId: string, locationId: string) {
+  const devices = await db.device.findMany({ where: { businessId, locationId, status: "ACTIVE" }, select: { id: true, name: true, locationId: true } });
+  await Promise.all(devices.map(announceDevice));
+}
+// After the restaurant's name or its branches were saved in Settings: every terminal shows the current names.
+export async function announceBusiness(businessId: string) {
+  const devices = await db.device.findMany({ where: { businessId, status: "ACTIVE" }, select: { id: true, name: true, locationId: true } });
+  await Promise.all(devices.map(announceDevice));
+}
+// The terminal itself says it is leaving (Disconnect on the terminal): it disappears from the dashboard list at once.
+export async function unpairDevice(device: { id: string; businessId: string }, now = new Date()) {
+  await db.device.update({ where: { id: device.id }, data: { status: "REVOKED", credentialHash: null, revokedAt: now } });
+  await publish(deviceChannel(device.id), "device.revoked", {});
+  await publish(businessChannel(device.businessId), "device.removed", { deviceId: device.id });
+  return { disconnected: true };
 }
 export async function disconnectDevice(userId: string, businessId: string, deviceId: string, now = new Date()) {
   await authorize(userId, businessId, "business.manage");

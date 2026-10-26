@@ -1,3 +1,4 @@
+import { announceBusiness } from "@/modules/devices/service";
 import { Prisma } from "@prisma/client";
 import { decimalsOf, fromMinor, toMinor } from "../market/money";
 import { isCountryCode, marketOf, type CountryCode } from "../market/countries";
@@ -147,5 +148,6 @@ export async function saveSettingsSection(userId: string, businessId: string, se
     }
     await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "Settings", entityId: businessId, action: `settings.${key}.updated`, requestId, afterData: { section: key } } });
   });
+  if (key === "branches" || key === "profile") await announceBusiness(businessId).catch(() => undefined); // terminals show the new branch and restaurant names
   return { section: key, value: sectionsOf(await load(businessId))[key] };
 }

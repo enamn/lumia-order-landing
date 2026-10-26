@@ -51,19 +51,21 @@ export function branchFromText(rules: DeliveryRules | null, branches: BranchPoin
 }
 // Is this message likely an address worth looking up on a map? (a place word such as tower, street or villa, and not a one-word reply; a quantity like "2 burgers" is not an address)
 export const looksLikeAddress = (text: string) => text.trim().length >= 8 && text.trim().split(/\s+/).length >= 2 && /tower|building|bldg|street|\bst\b|road|villa|flat|apt|apartment|near|behind|opposite|برج|شارع|مبنى|بناية|فيلا|شقة|قرب|بجانب|منطقة|حي|\bal\s+\w+/i.test(text);
+// With the customer's location pin the nearest active branch (that has a pin) serves the order, whatever the delivery method; without one, the branch the rule names, else the first.
+const nearestTo = (place: CustomerPlace, branches: BranchPoint[]) => (typeof place.latitude === "number" && typeof place.longitude === "number" ? nearestBranch(branches, { latitude: place.latitude, longitude: place.longitude }) : null);
 const firstBranch = (branches: BranchPoint[]) => branches.find(b => b.active)?.id ?? null;
 const hasPin = (c: CustomerPlace): c is CustomerPlace & { latitude: number; longitude: number } => typeof c.latitude === "number" && typeof c.longitude === "number";
 
 // Works out the delivery fee for one customer. `rules` null means delivery was never configured in Settings: delivery stays free of charge, as before.
 export function quoteDelivery(rules: DeliveryRules | null, branches: BranchPoint[], place: CustomerPlace, subtotalMinor: number, fallbackMinimumMinor: number, currency = "AED"): Quote {
   const fils = minorOf(currency);
-  if (!rules) return { status: "ok", feeMinor: 0, minimumMinor: fallbackMinimumMinor, etaMinutes: null, branchId: firstBranch(branches), manual: false, free: true };
+  if (!rules) return { status: "ok", feeMinor: 0, minimumMinor: fallbackMinimumMinor, etaMinutes: null, branchId: nearestTo(place, branches) ?? firstBranch(branches), manual: false, free: true };
   if (rules.status === "pickup") return { status: "unavailable", reason: "PICKUP_ONLY" };
   if (rules.status === "paused") return { status: "unavailable", reason: "PAUSED" };
   const base = mins(rules.eta), baseMin = fils(rules.minOrder) || fallbackMinimumMinor;
   const done = (feeMinor: number, o: { min?: string; eta?: string; branch?: string | null; km?: number }): Extract<Quote, { status: "ok" }> => {
     const free = rules.freeAbove !== "" && fils(rules.freeAbove) > 0 && subtotalMinor >= fils(rules.freeAbove);
-    return { status: "ok", feeMinor: free ? 0 : feeMinor, minimumMinor: fils(o.min) || baseMin, etaMinutes: mins(o.eta) ?? base, branchId: o.branch || firstBranch(branches), manual: false, free: free || feeMinor === 0, ...(o.km !== undefined ? { distanceKm: Math.round(o.km * 10) / 10 } : {}) };
+    return { status: "ok", feeMinor: free ? 0 : feeMinor, minimumMinor: fils(o.min) || baseMin, etaMinutes: mins(o.eta) ?? base, branchId: nearestTo(place, branches) ?? (o.branch || firstBranch(branches)), manual: false, free: free || feeMinor === 0, ...(o.km !== undefined ? { distanceKm: Math.round(o.km * 10) / 10 } : {}) };
   };
   switch (rules.method) {
     case null: return done(0, {});

@@ -5,6 +5,7 @@ import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
 import { AppError } from "@/server/errors";
 import { profileInclude, listBusinesses } from "./repository";
+import { announceBranch } from "@/modules/devices/service";
 import { createBusinessSchema, profileSchema, locationUpdateSchema, memberSchema } from "./validators";
 import { steps, evaluateReadiness } from "../onboarding/readiness";
 import { MARKETS, isCountryCode, marketFromDial } from "../market/countries";
@@ -70,6 +71,7 @@ export async function updateBusiness(userId: string, id: string, input: unknown,
     await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId: id, userId, entityType: "Business", entityId: id, action: "business.updated", requestId,
       beforeData: { name: business.name, revision }, afterData: { name: data.name, revision: revision + 1, locationId } } });
   });
+  await announceBranch(id, location.id).catch(() => undefined);
   return getBusiness(userId, id);
 }
 export async function updateLocation(userId: string, businessId: string, locationId: string, input: unknown, requestId: string) {
@@ -86,6 +88,7 @@ export async function updateLocation(userId: string, businessId: string, locatio
     await updateProgress(tx, businessId);
     await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "Location", entityId: locationId, action: "location.updated", requestId, beforeData: { name: existing.name }, afterData: { name: data.name } } });
   });
+  await announceBranch(businessId, locationId).catch(() => undefined); // terminals at this branch show the new name
   return getBusiness(userId, businessId);
 }
 export async function readiness(userId: string, id: string) {

@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import WebSocket from "ws";
 import { db } from "../src/server/db";
 import { createBusiness } from "../src/modules/business/service";
-import { businessChannel, cancelPairing, deviceChannel, disconnectDevice, getPairing, listDevices, pairDevice, publish, realtimeTicket, signTicket, startPairing, testPrint, updateDevice, verifyTicket } from "../src/modules/devices/service";
+import { businessChannel, cancelPairing, deviceChannel, announceBranch, disconnectDevice, getPairing, listDevices, pairDevice, publish, realtimeTicket, signTicket, startPairing, testPrint, unpairDevice, updateDevice, verifyTicket } from "../src/modules/devices/service";
 import { startRealtime, type Realtime } from "../src/realtime/server";
 const enabled = process.env.RUN_DB_TESTS === "true";
 
@@ -96,5 +96,18 @@ describe.skipIf(!enabled)("connecting a terminal", () => {
     await until(() => dash.msgs.some(m => m.event === "device.removed"));
     await expect(open(`ws://127.0.0.1:${rt.port}/ws/device`, { authorization: `Bearer ${key}` })).rejects.toThrow("HTTP 401");
     expect((await listDevices(owner, biz)).devices).toHaveLength(0); dash.ws.close();
+  });
+  it("the terminal hears about renames and branch edits, and leaving from the terminal removes it from the dashboard", async () => {
+    const p = await startPairing(owner, biz, {}), d = await pairDevice({ code: p.code, serial: "SERIAL-PAIR-0002" }, "10.0.0.4");
+    const events = async (type: string) => db.deviceEvent.findMany({ where: { channel: deviceChannel(d.deviceId), type }, orderBy: { createdAt: "asc" } });
+    await updateDevice(owner, biz, d.deviceId, { name: "Bar terminal" });
+    expect((await events("device.updated")).at(-1)?.payload).toMatchObject({ name: "Bar terminal", branch: "Main" });
+    await db.location.update({ where: { id: d.branch.id }, data: { name: "Main Street" } });
+    await announceBranch(biz, d.branch.id);
+    expect((await events("device.updated")).at(-1)?.payload).toMatchObject({ branch: "Main Street", locationId: d.branch.id });
+    await unpairDevice({ id: d.deviceId, businessId: biz });
+    expect((await listDevices(owner, biz)).devices).toHaveLength(0);
+    expect((await events("device.revoked")).length).toBe(1);
+    expect((await db.deviceEvent.findMany({ where: { channel: businessChannel(biz), type: "device.removed" } })).some(e => (e.payload as { deviceId?: string }).deviceId === d.deviceId)).toBe(true);
   });
 });
