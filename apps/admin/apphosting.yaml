@@ -36,6 +36,11 @@ env:
   # --- realtime service (terminals and live dashboards): its own Cloud Run service, see DEPLOY_REALTIME.md ---
   - variable: REALTIME_URL
     value: wss://lumia-order-realtime-445206340283.me-central1.run.app # later: wss://realtime.order.lumia.ae (see DEPLOY_REALTIME.md, step 3)
+  # --- Google Maps: address suggestions and the map for branch locations. A public browser key kept in Secret Manager (restrict it to this site's address in Google Cloud);
+  #     read when the app is built. Without it the app uses the free OpenStreetMap search and map. ---
+  - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    secret: lumia-google-maps-key
+    availability: [BUILD, RUNTIME]
   # --- lumia-order-api ---
   - variable: LUMIA_API_URL
     value: https://api.order.lumia.ae
