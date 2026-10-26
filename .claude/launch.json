@@ -46,6 +46,33 @@
         "--experimental-https"
       ],
       "port": 3000
+    },
+    {
+      "name": "admin-local",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd apps/admin && DATABASE_URL='mongodb://127.0.0.1:27017/lumia_order?replicaSet=rs0&directConnection=true' AUTH_TEST_MODE=true SUPER_ADMIN_PHONES=+971588031592 LUMIA_API_URL=http://127.0.0.1:4000 APP_URL=http://localhost:3000 BETTER_AUTH_URL=http://localhost:3000 NEXT_PUBLIC_MARKETING_URL=http://localhost:5180 NEXT_PUBLIC_VAT_GATE=off npm run dev"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "landing-local",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "VITE_FORCE_COUNTRY=SA npm run dev -- --port 5180"
+      ],
+      "port": 5180
+    },
+    {
+      "name": "realtime-local",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd apps/admin && DATABASE_URL='mongodb://127.0.0.1:27017/lumia_order?replicaSet=rs0&directConnection=true' PORT=3001 node --env-file=.env --import tsx src/realtime/main.ts"
+      ],
+      "port": 3001
     }
   ]
 }

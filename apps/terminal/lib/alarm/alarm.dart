@@ -1,6 +1,8 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 
+const _volume = MethodChannel('lumia/volume');
+
 // The new-order alarm: loops until nobody is waiting for an answer. Plays on the alarm volume so it is loud even if media is muted.
 abstract class Alarm {
   Future<void> setRinging(bool ringing);
@@ -26,6 +28,7 @@ class SoundAlarm implements Alarm {
     try {
       if (ringing) {
         await _init();
+        try { await _volume.invokeMethod('maxAlarm'); } catch (_) {} // as loud as the device goes
         await _player.play(AssetSource('alarm.wav'));
         HapticFeedback.vibrate();
       } else {
