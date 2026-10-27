@@ -16,7 +16,7 @@ describe("monthly periods and top-up prices", () => {
     expect(usagePeriod(new Date("2026-10-04T10:00:00Z"), new Date("2026-10-04T09:00:00Z")).start).toEqual(new Date("2026-10-04T10:00:00Z"));
   });
   it("prices a top-up with 5% VAT as its own amount", () => {
-    expect(quoteTopUp("orders50", 5)).toMatchObject({ subtotalMinor: 7900, vatMinor: 395, totalMinor: 8295 });
+    expect(quoteTopUp("orders50", 5)).toMatchObject({ subtotalMinor: 9900, vatMinor: 495, totalMinor: 10395 });
     expect(TOPUPS.orders200.orders).toBe(200); expect(LIMITS.pro.orders).toBeGreaterThan(LIMITS.plus.orders); expect(LIMITS.plus.orders).toBeGreaterThan(LIMITS.starter.orders); expect(TRIAL_LIMITS.orders).toBeLessThan(LIMITS.starter.orders); expect(TRIAL_LIMITS.imports).toBe(2);
   });
 });

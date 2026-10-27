@@ -3,12 +3,12 @@ import { db } from "@/server/db";
 import { lumiaApi } from "@/server/lumia-api";
 import { brandedEmail } from "@/modules/email/layout";
 import { MARKETS } from "@/modules/market/countries";
-import { TRIAL_DAYS, accessOf, trialInfo } from "./service";
+import { AUTH_REQUIRED, TRIAL_DAYS, accessOf, trialInfo } from "./service";
 
 // Reminder emails about the trial and the plan, sent from the hourly billing job (through lumia-order-api).
 // Each email goes out once per period: a BillingNotice row is claimed first, and removed again if the email could not be sent so the next run retries.
-type Kind = "trial_3d" | "trial_1d" | "trial_ended" | "plan_ending_3d" | "plan_ending_1d" | "payment_failed" | "plan_ended";
-interface Vars { business: string; date?: string; graceDate?: string }
+type Kind = "trial_3d" | "trial_1d" | "trial_ended" | "plan_ending_3d" | "plan_ending_1d" | "payment_failed" | "payment_action" | "plan_ended" | "customer_waiting" | "customers_waiting_day";
+interface Vars { business: string; date?: string; graceDate?: string; customer?: string }
 const DAY = 86_400_000, VAT_COUNTRIES = Object.values(MARKETS).filter(m => m.requiresVerifiedVatForSaas).map(m => m.code);
 
 const COPY: Record<Kind, { en: (v: Vars) => [string, string]; ar: (v: Vars) => [string, string] }> = {
@@ -24,13 +24,19 @@ const COPY: Record<Kind, { en: (v: Vars) => [string, string]; ar: (v: Vars) => [
     ar: v => ["تنتهي باقتك غداً", `تنتهي باقتك لـ ${v.business} في ${v.date}. أعد تفعيلها من صفحة الفوترة اليوم حتى لا يتوقف شيء.`] },
   payment_failed: { en: v => ["We couldn’t renew your plan", `The renewal payment for ${v.business} failed. Everything keeps working until ${v.graceDate}. Update your card in Billing before then, otherwise the dashboard is locked and the assistant stops replying.`],
     ar: v => ["تعذّر تجديد باقتك", `فشلت دفعة التجديد لـ ${v.business}. يستمر كل شيء بالعمل حتى ${v.graceDate}. حدّث بطاقتك من صفحة الفوترة قبل ذلك، وإلا ستُقفل لوحة التحكم ويتوقف المساعد عن الرد.`] },
+  payment_action: { en: v => ["Your bank needs you to confirm your renewal", `Your bank asked for extra confirmation, so the renewal payment for ${v.business} could not go through. Everything keeps working until ${v.graceDate}. Open Billing, choose “Update card” and enter your card again so the bank can confirm it. Otherwise the dashboard is locked and the assistant stops replying.`],
+    ar: v => ["يحتاج بنكك إلى تأكيدك لتجديد الباقة", `طلب البنك تأكيداً إضافياً فلم تتم دفعة التجديد لـ ${v.business}. يستمر كل شيء بالعمل حتى ${v.graceDate}. افتح صفحة الفوترة واختر «تحديث البطاقة» وأدخل بطاقتك من جديد ليؤكدها البنك. وإلا ستُقفل لوحة التحكم ويتوقف المساعد عن الرد.`] },
   plan_ended: { en: v => ["Your plan has ended", `The plan for ${v.business} has ended. The dashboard is locked and the WhatsApp assistant has stopped replying. Choose a plan to switch everything back on.`],
     ar: v => ["انتهت باقتك", `انتهت باقة ${v.business}. تم قفل لوحة التحكم وتوقف مساعد واتساب عن الرد. اختر باقة لإعادة تشغيل كل شيء.`] },
+  customer_waiting: { en: v => [`${v.customer} wrote to you on WhatsApp`, `${v.customer} sent a message to ${v.business} on WhatsApp, but the assistant cannot reply because your subscription has ended. The customer was told to contact you directly. Their message is saved and you will see it as soon as you choose a plan.`],
+    ar: v => [`${v.customer} راسلك على واتساب`, `أرسل ${v.customer} رسالة إلى ${v.business} على واتساب، لكن المساعد لا يستطيع الرد لأن اشتراكك انتهى. طُلب من العميل التواصل معك مباشرة. رسالته محفوظة وستراها فور اختيارك باقة.`] },
+  customers_waiting_day: { en: v => ["Customers are writing to you on WhatsApp", `Customers wrote to ${v.business} on WhatsApp today and the assistant could not reply because your subscription has ended. Their messages are saved. Choose a plan to switch the assistant back on.`],
+    ar: v => ["عملاؤك يراسلونك على واتساب", `راسلك عملاء على واتساب اليوم لكن المساعد لم يستطع الرد لأن اشتراكك انتهى. رسائلهم محفوظة. اختر باقة لإعادة تشغيل المساعد.`] },
 };
 
 export function renderEmail(kind: Kind, lang: "en" | "ar", vars: Vars, link: string) {
   const [subject, body] = COPY[kind][lang](vars);
-  const ended = kind === "trial_ended" || kind === "plan_ended", failed = kind === "payment_failed";
+  const ended = kind === "trial_ended" || kind === "plan_ended" || kind.startsWith("customer"), failed = kind === "payment_failed" || kind === "payment_action";
   const { html, text } = brandedEmail({
     lang, heading: subject, body: [lang === "ar" ? `مرحباً ${vars.business}،` : `Hello ${vars.business},`, body], preheader: body.slice(0, 110),
     button: { label: lang === "ar" ? (failed ? "تحديث البطاقة" : "اختيار باقة") : failed ? "Update my card" : ended || kind.startsWith("trial") ? "Choose a plan" : "Open Billing", url: link },
@@ -56,7 +62,7 @@ const zoneOf = async (businessId: string) => (await db.business.findUnique({ whe
 const fmt = (d: Date, timeZone = "Asia/Dubai") => d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone });
 
 // At most one email a day per restaurant (calendar day in its own time zone). The two final notices ("trial ended", "plan ended") are outcomes, not reminders, and are exempt.
-const UNCAPPED: Kind[] = ["trial_ended", "plan_ended"];
+const UNCAPPED: Kind[] = ["trial_ended", "plan_ended", "customer_waiting", "customers_waiting_day"];
 export const startOfDay = (now: Date, timeZone: string) => {
   const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }).formatToParts(now).map(x => [x.type, Number(x.value)]));
   const offset = Date.UTC(p.year!, p.month! - 1, p.day!, p.hour!, p.minute!, p.second!) - Math.floor(now.getTime() / 1000) * 1000;
@@ -79,6 +85,15 @@ export async function notify(businessId: string, kind: Kind, periodKey: string, 
   if (!sent) { await db.billingNotice.deleteMany({ where: { businessId, kind, periodKey } }); return false; } // nobody got it (no email provider yet, or no address): try again next run
   console.info(JSON.stringify({ level: "info", code: "REMINDER_SENT", kind, emails: sent }));
   return true;
+}
+
+// A customer wrote while the plan is over. The first 3 customers of this lock period each get their own email; after that, one summary email a day.
+// `lockKey` names the lock period (the plan's end date, or "trial"), so a later expiry starts fresh. Returns whether an email went out.
+export async function notifyCustomerWaiting(businessId: string, phone: string, name: string | null, lockKey: string, now = new Date()): Promise<boolean> {
+  const sent = await db.billingNotice.count({ where: { businessId, kind: "customer_waiting", periodKey: { endsWith: `|${lockKey}` } } });
+  if (sent < 3) return notify(businessId, "customer_waiting", `${phone}|${lockKey}`, { customer: name?.trim() || phone });
+  const day = new Intl.DateTimeFormat("en-CA", { timeZone: await zoneOf(businessId) }).format(now);
+  return notify(businessId, "customers_waiting_day", `${day}|${lockKey}`, {});
 }
 
 export async function runReminders(now = new Date()) {
@@ -106,7 +121,7 @@ export async function runReminders(now = new Date()) {
   for (const s of subs) {
     const key = s.currentPeriodEnd.toISOString().slice(0, 10);
     if (s.status === "ACTIVE") await count(notify(s.businessId, s.currentPeriodEnd.getTime() - t <= DAY ? "plan_ending_1d" : "plan_ending_3d", key, { date: fmt(s.currentPeriodEnd, await zoneOf(s.businessId)) }));
-    else if (s.status === "PAST_DUE") { const a = accessOf(s, new Date(0), t); if (a.active && a.graceEndsAt) await count(notify(s.businessId, "payment_failed", `${key}:${s.failedAttempts}`, { graceDate: fmt(new Date(a.graceEndsAt), await zoneOf(s.businessId)) })); }
+    else if (s.status === "PAST_DUE") { const a = accessOf(s, new Date(0), t); if (a.active && a.graceEndsAt) await count(notify(s.businessId, s.lastFailure === AUTH_REQUIRED ? "payment_action" : "payment_failed", `${key}:${s.failedAttempts}`, { graceDate: fmt(new Date(a.graceEndsAt), await zoneOf(s.businessId)) })); }
     else await count(notify(s.businessId, "plan_ended", key, {}));
   }
   return out;

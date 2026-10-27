@@ -132,6 +132,13 @@ describe.skipIf(!enabled)("Lumia-run subscriptions, Stripe only takes payments",
     expect(await sub()).toMatchObject({ status: "ENDED", nextChargeAt: null }); expect((await getSubscription(owner, biz)).entitlements.plan).toBeNull();
     expect(await runBilling(new Date(now.getTime() + 99 * 86400000))).toMatchObject({ checked: 0 });
   });
+  it("trying new cards on an overdue renewal never uses up the automatic retries", async () => {
+    const next = new Date(Date.now() + 86400000);
+    await db.subscription.updateMany({ where: { businessId: biz }, data: { status: "PAST_DUE", failedAttempts: 1, nextChargeAt: next, currentPeriodEnd: new Date(Date.now() - 86400000), stripePaymentMethodId: "pm_old", billing: "monthly", lastFailure: null } });
+    charge = { status: "failed", failureMessage: "Declined" };
+    for (const n of [1, 2, 3, 4]) { session = paid({ kind: "card" }, undefined, { paymentMethodId: `pm_bad${n}` }); await confirmSession(owner, biz, { sessionId: session.sessionId }); }
+    expect(await sub()).toMatchObject({ status: "PAST_DUE", failedAttempts: 1, lastFailure: "Declined" }); expect((await sub()).nextChargeAt!.getTime()).toBe(next.getTime());
+  });
   it("a new card fixes an overdue renewal straight away", async () => {
     await db.subscription.updateMany({ where: { businessId: biz }, data: { status: "PAST_DUE", failedAttempts: 1, nextChargeAt: new Date(Date.now() + 86400000), currentPeriodEnd: new Date(Date.now() - 86400000), stripePaymentMethodId: "pm_old", billing: "monthly" } });
     expect(await startCardUpdate(owner, biz)).toMatchObject({ clientSecret: "cs_new_secret" }); expect(calls.at(-1)!.body).toMatchObject({ mode: "setup", customerId: "cus_1", metadata: { kind: "card" } });
@@ -140,7 +147,7 @@ describe.skipIf(!enabled)("Lumia-run subscriptions, Stripe only takes payments",
     const s = await sub(); expect(s).toMatchObject({ status: "ACTIVE", stripePaymentMethodId: "pm_new", failedAttempts: 0 }); expect(s.card).toMatchObject({ brand: "mastercard", last4: "4444" });
     expect(calls.filter(c => c.path === "/internal/billing/charge").at(-1)!.body.paymentMethodId).toBe("pm_new");
   });
-  it("upgrades now for the time left, schedules downgrades and cycle changes for the next renewal, and cancels at period end", async () => {
+  it("upgrades now for the time left, refuses downgrades, schedules a longer cycle for the next renewal, and cancels at period end", async () => {
     const start = new Date(Date.now() - 10 * 86400000), end = new Date(Date.now() + 20 * 86400000);
     await db.subscription.updateMany({ where: { businessId: biz }, data: { plan: "starter", billing: "monthly", status: "ACTIVE", currentPeriodStart: start, currentPeriodEnd: end, nextChargeAt: end, failedAttempts: 0, pendingPlan: null, pendingBilling: null, cancelAtPeriodEnd: false } });
     const q = await quotePlanChange(owner, biz, { plan: "pro", billing: "monthly" }); expect(q).toMatchObject({ kind: "upgrade", now: true }); expect((q as any).totalMinor).toBeGreaterThan(15000); expect((q as any).totalMinor).toBeLessThan(20000);
@@ -150,17 +157,22 @@ describe.skipIf(!enabled)("Lumia-run subscriptions, Stripe only takes payments",
     expect(calls.find(c => c.path === "/internal/billing/charge")!.body.amountMinor).toBe((q as any).totalMinor);
     expect((await listInvoices(owner, biz)).find(i => i.kind === "UPGRADE")).toMatchObject({ totalMinor: (q as any).totalMinor });
     expect((await getSettings(owner, biz)).branchLimit).toBe(3);
-    // downgrade waits for the renewal
-    expect(await changePlan(owner, biz, { plan: "plus", billing: "monthly" })).toMatchObject({ plan: "pro", pendingPlan: "plus" });
-    expect((await getSubscription(owner, biz)).nextCharge).toMatchObject({ amountMinor: quoteRenewal("plus", "monthly", 0, 5).totalMinor });
-    expect(await changePlan(owner, biz, { plan: "pro", billing: "monthly" })).toMatchObject({ pendingPlan: undefined }); // choosing the current plan again undoes it
-    await changePlan(owner, biz, { plan: "plus", billing: "yearly" }); expect(await sub()).toMatchObject({ pendingPlan: "plus", pendingBilling: "yearly" });
+    // plans only go up: a smaller plan is refused, a longer cycle waits for the renewal
+    expect(await quotePlanChange(owner, biz, { plan: "plus", billing: "monthly" })).toMatchObject({ kind: "unavailable" });
+    await expect(changePlan(owner, biz, { plan: "plus", billing: "monthly" })).rejects.toMatchObject({ code: "DOWNGRADE_NOT_AVAILABLE" });
+    expect(await changePlan(owner, biz, { plan: "pro", billing: "yearly" })).toMatchObject({ plan: "pro", pendingBilling: "yearly" });
+    expect((await getSubscription(owner, biz)).nextCharge).toMatchObject({ amountMinor: quoteRenewal("pro", "yearly", 0, 5).totalMinor });
+    expect(await changePlan(owner, biz, { plan: "pro", billing: "monthly" })).toMatchObject({ pendingBilling: undefined }); // choosing the current plan again undoes it
+    await changePlan(owner, biz, { plan: "pro", billing: "yearly" }); expect(await sub()).toMatchObject({ plan: "pro", pendingBilling: "yearly" });
+    await db.subscription.updateMany({ where: { businessId: biz }, data: { billing: "yearly" } });
+    await expect(changePlan(owner, biz, { plan: "pro", billing: "monthly" })).rejects.toMatchObject({ code: "DOWNGRADE_NOT_AVAILABLE" });
+    await db.subscription.updateMany({ where: { businessId: biz }, data: { billing: "monthly" } });
     charge = { status: "succeeded", paymentIntentId: "pi_next" }; calls = [];
     await runBilling(new Date(end.getTime() + 1000));
-    expect(calls.find(c => c.path === "/internal/billing/charge")!.body.amountMinor).toBe(quoteRenewal("plus", "yearly", 0, 5).totalMinor);
-    expect(await sub()).toMatchObject({ plan: "plus", billing: "yearly", pendingPlan: null });
+    expect(calls.find(c => c.path === "/internal/billing/charge")!.body.amountMinor).toBe(quoteRenewal("pro", "yearly", 0, 5).totalMinor);
+    expect(await sub()).toMatchObject({ plan: "pro", billing: "yearly", pendingBilling: null });
     // cancel: keeps the plan until the period ends, then no charge
-    expect(await setCancel(owner, biz, true)).toMatchObject({ cancelAtPeriodEnd: true, nextCharge: null }); expect((await getSubscription(owner, biz)).entitlements.plan).toBe("plus");
+    expect(await setCancel(owner, biz, true)).toMatchObject({ cancelAtPeriodEnd: true, nextCharge: null }); expect((await getSubscription(owner, biz)).entitlements.plan).toBe("pro");
     expect(await setCancel(owner, biz, false)).toMatchObject({ cancelAtPeriodEnd: false });
     await setCancel(owner, biz, true); calls = [];
     const after = new Date((await sub()).currentPeriodEnd.getTime() + 1000);

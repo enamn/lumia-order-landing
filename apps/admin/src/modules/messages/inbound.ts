@@ -6,6 +6,7 @@ import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
 import { autoReply, handleVoice, replyToOptChange, replyToUnreadable, UNREADABLE_TYPES } from "./ai";
 import { sendWelcome } from "./welcome";
+import { handleLockedInbound } from "./locked";
 import { accessFor } from "@/modules/billing/service";
 import { isCountryCode } from "@/modules/market/countries";
 import { regionFrom } from "@/modules/market/regions";
@@ -19,7 +20,7 @@ const OPT_IN = /^(start|subscribe|اشتراك|ابدأ)[.!؟?\s]*$/i;
 export const inboundSchema = z.object({ messages: z.array(z.object({
   phoneNumberId: z.string().regex(/^\d{5,30}$/), wabaId: z.string().regex(/^\d{5,30}$/).optional(),
   messageId: z.string().min(1).max(200), senderId: z.string().regex(/^\d{6,20}$/), timestamp: z.string().regex(/^\d{9,12}$/),
-  type: z.string().min(1).max(40), location: z.object({ latitude: z.number().min(-90).max(90), longitude: z.number().min(-180).max(180), name: z.string().max(200).optional(), address: z.string().max(300).optional() }).strict().optional(), mediaId: z.string().regex(/^\d{5,30}$/).optional(), textBody: z.string().max(8192).optional(), senderName: z.string().max(200).optional(),
+  type: z.string().min(1).max(40), interactiveId: z.string().min(1).max(200).optional(), location: z.object({ latitude: z.number().min(-90).max(90), longitude: z.number().min(-180).max(180), name: z.string().max(200).optional(), address: z.string().max(300).optional() }).strict().optional(), mediaId: z.string().regex(/^\d{5,30}$/).optional(), textBody: z.string().max(8192).optional(), senderName: z.string().max(200).optional(),
 }).strict()).min(1).max(100) }).strict();
 
 export type InboundResult = { stored: number; duplicates: number; unmatched: number; welcomed?: number };
@@ -28,11 +29,12 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
   const { messages } = inboundSchema.parse(input);
   const result: InboundResult = { stored: 0, duplicates: 0, unmatched: 0 };
   const toAnswer: { businessId: string; conversationId: string; externalMessageId: string; kind: "text" | "voice" | "unreadable" | "optout" | "optin"; mediaId?: string }[] = [];
+  const toTell: Parameters<typeof handleLockedInbound>[0][] = [];
   for (const m of messages) {
     const account = await db.whatsAppAccount.findFirst({ where: { phoneNumberId: m.phoneNumberId, status: "CONNECTED" }, select: { businessId: true, wabaId: true } });
     if (!account || (account.wabaId && m.wabaId && account.wabaId !== m.wabaId)) { result.unmatched++; continue; }
     // Trial over or plan ended (after the grace period): the assistant is off. Messages are still stored for the owner.
-    const live = (await accessFor(account.businessId)).liveOrdering;
+    const access = await accessFor(account.businessId), live = access.liveOrdering;
     if (m.type === "request_welcome") {
       if (!live) continue;
       // Someone just opened the chat: greet them. A failed greeting must not fail the whole batch.
@@ -41,17 +43,18 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
       continue;
     }
     const phone = `+${m.senderId}`; const at = new Date(Number(m.timestamp) * 1000);
-    let pending: (typeof toAnswer)[number] | undefined;
+    let pending: (typeof toAnswer)[number] | undefined, who: { conversationId: string; name: string | null } | undefined;
     try {
       await transaction(async tx => {
         const customer = await tx.customer.upsert({ where: { businessId_phone: { businessId: account.businessId, phone } }, create: { businessId: account.businessId, phone, ...(m.senderName ? { displayName: m.senderName } : {}) }, update: {} });
         if (m.senderName && !customer.displayName) await tx.customer.update({ where: { id: customer.id }, data: { displayName: m.senderName } });
-        const open = await tx.conversation.findFirst({ where: { businessId: account.businessId, customerId: customer.id, status: "OPEN" }, orderBy: { lastMessageAt: "desc" } });
+        const open = await tx.conversation.findFirst({ where: { businessId: account.businessId, customerId: customer.id, status: "OPEN", OR: [{ phoneNumberId: m.phoneNumberId }, { phoneNumberId: null }, { phoneNumberId: { isSet: false } }] }, orderBy: { lastMessageAt: "desc" } });
         const conversation = open ?? await tx.conversation.create({ data: { businessId: account.businessId, customerId: customer.id, phoneNumberId: m.phoneNumberId, lastMessageAt: at } });
         // A shared location pin is kept on the conversation (for delivery pricing) and shown in the chat as readable text.
         const loc = m.type.toLowerCase() === "location" ? m.location : undefined;
         const shown = loc ? pinText(loc) : (m.textBody ?? null);
-        await tx.message.create({ data: { conversationId: conversation.id, externalMessageId: m.messageId, direction: "INBOUND", senderType: "CUSTOMER", messageType: m.type.toUpperCase(), textContent: shown, status: "RECEIVED", createdAt: at } });
+        who = { conversationId: conversation.id, name: customer.displayName ?? m.senderName ?? null };
+        await tx.message.create({ data: { conversationId: conversation.id, externalMessageId: m.messageId, direction: "INBOUND", senderType: "CUSTOMER", messageType: m.type.toUpperCase(), textContent: shown, ...(m.interactiveId ? { interactiveId: m.interactiveId } : {}), status: "RECEIVED", createdAt: at } });
         if (loc) await tx.conversation.update({ where: { id: conversation.id }, data: { customerLocation: { latitude: loc.latitude, longitude: loc.longitude, name: loc.name ?? "", address: loc.address ?? "", at: at.toISOString() } } });
         // Replying STOP stops offers for good (START turns them back on); neither reaches the assistant.
         const optText = m.type.toLowerCase() === "text" ? (m.textBody ?? "").trim() : "";
@@ -68,6 +71,8 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
       // Look the pin up (emirate, area, street) so the chat and the delivery pricing use real place names instead of coordinates. A failed lookup changes nothing.
       if (pending && live && m.type.toLowerCase() === "location" && m.location) await resolvePin(pending.conversationId, m.messageId, m.location).catch(() => undefined);
       result.stored++; if (pending && live) toAnswer.push(pending);
+      // Plan over: the assistant stays silent, but the owner and the customer are told (see locked.ts). STOP / START words are not messages to the restaurant.
+      if (!live && who && pending?.kind !== "optout" && pending?.kind !== "optin") toTell.push({ businessId: account.businessId, phone, customerName: who.name, phoneNumberId: m.phoneNumberId, conversationId: who.conversationId, access });
     } catch (error) {
       // Meta can deliver the same message more than once; the unique message ID makes that a no-op.
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") result.duplicates++; else throw error;
@@ -75,6 +80,7 @@ export async function recordInbound(input: unknown): Promise<InboundResult> {
   }
   // Messages are stored first and never lost; an AI failure only means no automatic reply.
   for (const t of toAnswer) await (t.kind === "optout" || t.kind === "optin" ? replyToOptChange(t, t.kind === "optout") : t.kind === "text" ? autoReply(t) : t.kind === "voice" ? handleVoice({ ...t, mediaId: t.mediaId! }) : replyToUnreadable(t)).catch((e: { code?: unknown }) => console.error(JSON.stringify({ level: "error", code: "AI_REPLY_FAILED", reason: typeof e?.code === "string" ? e.code : "UNKNOWN" })));
+  for (const t of toTell) await handleLockedInbound(t);
   return result;
 }
 

@@ -52,10 +52,11 @@ Bought on **Billing → Orders this month**, charged to the card on file with 5%
 
 | Pack | Price (before VAT) |
 |---|---|
-| 50 extra orders | AED 79 |
-| 200 extra orders | AED 249 |
+| 50 extra orders | AED 99 |
+| 200 extra orders | AED 349 |
 
 - Used only after the monthly orders, and never expire.
+- A pack always costs more per order (AED 1.98 and 1.75) than any plan (Starter 1.49, Plus 1.66, Pro 1.60), so upgrading is always the better deal.
 - Needs an active plan with a card; not allowed while a renewal is overdue.
 - A double click charges once; a failed card adds nothing.
 
@@ -168,9 +169,11 @@ Items go out one per line; if WhatsApp refuses line breaks in a parameter the sa
 | Free trial (14 days) | works | works |
 | Paid plan (`ACTIVE`) | works | works |
 | Renewal failed (`PAST_DUE`): **grace period** while the card is retried after 1, 3 and 5 days (about 9 days in total) | works | works |
-| Trial over, plan cancelled/ended, or retries used up | **locked: only the plans screen (and Log out)** | **fully off**, no message to customers; incoming messages are still stored |
+| Trial over, plan cancelled/ended, or retries used up | **locked: only the plans screen (and Log out)** | **fully off**; incoming messages are still stored. The number stays connected. A customer who writes gets one short notice a day (English + Arabic) to contact the restaurant directly; the owner is emailed (see below) |
 
 - Paying a plan unlocks everything at once. Server side, every dashboard API except subscription/billing answers `402 SUBSCRIPTION_REQUIRED` while locked.
 - Emails (from `noreply@…`, sent by lumia-order-api through Resend, to the restaurant's **verified contact email**; English or Arabic by the owner's language), each sent once per period by the hourly billing job: trial ends in 3 days, trial ends tomorrow, trial ended, plan ends in 3 days / tomorrow (cancelled plans), renewal failed (with the date the grace period ends), plan ended.
+- **Banks that ask for 3-D Secure:** a charge made without the cardholder present can be refused with “authentication required”. A renewal in that case is retried like any failed renewal, but the owner gets a specific email (“Your bank needs you to confirm your renewal”) and the Billing page says to choose **Update card** and enter the card again (the card form does the bank check once). Upgrades, top-ups and extra branches show the same instruction instead of a generic failure. Not built: confirming a single payment on the spot (needs the payment service to hand back the Stripe client secret).
+- **Customers writing after expiry** (trial ended or plan ended, not VAT setup): the first 3 customers of that lock period each trigger an email to the owner (“<name> wrote to you on WhatsApp”); after that, one summary email a day. These are not held back by the one-email-a-day limit. The customer notice is skipped when the owner turned automatic replies off, and for STOP/START words. Choosing a plan switches everything back on at once; the number is never disconnected.
 - Setup needed on lumia-order-api: `RESEND_API_KEY` and `EMAIL_FROM` (default `Lumia Order <noreply@order.lumia.ae>`); the sending domain must be verified in Resend. Until the key is set, no email goes out and the job retries every hour.
 - **Contact email:** phone sign-ups have no real email, so every restaurant without a verified one sees a banner at the top of the dashboard ("Add your email to get plan reminders") with the address field and a 6-digit code sent by email (valid 10 minutes, 30 s between codes, 5 codes an hour, 5 wrong guesses). The same address and a Verify button are in Settings → Profile → Email; changing the address un-verifies it. No verified email, no reminders.

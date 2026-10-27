@@ -39,7 +39,8 @@ export const REPLIES_PER_ORDER = 15;
 // Someone already halfway through an order may finish it even when the monthly orders are used up, up to this much extra.
 export const ORDER_BUFFER = 0.1;
 // Extra orders bought on top of the plan. They never expire and are used only after the monthly orders. Prices are before VAT, in AED.
-export const TOPUPS = { orders50: { orders: 50, price: 79 }, orders200: { orders: 200, price: 249 } } as const;
+// A pack always costs more per order than any plan (Starter 1.49, Plus 1.66, Pro 1.60 a month), so buying packs never beats upgrading. Packs: 1.98 and 1.75 per order.
+export const TOPUPS = { orders50: { orders: 50, price: 99 }, orders200: { orders: 200, price: 349 } } as const;
 export type TopUpId = keyof typeof TOPUPS;
 export const TOPUP_IDS = Object.keys(TOPUPS) as TopUpId[];
 export const UAE_BOOK: PriceBook = { country: "AE", currency: "AED", decimals: 2, plans: { starter: { monthly: PLANS.starter.monthly, yearly: PLANS.starter.yearly }, plus: { monthly: PLANS.plus.monthly, yearly: PLANS.plus.yearly }, pro: { monthly: PLANS.pro.monthly, yearly: PLANS.pro.yearly } }, extraBranch: { monthly: EXTRA_BRANCH.monthly, yearly: EXTRA_BRANCH.yearly }, topups: { orders50: TOPUPS.orders50.price, orders200: TOPUPS.orders200.price }, terminal: TERMINAL };

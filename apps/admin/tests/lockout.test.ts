@@ -75,6 +75,12 @@ describe.skipIf(!enabled)("trial and plan expiry", () => {
     await db.subscription.update({ where: { id: sub.id }, data: { status: "ENDED", nextChargeAt: null } }); calls = [];
     await expect(requireAccess(owner, biz)).rejects.toMatchObject({ code: "SUBSCRIPTION_REQUIRED" });
     await say("anyone?"); expect(ai().length).toBe(0);
+    // The customer is told once to call the restaurant, and the owner is emailed that someone wrote.
+    expect(calls.filter(c => c.path === "/internal/whatsapp/send").length).toBe(1);
+    expect(emails().filter(e => e.to === `lo-${suffix}@example.com`).map(e => e.subject)).toEqual(["Sara wrote to you on WhatsApp"]);
+    await say("hello??"); expect(calls.filter(c => c.path === "/internal/whatsapp/send").length).toBe(1); // no second notice the same day
+    expect(emails().length).toBe(1); // nor a second email for the same customer
+    calls = [];
     await runReminders(); expect(emails().filter(e => e.to === `lo-${suffix}@example.com`).map(e => e.subject)).toEqual(["Your plan has ended"]);
   });
   it("a paid plan unlocks it again", async () => {

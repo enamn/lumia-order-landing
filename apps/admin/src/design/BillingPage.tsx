@@ -1,7 +1,8 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// Billing inside the dashboard: plan and renewal, the card on file, plan changes, cancellation and invoices.
+// Billing inside the dashboard: plan and renewal, the card on file, upgrades, cancellation and invoices.
 // The subscription is Lumia's; Stripe only takes the payments, so every action here talks to Lumia's own API.
+// Plans only go up: a bigger plan starts now, a longer cycle starts at the renewal, and a smaller plan means cancelling and subscribing again.
 import React from "react";
 import { ContentLoader } from "@/components/lumia-loader";
 import { mountEmbeddedCheckout, type EmbeddedForm } from "@/lib/stripe-embed";
@@ -13,145 +14,222 @@ async function api(path: string, method = "GET", body?: unknown) {
   if (!res.ok) throw new Error(json.error?.message ?? json.message ?? "Something went wrong. Please try again.");
   return json.data ?? json;
 }
-const PLANS: [string, string, number, number][] = [["starter", "Starter", 149, 1548], ["plus", "Plus", 249, 2508], ["pro", "Pro", 399, 3948]];
-const RANK: Record<string, number> = { starter: 1, plus: 2, pro: 3 };
-const date = (iso?: string) => (iso ? new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "");
-const card: React.CSSProperties = { border: "1px solid #F0E4E8", borderRadius: 16, padding: "18px 22px", display: "flex", flexDirection: "column", gap: 14, minWidth: 0 };
+const fmtDate = (ar: boolean) => (iso?: string) => (iso ? new Date(iso).toLocaleDateString(ar ? "ar-AE-u-nu-latn" : "en-GB", { day: "numeric", month: "long", year: "numeric" }) : "");
+const num = (n: number) => n.toLocaleString("en-US");
+const INK = "#1A0815", MUTED = "#8A5A6E", LINE = "#F0E4E8", WASH = "#FFF7FA";
+const card: React.CSSProperties = { border: `1px solid ${LINE}`, borderRadius: 16, padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14, minWidth: 0, background: "#fff" };
 const h2: React.CSSProperties = { fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em", margin: 0 };
-const muted: React.CSSProperties = { fontSize: 14, color: "#8A5A6E", margin: 0, lineHeight: 1.5 };
-const outline: React.CSSProperties = { height: 40, padding: "0 16px", borderRadius: 12, border: "1.5px solid #ECD9E0", background: "#fff", fontWeight: 500, fontSize: 14, cursor: "pointer" };
-const gradient: React.CSSProperties = { height: 40, padding: "0 18px", borderRadius: 12, border: 0, background: "linear-gradient(90deg,#FF5577,#C93DFF)", color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer" };
+const muted: React.CSSProperties = { fontSize: 14, color: MUTED, margin: 0, lineHeight: 1.5 };
 const pill = (bg: string, fg: string): React.CSSProperties => ({ display: "inline-flex", alignItems: "center", height: 24, padding: "0 10px", borderRadius: 999, fontSize: 12, fontWeight: 600, background: bg, color: fg, whiteSpace: "nowrap" });
+const row: React.CSSProperties = { display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" };
+// Buttons are classes so they get hover and keyboard focus; the fill is a shade deeper than the brand gradient so white text reads at 4.5:1.
+const CSS = `
+.bl button,.bl a{font-family:inherit}
+.bl .b{min-height:44px;padding:0 18px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:background-color .15s,border-color .15s,filter .15s}
+.bl .b-out{border:1.5px solid #ECD9E0;background:#fff;color:${INK};font-weight:500}
+.bl .b-out:hover:not(:disabled){background:${WASH};border-color:#E2BCCB}
+.bl .b-fill{border:0;background:linear-gradient(90deg,#D92B55,#B02BE0);color:#fff}
+.bl .b-fill:hover:not(:disabled){filter:brightness(1.08)}
+.bl .b-danger{border:0;background:#B42318;color:#fff}
+.bl .b-danger:hover:not(:disabled){filter:brightness(1.1)}
+.bl .b:disabled{opacity:.5;cursor:not-allowed}
+.bl .lk{min-height:44px;padding:0 4px;border:0;background:none;font-size:14px;font-weight:600;color:#C0284F;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.bl .lk:disabled{opacity:.5;cursor:not-allowed}
+.bl .lk.quiet{color:${MUTED};font-weight:500}
+.bl button:focus-visible,.bl a:focus-visible{outline:2px solid #A62BD9;outline-offset:2px}
+.bl ::selection{background:#FFD3E1}
+.bl .nums{font-variant-numeric:tabular-nums}
+.bl .opt{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 24px;padding:18px 0;border-top:1px solid ${LINE}}
+.bl .opt:first-of-type{border-top:0;padding-top:4px}
+@media (max-width:640px){.bl .opt{grid-template-columns:1fr}.bl .card{padding:18px 16px}}
+`;
 
-export function BillingPage({ businessId, onChoosePlan, onChanged, focus }: { businessId: string; onChoosePlan: () => void; onChanged: () => void; focus?: string }) {
+type Ask = { where: string; title: string; rows: [string, string][]; note?: string; confirm: string; danger?: boolean; go: () => void };
+
+export function BillingPage({ businessId, onChoosePlan, onChanged, focus, ar = false }: { businessId: string; onChoosePlan: () => void; onChanged: () => void; focus?: string; ar?: boolean }) {
+  const t = (en: string, a: string) => (ar ? a : en), date = fmtDate(ar);
   const base = `/api/v1/businesses/${businessId}/subscription`;
   const [sub, setSub] = React.useState<any>(null), [invoices, setInvoices] = React.useState<any[]>([]), [error, setError] = React.useState(""), [busy, setBusy] = React.useState(""), [note, setNote] = React.useState("");
-  const [cycle, setCycle] = React.useState<"monthly" | "yearly">("monthly"), [quotes, setQuotes] = React.useState<Record<string, any>>({}), [cardForm, setCardForm] = React.useState<null | { secret: string; key: string; id: string }>(null);
-  const slot = React.useRef<HTMLDivElement>(null), form = React.useRef<EmbeddedForm | null>(null);
-  const load = React.useCallback(async () => { try { const [s, i] = await Promise.all([api(base), api(`${base}/invoices`)]); setSub(s); setInvoices(i); setCycle(s.billing ?? "monthly"); } catch (e: any) { setError(e.message); } }, [base]);
+  const [cycle, setCycle] = React.useState<"monthly" | "yearly">("monthly"), [quotes, setQuotes] = React.useState<Record<string, any>>({}), [cardForm, setCardForm] = React.useState<null | { secret: string; key: string; id: string }>(null), [ask, setAsk] = React.useState<Ask | null>(null);
+  const slot = React.useRef<HTMLDivElement>(null), form = React.useRef<EmbeddedForm | null>(null), alertRef = React.useRef<HTMLDivElement>(null), askRef = React.useRef<HTMLButtonElement>(null);
+  const load = React.useCallback(async () => { try { const [s, i] = await Promise.all([api(base), api(`${base}/invoices`)]); setSub(s); setInvoices(i); setCycle(c => (s.billing === "yearly" ? "yearly" : c)); } catch (e: any) { setError(e.message); } }, [base]);
   React.useEffect(() => { load(); }, [load]);
-  // quotes for each plan under the chosen cycle
-  React.useEffect(() => { if (!sub || !sub.plan || sub.status === "NONE") return; let live = true; Promise.all(PLANS.map(([id]) => api(`${base}/quote`, "POST", { plan: id, billing: cycle }).then(q => [id, q] as const).catch(() => [id, null] as const))).then(r => { if (live) setQuotes(Object.fromEntries(r)); }); return () => { live = false; }; }, [sub, cycle, base]);
+  // What each bigger plan would cost today, under the cycle being looked at (a yearly owner can only see yearly).
+  const target: "monthly" | "yearly" = sub?.billing === "yearly" ? "yearly" : cycle;
+  React.useEffect(() => { if (!sub || !sub.plan || !sub.catalog || sub.status === "NONE") return; let live = true; Promise.all(sub.catalog.filter((p: any) => p.rank >= (sub.catalog.find((c: any) => c.id === sub.plan)?.rank ?? 1)).map((p: any) => api(`${base}/quote`, "POST", { plan: p.id, billing: target }).then(q => [p.id, q] as const).catch(() => [p.id, null] as const))).then((r: any) => { if (live) setQuotes(Object.fromEntries(r)); }); return () => { live = false; }; }, [sub, target, base]);
   React.useEffect(() => {
     if (!cardForm || !slot.current) return; let gone = false;
-    mountEmbeddedCheckout(slot.current, cardForm.secret, cardForm.key, async () => { form.current?.destroy(); form.current = null; setCardForm(null); try { await api(`${base}/confirm`, "POST", { sessionId: cardForm.id }); setNote("Your card was updated."); await load(); onChanged(); } catch (e: any) { setError(e.message); } })
+    mountEmbeddedCheckout(slot.current, cardForm.secret, cardForm.key, async () => { form.current?.destroy(); form.current = null; setCardForm(null); try { await api(`${base}/confirm`, "POST", { sessionId: cardForm.id }); setNote(t("Your card was updated.", "تم تحديث بطاقتك.")); await load(); onChanged(); } catch (e: any) { setError(e.message); } })
       .then(f => { if (gone) f.destroy(); else form.current = f; }).catch(e => setError(e.message));
     return () => { gone = true; form.current?.destroy(); form.current = null; };
-  }, [cardForm, base, load, onChanged]);
+  }, [cardForm, base, load, onChanged]); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => { if (error) alertRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [error]);
+  React.useEffect(() => { if (ask) askRef.current?.focus(); }, [ask]);
 
-  const run = async (key: string, fn: () => Promise<any>, done: string) => { setBusy(key); setError(""); setNote(""); try { await fn(); setNote(done); await load(); onChanged(); } catch (e: any) { setError(e.message); } setBusy(""); };
+  const run = async (key: string, fn: () => Promise<any>, done: string) => { setBusy(key); setError(""); setNote(""); try { await fn(); setNote(done); setAsk(null); await load(); onChanged(); } catch (e: any) { setError(e.message); setAsk(null); } setBusy(""); };
   if (!sub && !error) return <ContentLoader />;
-  if (!sub) return <div style={{ color: "#B42318", fontSize: 15 }}>{error}</div>;
+  if (!sub) return <div role="alert" style={{ color: "#B42318", fontSize: 15 }}>{error}</div>;
   // Amounts are shown in the restaurant's own currency (dirham sign, riyal sign, or the code); invoices keep the currency they were issued in.
-  const cur0 = sub.prices?.currency ?? "AED", aed = (minor: number, c: string = cur0) => formatMoneyUi(minor, c);
-  const active = sub.status === "ACTIVE" || sub.status === "PAST_DUE", pastDue = sub.status === "PAST_DUE", canManage = sub.canManage;
-  const planName = PLANS.find(p => p[0] === sub.plan)?.[1] ?? "";
-  const status = pastDue ? ["Payment failed", "#FFF1DC", "#8A4B00"] : sub.status === "ENDED" ? ["Lapsed", "#FDECEC", "#B42318"] : sub.status === "CANCELED" ? ["Cancelled", "#F6EEF2", "#3D1C31"] : sub.cancelAtPeriodEnd ? ["Cancels " + date(sub.currentPeriodEnd), "#F6EEF2", "#3D1C31"] : active ? ["Active", "#E6F4EC", "#16704A"] : ["Free trial", "#FDEAF2", "#8A2040"];
+  const cur0 = sub.prices?.currency ?? "AED", money = (minor: number, c: string = cur0) => formatMoneyUi(minor, c), vatTag = sub.tax?.ratePercent > 0 ? " + VAT" : "";
+  const active = sub.status === "ACTIVE" || sub.status === "PAST_DUE", pastDue = sub.status === "PAST_DUE", canManage = sub.canManage, catalog: any[] = sub.catalog ?? [];
+  const mine = catalog.find(p => p.id === sub.plan), planName = mine?.name ?? "", ending = !!sub.cancelAtPeriodEnd;
+  const status = pastDue ? [t("Payment failed", "فشل الدفع"), "#FFF1DC", "#8A4B00"] : sub.status === "ENDED" ? [t("Lapsed", "انتهت"), "#FDECEC", "#B42318"] : sub.status === "CANCELED" ? [t("Cancelled", "ملغاة"), "#F6EEF2", "#3D1C31"] : ending ? [t("Ends ", "تنتهي في ") + date(sub.currentPeriodEnd), "#F6EEF2", "#3D1C31"] : active ? [t("Active", "نشطة"), "#E6F4EC", "#16704A"] : [t("Free trial", "تجربة مجانية"), "#FDEAF2", "#8A2040"];
+  const taxFirst = focus === "tax", noPlan = !active && sub.status === "NONE", ended = sub.status === "ENDED" || sub.status === "CANCELED";
+  const taxNode = <div id="billing-tax"><TaxDetails ar={ar} businessId={businessId} canManage={!!canManage} onSaved={() => { load(); onChanged(); }} /></div>;
+  const trialLeft = sub.trial?.daysLeft ?? 0, trialOn = noPlan && sub.trial?.started !== false && trialLeft > 0;
+  const includes = (p: any) => p ? (ar ? `${num(p.orders)} طلب شهرياً · ${p.branches} ${p.branches === 1 ? "فرع" : "فروع"}${p.extraBranches ? " (يمكن إضافة المزيد)" : ""} · ${p.staff} ${p.staff === 1 ? "حساب موظف" : "حسابات موظفين"}` : `${num(p.orders)} orders a month · ${p.branches} ${p.branches === 1 ? "branch" : "branches"}${p.extraBranches ? " (more can be added)" : ""} · ${p.staff} staff ${p.staff === 1 ? "account" : "accounts"}`) : "";
 
-  const tile: React.CSSProperties = { background: "#fff", border: "1px solid #F0E4E8", borderRadius: 14, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 4, minWidth: 0 };
-  const tileK: React.CSSProperties = { fontSize: 13, color: "#8A5A6E", margin: 0 };
-  const tileV: React.CSSProperties = { fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em", margin: 0, fontVariantNumeric: "tabular-nums", overflowWrap: "anywhere" };
-  const link: React.CSSProperties = { alignSelf: "flex-start", padding: 0, border: 0, background: "none", fontSize: 14, fontWeight: 600, color: "#C0284F", textDecoration: "underline", textUnderlineOffset: 3, cursor: "pointer" };
-  const taxFirst = focus === "tax";
-  const taxNode = <div id="billing-tax"><TaxDetails businessId={businessId} canManage={!!canManage} onSaved={() => { load(); onChanged(); }} /></div>;
-  const noPlan = !active && sub.status === "NONE", ended = sub.status === "ENDED" || sub.status === "CANCELED";
+  // Why a payment button is switched off, said next to the button instead of leaving it grey and silent.
+  const blocked = pastDue ? t("Update your card to pay the overdue renewal first.", "حدّث بطاقتك لدفع التجديد المتأخر أولاً.") : ending ? t("Your plan is set to end. Choose “Keep my plan” first.", "باقتك ستنتهي. اختر «الإبقاء على باقتي» أولاً.") : !sub.card ? t("Add a card first.", "أضف بطاقة أولاً.") : "";
+  const sheet = (where: string) => ask?.where === where && <div role="group" aria-label={ask.title} style={{ border: `1.5px solid ${ask.danger ? "#F0B8B2" : "#E6C3D0"}`, background: ask.danger ? "#FFF8F7" : WASH, borderRadius: 14, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
+    <b style={{ fontSize: 15 }}>{ask.title}</b>
+    <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "auto 1fr", gap: "6px 20px", fontSize: 14 }}>{ask.rows.map(([k, v]) => <React.Fragment key={k}><dt style={{ color: MUTED }}>{k}</dt><dd className="nums" style={{ margin: 0, fontWeight: 600, textAlign: "end" }}>{v}</dd></React.Fragment>)}</dl>
+    {ask.note && <p style={muted}>{ask.note}</p>}
+    <div style={row}>
+      <button ref={askRef} type="button" className={`b ${ask.danger ? "b-danger" : "b-fill"}`} disabled={!!busy} onClick={ask.go}>{busy ? t("Working…", "جارٍ التنفيذ…") : ask.confirm}</button>
+      <button type="button" className="b b-out" disabled={!!busy} onClick={() => setAsk(null)} onKeyDown={e => { if (e.key === "Escape") setAsk(null); }}>{t("Not now", "ليس الآن")}</button>
+    </div></div>;
+  const reason = (show: boolean) => show && blocked ? <p style={muted}>{blocked}</p> : null;
 
-  return <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 1000 }}>
-    <div><h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.035em", margin: 0 }}>Billing</h1><p style={{ ...muted, marginTop: 6 }}>Your plan, payment card and invoices.</p></div>
-    {error && <div role="alert" style={{ fontSize: 14, color: "#B42318", padding: "10px 14px", borderRadius: 12, background: "#FDECEC" }}>{error}</div>}
-    {note && <div role="status" style={{ fontSize: 14, color: "#16704A", fontWeight: 500, padding: "10px 14px", borderRadius: 12, background: "#E6F4EC" }}>{note}</div>}
+  const askCancel = () => setAsk({ where: "cancel", title: t("Cancel your plan?", "إلغاء باقتك؟"), rows: [[t("Stays active until", "تبقى فعّالة حتى"), date(sub.currentPeriodEnd)], [t("Charged after that", "المبلغ بعد ذلك"), t("Nothing", "لا شيء")]], note: t("Your restaurant keeps working until then. You can keep the plan again before that date, or subscribe to any plan afterwards.", "يستمر مطعمك بالعمل حتى ذلك التاريخ. يمكنك الإبقاء على الباقة قبله، أو الاشتراك في أي باقة بعده."), confirm: t("Cancel plan", "إلغاء الباقة"), danger: true, go: () => run("cancel", () => api(`${base}/cancel`, "POST"), t("Your plan will end at the end of this period.", "ستنتهي باقتك في نهاية هذه الفترة.")) });
+  const askTopUp = (pk: any) => setAsk({ where: "usage", title: ar ? `شراء ${num(pk.orders)} طلب إضافي` : `Buy ${num(pk.orders)} extra orders`, rows: [[t("Charged now", "المبلغ الآن"), money(pk.totalMinor) + (vatTag ? t(" (incl. VAT)", " (شامل الضريبة)") : "")], [t("Card", "البطاقة"), `${sub.card?.brand ?? t("Card", "بطاقة")} •••• ${sub.card?.last4 ?? ""}`], [t("Expire", "الصلاحية"), t("Never", "لا تنتهي")]], note: t("They are used after this month’s orders run out.", "تُستخدم بعد نفاد طلبات هذا الشهر."), confirm: t(`Pay ${money(pk.totalMinor)}`, `ادفع ${money(pk.totalMinor)}`), go: () => run("topup", () => api(`${base}/topup`, "POST", { pack: pk.id, requestId: crypto.randomUUID() }), ar ? `تمت إضافة ${num(pk.orders)} طلب.` : `${num(pk.orders)} orders added.`) });
+  const per = sub.billing === "yearly" ? t("year", "سنة") : t("month", "شهر"), b = sub.branches ?? {};
+  const askBranch = () => setAsk({ where: "branches", title: t("Add a branch", "إضافة فرع"), rows: [[t("Pay now", "ادفع الآن"), `${money(b.payNowMinor ?? 0)}${vatTag ? t(" (incl. VAT)", " (شامل الضريبة)") : ""}`], [t("Covers", "تغطي"), ar ? `باقي هذه الفترة، حتى ${date(sub.currentPeriodEnd)}` : `Rest of this period, to ${date(sub.currentPeriodEnd)}`], [t("From renewal", "من التجديد"), ar ? `${money(b.priceMinor ?? 0)}${vatTag} لكل ${per}` : `${money(b.priceMinor ?? 0)}${vatTag} per ${per}`], [t("Adds", "يضيف"), ar ? `${b.ordersPerBranch} طلب شهرياً` : `${b.ordersPerBranch} orders a month`]], note: t("Taking a branch off later happens at renewal, and nothing is refunded for the current period.", "إزالة الفرع لاحقاً تتم عند التجديد، ولا يُسترد شيء عن الفترة الحالية."), confirm: t(`Pay ${money(b.payNowMinor ?? 0)}`, `ادفع ${money(b.payNowMinor ?? 0)}`), go: () => run("branch", () => api(`${base}/branch`, "POST", { requestId: crypto.randomUUID() }), t("Branch added. You can set it up in Settings.", "تمت إضافة الفرع. يمكنك إعداده من الإعدادات.")) });
+  const askRemoveBranch = () => { const left = (b.pendingExtra ?? b.extra) - 1; setAsk({ where: "branches", title: t("Remove one extra branch", "إزالة فرع إضافي واحد"), rows: [[t("Takes effect", "يسري في"), date(sub.currentPeriodEnd)], [t("Extra branches after", "الفروع الإضافية بعد ذلك"), String(left)]], note: t("You keep it until then and nothing is refunded for this period. Switch the branch off in Settings first if it is active.", "تحتفظ به حتى ذلك الحين ولا يُسترد شيء عن هذه الفترة. أوقف الفرع من الإعدادات أولاً إن كان فعّالاً."), confirm: t("Remove at renewal", "إزالة عند التجديد"), go: () => run("branches", () => api(`${base}/branches`, "POST", { extra: left }), t("One fewer extra branch from your next renewal.", "فرع إضافي أقل ابتداءً من تجديدك القادم.")) }); };
+  const askUpgrade = (p: any, q: any) => setAsk({ where: "plan", title: t(`Upgrade to ${p.name}`, `الترقية إلى ${p.name}`), rows: [[t("Pay now", "ادفع الآن"), `${money(q.totalMinor)}${vatTag ? t(" (incl. VAT)", " (شامل الضريبة)") : ""}`], [t("Covers", "تغطي"), ar ? `باقي هذه الفترة، حتى ${date(sub.currentPeriodEnd)}` : `Rest of this period, to ${date(sub.currentPeriodEnd)}`], [t(`From ${date(q.renewsAt)}`, `من ${date(q.renewsAt)}`), ar ? `${money(q.renewalMinor)} لكل ${target === "yearly" ? "سنة" : "شهر"}` : `${money(q.renewalMinor)} per ${target === "yearly" ? "year" : "month"}`]], note: q.cycleChange ? t(`${p.name} starts now. Yearly billing starts at your next renewal.`, `تبدأ ${p.name} الآن. تبدأ الفوترة السنوية عند تجديدك القادم.`) : t(`${p.name} starts as soon as the payment goes through.`, `تبدأ ${p.name} فور نجاح الدفع.`), confirm: q.totalMinor ? t(`Pay ${money(q.totalMinor)} and upgrade`, `ادفع ${money(q.totalMinor)} وقم بالترقية`) : t("Upgrade now", "رقِّ الآن"), go: () => run("plan", () => api(`${base}/change`, "POST", { plan: p.id, billing: target }), t(`You’re on ${p.name} now.`, `أنت الآن على ${p.name}.`)) });
+  const askYearly = (q: any) => setAsk({ where: "plan", title: t("Switch to yearly billing", "التحويل إلى الفوترة السنوية"), rows: [[t("Pay now", "ادفع الآن"), t("Nothing", "لا شيء")], [t(`From ${date(q.effectiveAt)}`, `من ${date(q.effectiveAt)}`), ar ? `${money(q.renewalMinor)} لكل سنة` : `${money(q.renewalMinor)} per year`]], note: t("Your plan and limits stay the same. You can undo this before the renewal.", "تبقى باقتك وحدودها كما هي. يمكنك التراجع قبل التجديد."), confirm: t("Switch at renewal", "التحويل عند التجديد"), go: () => run("plan", () => api(`${base}/change`, "POST", { plan: sub.plan, billing: "yearly" }), t(`Yearly billing starts ${date(sub.currentPeriodEnd)}.`, `تبدأ الفوترة السنوية في ${date(sub.currentPeriodEnd)}.`)) });
+
+  const plan = (id: string) => sub.prices?.plans?.[id];
+  const monthEq = (id: string, c: "monthly" | "yearly") => { const p = plan(id); return p ? (c === "yearly" ? p.yearly / 12 : p.monthly) : null; };
+  const saving = mine && plan(mine.id) ? Math.round((1 - plan(mine.id).yearly / (plan(mine.id).monthly * 12)) * 100) : 0;
+  const higher = catalog.filter(p => p.rank > (mine?.rank ?? 0));
+
+  return <div className="bl" dir={ar ? "rtl" : "ltr"} lang={ar ? "ar" : "en"} style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 960 }}>
+    <style>{CSS}</style>
+    <div><h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: ar ? 0 : "-0.035em", margin: 0 }}>{t("Billing", "الفوترة")}</h1><p style={{ ...muted, marginTop: 6 }}>{t("Your plan, orders, payment card and invoices.", "باقتك وطلباتك وبطاقة الدفع والفواتير.")}</p></div>
+    <div ref={alertRef} style={{ display: error || note ? "flex" : "none", flexDirection: "column", gap: 8 }}>
+      {error && <div role="alert" style={{ fontSize: 14, color: "#B42318", padding: "10px 14px", borderRadius: 12, background: "#FDECEC" }}>{error}</div>}
+      {note && <div role="status" style={{ fontSize: 14, color: "#16704A", fontWeight: 500, padding: "10px 14px", borderRadius: 12, background: "#E6F4EC" }}>{note}</div>}
+    </div>
     {taxFirst && taxNode}
 
-    <section style={{ ...card, gap: 18, padding: "22px 24px", background: "linear-gradient(180deg,#FFF7FA,#fff 70%)", borderColor: "#F6D9E3" }}>
+    <section className="card" style={{ ...card, gap: 16, padding: "22px 24px", background: `linear-gradient(180deg,${WASH},#fff 70%)`, borderColor: "#F6D9E3" }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>
-          <p style={tileK}>Your plan</p>
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            <h2 style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.03em", margin: 0 }}>{noPlan ? "No plan yet" : planName}</h2>
-            <span style={pill(status[1]!, status[2]!)}>{status[0]}</span>
+            <h2 style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.03em", margin: 0 }}>{noPlan ? (trialOn ? t("Free trial", "تجربة مجانية") : sub.trial?.started === false ? t("Free trial not started", "التجربة المجانية لم تبدأ") : t("Free trial ended", "انتهت التجربة المجانية")) : ended ? t("No active plan", "لا توجد باقة فعّالة") : planName}</h2>
+            <span style={pill(status[1]!, status[2]!)}>{trialOn ? (ar ? `بقي ${trialLeft} ${trialLeft === 1 ? "يوم" : "أيام"}` : `${trialLeft} ${trialLeft === 1 ? "day" : "days"} left`) : status[0]}</span>
           </div>
-          {active && <p style={muted}>Billed {sub.billing === "yearly" ? "yearly" : "monthly"}</p>}
+          {active && <p style={muted}>{includes(mine)}{sub.billing === "yearly" ? t(" · billed yearly", " · فوترة سنوية") : t(" · billed monthly", " · فوترة شهرية")}</p>}
+          {trialOn && <div role="progressbar" aria-label={t("Free trial days left", "أيام التجربة المجانية المتبقية")} aria-valuemin={0} aria-valuemax={14} aria-valuenow={trialLeft} style={{ height: 6, width: 220, maxWidth: "100%", borderRadius: 999, background: "#F6EEF2", overflow: "hidden" }}><div style={{ width: `${Math.min(100, Math.round(trialLeft / 14 * 100))}%`, height: "100%", background: "linear-gradient(90deg,#FF5577,#C93DFF)" }} /></div>}
         </div>
-        {(noPlan || ended) && <button type="button" style={{ ...gradient, height: 44 }} onClick={onChoosePlan}>Choose a plan</button>}
+        {(noPlan || ended) && canManage && <button type="button" className="b b-fill" onClick={onChoosePlan}>{t("Choose a plan", "اختر باقة")}</button>}
       </div>
-      {noPlan && <p style={muted}>{sub.trial.started === false ? "Your free trial starts once your VAT registration is verified." : sub.trial.daysLeft ? `Your free trial ends on ${date(sub.trial.endsAt)}.` : "Your free trial has ended."} Choose a plan to keep receiving WhatsApp orders.</p>}
-      {ended && <p style={muted}>{sub.status === "ENDED" ? "Your last renewal could not be paid, so the plan lapsed." : "Your plan was cancelled."} You can subscribe again at any time.</p>}
+      {noPlan && <p style={muted}>{sub.trial?.started === false ? t("Your free trial starts once your VAT registration is verified.", "تبدأ تجربتك المجانية بعد التحقق من تسجيلك في ضريبة القيمة المضافة.") : trialOn ? t(`Your free trial ends on ${date(sub.trial.endsAt)}.`, `تنتهي تجربتك المجانية في ${date(sub.trial.endsAt)}.`) : t("Your free trial has ended and WhatsApp ordering is paused.", "انتهت تجربتك المجانية وتوقف الطلب عبر واتساب.")} {t("Choose a plan to keep receiving WhatsApp orders.", "اختر باقة لتواصل استقبال طلبات واتساب.")}</p>}
+      {ended && <p style={muted}>{sub.status === "ENDED" ? t("Your last renewal could not be paid, so the plan lapsed.", "تعذّر دفع آخر تجديد فانتهت الباقة.") : t("Your plan was cancelled.", "تم إلغاء باقتك.")} {t("Choose a plan to switch everything back on. Your menu and settings are kept.", "اختر باقة لإعادة تشغيل كل شيء. قائمتك وإعداداتك محفوظة.")}</p>}
       {active && <>
-        {pastDue && <div role="alert" style={{ padding: "12px 14px", borderRadius: 12, background: "#FFF1DC", color: "#6B3A00", fontSize: 14, lineHeight: 1.45 }}>The last payment didn’t go through{sub.lastFailure ? ` (${String(sub.lastFailure).replace(/\.$/, "")})` : ""}. We’ll try again automatically{sub.failedAttempts ? ` (attempt ${sub.failedAttempts} of 4 failed)` : ""}. Update your card to fix it now.</div>}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 12 }}>
-          <div style={tile}><p style={tileK}>{sub.cancelAtPeriodEnd ? "Plan ends" : "Next payment"}</p>
-            <p style={tileV}>{sub.cancelAtPeriodEnd ? date(sub.currentPeriodEnd) : sub.nextCharge ? aed(sub.nextCharge.amountMinor) : "—"}</p>
-            {!sub.cancelAtPeriodEnd && sub.nextCharge && <p style={tileK}>on {date(sub.nextCharge.at)}</p>}</div>
-          <div style={tile}><p style={tileK}>Current period</p><p style={{ ...tileV, fontSize: 16 }}>{date(sub.currentPeriodStart)}</p><p style={tileK}>to {date(sub.currentPeriodEnd)}</p></div>
-          <div style={tile}><p style={tileK}>Payment card</p>
-            {sub.card ? <><p style={tileV}><span style={{ textTransform: "capitalize" }}>{sub.card.brand}</span> •••• {sub.card.last4}</p><p style={tileK}>expires {String(sub.card.expMonth).padStart(2, "0")}/{String(sub.card.expYear).slice(-2)}</p></> : <p style={{ ...tileV, color: "#8A5A6E", fontWeight: 500 }}>No card on file</p>}
-            {canManage && !cardForm && <button type="button" style={{ ...link, marginTop: 4 }} disabled={!!busy} onClick={() => run("card", async () => { const r = await api(`${base}/card`, "POST"); if (r.clientSecret) setCardForm({ secret: r.clientSecret, key: r.publishableKey, id: r.sessionId }); else window.location.assign(r.url); }, "")}>{sub.card ? "Update card" : "Add card"}</button>}</div>
-        </div>
-        {cardForm && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}><div ref={slot} style={{ minHeight: 300, border: "1.5px solid #ECD9E0", borderRadius: 16, padding: 12, background: "#fff" }} /><div><button type="button" style={outline} onClick={() => setCardForm(null)}>Cancel</button></div></div>}
-        {sub.pendingPlan && <p style={muted}>Changes to <b>{PLANS.find(p => p[0] === sub.pendingPlan)?.[1]}</b> ({sub.pendingBilling}) on {date(sub.currentPeriodEnd)}.</p>}
-        {canManage && <div style={{ borderTop: "1px solid #F3EEF1", paddingTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {sub.cancelAtPeriodEnd ? <button type="button" style={outline} disabled={!!busy} onClick={() => run("resume", () => api(`${base}/resume`, "POST"), "Your plan will keep renewing.")}>Keep my plan</button>
-            : <button type="button" style={{ ...link, color: "#8A5A6E" }} disabled={!!busy} onClick={() => { if (window.confirm(`Cancel your plan? It stays active until ${date(sub.currentPeriodEnd)}, then stops. You won’t be charged again.`)) run("cancel", () => api(`${base}/cancel`, "POST"), "Your plan will end at the end of this period."); }}>Cancel plan</button>}
+        {pastDue && <div role="alert" style={{ padding: "14px 16px", borderRadius: 12, background: "#FFF1DC", color: "#6B3A00", fontSize: 14, lineHeight: 1.5, display: "flex", gap: 14, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
+          <span style={{ flex: "1 1 320px" }}>{sub.needsAuthentication ? t("Your bank needs you to confirm the renewal payment. Choose “Update card” and enter your card again so the bank can confirm it.", "يحتاج بنكك إلى تأكيدك لدفعة التجديد. اختر «تحديث البطاقة» وأدخل بطاقتك من جديد ليؤكدها البنك.") : <>{t("The last payment didn’t go through", "لم تتم آخر دفعة")}{sub.lastFailure && !ar ? ` (${String(sub.lastFailure).replace(/\.$/, "")})` : ""}.</>} {t("Everything keeps working while we try again.", "يستمر كل شيء بالعمل بينما نعيد المحاولة.")}{sub.access?.graceEndsAt ? t(` Update your card before ${date(sub.access.graceEndsAt)} or the plan will end.`, ` حدّث بطاقتك قبل ${date(sub.access.graceEndsAt)} وإلا ستنتهي الباقة.`) : t(" Update your card to fix it now.", " حدّث بطاقتك لحل المشكلة الآن.")}</span>
+          {canManage && !cardForm && <button type="button" className="b b-fill" disabled={!!busy} onClick={() => run("card", async () => { const r = await api(`${base}/card`, "POST"); if (r.clientSecret) setCardForm({ secret: r.clientSecret, key: r.publishableKey, id: r.sessionId }); else window.location.assign(r.url); }, "")}>{t("Update card", "تحديث البطاقة")}</button>}
         </div>}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 24, paddingTop: 4 }}>
+          <div><p style={muted}>{ending ? t("Plan ends", "تنتهي الباقة") : t("Next payment", "الدفعة القادمة")}</p>
+            <p className="nums" style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-0.02em", margin: "2px 0 0" }}>{ending ? date(sub.currentPeriodEnd) : sub.nextCharge ? money(sub.nextCharge.amountMinor) : "—"}</p>
+            {!ending && sub.nextCharge && <p style={muted}>{t("on ", "في ")}{date(sub.nextCharge.at)}{sub.pendingBilling === "yearly" ? t(", billed yearly from then", "، وفوترة سنوية بعد ذلك") : ""}</p>}</div>
+          <div><p style={muted}>{t("Current period", "الفترة الحالية")}</p><p className="nums" style={{ fontSize: 16, fontWeight: 600, margin: "4px 0 0" }}>{date(sub.currentPeriodStart)}</p><p style={muted}>{t("to ", "إلى ")}{date(sub.currentPeriodEnd)}</p></div>
+          <div><p style={muted}>{t("Payment card", "بطاقة الدفع")}</p>
+            {sub.card ? <><p className="nums" style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-0.02em", margin: "2px 0 0" }}><span style={{ textTransform: "capitalize" }}>{sub.card.brand}</span> •••• {sub.card.last4}</p><p style={muted}>{t("expires ", "تنتهي ")}{String(sub.card.expMonth).padStart(2, "0")}/{String(sub.card.expYear).slice(-2)}</p></> : <p style={{ ...muted, margin: "6px 0 0" }}>{t("No card on file", "لا توجد بطاقة محفوظة")}</p>}
+            {canManage && !cardForm && !pastDue && <button type="button" className="lk" disabled={!!busy} onClick={() => run("card", async () => { const r = await api(`${base}/card`, "POST"); if (r.clientSecret) setCardForm({ secret: r.clientSecret, key: r.publishableKey, id: r.sessionId }); else window.location.assign(r.url); }, "")}>{sub.card ? t("Update card", "تحديث البطاقة") : t("Add card", "إضافة بطاقة")}</button>}</div>
+        </div>
+        {cardForm && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}><div ref={slot} style={{ minHeight: 300, border: "1.5px solid #ECD9E0", borderRadius: 16, padding: 12, background: "#fff" }} /><div><button type="button" className="b b-out" onClick={() => setCardForm(null)}>{t("Cancel", "إلغاء")}</button></div></div>}
+        {sub.pendingBilling && !ending && <p style={muted}>{t("Yearly billing starts on ", "تبدأ الفوترة السنوية في ")}<b>{date(sub.currentPeriodEnd)}</b>. <button type="button" className="lk" disabled={!!busy} onClick={() => run("plan", () => api(`${base}/change`, "POST", { plan: sub.plan, billing: sub.billing }), t("The scheduled change was cancelled.", "تم إلغاء التغيير المجدول."))}>{t("Undo", "تراجع")}</button></p>}
+        {canManage && <div style={{ borderTop: "1px solid #F3EEF1", paddingTop: 8, ...row }}>
+          {ending ? <><p style={{ ...muted, flex: "1 1 260px" }}>{t(`Your plan is set to end on ${date(sub.currentPeriodEnd)}.`, `ستنتهي باقتك في ${date(sub.currentPeriodEnd)}.`)}</p><button type="button" className="b b-out" disabled={!!busy} onClick={() => run("resume", () => api(`${base}/resume`, "POST"), t("Your plan will keep renewing.", "ستتجدد باقتك تلقائياً."))}>{t("Keep my plan", "الإبقاء على باقتي")}</button></>
+            : <button type="button" className="lk quiet" disabled={!!busy} onClick={askCancel}>{t("Cancel plan", "إلغاء الباقة")}</button>}
+        </div>}
+        {sheet("cancel")}
       </>}
     </section>
 
-    {sub.usage && (() => { const u = sub.usage, o = u.orders, num = (n: number) => n.toLocaleString("en-US"), left = Math.max(0, o.limit - o.used) + u.credits, over = o.used >= o.limit && u.credits === 0, warm = o.limit > 0 && o.used / o.limit >= 0.8;
+    {sub.usage && (() => { const u = sub.usage, o = u.orders, left = Math.max(0, o.limit - o.used) + u.credits, over = o.used >= o.limit && u.credits === 0, warm = o.limit > 0 && o.used / o.limit >= 0.8;
       // Voice notes, menu imports and the AI-reply pool are fair-use limits behind the order limit: they only show when one is nearly used up.
-      const fair = ([["Voice notes", u.voice, "voice notes"], ["AI menu imports", u.imports, "AI menu imports"], ["AI replies", u.aiReplies, "AI replies"]] as [string, { used: number; limit: number }, string][]).filter(([, x]) => x.limit && x.used / x.limit >= 0.8);
-      const bar = (label: string, used: number, limit: number, hot: boolean, amber: boolean) => <div key={label} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}><span>{label}</span><b style={{ fontVariantNumeric: "tabular-nums" }}>{num(used)} / {num(limit)}</b></div>
-        <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={limit} aria-valuenow={used} style={{ height: 8, borderRadius: 999, background: "#F6EEF2", overflow: "hidden" }}><div style={{ width: `${limit ? Math.min(100, Math.round(used / limit * 100)) : 100}%`, height: "100%", borderRadius: 999, background: hot ? "#B42318" : amber ? "#E8A100" : "linear-gradient(90deg,#FF5577,#C93DFF)" }} /></div>
+      const fair = ([[t("Voice notes", "الرسائل الصوتية"), u.voice], [t("AI menu imports", "استيراد القائمة بالذكاء الاصطناعي"), u.imports], [t("AI replies", "ردود الذكاء الاصطناعي"), u.aiReplies]] as [string, { used: number; limit: number }][]).filter(([, x]) => x.limit && x.used / x.limit >= 0.8);
+      const bar = (label: string, used: number, limit: number, hot: boolean, amber: boolean) => <div key={label} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}><span>{label}</span><b className="nums">{num(used)} / {num(limit)}</b></div>
+        <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={limit} aria-valuenow={used} style={{ height: 10, borderRadius: 999, background: "#F6EEF2", overflow: "hidden" }}><div style={{ width: `${limit ? Math.min(100, Math.round(used / limit * 100)) : 100}%`, height: "100%", borderRadius: 999, background: hot ? "#B42318" : amber ? "#E8A100" : "linear-gradient(90deg,#FF5577,#C93DFF)" }} /></div>
       </div>;
-      const alertBox = (text: string, role: string) => <div role={role} style={{ padding: "12px 14px", borderRadius: 12, background: "#FFF1DC", color: "#6B3A00", fontSize: 14, lineHeight: 1.45 }}>{text}</div>;
-      return <section style={card}>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}><h2 style={h2}>Orders this month</h2><span style={muted}>Resets {date(u.periodEnd)}</span></div>
-        {bar("WhatsApp orders", o.used, o.limit, over, warm)}
-        <p style={muted}>{over ? "No orders left this month." : `${num(left)} orders left this month.`}{u.credits > 0 ? ` Includes ${num(u.credits)} extra orders you bought. They are used after your monthly orders and never expire.` : ""}</p>
-        {over && alertBox("You have reached this month’s orders. Customers now get “someone from our team will assist you soon” and you reply yourself from the inbox. Buy more orders below or upgrade your plan.", "alert")}
-        {!over && warm && alertBox(`You have used over 80% of this month’s orders.`, "status")}
-        {fair.map(([label, x, name]) => alertBox(`You have used ${num(x.used)} of ${num(x.limit)} ${name} included this month.`, "status"))}
-        {active && canManage && <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          {(sub.topups ?? []).map((t: any) => <button key={t.id} type="button" style={outline} disabled={!!busy || pastDue || !sub.card} onClick={() => { if (window.confirm(`Buy ${num(t.orders)} extra orders for ${aed(t.totalMinor)} ${sub.tax?.ratePercent > 0 ? " (incl. VAT)" : ""}? Your card ${sub.card ? "••••" + sub.card.last4 : ""} will be charged now.`)) run("topup", () => api(`${base}/topup`, "POST", { pack: t.id, requestId: crypto.randomUUID() }), `${num(t.orders)} orders added.`); }}>{busy === "topup" ? "Charging…" : `Add ${num(t.orders)} orders · ${aed(t.subtotalMinor)} + VAT`}</button>)}
-          {!sub.card && <span style={muted}>Add a card to buy more orders.</span>}
+      const alertBox = (text: string, role: string, key?: string) => <div key={key} role={role} style={{ padding: "12px 14px", borderRadius: 12, background: "#FFF1DC", color: "#6B3A00", fontSize: 14, lineHeight: 1.5 }}>{text}</div>;
+      return <section className="card" style={card}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}><h2 style={h2}>{t("Orders this month", "طلبات هذا الشهر")}</h2><span style={muted}>{t("Resets ", "يُعاد الضبط في ")}{date(u.periodEnd)}</span></div>
+        {bar(t("WhatsApp orders", "طلبات واتساب"), o.used, o.limit, over, warm)}
+        <p style={muted}>{over ? t("No orders left this month.", "لا توجد طلبات متبقية هذا الشهر.") : t(`${num(left)} orders left this month.`, `بقي ${num(left)} طلب هذا الشهر.`)}{u.credits > 0 ? t(` That includes ${num(u.credits)} extra orders you bought. They are used after your monthly orders and never expire.`, ` ويشمل ذلك ${num(u.credits)} طلباً إضافياً اشتريتها. تُستخدم بعد طلباتك الشهرية ولا تنتهي صلاحيتها.`) : ""}</p>
+        {over && alertBox(t("You have reached this month’s orders. New customers now get “someone from the restaurant will assist you soon”, and you reply from the inbox yourself. Buy more orders below or upgrade your plan.", "وصلت إلى حد طلبات هذا الشهر. يصل العملاء الجدد الآن رد «سيساعدك أحد من المطعم قريباً»، وتردّ أنت من صندوق الوارد. اشترِ طلبات إضافية أدناه أو رقِّ باقتك."), "alert")}
+        {!over && warm && alertBox(t("You have used over 80% of this month’s orders.", "استخدمت أكثر من 80% من طلبات هذا الشهر."), "status")}
+        {fair.map(([label, x]) => alertBox(t(`${label}: ${num(x.used)} of ${num(x.limit)} included this month are used.`, `${label}: استُخدم ${num(x.used)} من ${num(x.limit)} مشمولة هذا الشهر.`), "status", label))}
+        {active && canManage && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={row}>{(sub.topups ?? []).map((pk: any) => <button key={pk.id} type="button" className="b b-out" style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", justifyContent: "center", padding: "6px 16px", lineHeight: 1.25 }} disabled={!!busy || !!blocked} onClick={() => askTopUp(pk)}><span>{t(`Add ${num(pk.orders)} orders`, `أضف ${num(pk.orders)} طلب`)}</span><span className="nums" style={{ fontSize: 13, color: MUTED, fontWeight: 400 }}>{money(pk.subtotalMinor)}{vatTag}</span></button>)}</div>
+          {reason(ask?.where !== "usage")}
         </div>}
+        {sheet("usage")}
       </section>; })()}
 
-    {active && sub.branches && <section style={card}>
-      <h2 style={h2}>Branches</h2>
-      <p style={muted}><b>{sub.branches.used}</b> active of <b>{sub.branches.limit}</b> {sub.branches.limit === 1 ? "branch" : "branches"} · {sub.branches.included} included in {planName}{sub.branches.extra ? ` + ${sub.branches.extra} extra` : ""}.{sub.branches.menuPerBranch ? " Each branch can have its own menu, or all branches can share one." : sub.plan === "plus" ? " All branches share one menu." : ""}</p>
-      {sub.branches.pendingExtra !== undefined && <p style={muted}>From {date(sub.currentPeriodEnd)} you will have {sub.branches.pendingExtra} extra {sub.branches.pendingExtra === 1 ? "branch" : "branches"}.</p>}
-      {sub.branches.priceMinor ? <p style={muted}>Extra branch: {aed(sub.branches.priceMinor)}{sub.tax?.ratePercent > 0 ? " + VAT" : ""} per {sub.billing === "yearly" ? "year" : "month"}. Each one adds {sub.branches.ordersPerBranch} orders a month.</p> : null}
-      {canManage && sub.entitlements?.canBuyBranches && <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <button type="button" style={outline} disabled={!!busy || pastDue || !sub.card || !sub.branches.canBuy} onClick={() => { if (window.confirm(`Add a branch for ${aed(sub.branches.priceMinor)}${sub.tax?.ratePercent > 0 ? " + VAT" : ""} per ${sub.billing === "yearly" ? "year" : "month"}? You pay ${aed(sub.branches.payNowMinor)}${sub.tax?.ratePercent > 0 ? " (incl. VAT)" : ""} now for the rest of this period, charged to your card ending ${sub.card.last4}.`)) run("branch", () => api(`${base}/branch`, "POST", { requestId: crypto.randomUUID() }), "Branch added. You can now add it in Settings."); }}>{busy === "branch" ? "Charging…" : "Add a branch"}</button>
-        {(sub.branches.pendingExtra ?? sub.branches.extra) > 0 && <button type="button" style={outline} disabled={!!busy} onClick={() => run("branches", () => api(`${base}/branches`, "POST", { extra: (sub.branches.pendingExtra ?? sub.branches.extra) - 1 }), "One fewer extra branch from your next renewal.")}>Remove one at renewal</button>}
-        {!sub.card && <span style={muted}>Add a card to buy a branch.</span>}
+    {active && sub.branches && <section className="card" style={card}>
+      <h2 style={h2}>{t("Branches", "الفروع")}</h2>
+      <p style={muted}>{ar ? <><b>{b.used}</b> فعّال من <b>{b.limit}</b> {b.limit === 1 ? "فرع" : "فروع"} · {b.included} مشمولة في {planName}{b.extra ? ` + ${b.extra} إضافي` : ""}.{b.menuPerBranch ? " يمكن لكل فرع قائمته الخاصة، أو أن تشترك الفروع في قائمة واحدة." : sub.plan === "plus" ? " تشترك كل الفروع في قائمة واحدة." : ""}</> : <><b>{b.used}</b> active of <b>{b.limit}</b> {b.limit === 1 ? "branch" : "branches"} · {b.included} included in {planName}{b.extra ? ` + ${b.extra} extra` : ""}.{b.menuPerBranch ? " Each branch can have its own menu, or all branches can share one." : sub.plan === "plus" ? " All branches share one menu." : ""}</>}</p>
+      {b.pendingExtra !== undefined && <p style={muted}>{ar ? `من ${date(sub.currentPeriodEnd)} سيكون لديك ${b.pendingExtra} ${b.pendingExtra === 1 ? "فرع إضافي" : "فروع إضافية"}.` : `From ${date(sub.currentPeriodEnd)} you will have ${b.pendingExtra} extra ${b.pendingExtra === 1 ? "branch" : "branches"}.`}</p>}
+      {b.priceMinor ? <p style={muted}>{ar ? `الفرع الإضافي بسعر ${money(b.priceMinor)}${vatTag} لكل ${per} ويضيف ${b.ordersPerBranch} طلب شهرياً.` : `An extra branch is ${money(b.priceMinor)}${vatTag} per ${per} and adds ${b.ordersPerBranch} orders a month.`}</p> : null}
+      {!sub.entitlements?.canBuyBranches && sub.plan !== "pro" && <p style={muted}>{t(`Pro lets you add more than ${b.included} branches.`, `تتيح لك Pro إضافة أكثر من ${b.included} فروع.`)}</p>}
+      {canManage && sub.entitlements?.canBuyBranches && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={row}>
+          <button type="button" className="b b-out" disabled={!!busy || !!blocked || !b.canBuy} onClick={askBranch}>{t("Add a branch", "إضافة فرع")}</button>
+          {(b.pendingExtra ?? b.extra) > 0 && !ending && <button type="button" className="b b-out" disabled={!!busy} onClick={askRemoveBranch}>{t("Remove one at renewal", "إزالة فرع عند التجديد")}</button>}
+        </div>
+        {reason(ask?.where !== "branches")}
+      </div>}
+      {sheet("branches")}
+    </section>}
+
+    {active && canManage && <section className="card" style={card}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <h2 style={h2}>{higher.length ? t("Upgrade your plan", "ترقية باقتك") : t("Your plan", "باقتك")}</h2>
+        {sub.billing === "monthly" && !ending && <div role="group" aria-label={t("Billing cycle", "دورة الفوترة")} style={{ display: "flex", padding: 3, borderRadius: 10, background: "#F6EEF2", gap: 2 }}>
+          {(["monthly", "yearly"] as const).map(c => <button key={c} type="button" aria-pressed={cycle === c} className="b" onClick={() => setCycle(c)} style={{ minHeight: 36, padding: "0 14px", borderRadius: 8, border: 0, fontSize: 14, fontWeight: cycle === c ? 600 : 500, background: cycle === c ? "#fff" : "transparent", color: cycle === c ? INK : MUTED, boxShadow: cycle === c ? "0 1px 3px rgba(26,8,21,.12)" : "none" }}>{c === "monthly" ? t("Monthly", "شهري") : saving > 0 ? t(`Yearly · save ${saving}%`, `سنوي · وفّر ${saving}%`) : t("Yearly", "سنوي")}</button>)}
+        </div>}
+      </div>
+      {ending ? <p style={muted}>{t(`Your plan is set to end on ${date(sub.currentPeriodEnd)}. Choose “Keep my plan” above to upgrade or change billing.`, `ستنتهي باقتك في ${date(sub.currentPeriodEnd)}. اختر «الإبقاء على باقتي» أعلاه لتتمكن من الترقية أو تغيير الفوترة.`)}</p> : <div>
+        {sub.billing === "monthly" && target === "yearly" && mine && (() => { const q = quotes[mine.id]; return <div className="opt">
+          <div><b style={{ fontSize: 16 }}>{t(`Stay on ${mine.name}, billed yearly`, `البقاء على ${mine.name} بفوترة سنوية`)}</b><p style={{ ...muted, marginTop: 4 }}>{saving > 0 ? t(`Pay for 10 months instead of 12 (${saving}% less). `, `ادفع 10 أشهر بدل 12 (أقل بنسبة ${saving}%). `) : ""}{t(`Starts at your next renewal on ${date(sub.currentPeriodEnd)}, so nothing to pay now.`, `تبدأ عند تجديدك القادم في ${date(sub.currentPeriodEnd)}، فلا شيء يُدفع الآن.`)}</p></div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end", justifyContent: "center" }}>
+            <span className="nums" style={{ fontSize: 18, fontWeight: 600 }}>{plan(mine.id) ? moneyUi(plan(mine.id).yearly, cur0) : "—"}<span style={{ fontSize: 13, color: MUTED, fontWeight: 400 }}> {t("/ year", "/ سنة")}</span></span>
+            <button type="button" className="b b-out" disabled={!!busy || !q || q.kind !== "scheduled" || !!sub.pendingBilling} onClick={() => q && askYearly(q)}>{sub.pendingBilling ? t("Scheduled", "مجدول") : t("Switch at renewal", "التحويل عند التجديد")}</button></div></div>; })()}
+        {higher.map(p => { const q = quotes[p.id], eq = monthEq(p.id, target), yr = target === "yearly";
+          return <div key={p.id} className="opt">
+            <div style={{ minWidth: 0 }}><b style={{ fontSize: 16 }}>{p.name}</b>
+              <ul style={{ margin: "6px 0 0", padding: 0, listStyle: "none", display: "flex", flexWrap: "wrap", gap: "2px 18px", fontSize: 14, color: INK }}>
+                <li>{t(`${num(p.orders)} orders a month`, `${num(p.orders)} طلب شهرياً`)}</li><li>{t(`${p.branches} branches${p.extraBranches ? ", more can be added" : ""}`, `${p.branches} فروع${p.extraBranches ? "، ويمكن إضافة المزيد" : ""}`)}</li><li>{t(`${p.staff} staff accounts`, `${p.staff} حسابات موظفين`)}</li>
+                {p.customers && !mine?.customers && <li>{t("Customers page and campaigns", "صفحة العملاء والحملات")}</li>}{p.menuPerBranch && !mine?.menuPerBranch && <li>{t("A separate menu for each branch", "قائمة منفصلة لكل فرع")}</li>}
+              </ul>
+              {q?.kind === "upgrade" && <p style={{ ...muted, marginTop: 8 }}>{q.totalMinor ? <>{t("Pay ", "ادفع ")}<b className="nums" style={{ color: INK }}>{money(q.totalMinor)}</b>{t(" today for the rest of this period. ", " اليوم عن باقي هذه الفترة. ")}</> : t("Nothing to pay today. ", "لا شيء يُدفع اليوم. ")}{ar ? `ثم ${money(q.renewalMinor)} لكل ${yr ? "سنة" : "شهر"} ابتداءً من ${date(q.renewsAt)}.` : `Then ${money(q.renewalMinor)} per ${yr ? "year" : "month"} from ${date(q.renewsAt)}.`}{q.cycleChange ? t(" Yearly billing starts then.", " تبدأ الفوترة السنوية حينها.") : ""}</p>}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end", justifyContent: "center" }}>
+              <span className="nums" style={{ fontSize: 22, fontWeight: 600, letterSpacing: "-0.03em" }}>{eq === null ? "—" : moneyUi(Math.round(eq * 100) / 100, cur0)}<span style={{ fontSize: 13, color: MUTED, fontWeight: 400 }}> {t("/ month", "/ شهر")}</span></span>
+              {yr && plan(p.id) && <span style={{ ...muted, fontSize: 13 }}>{t(`billed ${moneyUi(plan(p.id).yearly, cur0)} a year`, `تُفوتر ${moneyUi(plan(p.id).yearly, cur0)} في السنة`)}</span>}
+              <button type="button" className="b b-fill" disabled={!!busy || !!blocked || !q || q.kind !== "upgrade"} onClick={() => q && askUpgrade(p, q)}>{t(`Upgrade to ${p.name}`, `الترقية إلى ${p.name}`)}</button>
+            </div>
+          </div>; })}
+        {!higher.length && <p style={muted}>{t("You’re on our biggest plan. Add branches above, or buy extra orders when you need them.", "أنت على أكبر باقاتنا. أضف فروعاً من الأعلى أو اشترِ طلبات إضافية عند الحاجة.")}</p>}
+        {!!higher.length && reason(ask?.where !== "plan")}
+        {sheet("plan")}
+        {mine && mine.rank > 1 || sub.billing === "yearly" ? <p style={{ ...muted, marginTop: 14, paddingTop: 14, borderTop: `1px solid ${LINE}` }}>{ar ? `الباقات تنتقل للأعلى فقط. للانتقال إلى باقة أصغر${sub.billing === "yearly" ? " أو إلى الفوترة الشهرية" : ""}، ألغِ باقتك واشترك من جديد بعد ${date(sub.currentPeriodEnd)}.` : `Plans only go up. To move to a smaller plan${sub.billing === "yearly" ? " or to monthly billing" : ""}, cancel your plan and subscribe again after ${date(sub.currentPeriodEnd)}.`}</p> : null}
       </div>}
     </section>}
 
-    {active && canManage && <section style={card}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}><h2 style={h2}>Change plan</h2>
-        <div role="radiogroup" aria-label="Billing cycle" style={{ display: "flex", padding: 3, borderRadius: 10, background: "#F6EEF2", gap: 2 }}>
-          {(["monthly", "yearly"] as const).map(c => <button key={c} type="button" role="radio" aria-checked={cycle === c} onClick={() => setCycle(c)} style={{ height: 32, padding: "0 14px", borderRadius: 8, border: 0, fontSize: 14, fontWeight: cycle === c ? 600 : 500, background: cycle === c ? "#fff" : "transparent", color: cycle === c ? "#1A0815" : "#8A5A6E", boxShadow: cycle === c ? "0 1px 3px rgba(26,8,21,.12)" : "none", cursor: "pointer", textTransform: "capitalize" }}>{c}</button>)}
-        </div></div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(230px,1fr))", gap: 12 }}>
-        {PLANS.map(([id, name, m, y]) => { const cur = sub.plan === id && sub.billing === cycle, q = quotes[id], up = RANK[id]! > RANK[sub.plan]!;
-          const hint = cur ? "Your current plan" : !q ? "" : q.kind === "upgrade" ? `Upgrade now: pay ${aed(q.totalMinor)} for the rest of this period` : `Starts ${date(q.effectiveAt)} at ${aed(q.renewalMinor)} per ${cycle === "yearly" ? "year" : "month"}`;
-          return <div key={id} style={{ border: `2px solid ${cur ? "#FF5577" : "#F0E4E8"}`, background: cur ? "#FFF7FA" : "#fff", borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
-            <b style={{ fontSize: 16 }}>{name}</b><span style={{ fontSize: 22, fontWeight: 600, letterSpacing: "-0.03em" }}>{moneyUi(cycle === "yearly" ? (sub.prices?.plans?.[id]?.yearly ?? y) : (sub.prices?.plans?.[id]?.monthly ?? m), cur0)}<span style={{ fontSize: 13, color: "#8A5A6E", fontWeight: 400 }}> / {cycle === "yearly" ? "year" : "month"}</span></span>
-            <span style={{ fontSize: 13, color: "#8A5A6E", minHeight: 36 }}>{hint}</span>
-            <button type="button" disabled={cur || !!busy} style={{ ...(up && sub.billing === cycle ? gradient : outline), opacity: cur ? 0.45 : 1 }} onClick={() => run("plan", () => api(`${base}/change`, "POST", { plan: id, billing: cycle }), up && sub.billing === cycle ? `You’re on ${name} now.` : `Done. ${name} starts at your next renewal.`)}>{cur ? "Current" : up && sub.billing === cycle ? `Upgrade to ${name}` : `Switch to ${name}`}</button>
-          </div>; })}
-      </div>
-      {sub.pendingPlan && <div><button type="button" style={outline} disabled={!!busy} onClick={() => run("plan", () => api(`${base}/change`, "POST", { plan: sub.plan, billing: sub.billing }), "The scheduled change was cancelled.")}>Cancel scheduled change</button></div>}
-    </section>}
-
-    <section style={card}>
-      <h2 style={h2}>Invoices</h2>
-      {!invoices.length ? <p style={muted}>Invoices appear here after your first payment.</p> : <div style={{ display: "flex", flexDirection: "column" }}>
-        {invoices.map((i, k) => <div key={i.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderTop: k ? "1px solid #F3EEF1" : 0, flexWrap: "wrap" }}>
-          <b style={{ fontVariantNumeric: "tabular-nums", minWidth: 130 }}>{i.number}</b><span style={{ ...muted, flex: 1, minWidth: 140 }}>{date(i.createdAt)} · {i.kind === "SIGNUP" ? "First payment" : i.kind === "RENEWAL" ? "Renewal" : i.kind === "TOPUP" ? "Extra orders" : "Upgrade"}</span>
-          <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{aed(i.totalMinor, i.currency)}</span><a href={`/invoices/${i.id}?businessId=${businessId}`} target="_blank" rel="noreferrer" style={{ fontSize: 14, fontWeight: 500 }}>View</a>
+    <section className="card" style={card}>
+      <h2 style={h2}>{t("Invoices", "الفواتير")}</h2>
+      {!invoices.length ? <p style={muted}>{t("Your invoices appear here after your first payment.", "تظهر فواتيرك هنا بعد أول دفعة.")}</p> : <div style={{ display: "flex", flexDirection: "column" }}>
+        {invoices.map((i, k) => <div key={i.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "6px 0", borderTop: k ? "1px solid #F3EEF1" : 0, flexWrap: "wrap" }}>
+          <b className="nums" style={{ minWidth: 130 }}>{i.number}</b><span style={{ ...muted, flex: 1, minWidth: 140 }}>{date(i.createdAt)} · {(ar ? { SIGNUP: "الدفعة الأولى", RENEWAL: "تجديد", TOPUP: "طلبات إضافية", UPGRADE: "ترقية", BRANCH: "فرع إضافي" } : { SIGNUP: "First payment", RENEWAL: "Renewal", TOPUP: "Extra orders", UPGRADE: "Upgrade", BRANCH: "Extra branch" } as Record<string, string>)[i.kind] ?? t("Payment", "دفعة")}</span>
+          <span className="nums" style={{ fontWeight: 600 }}>{money(i.totalMinor, i.currency)}</span><a href={`/invoices/${i.id}?businessId=${businessId}`} target="_blank" rel="noreferrer" style={{ fontSize: 14, fontWeight: 500, minHeight: 44, display: "inline-flex", alignItems: "center", padding: "0 6px" }}>{t("View", "عرض")}</a>
         </div>)}
       </div>}
     </section>
@@ -160,22 +238,23 @@ export function BillingPage({ businessId, onChoosePlan, onChanged, focus }: { bu
 }
 
 // The business's billing tax details: who is invoiced, and (for Saudi Arabia, Oman and Bahrain) the local VAT registration that has to be verified before a plan can be bought.
-const VAT_COPY: Record<string, [string, string, string]> = {
-  NOT_REQUIRED: ["Not required", "#F6EEF2", "#3D1C31"], NOT_SUBMITTED: ["Not submitted", "#FFF1DC", "#8A4B00"], PENDING: ["Being reviewed", "#FFF1DC", "#8A4B00"], VERIFIED: ["Verified", "#E4F4EC", "#16704A"], REJECTED: ["Not verified", "#FDECEC", "#B42318"], EXPIRED: ["Expired", "#FDECEC", "#B42318"],
+const VAT_COPY: Record<string, [string, string, string, string]> = {
+  NOT_REQUIRED: ["Not required", "#F6EEF2", "#3D1C31", "غير مطلوب"], NOT_SUBMITTED: ["Not submitted", "#FFF1DC", "#8A4B00", "لم يُرسل"], PENDING: ["Being reviewed", "#FFF1DC", "#8A4B00", "قيد المراجعة"], VERIFIED: ["Verified", "#E4F4EC", "#16704A", "تم التحقق"], REJECTED: ["Not verified", "#FDECEC", "#B42318", "لم يتم التحقق"], EXPIRED: ["Expired", "#FDECEC", "#B42318", "منتهي"],
 };
 const field: React.CSSProperties = { height: 44, width: "100%", padding: "0 12px", borderRadius: 10, border: "1.5px solid #ECD9E0", background: "#fff", fontSize: 15, boxSizing: "border-box" };
-export function TaxDetails({ businessId, canManage, onSaved }: { businessId: string; canManage: boolean; onSaved: () => void }) {
+export function TaxDetails({ businessId, canManage, onSaved, ar = false }: { businessId: string; canManage: boolean; onSaved: () => void; ar?: boolean }) {
+  const t = (en: string, a: string) => (ar ? a : en), date = fmtDate(ar);
   const base = `/api/v1/businesses/${businessId}/billing-tax`;
   const [p, setP] = React.useState<any>(null), [f, setF] = React.useState<any>({ legalName: "", line1: "", city: "", vatRegistered: false, vatNumber: "" }), [err, setErr] = React.useState(""), [busy, setBusy] = React.useState(false), [saved, setSaved] = React.useState(false);
   const fill = (v: any) => { setP(v); setF({ legalName: v.legalName ?? "", line1: v.billingAddress?.line1 ?? "", city: v.billingAddress?.city ?? "", vatRegistered: v.vatRegistered ?? v.vatRequired, vatNumber: v.vatNumber ?? "" }); };
   React.useEffect(() => { api(base).then(fill).catch(e => setErr(e.message)); }, [base]);
   if (!p) return err ? <div role="alert" style={{ color: "#B42318", fontSize: 14 }}>{err}</div> : null;
-  const [label, bg, fg] = VAT_COPY[p.vatVerificationStatus] ?? VAT_COPY.NOT_SUBMITTED!;
-  const note = p.vatVerificationStatus === "PENDING" ? "Your VAT details are being reviewed. You can continue setting up while we verify your business."
-    : p.vatVerificationStatus === "VERIFIED" ? `Your VAT registration is verified${p.validTo ? ` until ${date(p.validTo)}` : ""}.`
-    : p.vatVerificationStatus === "REJECTED" ? `We couldn’t verify your VAT details${p.rejectionReason ? `: ${p.rejectionReason}` : ""}. Check them and submit again.`
-    : p.vatVerificationStatus === "EXPIRED" ? "Your VAT verification has expired. Submit your details again to renew it."
-    : p.vatRequired ? "For this market, Lumia Order currently supports subscriptions for VAT-registered businesses. Enter your business VAT number to continue. If you are not registered, contact sales to discuss future availability." : "";
+  const [en, bg, fg, arLabel] = VAT_COPY[p.vatVerificationStatus] ?? VAT_COPY.NOT_SUBMITTED!, label = t(en, arLabel);
+  const note = p.vatVerificationStatus === "PENDING" ? t("Your VAT details are being reviewed. You can continue setting up while we verify your business.", "بيانات ضريبة القيمة المضافة قيد المراجعة. يمكنك متابعة الإعداد أثناء التحقق من نشاطك.")
+    : p.vatVerificationStatus === "VERIFIED" ? t(`Your VAT registration is verified${p.validTo ? ` until ${date(p.validTo)}` : ""}.`, `تم التحقق من تسجيلك في ضريبة القيمة المضافة${p.validTo ? ` حتى ${date(p.validTo)}` : ""}.`)
+    : p.vatVerificationStatus === "REJECTED" ? t(`We couldn’t verify your VAT details${p.rejectionReason ? `: ${p.rejectionReason}` : ""}. Check them and submit again.`, `تعذّر التحقق من بيانات ضريبة القيمة المضافة${p.rejectionReason ? `: ${p.rejectionReason}` : ""}. تحقق منها وأرسلها من جديد.`)
+    : p.vatVerificationStatus === "EXPIRED" ? t("Your VAT verification has expired. Submit your details again to renew it.", "انتهى التحقق من ضريبة القيمة المضافة. أرسل بياناتك من جديد لتجديده.")
+    : p.vatRequired ? t("For this market, Lumia Order currently supports subscriptions for VAT-registered businesses. Enter your business VAT number to continue. If you are not registered, contact sales to discuss future availability.", "في هذا السوق، يدعم لوميا أوردر حالياً الاشتراكات للأنشطة المسجلة في ضريبة القيمة المضافة. أدخل رقم تسجيل نشاطك للمتابعة. إن لم تكن مسجلاً، تواصل مع المبيعات لمناقشة التوفر مستقبلاً.") : "";
   const save = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy(true); setErr(""); setSaved(false);
     try { const v = await api(base, "PUT", { legalName: f.legalName, billingAddress: { line1: f.line1, city: f.city }, vatRegistered: !!f.vatRegistered, vatNumber: f.vatRegistered ? f.vatNumber : "" }); fill(v); setSaved(true); onSaved(); } catch (e2: any) { setErr(e2.message); }
@@ -183,18 +262,18 @@ export function TaxDetails({ businessId, canManage, onSaved }: { businessId: str
   };
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
   return <section style={card}>
-    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}><h2 style={h2}>Tax details</h2>{p.vatRequired && <span style={pill(bg, fg)}>VAT: {label}</span>}</div>
-    <p style={muted}>These details appear on your invoices{p.vatRequired ? ", and your VAT registration decides whether a plan can be bought" : ""}.</p>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}><h2 style={h2}>{t("Tax details", "البيانات الضريبية")}</h2>{p.vatRequired && <span style={pill(bg, fg)}>{t("VAT: ", "الضريبة: ")}{label}</span>}</div>
+    <p style={muted}>{t(`These details appear on your invoices${p.vatRequired ? ", and your VAT registration decides whether a plan can be bought" : ""}.`, `تظهر هذه البيانات في فواتيرك${p.vatRequired ? "، ويحدد تسجيلك في ضريبة القيمة المضافة إمكانية شراء باقة" : ""}.`)}</p>
     {note && <p style={{ ...muted, color: p.vatVerificationStatus === "REJECTED" || p.vatVerificationStatus === "EXPIRED" ? "#B42318" : "#3D1C31" }}>{note}</p>}
     <form onSubmit={save} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 12 }}>
-      <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, fontWeight: 500 }}>Legal name of the business<input style={field} value={f.legalName} onChange={set("legalName")} disabled={!canManage} required minLength={2} /></label>
-      <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, fontWeight: 500 }}>Billing address<input style={field} value={f.line1} onChange={set("line1")} disabled={!canManage} required minLength={3} /></label>
-      <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, fontWeight: 500 }}>City<input style={field} value={f.city} onChange={set("city")} disabled={!canManage} required minLength={2} /></label>
-      <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 500, alignSelf: "end", minHeight: 44 }}><input type="checkbox" checked={!!f.vatRegistered} onChange={set("vatRegistered")} disabled={!canManage || p.vatRequired && false} />My business is VAT registered in {p.billingCountry}</label>
-      {f.vatRegistered && <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, fontWeight: 500 }}>VAT registration number<input style={field} value={f.vatNumber} onChange={set("vatNumber")} disabled={!canManage} required={p.vatRequired} inputMode="text" autoComplete="off" /></label>}
+      <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, fontWeight: 500 }}>{t("Legal name of the business", "الاسم القانوني للنشاط")}<input style={field} value={f.legalName} onChange={set("legalName")} disabled={!canManage} required minLength={2} /></label>
+      <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, fontWeight: 500 }}>{t("Billing address", "عنوان الفوترة")}<input style={field} value={f.line1} onChange={set("line1")} disabled={!canManage} required minLength={3} /></label>
+      <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, fontWeight: 500 }}>{t("City", "المدينة")}<input style={field} value={f.city} onChange={set("city")} disabled={!canManage} required minLength={2} /></label>
+      <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 500, alignSelf: "end", minHeight: 44 }}><input type="checkbox" checked={!!f.vatRegistered} onChange={set("vatRegistered")} disabled={!canManage || p.vatRequired && false} />{t(`My business is VAT registered in ${p.billingCountry}`, `نشاطي مسجل في ضريبة القيمة المضافة في ${p.billingCountry}`)}</label>
+      {f.vatRegistered && <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14, fontWeight: 500 }}>{t("VAT registration number", "رقم التسجيل الضريبي")}<input style={field} value={f.vatNumber} onChange={set("vatNumber")} disabled={!canManage} required={p.vatRequired} inputMode="text" autoComplete="off" /></label>}
       <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        {canManage && <button type="submit" style={gradient} disabled={busy}>{busy ? "Saving…" : "Save tax details"}</button>}
-        {saved && <span role="status" style={{ fontSize: 14, color: "#16704A", fontWeight: 500 }}>Saved.</span>}
+        {canManage && <button type="submit" className="b b-fill" disabled={busy}>{busy ? t("Saving…", "جارٍ الحفظ…") : t("Save tax details", "حفظ البيانات الضريبية")}</button>}
+        {saved && <span role="status" style={{ fontSize: 14, color: "#16704A", fontWeight: 500 }}>{t("Saved.", "تم الحفظ.")}</span>}
         {err && <span role="alert" style={{ fontSize: 14, color: "#B42318" }}>{err}</span>}
       </div>
     </form>

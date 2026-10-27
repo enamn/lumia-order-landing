@@ -4,7 +4,7 @@ import { db } from "@/server/db";
 import { authorize } from "@/server/authorization";
 import { AppError } from "@/server/errors";
 import { lumiaApi } from "@/server/lumia-api";
-import { EXTRA_BRANCH, INCLUDED_BRANCHES, PLANS, RETRY_DAYS, TOPUPS, TOPUP_IDS, WHATSAPP_NUMBERS, addPeriod, isUpgrade, quoteExtraBranch, quoteRenewal, quoteSignup, quoteTopUp, quoteUpgrade, withTax, type PriceBook, type Billing, type PlanId, type Quote } from "./plans";
+import { EXTRA_BRANCH, INCLUDED_BRANCHES, LIMITS, PLANS, PLAN_IDS, RETRY_DAYS, TOPUPS, TOPUP_IDS, WHATSAPP_NUMBERS, addPeriod, quoteExtraBranch, quoteRenewal, quoteSignup, quoteTopUp, quoteUpgrade, withTax, type PriceBook, type Billing, type PlanId, type Quote } from "./plans";
 import { addCredits, usageSummary } from "./usage";
 import { requireTaxEligible, taxDecisionFor } from "../tax/service";
 import { priceBookFor, priceBookForBusiness, priceBookOrNull, providerAmountOk, uaeBook } from "./pricing";
@@ -94,13 +94,14 @@ export async function getSubscription(userId: string, businessId: string) {
   const active = isActive(sub), nextPlan = (sub?.pendingPlan ?? sub?.plan) as PlanId | undefined, nextBilling = (sub?.pendingBilling ?? sub?.billing) as Billing | undefined;
   return {
     status: (sub?.status ?? "NONE") as SubStatus, plan: sub?.plan, billing: sub?.billing, currentPeriodStart: iso(sub?.currentPeriodStart), currentPeriodEnd: iso(sub?.currentPeriodEnd), cancelAtPeriodEnd: sub?.cancelAtPeriodEnd ?? false,
-    pendingPlan: sub?.pendingPlan ?? undefined, pendingBilling: sub?.pendingBilling ?? undefined, failedAttempts: sub?.failedAttempts ?? 0, lastFailure: sub?.lastFailure ?? undefined,
+    pendingPlan: sub?.pendingPlan ?? undefined, pendingBilling: sub?.pendingBilling ?? undefined, failedAttempts: sub?.failedAttempts ?? 0, lastFailure: sub?.lastFailure ?? undefined, needsAuthentication: sub?.lastFailure === AUTH_REQUIRED,
     nextCharge: pbook && active && !sub!.cancelAtPeriodEnd && nextPlan && nextBilling ? { at: iso(sub!.nextChargeAt ?? sub!.currentPeriodEnd)!, amountMinor: quoteRenewal(nextPlan, nextBilling, nextPlan === "pro" ? Math.max(0, sub!.pendingExtraBranches ?? sub!.extraBranches ?? 0) : 0, tax.ratePercent, book).totalMinor } : null,
     card: (sub?.card as Card | null) ?? undefined, terminals: sub?.terminals, terminalAddress: sub?.terminalAddress ?? undefined, terminal: (sub?.terminal as Terminal | null) ?? undefined, startedAt: iso(sub?.startedAt),
     hasCustomer: Boolean(sub?.stripeCustomerId || b.stripeCustomerId), defaults: { address: known.address }, canManage: member.role === "OWNER" || member.role === "ADMIN",
     contactEmail: { email: b.email ?? "", verified: !!b.email && !!b.emailVerifiedAt },
     access: accessOf(sub, b.createdAt, Date.now(), vat), trial: { ...trialInfo(trialStart), started: !vat.required || !!vat.verifiedFrom }, entitlements: entitlements(sub), usage,
     branches: { ...(await branchInfo(businessId, sub, tax.ratePercent, pbook)) },
+    catalog: PLAN_IDS.map(id => { const e = entitlements({ status: "ACTIVE", plan: id }); return { id, name: PLANS[id].name, rank: PLANS[id].rank, orders: LIMITS[id].orders, branches: INCLUDED_BRANCHES[id], extraBranches: e.canBuyBranches, ordersPerExtraBranch: EXTRA_BRANCH.orders, staff: e.staff, customers: e.customers, campaigns: e.campaigns, menuPerBranch: e.menuPerBranch }; }),
     prices: pbook ? { currency: pbook.currency, decimals: pbook.decimals, plans: pbook.plans, terminal: !!pbook.terminal, terminalBook: pbook.terminal } : null, pricesUnavailable: pbook ? null : priceCode,
     tax: { eligible: tax.eligible, reasons: tax.reasons, ratePercent: tax.ratePercent, destinationTreatment: tax.destinationTreatment, uaeTreatment: tax.uaeTreatment, vatStatus: tax.customer.vatStatus },
     topups: pbook ? TOPUP_IDS.map(id => ({ id, orders: TOPUPS[id].orders, totalMinor: quoteTopUp(id, tax.ratePercent, pbook).totalMinor, subtotalMinor: quoteTopUp(id, tax.ratePercent, pbook).subtotalMinor })) : [],
@@ -115,6 +116,11 @@ async function api<T>(path: string, body: unknown): Promise<T> {
 }
 interface CheckoutReply { id: string; url?: string; clientSecret?: string; publishableKey?: string; customerId?: string }
 interface SessionSummary { sessionId: string; mode: "payment" | "setup"; complete: boolean; paid: boolean; customerId?: string; paymentMethodId?: string; paymentIntentId?: string; amountTotalMinor?: number; metadata: Record<string, string> }
+// Some banks make the cardholder confirm a payment themselves (3-D Secure) and refuse it when the card is charged without them. We cannot ask for that confirmation
+// during a charge, so the owner is told to re-enter the card in Billing (the card form does the bank check once, and later charges then go through).
+export const AUTH_REQUIRED = "Your bank needs you to confirm this payment.";
+const AUTH_HELP = `${AUTH_REQUIRED} Open Billing, choose “Update card” and enter your card again, then try once more.`;
+const notPaid = (charge: ChargeReply) => new AppError(charge.status === "requires_action" ? "AUTHENTICATION_REQUIRED" : "PAYMENT_FAILED", charge.status === "requires_action" ? AUTH_HELP : charge.failureMessage ?? "The payment did not go through. Try another card.", 402);
 interface ChargeReply { status: "succeeded" | "requires_action" | "failed"; paymentIntentId?: string; failureCode?: string; failureMessage?: string }
 const appUrl = () => (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
@@ -209,8 +215,18 @@ export async function applySession(businessId: string, session: SessionSummary, 
   const terminalData = keepTerminal ? {} : terminals > 0 ? { terminals, terminalAddress: session.metadata.terminalAddress || null, terminal: { stage: 0, dates: [now.toISOString()] } as unknown as Prisma.InputJsonValue } : { terminals: 0, terminalAddress: null };
   const data = { plan, billing, status: "ACTIVE", ...terminalData,
     stripeCustomerId: session.customerId ?? null, stripePaymentMethodId: session.paymentMethodId ?? null, ...(card ? { card: card as unknown as Prisma.InputJsonValue } : {}), currentPeriodStart: now, currentPeriodEnd: end, nextChargeAt: end, cancelAtPeriodEnd: false, pendingPlan: null, pendingBilling: null, failedAttempts: 0, lastFailure: null, startedAt: now };
-  const sub = existing ? await db.subscription.update({ where: { id: existing.id }, data: { ...data, processedSessions: { push: session.sessionId } } }) : await db.subscription.create({ data: { businessId, ...data, processedSessions: [session.sessionId] } });
-  await writeInvoice(sub, "SIGNUP", quote, { start: now, end }, session.paymentIntentId, now, { ...taxSnapshot, ratePercent: quote.subtotalMinor ? Math.round(quote.vatMinor / quote.subtotalMinor * 10000) / 100 : 0 }, book.currency);
+  // Claimed in one step so the dashboard's confirm and Stripe's webhook, arriving together, cannot both apply the same payment.
+  let sub: Subscription;
+  if (existing) {
+    const won = await db.subscription.updateMany({ where: { id: existing.id, NOT: { processedSessions: { has: session.sessionId } } }, data: { ...data, processedSessions: { push: session.sessionId } } });
+    if (won.count !== 1) return { applied: false, reason: "ALREADY_APPLIED" as const };
+    sub = await db.subscription.findUniqueOrThrow({ where: { id: existing.id } });
+  } else {
+    try { sub = await db.subscription.create({ data: { businessId, ...data, processedSessions: [session.sessionId] } }); }
+    catch (e) { if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") return { applied: false, reason: "ALREADY_APPLIED" as const }; throw e; } // one subscription per restaurant: the other call got there first
+  }
+  try { await writeInvoice(sub, "SIGNUP", quote, { start: now, end }, session.paymentIntentId, now, { ...taxSnapshot, ratePercent: quote.subtotalMinor ? Math.round(quote.vatMinor / quote.subtotalMinor * 10000) / 100 : 0 }, book.currency); }
+  catch (e) { if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")) throw e; } // one invoice per payment
   return { applied: true, kind: "signup" as const };
 }
 
@@ -244,10 +260,11 @@ export async function runBilling(now = new Date()) {
 }
 type BillResult = "renewed" | "failed" | "ended" | "skipped";
 async function billOne(s: Subscription, now: Date, force = false): Promise<BillResult> {
-  if (!force) { const claim = await db.subscription.updateMany({ where: { id: s.id, nextChargeAt: s.nextChargeAt }, data: { nextChargeAt: new Date(now.getTime() + 15 * 60_000) } }); if (!claim.count) return "skipped"; }
+  const claim = await db.subscription.updateMany({ where: { id: s.id, nextChargeAt: s.nextChargeAt }, data: { nextChargeAt: new Date(now.getTime() + 15 * 60_000) } }); if (!claim.count) return "skipped"; // also for a forced try, so the hourly job cannot charge at the same moment
   if (s.cancelAtPeriodEnd && s.currentPeriodEnd <= now) { await db.subscription.update({ where: { id: s.id }, data: { status: "CANCELED", nextChargeAt: null } }); return "ended"; }
   const plan = (s.pendingPlan ?? s.plan) as PlanId, billing = (s.pendingBilling ?? s.billing) as Billing, extra = plan === "pro" ? Math.max(0, s.pendingExtraBranches ?? s.extraBranches ?? 0) : 0, tax = await taxDecisionFor(s.businessId, now), attempt = s.failedAttempts + 1;
   const fail = async (message: string): Promise<BillResult> => {
+    if (force) { await db.subscription.update({ where: { id: s.id }, data: { lastFailure: message, nextChargeAt: s.nextChargeAt } }); return "failed"; } // a try with a new card never uses up the automatic retries or moves the grace period
     if (attempt > RETRY_DAYS.length) { await db.subscription.update({ where: { id: s.id }, data: { status: "ENDED", nextChargeAt: null, failedAttempts: attempt, lastFailure: message } }); return "ended"; }
     await db.subscription.update({ where: { id: s.id }, data: { status: "PAST_DUE", failedAttempts: attempt, lastFailure: message, nextChargeAt: new Date(now.getTime() + RETRY_DAYS[attempt - 1]! * 86_400_000) } });
     return "failed";
@@ -258,9 +275,9 @@ async function billOne(s: Subscription, now: Date, force = false): Promise<BillR
   if (!tax.eligible) return fail(`Tax review required (${tax.reasons.join(", ")}).`); // a revoked or expired VAT approval stops new billing until it is reviewed; the retry window is the grace period
   if (!s.stripeCustomerId || !s.stripePaymentMethodId) return fail("No card on file.");
   let charge: ChargeReply;
-  try { charge = await api<ChargeReply>("/internal/billing/charge", { customerId: s.stripeCustomerId, paymentMethodId: s.stripePaymentMethodId, amountMinor: quote.totalMinor, currency: book.currency, description: `Lumia Order ${PLANS[plan].name} (${billing}) renewal${extra ? ` + ${extra} extra branch${extra > 1 ? "es" : ""}` : ""}`, idempotencyKey: `renew:${s.id}:${s.currentPeriodEnd.toISOString().slice(0, 10)}:${attempt}`, metadata: { kind: "renewal", subscriptionId: s.id, businessId: s.businessId } }); }
-  catch { await db.subscription.update({ where: { id: s.id }, data: { nextChargeAt: new Date(now.getTime() + 60 * 60_000) } }); return "skipped"; } // payment service unreachable: not the customer's fault, try again in an hour
-  if (charge.status !== "succeeded") return fail(charge.failureMessage ?? "The payment did not go through.");
+  try { charge = await api<ChargeReply>("/internal/billing/charge", { customerId: s.stripeCustomerId, paymentMethodId: s.stripePaymentMethodId, amountMinor: quote.totalMinor, currency: book.currency, description: `Lumia Order ${PLANS[plan].name} (${billing}) renewal${extra ? ` + ${extra} extra branch${extra > 1 ? "es" : ""}` : ""}`, idempotencyKey: `renew:${s.id}:${s.currentPeriodEnd.toISOString().slice(0, 10)}:${attempt}${force ? `:${s.stripePaymentMethodId}` : ""}`, metadata: { kind: "renewal", subscriptionId: s.id, businessId: s.businessId } }); }
+  catch { await db.subscription.update({ where: { id: s.id }, data: { nextChargeAt: force ? s.nextChargeAt : new Date(now.getTime() + 60 * 60_000) } }); return "skipped"; } // payment service unreachable: not the customer's fault, try again in an hour
+  if (charge.status !== "succeeded") return fail(charge.status === "requires_action" ? AUTH_REQUIRED : charge.failureMessage ?? "The payment did not go through.");
   const start = s.currentPeriodEnd, end = addPeriod(start, billing);
   const sub = await db.subscription.update({ where: { id: s.id }, data: { plan, billing, pendingPlan: null, pendingBilling: null, extraBranches: extra, pendingExtraBranches: null, currentPeriodStart: start, currentPeriodEnd: end, nextChargeAt: end, status: "ACTIVE", failedAttempts: 0, lastFailure: null } });
   try { await writeInvoice(sub, "RENEWAL", quote, { start, end }, charge.paymentIntentId, now, tax, book.currency); } catch (e) { if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")) throw e; }
@@ -268,41 +285,54 @@ async function billOne(s: Subscription, now: Date, force = false): Promise<BillR
 }
 
 // ---- changes made by the owner ----
+// Plans only go up. A bigger plan starts now and pays the difference for the time left. Moving from monthly to yearly starts at the next renewal.
+// A smaller plan or a shorter cycle is not offered: the owner cancels (the plan runs to the end of the period) and subscribes again.
+type Move = "none" | "upgrade" | "cycle" | "unavailable";
+function moveOf(s: Subscription, plan: PlanId, billing: Billing): Move {
+  const from = s.plan as PlanId;
+  if (plan === from && billing === s.billing) return "none";
+  if (PLANS[plan].rank < PLANS[from].rank || (billing === "monthly" && s.billing === "yearly")) return "unavailable";
+  return PLANS[plan].rank > PLANS[from].rank ? "upgrade" : "cycle";
+}
+const extraOf = (s: Subscription, plan: PlanId) => (plan === "pro" ? Math.max(0, s.pendingExtraBranches ?? s.extraBranches ?? 0) : 0);
+// If the money was taken but our records could not be updated, say so plainly and leave a trail for support instead of a vague failure.
+async function afterPayment<T>(kind: string, businessId: string, paymentIntentId: string | undefined, fn: () => Promise<T>): Promise<T> {
+  try { return await fn(); }
+  catch { console.error(JSON.stringify({ level: "error", code: "BILLING_PAID_NOT_APPLIED", kind, businessId, paymentIntentId })); throw new AppError("PAID_NOT_APPLIED", "Your payment went through, but we couldn’t finish the change. Please contact Lumia. You will not be charged again.", 500); }
+}
 const planSchema = z.object({ plan: z.enum(["starter", "plus", "pro"]), billing: z.enum(["monthly", "yearly"]) }).strict();
 export async function quotePlanChange(userId: string, businessId: string, input: unknown, now = new Date()) {
   const { plan, billing } = planSchema.parse(input);
   await authorize(userId, businessId);
   const s = await getSubscriptionFor(businessId);
   if (!isActive(s)) throw new AppError("NO_SUBSCRIPTION", "Subscribe to a plan first.", 409);
-  const sameCycle = billing === s!.billing, tax = await taxDecisionFor(businessId, now), book = await priceBookForBusiness(businessId, now);
-  if (plan === s!.plan && sameCycle) return { kind: "none" as const };
-  if (sameCycle && isUpgrade(s!.plan as PlanId, plan)) { const q = quoteUpgrade(s!.plan as PlanId, plan, billing, s!.currentPeriodStart, s!.currentPeriodEnd, now, tax.ratePercent, book); return { kind: "upgrade" as const, now: true, totalMinor: q.totalMinor, vatMinor: q.vatMinor, effectiveAt: now.toISOString() }; }
-  return { kind: "scheduled" as const, now: false, totalMinor: 0, effectiveAt: s!.currentPeriodEnd.toISOString(), renewalMinor: quoteRenewal(plan, billing, 0, tax.ratePercent, book).totalMinor };
+  const move = moveOf(s!, plan, billing);
+  if (move === "none") return { kind: "none" as const };
+  if (move === "unavailable") return { kind: "unavailable" as const };
+  const tax = await taxDecisionFor(businessId, now), book = await priceBookForBusiness(businessId, now), renewal = quoteRenewal(plan, billing, extraOf(s!, plan), tax.ratePercent, book);
+  if (move === "cycle") return { kind: "scheduled" as const, now: false, totalMinor: 0, effectiveAt: s!.currentPeriodEnd.toISOString(), renewalMinor: renewal.totalMinor };
+  const q = quoteUpgrade(s!.plan as PlanId, plan, s!.billing as Billing, s!.currentPeriodStart, s!.currentPeriodEnd, now, tax.ratePercent, book);
+  return { kind: "upgrade" as const, now: true, totalMinor: q.totalMinor, vatMinor: q.vatMinor, effectiveAt: now.toISOString(), renewalMinor: renewal.totalMinor, renewsAt: s!.currentPeriodEnd.toISOString(), cycleChange: billing !== s!.billing };
 }
 export async function changePlan(userId: string, businessId: string, input: unknown, now = new Date()) {
   const { plan, billing } = planSchema.parse(input);
   await authorize(userId, businessId, "business.manage");
   const s = await getSubscriptionFor(businessId);
   if (!isActive(s)) throw new AppError("NO_SUBSCRIPTION", "Subscribe to a plan first.", 409);
-  const sameCycle = billing === s!.billing;
-  if (plan === s!.plan && sameCycle) { await db.subscription.update({ where: { id: s!.id }, data: { pendingPlan: null, pendingBilling: null } }); return getSubscription(userId, businessId); } // choosing the current plan again cancels a scheduled change
-  if (sameCycle && isUpgrade(s!.plan as PlanId, plan)) {
-    if (s!.status === "PAST_DUE") throw new AppError("PAYMENT_OVERDUE", "Update your card and pay the overdue renewal before upgrading.", 409);
-    if (!s!.stripeCustomerId || !s!.stripePaymentMethodId) throw new AppError("NO_CARD", "Add a card first.", 409);
-    const tax = await requireTaxEligible(businessId, now), book = await priceBookForBusiness(businessId, now), q = quoteUpgrade(s!.plan as PlanId, plan, billing, s!.currentPeriodStart, s!.currentPeriodEnd, now, tax.ratePercent, book);
-    if (q.totalMinor >= 200) {
-      const charge = await api<ChargeReply>("/internal/billing/charge", { customerId: s!.stripeCustomerId, paymentMethodId: s!.stripePaymentMethodId, amountMinor: q.totalMinor, currency: book.currency, description: `Lumia Order upgrade to ${PLANS[plan].name}`, idempotencyKey: `upgrade:${s!.id}:${s!.plan}:${plan}:${s!.currentPeriodEnd.toISOString().slice(0, 10)}`, metadata: { kind: "upgrade", subscriptionId: s!.id, businessId } });
-      if (charge.status !== "succeeded") throw new AppError("PAYMENT_FAILED", charge.failureMessage ?? "The payment did not go through. Try another card.", 402);
-      const sub = await db.subscription.update({ where: { id: s!.id }, data: { plan, pendingPlan: null, pendingBilling: null } });
-      await writeInvoice(sub, "UPGRADE", q, { start: now, end: s!.currentPeriodEnd }, charge.paymentIntentId, now, tax, book.currency);
-    } else await db.subscription.update({ where: { id: s!.id }, data: { plan, pendingPlan: null, pendingBilling: null } }); // nothing left to pay for
-    return getSubscription(userId, businessId);
-  }
-  if (INCLUDED_BRANCHES[plan] < INCLUDED_BRANCHES[s!.plan as PlanId] || plan !== "pro" && s!.plan === "pro") { // a smaller plan has fewer branches: switch the extra ones off first
-    const active = await db.location.count({ where: { businessId, status: "ACTIVE" } });
-    if (active > INCLUDED_BRANCHES[plan]) throw new AppError("PLAN_LIMIT", `${PLANS[plan].name} includes ${INCLUDED_BRANCHES[plan]} ${INCLUDED_BRANCHES[plan] === 1 ? "branch" : "branches"} and you have ${active} active. Switch some off in Settings first.`, 409);
-  }
-  await db.subscription.update({ where: { id: s!.id }, data: { pendingPlan: plan, pendingBilling: billing } }); // downgrades and billing-cycle changes start at the next renewal
+  const move = moveOf(s!, plan, billing);
+  if (move === "none") { await db.subscription.update({ where: { id: s!.id }, data: { pendingPlan: null, pendingBilling: null } }); return getSubscription(userId, businessId); } // choosing the current plan again cancels a scheduled change
+  if (move === "unavailable") throw new AppError("DOWNGRADE_NOT_AVAILABLE", "Plans can only go up. To move to a smaller plan or a shorter cycle, cancel your plan and subscribe again when the period ends.", 409);
+  if (s!.cancelAtPeriodEnd) throw new AppError("PLAN_ENDING", "Your plan is set to end. Choose “Keep my plan” first, then change it.", 409);
+  if (move === "cycle") { await db.subscription.update({ where: { id: s!.id }, data: { pendingPlan: null, pendingBilling: billing } }); return getSubscription(userId, businessId); } // monthly to yearly starts at the next renewal
+  if (s!.status === "PAST_DUE") throw new AppError("PAYMENT_OVERDUE", "Update your card and pay the overdue renewal before upgrading.", 409);
+  if (!s!.stripeCustomerId || !s!.stripePaymentMethodId) throw new AppError("NO_CARD", "Add a card first.", 409);
+  const tax = await requireTaxEligible(businessId, now), book = await priceBookForBusiness(businessId, now), q = quoteUpgrade(s!.plan as PlanId, plan, s!.billing as Billing, s!.currentPeriodStart, s!.currentPeriodEnd, now, tax.ratePercent, book);
+  const data = { plan, pendingPlan: null, pendingBilling: billing !== s!.billing ? billing : null }; // a longer cycle chosen together with a bigger plan still starts at the renewal
+  if (q.totalMinor >= 200) {
+    const charge = await api<ChargeReply>("/internal/billing/charge", { customerId: s!.stripeCustomerId, paymentMethodId: s!.stripePaymentMethodId, amountMinor: q.totalMinor, currency: book.currency, description: `Lumia Order upgrade to ${PLANS[plan].name}`, idempotencyKey: `upgrade:${s!.id}:${s!.plan}:${plan}:${s!.currentPeriodEnd.toISOString().slice(0, 10)}:${s!.stripePaymentMethodId}`, metadata: { kind: "upgrade", subscriptionId: s!.id, businessId } });
+    if (charge.status !== "succeeded") throw notPaid(charge);
+    await afterPayment("upgrade", businessId, charge.paymentIntentId, async () => { const sub = await db.subscription.update({ where: { id: s!.id }, data }); await writeInvoice(sub, "UPGRADE", q, { start: now, end: s!.currentPeriodEnd }, charge.paymentIntentId, now, tax, book.currency); });
+  } else await db.subscription.update({ where: { id: s!.id }, data }); // nothing left to pay for
   return getSubscription(userId, businessId);
 }
 export async function setCancel(userId: string, businessId: string, cancel: boolean) {
@@ -337,9 +367,8 @@ export async function buyTopUp(userId: string, businessId: string, input: unknow
   const tax = await requireTaxEligible(businessId, now), book = await priceBookForBusiness(businessId, now), id = pack as keyof typeof TOPUPS, q = quoteTopUp(id, tax.ratePercent, book);
   if (!providerAmountOk(q.totalMinor, book.currency)) throw new AppError("INVALID_AMOUNT", "This amount cannot be charged in this currency. Please contact support.", 409);
   const charge = await api<ChargeReply>("/internal/billing/charge", { customerId: s!.stripeCustomerId, paymentMethodId: s!.stripePaymentMethodId, amountMinor: q.totalMinor, currency: book.currency, description: `Lumia Order ${TOPUPS[id].orders} extra orders`, idempotencyKey: `topup:${s!.id}:${requestId}`, metadata: { kind: "topup", subscriptionId: s!.id, businessId, pack: id } });
-  if (charge.status !== "succeeded") throw new AppError("PAYMENT_FAILED", charge.failureMessage ?? "The payment did not go through. Try another card.", 402);
-  await addCredits(businessId, TOPUPS[id].orders);
-  await writeInvoice(s!, "TOPUP", q, { start: now, end: now }, charge.paymentIntentId, now, tax, book.currency);
+  if (charge.status !== "succeeded") throw notPaid(charge);
+  await afterPayment("topup", businessId, charge.paymentIntentId, async () => { await addCredits(businessId, TOPUPS[id].orders); await writeInvoice(s!, "TOPUP", q, { start: now, end: now }, charge.paymentIntentId, now, tax, book.currency); });
   return getSubscription(userId, businessId);
 }
 
@@ -360,15 +389,18 @@ export async function buyBranch(userId: string, businessId: string, input: unkno
   const s = await getSubscriptionFor(businessId);
   if (!isActive(s) || s!.plan !== "pro") throw new AppError("NOT_PRO", "Extra branches are available on the Pro plan.", 409);
   if (s!.status === "PAST_DUE") throw new AppError("PAYMENT_OVERDUE", "Update your card and pay the overdue renewal first.", 409);
+  if (s!.cancelAtPeriodEnd) throw new AppError("PLAN_ENDING", "Your plan is set to end. Choose “Keep my plan” first, then add a branch.", 409);
   if (!s!.stripeCustomerId || !s!.stripePaymentMethodId) throw new AppError("NO_CARD", "Add a card first.", 409);
   const extra = s!.extraBranches ?? 0;
   if (extra >= EXTRA_BRANCH.max) throw new AppError("PLAN_LIMIT", "That is the most branches one account can have.", 409);
   const tax = await requireTaxEligible(businessId, now), book = await priceBookForBusiness(businessId, now), q = quoteExtraBranch(s!.billing as Billing, s!.currentPeriodStart, s!.currentPeriodEnd, now, tax.ratePercent, book);
   if (q.totalMinor >= 200) {
     const charge = await api<ChargeReply>("/internal/billing/charge", { customerId: s!.stripeCustomerId, paymentMethodId: s!.stripePaymentMethodId, amountMinor: q.totalMinor, currency: book.currency, description: "Lumia Order extra branch", idempotencyKey: `branch:${s!.id}:${requestId}`, metadata: { kind: "branch", subscriptionId: s!.id, businessId } });
-    if (charge.status !== "succeeded") throw new AppError("PAYMENT_FAILED", charge.failureMessage ?? "The payment did not go through. Try another card.", 402);
-    await db.subscription.update({ where: { id: s!.id }, data: { extraBranches: extra + 1, pendingExtraBranches: s!.pendingExtraBranches === null ? null : Math.max(s!.pendingExtraBranches ?? 0, extra + 1) } });
-    await writeInvoice({ ...s!, extraBranches: extra + 1 }, "BRANCH", q, { start: now, end: s!.currentPeriodEnd }, charge.paymentIntentId, now, tax, book.currency);
+    if (charge.status !== "succeeded") throw notPaid(charge);
+    await afterPayment("branch", businessId, charge.paymentIntentId, async () => {
+      await db.subscription.update({ where: { id: s!.id }, data: { extraBranches: extra + 1, pendingExtraBranches: s!.pendingExtraBranches === null ? null : Math.max(s!.pendingExtraBranches ?? 0, extra + 1) } });
+      await writeInvoice({ ...s!, extraBranches: extra + 1 }, "BRANCH", q, { start: now, end: s!.currentPeriodEnd }, charge.paymentIntentId, now, tax, book.currency);
+    });
   } else await db.subscription.update({ where: { id: s!.id }, data: { extraBranches: extra + 1 } }); // nothing left to pay for in this period
   return getSubscription(userId, businessId);
 }
