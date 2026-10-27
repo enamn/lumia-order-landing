@@ -7,11 +7,11 @@ import { extractMenuFromUrl } from "@/modules/menu/import-url";
 import { setLanguage } from "@/modules/auth/profile";
 import { connectWhatsApp, getWhatsAppStatus, getImportInfo, applyImport, useCatalog, disconnectWhatsApp } from "@/modules/whatsapp/link";
 import { createMessageTemplate } from "@/modules/whatsapp/templates";
-import { getSubscription, startCheckout, startCardUpdate, confirmSession, quotePlanChange, changePlan, buyTopUp, buyBranch, setExtraBranches, setCancel, listInvoices } from "@/modules/billing/service";
+import { getSubscription, startCheckout, startCardUpdate, removeCard, confirmSession, quotePlanChange, changePlan, buyTopUp, buyBranch, setExtraBranches, setCancel, listInvoices } from "@/modules/billing/service";
 import { getSettings, saveSettingsSection } from "@/modules/settings/service";
 import { getMessageStats, getOverview, listConversations } from "@/modules/messages/inbound";
 import { getConversation, sendReply } from "@/modules/messages/reply";
-import { getAiSettings, setAiSettings } from "@/modules/messages/ai";
+import { getAiSettings, setAiSettings, getMenuPreview } from "@/modules/messages/ai";
 import { listOrders, setOrderStatus } from "@/modules/orders/service";
 import { AppError } from "@/server/errors";
 import { startEmailVerification, confirmEmailVerification } from "@/modules/business/contact-email";
@@ -80,6 +80,7 @@ async function handle(request: Request, context: Context) {
       if (method === "POST" && path.length === 4) {
         if (subId === "checkout") return startCheckout(userId, businessId, await jsonBody(request));
         if (subId === "card") return startCardUpdate(userId, businessId);
+        if (subId === "remove-card") return removeCard(userId, businessId);
         if (subId === "confirm") return confirmSession(userId, businessId, await jsonBody(request));
         if (subId === "quote") return quotePlanChange(userId, businessId, await jsonBody(request));
         if (subId === "change") return changePlan(userId, businessId, await jsonBody(request));
@@ -110,6 +111,7 @@ async function handle(request: Request, context: Context) {
       if (method === "POST" && subId2 === "status" && path.length === 5) return setOrderStatus(userId, businessId, subId, await jsonBody(request), requestId);
       if (method === "POST" && subId2 === "print" && path.length === 5) return printOrder(userId, businessId, subId);
     }
+    if (section === "ai" && subId === "menu-preview" && path.length === 4 && method === "GET") return getMenuPreview(userId, businessId, new URL(request.url).searchParams.get("branch"));
     if (section === "ai" && path.length === 3) {
       if (method === "GET") return getAiSettings(userId, businessId);
       if (method === "POST") return setAiSettings(userId, businessId, await jsonBody(request), requestId);

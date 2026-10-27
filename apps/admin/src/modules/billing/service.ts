@@ -339,7 +339,18 @@ export async function setCancel(userId: string, businessId: string, cancel: bool
   await authorize(userId, businessId, "business.manage");
   const s = await getSubscriptionFor(businessId);
   if (!isActive(s)) throw new AppError("NO_SUBSCRIPTION", "There is no active plan.", 409);
+  if (!cancel && !s!.stripePaymentMethodId) throw new AppError("NO_CARD", "Add a card first, then keep your plan.", 409);
   await db.subscription.update({ where: { id: s!.id }, data: { cancelAtPeriodEnd: cancel, ...(cancel ? { pendingPlan: null, pendingBilling: null } : {}) } });
+  return getSubscription(userId, businessId);
+}
+
+// The card on file is only removed while no renewal depends on it (the plan is set to end or already over); otherwise the owner changes it instead.
+export async function removeCard(userId: string, businessId: string) {
+  await authorize(userId, businessId, "business.manage");
+  const s = await getSubscriptionFor(businessId);
+  if (!s || !s.stripePaymentMethodId) throw new AppError("NO_CARD", "There is no card on file.", 409);
+  if (isActive(s) && !s.cancelAtPeriodEnd) throw new AppError("CARD_IN_USE", "Your plan renews with this card. Change the card instead, or cancel your plan first.", 409);
+  await db.subscription.update({ where: { id: s.id }, data: { stripePaymentMethodId: null, card: null } });
   return getSubscription(userId, businessId);
 }
 
