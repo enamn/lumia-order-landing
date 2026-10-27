@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import { deliverText } from "./reply";
 import { agentOf, isOn } from "./ai";
 import { welcomeFor } from "./welcome-text";
+import { greetingText } from "./greeting";
 import { closedText, hoursFrom, openStatus } from "./hours";
 import { langOf } from "@/modules/orders/draft";
 import { marketOf } from "@/modules/market/countries";
@@ -17,18 +18,23 @@ export async function sendWelcome(t: { businessId: string; messageId: string; se
   const business = await db.business.findUnique({ where: { id: t.businessId }, select: { name: true, settings: true, countryCode: true } });
   if (!account?.phoneNumberId || !account.accessTokenEncrypted || !business) return "skipped";
   const phone = `+${t.senderId}`; const at = new Date(Number(t.timestamp) * 1000);
+  if (Date.now() - at.getTime() >= 24 * 3600000) return "skipped";
   const customer = await db.customer.upsert({ where: { businessId_phone: { businessId: t.businessId, phone } }, create: { businessId: t.businessId, phone, ...(t.senderName ? { displayName: t.senderName } : {}) }, update: {} });
-  const open = await db.conversation.findFirst({ where: { businessId: t.businessId, customerId: customer.id, status: "OPEN" }, orderBy: { lastMessageAt: "desc" } });
+  const open = await db.conversation.findFirst({ where: { businessId: t.businessId, customerId: customer.id, status: "OPEN", OR: [{ phoneNumberId: t.phoneNumberId }, { phoneNumberId: null }, { phoneNumberId: { isSet: false } }] }, orderBy: { lastMessageAt: "desc" } });
   const conversation = open ?? await db.conversation.create({ data: { businessId: t.businessId, customerId: customer.id, phoneNumberId: t.phoneNumberId, lastMessageAt: at } });
   try { await db.message.create({ data: { conversationId: conversation.id, externalMessageId: t.messageId, direction: "INBOUND", senderType: "CUSTOMER", messageType: "REQUEST_WELCOME", status: "RECEIVED", createdAt: at } }); }
   catch (error) { if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") return "skipped"; /* Meta redelivered it */ throw error; }
   // Closed right now: the customer is told so, with the working hours, instead of being invited to order.
   const rows = await db.businessHours.findMany({ where: { location: { businessId: t.businessId, status: "ACTIVE" } }, orderBy: { createdAt: "asc" }, take: 7 });
   const openNow = openStatus(hoursFrom((business.settings as { hours?: Hours } | null)?.hours, rows), conversation.branchId ?? null, marketOf(business.countryCode).timezone);
-  const welcome = welcomeFor(agent, business.name);
+  const configured = welcomeFor(agent, business.name);
   const custom = (agent?.configuration as { welcome?: unknown } | null)?.welcome, ownText = typeof custom === "string" && custom.trim() !== "";
-  // The default welcome is in English and Arabic, so the closed notice is too; an owner's own welcome sets the language.
-  const text = openNow.open ? welcome : ownText ? closedText(openNow, langOf(welcome), business.name) : `${closedText(openNow, "en", business.name)}\n\n${closedText(openNow, "ar", business.name)}`;
+  const conversationalMenu = (agent?.configuration as { interactiveMenu?: boolean } | null)?.interactiveMenu === true;
+  const previous = conversationalMenu ? await db.message.findFirst({ where: { conversationId: conversation.id, direction: "INBOUND", textContent: { not: null } }, orderBy: { createdAt: "desc" }, select: { textContent: true } }) : null;
+  const locale = ownText ? langOf(configured) : langOf(previous?.textContent || "hello");
+  // Unknown first-open language defaults to English; the customer's first text/voice selects subsequent language.
+  const welcome = ownText || !conversationalMenu ? configured : greetingText(locale, business.name, "");
+  const text = openNow.open ? welcome : ownText || conversationalMenu ? closedText(openNow, locale, business.name) : `${closedText(openNow, "en", business.name)}\n\n${closedText(openNow, "ar", business.name)}`;
   const sentId = await deliverText(account, phone, text); const now = new Date();
   await db.$transaction([
     db.message.create({ data: { conversationId: conversation.id, externalMessageId: sentId, direction: "OUTBOUND", senderType: "AI", messageType: "TEXT", textContent: text, status: "SENT", createdAt: now } }),

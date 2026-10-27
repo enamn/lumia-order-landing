@@ -59,7 +59,7 @@ describe.skipIf(!enabled)("replying to customers", () => {
     await db.whatsAppAccount.updateMany({ where: { businessId: biz }, data: { status: "DISCONNECTED" } });
     await expect(sendReply(owner, biz, conv, { text: "x" }, "t")).rejects.toMatchObject({ code: "WHATSAPP_NOT_CONNECTED" });
   });
-  it("with two numbers, replies go out from the number the customer last wrote to", async () => {
+  it("with two numbers, each conversation replies from its own receiving number", async () => {
     const SECOND = `5561${Date.now().toString().slice(-9)}`;
     await db.whatsAppAccount.create({ data: { businessId: biz, phoneNumberId: SECOND, wabaId: "9990001", status: "CONNECTED", accessTokenEncrypted: encryptSecret("biz-token"), connectedAt: new Date(Date.now() + 60000) } }); // newest, but not the one this customer used
     await db.whatsAppAccount.updateMany({ where: { businessId: biz, phoneNumberId: PNID }, data: { status: "CONNECTED" } }); // the test above disconnected it
@@ -71,7 +71,9 @@ describe.skipIf(!enabled)("replying to customers", () => {
     respond(() => Response.json({ error: { code: "AI_FAILED" } }, { status: 502 }));
     await recordInbound({ messages: [{ phoneNumberId: SECOND, messageId: `wamid.${suffix}.second`, senderId: "971504074115", timestamp: String(Math.floor(Date.now() / 1000) + 1), type: "text", textBody: "Writing to your other number", senderName: "Ahmad" }] });
     calls = []; respond(() => Response.json({ messageId: `wamid.out.${suffix}.b` }));
-    await sendReply(owner, biz, conv, { text: "From the second number" }, "t");
+    const secondConversation = await db.conversation.findFirstOrThrow({ where: { businessId: biz, phoneNumberId: SECOND, customer: { phone: "+971504074115" } } });
+    expect(secondConversation.id).not.toBe(conv);
+    await sendReply(owner, biz, secondConversation.id, { text: "From the second number" }, "t");
     expect(calls.at(-1)?.body).toMatchObject({ phoneNumberId: SECOND });
   });
 });

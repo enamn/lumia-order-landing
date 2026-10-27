@@ -1,0 +1,23 @@
+{
+  "note": "Illustrative fixture. The session action mapping lives on the server; IDs and labels contain no prices or credentials.",
+  "outbound": {
+    "messaging_product": "whatsapp",
+    "to": "971500000000",
+    "type": "interactive",
+    "interactive": {
+      "type": "list",
+      "body": { "text": "اختر القسم الذي ترغب بتصفحه." },
+      "action": {
+        "button": "عرض الأقسام",
+        "sections": [{ "title": "عرض الأقسام", "rows": [{ "id": "lm:0123456789abcdef:0", "title": "المشاوي" }, { "id": "lm:0123456789abcdef:1", "title": "المقبلات" }] }]
+      }
+    }
+  },
+  "inbound": {
+    "object": "whatsapp_business_account",
+    "entry": [{ "id": "12345678", "changes": [{ "field": "messages", "value": {
+      "metadata": { "phone_number_id": "123456789" },
+      "messages": [{ "from": "971500000000", "id": "wamid.fixture", "timestamp": "1793088000", "type": "interactive", "interactive": { "list_reply": { "id": "lm:0123456789abcdef:0", "title": "المشاوي" } } }]
+    } }] }]
+  }
+}

@@ -1,7 +1,8 @@
 "use client";
+import { MenuPreview } from "./menu-preview";
 import { useEffect, useState } from "react";
 
-type Settings = { enabled: boolean; welcome: string; instructions: string; tone: string };
+type Settings = { enabled: boolean; welcome: string; instructions: string; tone: string; interactiveMenu?: boolean };
 async function call(path: string, method = "GET", body?: unknown) {
   const res = await fetch(path, { method, headers: { "Content-Type": "application/json" }, ...(method !== "GET" ? { body: JSON.stringify(body ?? {}) } : {}) });
   const json = await res.json().catch(() => ({}));
@@ -13,11 +14,12 @@ async function call(path: string, method = "GET", body?: unknown) {
 export function AiSettings({ businessId, canManage }: { businessId: string; canManage: boolean }) {
   const path = `/api/v1/businesses/${businessId}/ai`;
   const [s, setS] = useState<Settings | null>(null); const [instructions, setInstructions] = useState(""); const [welcome, setWelcome] = useState("");
+  const [interactiveMenu, setInteractiveMenu] = useState(false);
   const [busy, setBusy] = useState(false); const [error, setError] = useState(""); const [saved, setSaved] = useState(false);
-  useEffect(() => { call(path).then((d: Settings) => { setS(d); setInstructions(d.instructions); setWelcome(d.welcome); }).catch(() => setError("We couldn’t load the AI settings.")); }, [path]);
+  useEffect(() => { call(path).then((d: Settings) => { setS(d); setInstructions(d.instructions); setWelcome(d.welcome); setInteractiveMenu(d.interactiveMenu === true); }).catch(() => setError("We couldn’t load the AI settings.")); }, [path]);
   async function save() {
     setBusy(true); setError(""); setSaved(false);
-    try { const d: Settings = await call(path, "POST", { instructions, welcome }); setS(d); setInstructions(d.instructions); setWelcome(d.welcome); setSaved(true); }
+    try { const d: Settings = await call(path, "POST", { instructions, welcome, interactiveMenu }); setS(d); setInstructions(d.instructions); setWelcome(d.welcome); setInteractiveMenu(d.interactiveMenu === true); setSaved(true); }
     catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   }
   if (!s) return error ? <p role="alert" className="error-message">{error}</p> : null;
@@ -25,12 +27,15 @@ export function AiSettings({ businessId, canManage }: { businessId: string; canM
     <div className="ai-head">
       <div><h2>AI assistant <span className="pill pill-green"><span className="dot"/>Always on</span></h2><p className="muted">Answers customers’ WhatsApp messages from your menu, in Arabic or English, and takes their orders. Complaints and anything it can’t answer are passed to you.</p></div>
     </div>
-    {canManage && <details className="ai-more"><summary>Notes for the assistant</summary>
+    {canManage && <details className="ai-more"><summary>Assistant settings</summary>
+      <label><input type="checkbox" checked={interactiveMenu} onChange={e => { setInteractiveMenu(e.target.checked); setSaved(false); }}/> Reply to menu questions with swipeable menu cards</label>
+      <p className="muted">Customers order or ask for advice by text or voice. Greetings stay conversational; items with options are handled by your team.</p>
       <label>Welcome message (sent when a customer first opens the chat)<textarea className="input" rows={3} maxLength={600} value={welcome} onChange={e => { setWelcome(e.target.value); setSaved(false); }} placeholder="Leave empty to use the default English and Arabic welcome."/></label>
       <label>Anything it should know (opening hours, delivery areas, offers)<textarea className="input" rows={3} maxLength={1500} value={instructions} onChange={e => { setInstructions(e.target.value); setSaved(false); }} placeholder="We are open 11am–midnight. We deliver to Al Majaz and Al Khan."/></label>
-      <button type="button" className="button button-outline button-sm" disabled={busy || (instructions === s.instructions && welcome === s.welcome)} onClick={save}>{busy ? "Saving…" : "Save notes"}</button>
+      <button type="button" className="button button-outline button-sm" disabled={busy || (instructions === s.instructions && welcome === s.welcome && interactiveMenu === (s.interactiveMenu === true))} onClick={save}>{busy ? "Saving…" : "Save settings"}</button>
       {saved && <span className="saved"> Saved</span>}
     </details>}
+    <MenuPreview businessId={businessId}/>
     {error && <p role="alert" className="error-message">{error}</p>}
   </section>;
 }

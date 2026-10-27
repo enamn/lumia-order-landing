@@ -111,7 +111,7 @@ async function handle(request: Request, context: Context) {
       if (method === "POST" && subId2 === "status" && path.length === 5) return setOrderStatus(userId, businessId, subId, await jsonBody(request), requestId);
       if (method === "POST" && subId2 === "print" && path.length === 5) return printOrder(userId, businessId, subId);
     }
-    if (section === "ai" && subId === "menu-preview" && path.length === 4 && method === "GET") return getMenuPreview(userId, businessId, new URL(request.url).searchParams.get("branch"));
+    if (section === "ai" && subId === "menu-preview" && path.length === 4 && method === "GET") { const q = new URL(request.url).searchParams; return getMenuPreview(userId, businessId, q.get("branch"), q.get("locale") === "en" ? "en" : "ar", Number(q.get("page") ?? 0)); }
     if (section === "ai" && path.length === 3) {
       if (method === "GET") return getAiSettings(userId, businessId);
       if (method === "POST") return setAiSettings(userId, businessId, await jsonBody(request), requestId);

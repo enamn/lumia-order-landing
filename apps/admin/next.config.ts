@@ -6,5 +6,5 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
   { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
 ];
-const config: NextConfig = { poweredByHeader: false, turbopack: { root: process.cwd() }, experimental: { cpus: 2 }, async headers() { return [{ source: "/:path*", headers: securityHeaders }]; } };
+const config: NextConfig = { poweredByHeader: false, serverExternalPackages: ["@resvg/resvg-js"], turbopack: { root: process.cwd() }, experimental: { cpus: 2 }, async headers() { return [{ source: "/:path*", headers: securityHeaders }]; } };
 export default config;

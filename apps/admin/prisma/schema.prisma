@@ -415,8 +415,10 @@ model Conversation {
   // A complaint pauses the assistant until this time (or until staff reply). Other "needs you" flags only mark the chat for staff and never silence it.
   aiPausedUntil DateTime?
   draftOrder Json?
+  // Current interactive menu choices, scoped to this conversation and receiving number.
+  menuSession Json?
   customerLocation Json?
-  // The restaurant WhatsApp number (Meta phone number id) the customer last wrote to; replies go out from it.
+  // Receiving WhatsApp number for this conversation; separate numbers keep separate sessions.
   phoneNumberId String?
   // Pro with a menu per branch: the branch this chat is being served by (set from the shared location pin, or chosen by the customer).
   branchId String?
@@ -439,6 +441,7 @@ model Message {
   senderType String
   messageType String @default("TEXT")
   textContent String?
+  interactiveId String?
   mediaUrl String?
   transcription String?
   status String @default("PENDING")
@@ -1000,4 +1003,16 @@ model MarketPrice {
   createdAt DateTime @default(now())
   @@index([country, item, effectiveFrom])
   @@map("market_prices")
+}
+
+// Cached Meta uploads for generated menu cards. Keys include tenant, receiving number and content hash.
+model WhatsAppMenuMedia {
+  id String @id @map("_id")
+  businessId String
+  phoneNumberId String
+  mediaId String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  @@index([expiresAt])
+  @@map("whatsapp_menu_media")
 }

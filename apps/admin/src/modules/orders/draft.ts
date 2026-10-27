@@ -5,7 +5,7 @@ import { regionIn, quoteDelivery, type BranchPoint, type DeliveryRules, type Quo
 // Pure order logic: the AI only proposes menu IDs and quantities. Names, prices and totals always come from the restaurant's own menu.
 export type Lang = "en" | "ar";
 export type Fulfillment = "delivery" | "pickup";
-export interface MenuEntry { index: string; itemId: string; name: string; nameAr: string; priceMinor: number; available: boolean }
+export interface MenuEntry { index: string; itemId: string; name: string; nameAr: string; priceMinor: number; available: boolean; imageUrl?: string | null; category?: string; categoryAr?: string }
 export interface StoredLine { itemId: string; quantity: number; notes: string }
 export interface StoredDraft { items: StoredLine[]; fulfillment: Fulfillment | null; address: string; emirate?: string | null; area?: string; name?: string; label?: string; savedId?: string; discountCode?: string; shownKey: string; updatedAt: string }
 export interface ModelDraft { items: { id: string; quantity: number; notes: string }[]; fulfillment: Fulfillment | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; discountCode?: string; confirmed: boolean }

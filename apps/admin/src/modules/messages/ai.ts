@@ -3,13 +3,14 @@ import { fromMinor } from "../market/money";
 import { marketOf } from "../market/countries";
 import { regionNames } from "../market/regions";
 import { db } from "@/server/db";
+import { AppError } from "@/server/errors";
 import { transaction } from "@/server/transaction";
 import { authorize } from "@/server/authorization";
 import { lumiaApi } from "@/server/lumia-api";
 import { decryptSecret } from "@/server/crypto";
 import { deliverOrderReview, deliverText, type Interactive } from "./reply";
 import { welcomeFor } from "./welcome-text";
-import { DRAFT_TTL_MS, type SavedAddr, draftKey, isComplete, meetsMinimum, money, orderItemLines, placedText, recheckText, codeText, langOf, removedText, resolveDraft, summaryText, type DeliveryContext, type MenuEntry, type Options, type StoredDraft } from "@/modules/orders/draft";
+import { DRAFT_TTL_MS, type SavedAddr, draftKey, isComplete, meetsMinimum, money, orderItemLines, placedText, recheckText, codeText, langOf, removedText, resolveDraft, summaryText, type DeliveryContext, type Options, type StoredDraft } from "@/modules/orders/draft";
 import { branchFromText, looksLikeAddress, nearestBranch, quoteDelivery, regionIn, type BranchPoint, type DeliveryRules } from "@/modules/orders/delivery";
 import { catalogIdFor } from "@/modules/menu/catalog";
 import { canPersonalize, entitlementsFor } from "@/modules/billing/service";
@@ -20,6 +21,9 @@ import { showTyping } from "@/modules/whatsapp/typing";
 import { greetingText, isGreeting } from "./greeting";
 import { closedText, hoursForAi, hoursFrom, openStatus } from "./hours";
 import type { Hours } from "@/modules/settings/schema";
+import { adviceIsActive, recommendationText } from "./menu-carousel";
+import { handleMenu } from "./menu-controller";
+import type { MenuProduct, MenuSession } from "./menu-presentation";
 import { sendingAccount } from "@/modules/whatsapp/accounts";
 
 // The AI assistant answers customers' WhatsApp messages from the restaurant's own menu. It only replies when the owner turned it on,
@@ -29,14 +33,14 @@ const COMPLAINT_PAUSE_MS = 30 * 60 * 1000;
 const HUMAN_ACTIVE_MS = 15 * 60 * 1000; const MAX_AI_PER_HOUR = 20;
 // Abuse guards: one person sending more than RATE_BURST messages in two minutes is told once to slow down, then ignored for a while; very long messages are cut.
 const RATE_BURST = 10; const MAX_TEXT = 1000;
-export const aiSettingsSchema = z.object({ enabled: z.boolean().optional(), instructions: z.string().trim().max(1500).optional(), welcome: z.string().trim().max(600).optional(), tone: z.enum(["Friendly", "Professional", "Casual"]).optional() }).strict();
+export const aiSettingsSchema = z.object({ enabled: z.boolean().optional(), interactiveMenu: z.boolean().optional(), instructions: z.string().trim().max(1500).optional(), welcome: z.string().trim().max(600).optional(), tone: z.enum(["Friendly", "Professional", "Casual"]).optional() }).strict();
 
 const agentFor = (businessId: string) => db.aiAgent.findFirst({ where: { businessId }, orderBy: { createdAt: "asc" } });
 // The assistant is always on for a connected restaurant. Only an explicit DISABLED status (set by us, not exposed in the app) silences it.
 export const isOn = (a: { status: string } | null) => a?.status !== "DISABLED";
 export const agentOf = agentFor;
 const welcomeOf = (a: { configuration?: unknown } | null) => { const w = (a?.configuration as { welcome?: unknown } | null)?.welcome; return typeof w === "string" ? w : ""; };
-const view = (a: { status: string; instructions: string; tone: string; configuration?: unknown } | null) => ({ enabled: isOn(a), welcome: welcomeOf(a), instructions: a?.instructions ?? "", tone: a?.tone ?? "Friendly" });
+const view = (a: { status: string; instructions: string; tone: string; configuration?: unknown } | null) => ({ enabled: isOn(a), welcome: welcomeOf(a), instructions: a?.instructions ?? "", tone: a?.tone ?? "Friendly", ...((a?.configuration as { interactiveMenu?: unknown } | null)?.interactiveMenu !== undefined ? { interactiveMenu: (a?.configuration as { interactiveMenu?: boolean }).interactiveMenu === true } : {}) });
 
 export async function getAiSettings(userId: string, businessId: string) { await authorize(userId, businessId); return view(await agentFor(businessId)); }
 
@@ -45,7 +49,7 @@ export async function setAiSettings(userId: string, businessId: string, input: u
   return transaction(async tx => {
     const { business } = await authorize(userId, businessId, "business.manage", tx);
     const existing = await tx.aiAgent.findFirst({ where: { businessId }, orderBy: { createdAt: "asc" } });
-    const fields = { status: data.enabled === false ? "DISABLED" : "ACTIVE", ...(data.welcome !== undefined ? { configuration: { ...((existing?.configuration as object | null) ?? {}), welcome: data.welcome } } : {}), ...(data.instructions !== undefined ? { instructions: data.instructions } : {}), ...(data.tone ? { tone: data.tone } : {}) };
+    const fields = { status: data.enabled === false ? "DISABLED" : "ACTIVE", ...((data.welcome !== undefined || data.interactiveMenu !== undefined) ? { configuration: { ...((existing?.configuration as object | null) ?? {}), ...(data.welcome !== undefined ? { welcome: data.welcome } : {}), ...(data.interactiveMenu !== undefined ? { interactiveMenu: data.interactiveMenu } : {}) } } : {}), ...(data.instructions !== undefined ? { instructions: data.instructions } : {}), ...(data.tone ? { tone: data.tone } : {}) };
     const agent = existing ? await tx.aiAgent.update({ where: { id: existing.id }, data: fields }) : await tx.aiAgent.create({ data: { businessId, ...fields } });
     // Instructions can hold business details, so the audit trail records only that the setting changed.
     await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "AiAgent", entityId: agent.id, action: data.enabled === false ? "ai.disabled" : "ai.settings.updated", requestId } });
@@ -54,12 +58,22 @@ export async function setAiSettings(userId: string, businessId: string, input: u
 }
 
 // The menu a customer is served from: the shared menu, or (Pro) the branch's own.
-async function loadMenu(businessId: string, branchId?: string | null): Promise<(MenuEntry & { category: string })[]> {
+export async function loadMenu(businessId: string, branchId?: string | null): Promise<(MenuProduct & { category: string })[]> {
   const id = await catalogIdFor(db, businessId, branchId);
-  const catalog = id ? await db.catalog.findUnique({ where: { id }, include: { categories: true, items: { where: { status: "ACTIVE" }, orderBy: { sortOrder: "asc" }, take: 400 } } }) : null;
+  const catalog = id ? await db.catalog.findUnique({ where: { id }, include: { categories: { orderBy: { sortOrder: "asc" } }, items: { include: { variants: true, modifierGroups: true }, where: { status: "ACTIVE" }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }, { id: "asc" }] } } }) : null;
   if (!catalog) return [];
-  const names = new Map(catalog.categories.map(c => [c.id, c.name]));
-  return catalog.items.map((i, n) => ({ index: String(n + 1), itemId: i.id, category: (i.categoryId && names.get(i.categoryId)) || "Other", name: i.name, nameAr: i.nameAr ?? "", priceMinor: i.basePriceMinor, available: i.isAvailable }));
+  const names = new Map(catalog.categories.map(c => [c.id, { name: c.name, nameAr: c.nameAr ?? "", sortOrder: c.sortOrder }]));
+  return catalog.items.map((i, n) => { const category = i.categoryId ? names.get(i.categoryId) : null; return { index: String(n + 1), itemId: i.id, category: category?.name || "Other", categoryAr: category?.nameAr || "", name: i.name, nameAr: i.nameAr ?? "", priceMinor: i.basePriceMinor, available: i.isAvailable, imageUrl: i.imageUrl ?? null, categoryId: i.categoryId || "other", categoryOrder: category?.sortOrder ?? 9999, description: i.description ?? "", descriptionAr: i.descriptionAr ?? "", requiresCustomization: i.variants.length > 0 || i.modifierGroups.length > 0 }; });
+}
+
+// Read-only data for an operator's local preview; this never creates a session or sends WhatsApp messages.
+export async function getMenuPreview(userId: string, businessId: string, branchId?: string | null, locale: "ar" | "en" = "ar", page = 0) {
+  await authorize(userId, businessId);
+  const business = await db.business.findUniqueOrThrow({ where: { id: businessId }, select: { name: true, currencyCode: true, locations: { where: { status: "ACTIVE" }, select: { id: true, name: true } } } });
+  if (branchId && !business.locations.some(b => b.id === branchId)) throw new AppError("NOT_FOUND", "Branch not found.", 404);
+  const menu = await loadMenu(businessId, branchId);
+  const { buildMenuPreview } = await import("./menu-preview-data");
+  return { name: business.name, currency: business.currencyCode, branches: business.locations, menu, locale, batch: await buildMenuPreview(business.name, business.currencyCode, menu, locale, page) };
 }
 
 export async function autoReply(t: { businessId: string; conversationId: string; externalMessageId: string }): Promise<"sent" | "skipped"> {
@@ -70,10 +84,11 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const conversation = await db.conversation.findFirst({ where: { id: t.conversationId, businessId: t.businessId }, include: { customer: { select: { phone: true, displayName: true, lastBranchId: true } }, business: { select: { name: true } } } });
   if (!conversation) return "skipped";
   const now = Date.now();
-  const recent = await db.message.findMany({ where: { conversationId: t.conversationId }, orderBy: { createdAt: "desc" }, take: 12, select: { externalMessageId: true, direction: true, senderType: true, messageType: true, textContent: true, createdAt: true } });
+  const recent = await db.message.findMany({ where: { conversationId: t.conversationId }, orderBy: { createdAt: "desc" }, take: 12, select: { externalMessageId: true, direction: true, senderType: true, messageType: true, textContent: true, interactiveId: true, createdAt: true } });
   // Answer only the newest customer message, and stay quiet while a person is actively replying.
   if (conversation.aiPausedUntil && conversation.aiPausedUntil.getTime() > now) return "skipped"; // a complaint is with the team
   const latestInbound = recent.find(m => m.direction === "INBOUND");
+  if (latestInbound && now - latestInbound.createdAt.getTime() >= 24 * 3600000) return "skipped";
   if (!latestInbound || latestInbound.externalMessageId !== t.externalMessageId || !latestInbound.textContent) return "skipped";
   if (recent.some(m => m.senderType === "STAFF" && now - m.createdAt.getTime() < HUMAN_ACTIVE_MS)) return "skipped";
   if (recent.filter(m => m.senderType === "AI" && now - m.createdAt.getTime() < 3600000).length >= MAX_AI_PER_HOUR) return "skipped";
@@ -121,12 +136,30 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   // A tap on the review template's buttons is handled directly: no AI call, nothing counted against the AI allowance.
   const tapText = latestInbound.textContent.trim();
   const tap = /^(confirm order|تأكيد الطلب)$/i.test(tapText) ? "confirm" : /^(change order|تعديل الطلب)$/i.test(tapText) ? "change" : null;
+  if (tap === "confirm" && stored && apiDraft && openNow.open) {
+    const discount = await checkCode(t.businessId, conversation.customerId, stored.discountCode);
+    const pricedCtx: DeliveryContext = discount?.ok ? { ...ctx, discount: { id: discount.id, code: discount.code, percent: discount.percent } } : ctx;
+    const checked = resolveDraft(menu.map(m => ({ ...m, available: m.available && !m.requiresCustomization })), apiDraft, options, pricedCtx);
+    if (checked.removed.length || draftKey(checked) !== stored.shownKey || !isComplete(checked) || !meetsMinimum(checked, options)) {
+      await discardPendingOrders(t.conversationId);
+      await db.conversation.update({ where: { id: t.conversationId }, data: { draftOrder: { ...stored, shownKey: "" } as never } });
+      return sendDirect(t, account, conversation.customer.phone, `${recheckText(langOf(tapText))}\n\n${summaryText(checked, langOf(tapText), options)}`);
+    }
+  }
   if (tap) { const pendingOrder = await findPendingOrder(t.conversationId); if (pendingOrder && tap === "confirm" && !openNow.open) { await discardPendingOrders(t.conversationId); return sendDirect(t, account, conversation.customer.phone, closedText(openNow, langOf(recent.find(m => m.direction === "OUTBOUND")?.textContent ?? tapText), conversation.business.name)); } if (pendingOrder) return handleReviewTap(t, tap, pendingOrder, account, conversation, langOf(recent.find(m => m.direction === "OUTBOUND")?.textContent ?? tapText)); }
   // Abuse guard: a flood from one customer.
   const burst = await db.message.count({ where: { conversationId: t.conversationId, direction: "INBOUND", createdAt: { gte: new Date(now - 120000) } } });
   if (burst > RATE_BURST) { if (burst === RATE_BURST + 1) await sendNotice(t, SLOW_DOWN).catch(() => undefined); return "skipped"; }
   // The plan's monthly orders (then bought ones). Someone halfway through an order may finish it; everyone else gets a plain notice and the owner sees the message in the inbox.
   if (!stored && !await canStartOrder(t.businessId)) return sendNotice(t, BUSY, 3600000);
+  const menuConfig = agent?.configuration as { interactiveMenu?: boolean } | null;
+  if (latestInbound.interactiveId?.startsWith("lm:") && menuConfig?.interactiveMenu !== true) return sendDirect(t, account, conversation.customer.phone, langOf(latestInbound.textContent) === "ar" ? "تصفح المنيو غير متاح الآن. اكتب طلبك وسنساعدك." : "Interactive browsing is unavailable right now. Type your order and we’ll help you.");
+  const previousLocale = (conversation.menuSession as MenuSession | null)?.locale;
+  const menuContext: Parameters<typeof handleMenu>[0] = { businessId: t.businessId, conversationId: t.conversationId, phone: conversation.customer.phone, phoneNumberId: account.phoneNumberId, businessName: conversation.business.name, account, text: latestInbound.textContent, interactiveId: latestInbound.interactiveId, locale: /[\u0600-\u06ff]/.test(latestInbound.textContent) ? "ar" : latestInbound.interactiveId ? previousLocale ?? "en" : "en", session: conversation.menuSession as MenuSession | null, branchId, branchNeeded, branches, menu, currency: options.currency, open: openNow.open, closedMessage: openNow.open ? "" : closedText(openNow, previousLocale ?? langOf(latestInbound.textContent), conversation.business.name), greeting: !stored && isGreeting(latestInbound.textContent), draft: stored, updatedAt: conversation.updatedAt, lastInboundAt: latestInbound.createdAt, loadBranchMenu: (id: string) => loadMenu(t.businessId, id), resetDraft: branchSwitched };
+  if (menuConfig?.interactiveMenu === true) {
+    const menuResult = await handleMenu(menuContext);
+    if (menuResult === "sent") return "sent";
+  }
   // A plain greeting with no order in progress: answer at once with a fixed welcome (no AI call, so no cold start, no wait, nothing counted against the AI allowance).
   // Closed: a plain greeting gets the closed notice with the hours, never an invitation to order.
   if (!stored && isGreeting(latestInbound.textContent) && !openNow.open) return sendNotice(t, closedText(openNow, langOf(latestInbound.textContent), conversation.business.name), 0);
@@ -147,14 +180,27 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   }
   const lastBranch = branchNeeded ? branches.find(b => b.id === conversation.customer.lastBranchId)?.name : undefined;
   const branchList = branches.map((b, i) => ({ id: String(i + 1), realId: b.id, name: b.name }));
-  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; branch?: string; askLocation?: boolean; locationConfirmed?: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; discountCode?: string; confirmed: boolean } | null }>("/internal/ai/reply", { market: { country: marketOf(bizRow.countryCode).nameEn, currency: bizRow.currencyCode, regionLabel: marketOf(bizRow.countryCode).regionLabelEn.toLowerCase(), regions: regionNames(marketOf(bizRow.countryCode).code) }, businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: [hoursForAi(hoursSet, hoursBranch, openNow), agent?.instructions ?? ""].filter(Boolean).join("\n\n").slice(0, 1500), menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, price: fromMinor(m.priceMinor, options.currency), available: m.available })), draft: apiDraft, delivery: deliveryHint, ...(branchNeeded ? { branchNeeded: true, branches: branchList.map(b => ({ id: b.id, name: b.name })), ...(lastBranch ? { lastBranch } : {}) } : {}), ...(wantsPin && candidate ? { candidate: candidate.formatted } : {}), customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: fromMinor(options.minimumMinor, options.currency) }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
+  const adviceMode = menuConfig?.interactiveMenu === true && adviceIsActive(menuContext.session, account.phoneNumberId, branchId) && menuContext.session?.advice === "preference";
+  const r = await lumiaApi<{ intent: string; language: "en" | "ar"; reply: string; needsHuman: boolean; recommendations?: string[]; branch?: string; askLocation?: boolean; locationConfirmed?: boolean; order: { items: { id: string; quantity: number; notes: string }[]; fulfillment: "delivery" | "pickup" | null; address: string; emirate?: string | null; area?: string; customerName?: string; addressLabel?: string; savedAddress?: string; discountCode?: string; confirmed: boolean } | null }>("/internal/ai/reply", { menuAdvice: adviceMode, market: { country: marketOf(bizRow.countryCode).nameEn, currency: bizRow.currencyCode, regionLabel: marketOf(bizRow.countryCode).regionLabelEn.toLowerCase(), regions: regionNames(marketOf(bizRow.countryCode).code) }, businessName: conversation.business.name, tone: agent?.tone ?? "Friendly", instructions: [hoursForAi(hoursSet, hoursBranch, openNow), agent?.instructions ?? ""].filter(Boolean).join("\n\n").slice(0, 1500), menu: menu.map(m => ({ id: m.index, category: m.category, name: m.name, nameAr: m.nameAr, ...(m.description ? { description: m.description } : {}), ...(m.descriptionAr ? { descriptionAr: m.descriptionAr } : {}), price: fromMinor(m.priceMinor, options.currency), available: m.available && !m.requiresCustomization })), draft: apiDraft, delivery: deliveryHint, ...(branchNeeded ? { branchNeeded: true, branches: branchList.map(b => ({ id: b.id, name: b.name })), ...(lastBranch ? { lastBranch } : {}) } : {}), ...(wantsPin && candidate ? { candidate: candidate.formatted } : {}), customer: { name: conversation.customer.displayName ?? "", useName }, savedAddresses: saved.map(a => ({ id: a.id, label: a.label, text: [a.text, a.emirate].filter(Boolean).join(", ") })), options: { delivery: options.delivery, pickup: options.pickup, minimumOrder: fromMinor(options.minimumMinor, options.currency) }, history, message: latestInbound.textContent.slice(0, MAX_TEXT), ...(latestInbound.messageType === "AUDIO" ? { voice: true } : {}) }, 45000);
   if (!r.ok) { console.error(JSON.stringify({ level: "error", code: "AI_REPLY_REJECTED", status: r.status, apiCode: r.code })); await refund(t.businessId, "ai", taken); return sendNotice(t, TRY_AGAIN, 300000).catch(() => "skipped" as const); } // an AI failure must never leave the customer in silence
+  if (r.data.intent === "menu_question" && menuConfig?.interactiveMenu === true) {
+    const sent = await handleMenu({ ...menuContext, text: "menu", interactiveId: null, greeting: false, locale: r.data.language });
+    if (sent === "sent") return "sent";
+  }
+  if (adviceMode && r.data.order) r.data.order.confirmed = false;
+  if (adviceMode && r.data.intent !== "order_request" && r.data.intent !== "complaint" && !r.data.needsHuman) {
+    const text = recommendationText(menu, r.data.recommendations ?? [], r.data.language, options.currency);
+    const { sendConversationText } = await import("./menu-controller");
+    return sendConversationText({ ...menuContext, locale: r.data.language }, text, null);
+  }
+  if (adviceMode && r.data.intent !== "order_request") r.data.order = null;
   // Closed: whatever the assistant understood as an order is not taken. The customer gets the closed notice with the working hours, and no draft is kept.
   const orderAttempt = r.data.intent === "order_request" || Boolean(r.data.order?.items?.length);
   const closedNow = !openNow.open && orderAttempt;
   if (closedNow) { r.data.reply = closedText(openNow, r.data.language, conversation.business.name); r.data.order = null as never; r.data.askLocation = false; r.data.needsHuman = false; await discardPendingOrders(t.conversationId); await refund(t.businessId, "ai", taken); }
   const lang = r.data.language; const parts = [r.data.reply];
-  const data: { needsHuman?: boolean; aiPausedUntil?: Date | null; draftOrder?: object | null; branchId?: string | null; customerLocation?: object; candidateLocation?: object | null } = {};
+  const data: { needsHuman?: boolean; aiPausedUntil?: Date | null; draftOrder?: object | null; branchId?: string | null; customerLocation?: object; candidateLocation?: object | null; menuSession?: object } = {};
+  if (menuContext.session?.advice) data.menuSession = { ...menuContext.session, advice: null };
   if (newCandidate) data.candidateLocation = newCandidate;
   // The customer confirmed the place we found for their typed address: from now on it works like a shared pin.
   if (wantsPin && candidate && r.data.locationConfirmed) { data.customerLocation = { latitude: candidate.latitude, longitude: candidate.longitude, name: "", address: "", at: new Date().toISOString(), emirate: candidate.emirate, area: candidate.area, street: candidate.street, place: candidate.place, formatted: candidate.formatted, source: "address" }; data.candidateLocation = null; }
@@ -178,7 +224,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   const codeCheck = model ? await checkCode(t.businessId, conversation.customerId, model.discountCode) : null;
   const priced: DeliveryContext = codeCheck?.ok ? { ...ctx, discount: { id: codeCheck.id, code: codeCheck.code, percent: codeCheck.percent } } : ctx;
   if (model) {
-    const resolved = resolveDraft(menu, model, options, priced); const key = draftKey(resolved);
+    const resolved = resolveDraft(menu.map(m => ({ ...m, available: m.available && !m.requiresCustomization })), model, options, priced); const key = draftKey(resolved);
     // An order is placed only when the customer confirmed the exact summary we showed them (same items, type and address), and it is complete.
     if (model.confirmed && isComplete(resolved) && meetsMinimum(resolved, options) && stored?.shownKey === key && resolved.fulfillment) {
       // The order counts against the plan's monthly orders (a little past the limit is allowed to finish one already started).
@@ -226,6 +272,7 @@ export async function autoReply(t: { businessId: string; conversationId: string;
   }
   // First contact: if nobody has answered this customer yet (and Meta's own welcome event didn't already), greet them before answering.
   if (!reviewId && await db.message.count({ where: { conversationId: t.conversationId, direction: "OUTBOUND" } }) === 0) parts.unshift(welcomeFor(agent, conversation.business.name));
+
   const reply = parts.filter(Boolean).join("\n\n");
   // Flags and the saved draft change only together with a reply that was really sent, so a failed delivery never leaves the chat stuck as "needs you".
   if (!reply) { if (Object.keys(data).length) await db.conversation.update({ where: { id: t.conversationId }, data: data as never }); return "skipped"; }

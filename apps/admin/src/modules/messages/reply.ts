@@ -17,10 +17,10 @@ export async function getConversation(userId: string, businessId: string, conver
   await authorize(userId, businessId);
   const c = await db.conversation.findFirst({ where: { id: conversationId, businessId }, include: { customer: { select: { displayName: true, phone: true } } } });
   if (!c) throw new AppError("NOT_FOUND", "Conversation not found.", 404);
-  const rows = await db.message.findMany({ where: { conversationId }, orderBy: { createdAt: "desc" }, take: 100, select: { id: true, direction: true, senderType: true, messageType: true, textContent: true, status: true, createdAt: true } });
+  const rows = await db.message.findMany({ where: { conversationId }, orderBy: { createdAt: "desc" }, take: 100, select: { id: true, direction: true, senderType: true, messageType: true, textContent: true, mediaUrl: true, status: true, createdAt: true } });
   const lastInbound = await db.message.findFirst({ where: { conversationId, direction: "INBOUND" }, orderBy: { createdAt: "desc" }, select: { createdAt: true } });
   const windowEndsAt = lastInbound ? new Date(lastInbound.createdAt.getTime() + WINDOW_MS) : null;
-  return { id: c.id, customer: { name: c.customer.displayName ?? "", phone: c.customer.phone }, needsHuman: c.needsHuman === true, canReply: !!windowEndsAt && windowEndsAt > new Date(), windowEndsAt, messages: rows.reverse().map(m => ({ id: m.id, direction: m.direction, senderType: m.senderType, type: m.messageType, text: m.textContent ?? "", status: m.status, createdAt: m.createdAt })) };
+  return { id: c.id, customer: { name: c.customer.displayName ?? "", phone: c.customer.phone }, needsHuman: c.needsHuman === true, canReply: !!windowEndsAt && windowEndsAt > new Date(), windowEndsAt, messages: rows.reverse().map(m => ({ id: m.id, direction: m.direction, senderType: m.senderType, type: m.messageType, text: m.textContent ?? "", mediaUrl: m.mediaUrl, status: m.status, createdAt: m.createdAt })) };
 }
 
 const ERRORS: Record<string, [string, string, number]> = {
@@ -31,19 +31,30 @@ const ERRORS: Record<string, [string, string, number]> = {
 // Sends one text through lumia-order-api from the restaurant's own number; returns Meta's message ID. Used for staff and AI replies.
 // A message that is more than text: the reply with a one-tap "Send location" button, reply buttons or a list (to pick a branch). If WhatsApp refuses the
 // interactive form (too long, not supported), the plain text goes out instead, so the customer always gets the answer.
-export interface Interactive { kind: "location_request" | "buttons" | "list"; options?: { id: string; title: string }[]; listButton?: string }
+export interface Interactive { kind: "location_request" | "buttons" | "list"; options?: { id: string; title: string; description?: string }[]; listButton?: string; fallbackText?: string }
 export async function deliverText(account: { phoneNumberId: string | null; accessTokenEncrypted: string | null }, to: string, text: string, interactive?: Interactive): Promise<string> {
   if (!account.phoneNumberId || !account.accessTokenEncrypted) throw new AppError("WHATSAPP_NOT_CONNECTED", "Connect WhatsApp before replying to customers.", 409);
   if (linkTestMode() && account.phoneNumberId.startsWith("test-")) return `test.${crypto.randomUUID()}`;
   const base = { accessToken: decryptSecret(account.accessTokenEncrypted), phoneNumberId: account.phoneNumberId, to, text };
   for (const extra of interactive ? [interactive, undefined] : [undefined]) {
-    const r = await lumiaApi<{ messageId: string }>("/internal/whatsapp/send", { ...base, ...(extra ?? {}) }, 15000);
+    const { fallbackText: _fallback, ...payload } = extra ?? {};
+    const r = await lumiaApi<{ messageId: string }>("/internal/whatsapp/send", { ...base, ...(!extra && interactive?.fallbackText ? { text: interactive.fallbackText } : {}), ...payload }, 15000);
     if (r.ok) return r.data.messageId;
     const known = r.code ? ERRORS[r.code] : undefined;
     if (extra && !known) continue; // the interactive form was refused: try the plain text
     throw known ? new AppError(...known) : new AppError("SEND_FAILED", "We couldn’t send your reply. Please try again.", 502);
   }
   throw new AppError("SEND_FAILED", "We couldn’t send your reply. Please try again.", 502);
+}
+
+// Menu photos use public HTTPS links saved on catalog items. Meta fetches the image from that URL.
+export async function deliverImage(account: { phoneNumberId: string | null; accessTokenEncrypted: string | null }, to: string, imageUrl: string, caption: string): Promise<string> {
+  if (!account.phoneNumberId || !account.accessTokenEncrypted) throw new AppError("WHATSAPP_NOT_CONNECTED", "Connect WhatsApp before replying to customers.", 409);
+  if (linkTestMode() && account.phoneNumberId.startsWith("test-")) return `test.${crypto.randomUUID()}`;
+  const r = await lumiaApi<{ messageId: string }>("/internal/whatsapp/send-image", { accessToken: decryptSecret(account.accessTokenEncrypted), phoneNumberId: account.phoneNumberId, to, imageUrl, caption }, 15000);
+  if (r.ok) return r.data.messageId;
+  const known = r.code ? ERRORS[r.code] : undefined;
+  throw known ? new AppError(...known) : new AppError("SEND_FAILED", "We couldn’t send the menu photo.", 502);
 }
 
 // The approved "review your order" template (customer name, order number, restaurant, items, total). Never throws: null means it was not sent and the caller sends the plain message.
@@ -73,4 +84,13 @@ export async function sendReply(userId: string, businessId: string, conversation
     await tx.auditLog.create({ data: { organizationId: business.organizationId, businessId, userId, entityType: "Conversation", entityId: conversationId, action: "message.sent", requestId } });
     return { id: message.id, direction: message.direction, senderType: message.senderType, type: message.messageType, text: message.textContent ?? "", status: message.status, createdAt: message.createdAt };
   });
+}
+
+export type MenuCard = { image: { id?: string; link?: string }; text: string; buttonId: string; buttonTitle: string };
+// Carousel failures are surfaced explicitly. Never substitute the rejected category/list design.
+export async function deliverCarousel(account: { phoneNumberId: string | null; accessTokenEncrypted: string | null }, to: string, text: string, cards: MenuCard[]) {
+  if (!account.phoneNumberId || !account.accessTokenEncrypted) throw new AppError("WHATSAPP_NOT_CONNECTED", "Connect WhatsApp first.", 409);
+  const result = await lumiaApi<{ messageId: string }>("/internal/whatsapp/send-carousel", { accessToken: decryptSecret(account.accessTokenEncrypted), phoneNumberId: account.phoneNumberId, to, text, cards }, 20000);
+  if (result.ok) return result.data.messageId;
+  throw new AppError(result.code ?? "CAROUSEL_UNAVAILABLE", "WhatsApp could not send the carousel. Verify this sender’s support before rollout.", result.status || 502);
 }
