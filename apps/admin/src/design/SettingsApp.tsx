@@ -362,7 +362,7 @@ class SettingsApp extends React.Component<Props, any> {
       trnBd: trnOk ? '#ECD9E0' : '#E5484D', trnHint: trnOk ? 'Shown on receipts.' : 'TRN must be 15 digits.', trnHintFg: trnOk ? '#8A5A6E' : '#B42318',
       langSeg: seg([['ar', 'Arabic'], ['en', 'English'], ['both', 'Both']], pr.lang, (v) => this.upd('profile', x => { x.lang = v; })),
       greetOpts: radio([['friendly', 'Friendly', 'Warm and casual'], ['formal', 'Formal', 'Polite and professional'], ['short', 'Short', 'Straight to the order']], pr.greet, (v) => this.upd('profile', x => { x.greet = v; })),
-      greetBubbles,
+      greetBubbles, phoneName: pr.name || 'Your business',
       pinMissing, branchCards, adding: s.adding, notAdding: !s.adding,
       startAdd: () => { const open = () => this.setState({ adding: true, editId: null, nb: newBranch(this.EMR[0]) }); if (d.branches.filter((b: any) => b.active).length < (this.props.initial.branchLimit ?? 1)) return open(); const bb = this.props.initial.branchBuy; if (bb) return this.buyBranch(open); if (this.props.onPremium) return this.props.onPremium(); open(); }, cancelAdd: () => this.setState({ adding: false, editId: null }),
       confirmAdd: () => this.commitBranch(),

@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { productScreen, type MenuProduct } from "@/modules/messages/menu-presentation";
+import { PhoneFrame } from "@/design/PhoneFrame";
 import { preferenceQuestion, type carouselBatch } from "@/modules/messages/menu-carousel";
 type Data = { name: string; currency: string; branches: { id: string; name: string }[]; menu: MenuProduct[]; locale: "ar" | "en"; batch: ReturnType<typeof carouselBatch> };
 export function MenuPreview({ businessId }: { businessId: string }) {
@@ -23,7 +24,7 @@ export function MenuPreview({ businessId }: { businessId: string }) {
       {data && <label>Branch <select className="input" value={branch} disabled={busy} onChange={e => { setBranch(e.target.value); void load(0, e.target.value); }}><option value="">Shared menu</option>{data.branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></label>}
       <button type="button" className="button button-outline button-sm" disabled={busy} onClick={() => void load()}>{busy ? "Loading…" : data ? "Restart preview" : "Open preview"}</button></div>
     {error && <p role="alert" className="error-message">{error}</p>}
-    {data && <div className="menu-preview-phone menu-preview-wide" dir={ar ? "rtl" : "ltr"} aria-label="Conversational menu carousel preview">
+    {data && <div style={{ width: "min(100%, 380px)", margin: "16px 0" }}><PhoneFrame name={data.name} ar={ar} caption={ar ? "معاينة فقط — في المحادثة الحقيقية، تقدر تطلب أو تسأل بنص أو فويس." : "Preview only. In the real chat, customers can order or ask by text or voice."}>
       <div className="menu-preview-question">{ar ? "شو عندك؟" : "What do you have?"}</div>
       <div className="menu-preview-bubble"><p>{data.batch.cards.length ? data.batch.text : ar ? "ما في أصناف متاحة حالياً." : "No items are available right now."}</p>
         <div className="menu-carousel-track" ref={track}>{data.batch.cards.map(card => <article className="menu-carousel-card" key={card.itemId} dir={ar ? "rtl" : "ltr"}>
@@ -36,8 +37,7 @@ export function MenuPreview({ businessId }: { businessId: string }) {
       </div>}
       {detail && <div className="menu-preview-bubble menu-preview-followup"><p>{detail}</p></div>}
       {advice && <><div className="menu-preview-question">{ar ? "نعم" : "Yes"}</div><div className="menu-preview-bubble"><p>{preferenceQuestion(data.menu, data.locale)}</p></div></>}
-      <small className="muted">{ar ? "معاينة فقط — في المحادثة الحقيقية، تقدر تطلب أو تسأل بنص أو فويس." : "Preview only — in the real chat, customers order or ask questions by text or voice."}</small>
       {!advice && data.batch.cards.length > 0 && <button type="button" className="button button-outline button-sm" onClick={() => setAdvice(true)}>{ar ? "مثال: الرد بنعم لطلب النصيحة" : "Example: say yes to advice"}</button>}
-    </div>}
+    </PhoneFrame></div>}
   </details>;
 }

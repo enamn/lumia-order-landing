@@ -81,10 +81,10 @@ export function BillingPage({ businessId, onChoosePlan, onChanged, focus, ar = f
 
   // Why a payment button is switched off, said next to the button instead of leaving it grey and silent.
   const blocked = pastDue ? t("Update your card to pay the overdue renewal first.", "حدّث بطاقتك لدفع التجديد المتأخر أولاً.") : ending ? t("Your plan is set to end. Choose “Keep my plan” first.", "باقتك ستنتهي. اختر «الإبقاء على باقتي» أولاً.") : !sub.card ? t("Add a card first.", "أضف بطاقة أولاً.") : "";
-  const sheet = (where: string) => ask?.where === where && <div role="group" aria-label={ask.title} style={{ border: `1.5px solid ${ask.danger ? "#F0B8B2" : "#E6C3D0"}`, background: ask.danger ? "#FFF8F7" : WASH, borderRadius: 14, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
+  const sheet = (where: string) => ask?.where === where && <div role="group" aria-label={ask.title} style={{ border: `1.5px solid ${ask.danger ? "#F0B8B2" : "#E6C3D0"}`, background: ask.danger ? "#FFF8F7" : WASH, borderRadius: 14, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12, width: "fit-content", minWidth: "min(100%, 340px)", maxWidth: "100%", boxSizing: "border-box" }}>
     <b style={{ fontSize: 15 }}>{ask.title}</b>
-    <dl style={{ margin: 0, maxWidth: 460, fontSize: 14 }}>{ask.rows.map(([k, v], i) => <div key={k} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 24, padding: "9px 0", borderTop: i ? `1px solid ${ask.danger ? "#F3D9D5" : "#F1DDE5"}` : 0 }}><dt style={{ color: MUTED }}>{k}</dt><dd className="nums" style={{ margin: 0, fontWeight: 600, textAlign: "end" }}>{v}</dd></div>)}</dl>
-    {ask.note && <p style={{ ...muted, maxWidth: 560 }}>{ask.note}</p>}
+    <dl style={{ margin: 0, fontSize: 14 }}>{ask.rows.map(([k, v], i) => <div key={k} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 24, padding: "9px 0", borderTop: i ? `1px solid ${ask.danger ? "#F3D9D5" : "#F1DDE5"}` : 0 }}><dt style={{ color: MUTED }}>{k}</dt><dd className="nums" style={{ margin: 0, fontWeight: 600, textAlign: "end" }}>{v}</dd></div>)}</dl>
+    {ask.note && <p style={{ ...muted, maxWidth: 440 }}>{ask.note}</p>}
     <div style={row}>
       <button ref={askRef} type="button" className={`b ${ask.danger ? "b-danger" : "b-fill"}`} disabled={!!busy} onClick={ask.go}>{busy ? t("Working…", "جارٍ التنفيذ…") : ask.confirm}</button>
       <button type="button" className="b b-out" disabled={!!busy} onClick={() => setAsk(null)} onKeyDown={e => { if (e.key === "Escape") setAsk(null); }}>{t("Not now", "ليس الآن")}</button>

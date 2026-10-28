@@ -29,6 +29,34 @@ Reply STOP to unsubscribe. · أرسل «إيقاف» لإلغاء الاشتر�
 ## 3. Campaign without an image — still to create: `lumia_campaign_text_v1`
 Same as above (language English `en`), **no header**. Same body, samples and the `Order now` quick-reply button.
 
+## 4. Campaign layouts: picks carousel and priced list — to create (not sent yet)
+The dashboard's campaign builder (Campaigns → layouts) previews two layouts. They are only a preview until these templates exist and are approved; today campaigns send template 2 or 3 above.
+
+**Layout A, swipeable picks: `lumia_campaign_picks_v1`** (Marketing, English `en` and Arabic `ar` as two languages of the same name)
+- **Type:** media carousel template, 2 to 10 cards. Each card: image header, body `{{1}}` (item name and price on one line, e.g. `Classic Burger · AED 35`), one Quick reply button `Order`.
+- **Message body above the cards:** `Picks from {{1}}` + `{{2}}` (the owner's message) + `{{3}}` (offer line / validity) + `Reply STOP to unsubscribe. · أرسل «إيقاف» لإلغاء الاشتراك`.
+- Not allowed in a variable: line breaks, so name and price share one line. A **See full menu** quick reply sits on the message itself (Meta allows it next to the cards).
+
+**Layout B, priced list: `lumia_campaign_list_v1`** (Marketing, `en` and `ar`)
+- **Header:** image (banner). **Body** (variables never at the very start or end, no line breaks inside a variable):
+```
+{{1}}
+
+{{2}}
+{{3}}
+{{4}}
+{{5}}
+
+Total together: {{6}}
+
+Reply STOP to unsubscribe. · أرسل «إيقاف» لإلغاء الاشتراك
+```
+  `{{1}}` the owner's message, `{{2}}`..`{{5}}` one item each (`Classic Burger · AED 35`), `{{6}}` the total.
+- **Buttons:** Quick reply `Order now`, Quick reply `Full menu`.
+- Meta does not allow empty variables, so create one template per item count (`_2`, `_3`, `_4` items) and send the one that matches the list.
+
+When a customer taps `Order now` or one card's `Order`, the 24-hour window opens and the assistant starts the order from those items (it never confirms for the customer). `See full menu` / `Full menu` makes the assistant send its menu cards.
+
 ## How Lumia fills them
 - `{{1}}` the restaurant's name, `{{2}}` the message the owner wrote (`{name}` replaced by the customer's first name), `{{3}}` the offer line
   (`Code WEEKEND20: 20% off, valid until 12 Oct.`, or `Reply to this message to order.` when there is no code; Arabic when the message is Arabic).

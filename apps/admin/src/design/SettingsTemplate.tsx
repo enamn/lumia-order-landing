@@ -2,6 +2,7 @@
 /* eslint-disable */
 import { Fragment } from "react";
 import { S } from "./style";
+import { PhoneFrame } from "./PhoneFrame";
 
 export function SettingsTemplate({ vm }: { vm: any }) {
   return (
@@ -342,10 +343,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         )}
                       </section>
                     </div>
-                    <div style={S("position:sticky;top:12px;border-radius:16px;background:#EFE7DE;padding:16px;display:flex;flex-direction:column;gap:8px")}>
-                      <span style={S("font-size:14px;font-weight:600;color:#6B5B4E")}>
-                        Customer preview
-                      </span>
+                    <div style={S("position:sticky;top:12px")}><PhoneFrame name={vm.phoneName} caption="Customer preview">
                       {(vm.greetBubbles as any[]).map((b: any, __i: number) => (
                         <Fragment key={__i}>
                           <div dir={b.dir} style={S("align-self:flex-start;max-width:92%;background:#fff;border-radius:4px 14px 14px 14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.06)")}>
@@ -353,6 +351,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           </div>
                         </Fragment>
                       ))}
+                      </PhoneFrame>
                     </div>
                   </div>
                 </div>
@@ -1250,13 +1249,11 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         </>
                       )}
                     </div>
-                    <div style={S("position:sticky;top:12px;border-radius:16px;background:#EFE7DE;padding:16px;display:flex;flex-direction:column;gap:8px")}>
-                      <span style={S("font-size:14px;font-weight:600;color:#6B5B4E")}>
-                        Customer preview
-                      </span>
+                    <div style={S("position:sticky;top:12px")}><PhoneFrame name={vm.phoneName} caption="Customer preview">
                       <div style={S("align-self:flex-start;max-width:92%;background:#fff;border-radius:4px 14px 14px 14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.06);white-space:pre-line")}>
                         {vm.res.msg}
                       </div>
+                      </PhoneFrame>
                     </div>
                   </div>
                 </div>
@@ -1449,10 +1446,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         )}
                       </section>
                     </div>
-                    <div style={S("position:sticky;top:12px;border-radius:16px;background:#EFE7DE;padding:16px;display:flex;flex-direction:column;gap:10px")}>
-                      <span style={S("font-size:14px;font-weight:600;color:#6B5B4E")}>
-                        Customer preview
-                      </span>
+                    <div style={S("position:sticky;top:12px")}><PhoneFrame name={vm.phoneName} caption="Customer preview">
                       {(vm.hoursBubbles as any[]).map((b: any, __i: number) => (
                         <Fragment key={__i}>
                           <div style={S("display:flex;flex-direction:column;gap:4px")}>
@@ -1465,6 +1459,7 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                           </div>
                         </Fragment>
                       ))}
+                      </PhoneFrame>
                     </div>
                   </div>
                 </div>
@@ -1542,16 +1537,14 @@ export function SettingsTemplate({ vm }: { vm: any }) {
                         </a>
                       </div>
                     </section>
-                    <div style={S("position:sticky;top:12px;border-radius:16px;background:#EFE7DE;padding:16px;display:flex;flex-direction:column;gap:8px")}>
-                      <span style={S("font-size:14px;font-weight:600;color:#6B5B4E")}>
-                        Customer preview
-                      </span>
+                    <div style={S("position:sticky;top:12px")}><PhoneFrame name={vm.phoneName} caption="Customer preview">
                       <div style={S("align-self:flex-end;max-width:85%;background:#D9FDD3;border-radius:14px 4px 14px 14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.06)")}>
                         Do you have chicken burger?
                       </div>
                       <div style={S("align-self:flex-start;max-width:85%;background:#fff;border-radius:4px 14px 14px 14px;padding:9px 12px;font-size:15px;line-height:1.45;box-shadow:0 1px 1px rgba(0,0,0,.06)")}>
                         {"Yes, we have Chicken Burger for "}{vm.cur}{" 24."}
                       </div>
+                      </PhoneFrame>
                     </div>
                   </div>
                 </div>

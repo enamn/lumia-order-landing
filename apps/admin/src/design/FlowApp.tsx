@@ -699,7 +699,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       return row;
     };
     const goCustomers = () => { this.setState({ page: "Customers" }); history.replaceState(null, "", `/dashboard?page=customers&businessId=${s.businessId}`); };
-    return <CampaignsPage key={s.lang} ar={ar} customers={s.custList} selected={s.custSel} onSelect={(ids: string[]) => this.setState({ custSel: ids })} history={s.campHist ?? null} usage={u ? { used: u.used, limit: u.limit } : null}
+    return <CampaignsPage key={s.lang} ar={ar} currency={this.cur} menuItems={s.menu.flatMap((c: Cat) => c.items.map(i => ({ id: i.id, name: i.n, nameAr: i.ar, category: c.cat, categoryAr: c.catAr, priceMinor: toMinor(i.p, this.cur), available: i.on, imageUrl: i.img })))} customers={s.custList} selected={s.custSel} onSelect={(ids: string[]) => this.setState({ custSel: ids })} history={s.campHist ?? null} usage={u ? { used: u.used, limit: u.limit } : null}
       businessName={s.name || this.props.business?.name || (ar ? "مطعمنا" : "our restaurant")} defaults={campDefaults(s.lang, s.name || this.props.business?.name || (ar ? "مطعمنا" : "us"))} waConnected={s.waStatus === "connected"} onConnect={this.openWA} onCustomers={goCustomers} onSend={send}/>;
   }
   waPage(ar: boolean) {
