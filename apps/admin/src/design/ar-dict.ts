@@ -308,7 +308,7 @@ export const AR: Record<string, string> = {
  "Billed monthly": "تُفوتر شهرياً",
  "Terminal": "الجهاز",
  "You already have a terminal. Add one only if you need another.": "لديك جهاز بالفعل. أضف جهازاً آخر فقط إذا احتجت إليه.",
- "Need one per branch?": "هل تحتاج جهازاً لكل فرع؟",
+ "How many branches do you have? One terminal per branch is required.": "كم فرعاً لديك؟ يلزم جهاز واحد لكل فرع.",
  "Opening secure payment…": "جارٍ فتح الدفع الآمن…",
  "Continue to payment ·": "المتابعة إلى الدفع ·",
  "Required": "مطلوب",
