@@ -41,6 +41,9 @@ env:
   - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
     secret: lumia-google-maps-key
     availability: [BUILD, RUNTIME]
+  # --- billing sandbox (Stripe TEST keys only): a month lasts 1 minute, a year 1 hour, retries run in minutes. REMOVE before taking real payments. ---
+  - variable: BILLING_SANDBOX
+    value: "true"
   # --- lumia-order-api ---
   - variable: LUMIA_API_URL
     value: https://api.order.lumia.ae
