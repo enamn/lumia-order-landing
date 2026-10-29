@@ -113,7 +113,7 @@ describe.skipIf(!enabled)("Lumia-run subscriptions, Stripe only takes payments",
     charge = { status: "succeeded", paymentIntentId: "pi_renew" }; calls = [];
     expect(await runBilling(due)).toMatchObject({ checked: 1, renewed: 1, failed: 0 });
     const body = calls.find(c => c.path === "/internal/billing/charge")!.body;
-    expect(body).toMatchObject({ customerId: "cus_1", paymentMethodId: "pm_1", amountMinor: quoteRenewal("plus", "yearly", 0, 5).totalMinor, metadata: { kind: "renewal" } }); expect(body.idempotencyKey).toMatch(/^renew:.+:\d{4}-\d{2}-\d{2}:1$/);
+    expect(body).toMatchObject({ customerId: "cus_1", paymentMethodId: "pm_1", amountMinor: quoteRenewal("plus", "yearly", 0, 5).totalMinor, metadata: { kind: "renewal" } }); expect(body.idempotencyKey).toMatch(/^renew:.+:\d{4}-\d{2}-\d{2}T[\d:.]+Z:1$/);
     const s1 = await sub(); expect(s1.currentPeriodStart.getTime()).toBe(s0.currentPeriodEnd.getTime()); expect(s1.currentPeriodEnd.getTime()).toBe(addPeriod(s0.currentPeriodEnd, "yearly").getTime()); expect(s1.failedAttempts).toBe(0);
     expect((await listInvoices(owner, biz))[0]).toMatchObject({ kind: "RENEWAL", totalMinor: quoteRenewal("plus", "yearly", 0, 5).totalMinor });
     expect(await runBilling(due)).toMatchObject({ checked: 0 }); // running it again does not bill twice

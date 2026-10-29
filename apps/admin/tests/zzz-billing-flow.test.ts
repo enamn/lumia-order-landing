@@ -70,6 +70,23 @@ describe.skipIf(!enabled)("billing flow: subscribe, cards, renew, retry, credits
   });
 });
 
+describe.skipIf(!enabled)("late renewal", () => {
+  it("a renewal paid long after its end starts the new period now and is charged once, with a key of its own", async () => {
+    const suffix2 = crypto.randomUUID().slice(0, 8), charges: any[] = [];
+    process.env.LUMIA_API_URL = "http://api.test"; process.env.INTERNAL_API_KEY = "k".repeat(32);
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init: RequestInit) => { const path = new URL(url).pathname; if (path === "/internal/billing/charge") { charges.push(JSON.parse(String(init.body))); return Response.json({ status: "succeeded", paymentIntentId: `pi_${suffix2}_${charges.length}` }); } return Response.json({}); }));
+    const u = await db.user.create({ data: { name: "late", email: `late-${suffix2}@test.invalid`, phoneNumber: `+97150777${String(1000 + Math.floor(Math.random() * 8999))}`, phoneNumberVerified: true } });
+    const b = await createBusiness(u.id, { name: "Late Burgers", locationName: "Main" }, "t");
+    const now = new Date(), old = new Date(now.getTime() - 90 * 86_400_000);
+    await db.subscription.create({ data: { businessId: b.id, plan: "starter", billing: "monthly", status: "ACTIVE", stripeCustomerId: "cus_late", stripePaymentMethodId: "pm_late", currentPeriodStart: new Date(old.getTime() - 30 * 86_400_000), currentPeriodEnd: old, nextChargeAt: old, startedAt: old, processedSessions: [] } });
+    expect((await runBilling(now, b.id)).renewed).toBe(1);
+    const s = await db.subscription.findFirstOrThrow({ where: { businessId: b.id } });
+    expect(Math.abs(s.currentPeriodStart.getTime() - now.getTime())).toBeLessThan(5000); expect(s.currentPeriodEnd.getTime()).toBeGreaterThan(now.getTime());
+    expect((await runBilling(now, b.id)).checked).toBe(0); expect(charges).toHaveLength(1); expect(charges[0].idempotencyKey).toContain(old.toISOString());
+    vi.unstubAllGlobals();
+  });
+});
+
 // The sandbox clock: a month is 1 minute, a year is 1 hour, and a retry "day" is 1 minute.
 describe("sandbox billing clock", () => {
   it("shortens periods and retries only when BILLING_SANDBOX is on", async () => {
