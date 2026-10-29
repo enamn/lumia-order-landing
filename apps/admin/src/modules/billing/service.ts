@@ -9,7 +9,7 @@ import { addCredits, usageSummary } from "./usage";
 import { requireTaxEligible, taxDecisionFor } from "../tax/service";
 import { priceBookFor, priceBookForBusiness, priceBookOrNull, providerAmountOk, uaeBook } from "./pricing";
 import { formatMoney } from "../market/money";
-import { MARKETS, isCountryCode } from "../market/countries";
+import { GCC_CODES, MARKETS, isCountryCode } from "../market/countries";
 import type { TaxDecision } from "../tax/policy";
 
 // Subscriptions are run by Lumia: the plan, the billing period, renewals, retries, plan changes, cancellation and invoices all live here.
@@ -81,10 +81,10 @@ export async function canPersonalize(businessId: string): Promise<boolean> {
 
 // What we already know about the restaurant, used to pre-fill the payment page and Stripe so nobody types it twice.
 async function knownDetails(businessId: string) {
-  const b = await db.business.findUniqueOrThrow({ where: { id: businessId }, select: { name: true, phone: true, email: true, vatRegistered: true, taxRegistrationNumber: true, settings: true, locations: { where: { status: "ACTIVE" }, orderBy: { createdAt: "asc" }, take: 1, select: { addressLine1: true, city: true, emirate: true } } } });
+  const b = await db.business.findUniqueOrThrow({ where: { id: businessId }, select: { name: true, phone: true, email: true, countryCode: true, vatRegistered: true, taxRegistrationNumber: true, settings: true, locations: { where: { status: "ACTIVE" }, orderBy: { createdAt: "asc" }, take: 1, select: { addressLine1: true, city: true, emirate: true } } } });
   const loc = b.locations[0], legal = (b.settings as { profile?: { name?: string } } | null)?.profile?.name;
   const address = [loc?.addressLine1, loc?.city, loc?.emirate].filter(Boolean).join(", ");
-  return { name: legal || b.name, phone: b.phone ?? undefined, email: b.email ?? undefined, trn: b.vatRegistered && /^\d{15}$/.test(b.taxRegistrationNumber ?? "") ? b.taxRegistrationNumber! : undefined, address, line1: loc?.addressLine1 || undefined, city: loc?.city || undefined, state: loc?.emirate || undefined };
+  return { name: legal || b.name, phone: b.phone ?? undefined, email: b.email ?? undefined, trn: b.vatRegistered && /^\d{15}$/.test(b.taxRegistrationNumber ?? "") ? b.taxRegistrationNumber! : undefined, address, line1: loc?.addressLine1 || undefined, city: loc?.city || undefined, state: loc?.emirate || undefined, country: isCountryCode(b.countryCode) ? b.countryCode : "AE" };
 }
 
 // Receipt email after a payment. Failures are swallowed inside sendReceipt: a mail problem never undoes a payment.
@@ -105,7 +105,7 @@ export async function getSubscription(userId: string, businessId: string) {
     pendingPlan: sub?.pendingPlan ?? undefined, pendingBilling: sub?.pendingBilling ?? undefined, failedAttempts: sub?.failedAttempts ?? 0, lastFailure: sub?.lastFailure ?? undefined, needsAuthentication: sub?.lastFailure === AUTH_REQUIRED,
     nextCharge: pbook && active && !sub!.cancelAtPeriodEnd && nextPlan && nextBilling ? { at: iso(sub!.nextChargeAt ?? sub!.currentPeriodEnd)!, amountMinor: quoteRenewal(nextPlan, nextBilling, nextPlan === "pro" ? Math.max(0, sub!.pendingExtraBranches ?? sub!.extraBranches ?? 0) : 0, tax.ratePercent, book).totalMinor } : null,
     card: (sub?.card as Card | null) ?? undefined, terminals: sub?.terminals, terminalAddress: sub?.terminalAddress ?? undefined, terminal: (sub?.terminal as Terminal | null) ?? undefined, startedAt: iso(sub?.startedAt),
-    hasCustomer: Boolean(sub?.stripeCustomerId || b.stripeCustomerId), defaults: { address: known.address }, canManage: member.role === "OWNER" || member.role === "ADMIN",
+    hasCustomer: Boolean(sub?.stripeCustomerId || b.stripeCustomerId), defaults: { address: known.address, street: known.line1, city: known.state || known.city, country: known.country }, canManage: member.role === "OWNER" || member.role === "ADMIN",
     contactEmail: { email: b.email ?? "", verified: !!b.email && !!b.emailVerifiedAt },
     access: accessOf(sub, b.createdAt, Date.now(), vat), trial: { ...trialInfo(trialStart), started: !vat.required || !!vat.verifiedFrom }, entitlements: entitlements(sub), usage,
     branches: { ...(await branchInfo(businessId, sub, tax.ratePercent, pbook)) },
@@ -132,12 +132,12 @@ const notPaid = (charge: ChargeReply) => new AppError(charge.status === "require
 interface ChargeReply { status: "succeeded" | "requires_action" | "failed"; paymentIntentId?: string; failureCode?: string; failureMessage?: string }
 const appUrl = () => (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
-const checkoutSchema = z.object({ plan: z.enum(["starter", "plus", "pro"]), billing: z.enum(["monthly", "yearly"]), terminals: z.number().int().min(0).max(10), address: z.string().trim().max(400).default("") }).strict().refine(d => d.terminals === 0 || d.address.length >= 6, { message: "Add a delivery address for the terminal.", path: ["address"] });
+const checkoutSchema = z.object({ plan: z.enum(["starter", "plus", "pro"]), billing: z.enum(["monthly", "yearly"]), terminals: z.number().int().min(0).max(10), address: z.string().trim().max(400).default(""), country: z.enum(GCC_CODES).optional() }).strict().refine(d => d.terminals === 0 || d.address.length >= 6, { message: "Add a delivery address for the terminal.", path: ["address"] });
 
 async function customerPayload(userId: string, businessId: string) {
   const [user, known] = await Promise.all([db.user.findUnique({ where: { id: userId }, select: { email: true, preferredLanguage: true } }), knownDetails(businessId)]);
   const email = known.email || (user?.email && !user.email.endsWith(".invalid") ? user.email : undefined);
-  const customer = { name: known.name, ...(known.phone ? { phone: known.phone } : {}), ...(known.trn ? { trn: known.trn } : {}), ...(known.line1 || known.city || known.state ? { address: { line1: known.line1, city: known.city, state: known.state } } : {}), language: user?.preferredLanguage === "ar" ? "ar" : "en" };
+  const customer = { name: known.name, ...(known.phone ? { phone: known.phone } : {}), ...(known.trn ? { trn: known.trn } : {}), ...(known.line1 || known.city || known.state ? { address: { line1: known.line1, city: known.city, state: known.state, country: known.country } } : {}), language: user?.preferredLanguage === "ar" ? "ar" : "en" };
   return { customer, ...(email ? { email } : {}) };
 }
 async function rememberCustomer(businessId: string, customerId: string | undefined) { if (customerId) await db.business.update({ where: { id: businessId }, data: { stripeCustomerId: customerId } }); }
@@ -150,14 +150,14 @@ export async function startCheckout(userId: string, businessId: string, input: u
   const [existing, b] = await Promise.all([getSubscriptionFor(businessId), db.business.findUniqueOrThrow({ where: { id: businessId }, select: { stripeCustomerId: true } })]);
   if (isActive(existing)) throw new AppError("ALREADY_SUBSCRIBED", "This restaurant already has a plan. Change it from Billing.", 409);
   const tax = await requireTaxEligible(businessId); // not sold to without an eligible tax position (VAT verification for Saudi Arabia, Oman, Bahrain)
-  const { plan, billing, terminals, address } = data.data, book = await priceBookForBusiness(businessId);
+  const { plan, billing, terminals, address, country } = data.data, book = await priceBookForBusiness(businessId), known0 = await knownDetails(businessId);
   if (terminals > 0 && !book.terminal) throw new AppError("TERMINAL_UNAVAILABLE", "Terminals are not sold in your country yet. Lumia Order works fully in the dashboard without one.", 409);
   const quote = quoteSignup(plan, billing, terminals, tax.ratePercent, book);
   if (!providerAmountOk(quote.totalMinor, book.currency)) throw new AppError("INVALID_AMOUNT", "This amount cannot be charged in this currency. Please contact support.", 409);
   const reply = await api<CheckoutReply>("/internal/billing/checkout", {
     businessId, mode: "payment", embedded: true, currency: book.currency, returnUrl: `${appUrl()}/dashboard?businessId=${businessId}`, ...(await customerPayload(userId, businessId)), ...(b.stripeCustomerId || existing?.stripeCustomerId ? { customerId: b.stripeCustomerId ?? existing?.stripeCustomerId } : {}),
     lines: [...quote.lines, ...(quote.vatMinor > 0 ? [{ name: `VAT (${tax.ratePercent}%)`, unitMinor: quote.vatMinor, quantity: 1 }] : [])], // the form charges exactly quote.totalMinor
-    description: `Lumia Order ${PLANS[plan].name} (${billing})`, ...(terminals > 0 ? { shippingAddress: address } : {}),
+    description: `Lumia Order ${PLANS[plan].name} (${billing})`, ...(terminals > 0 ? { shippingAddress: address, shippingCountry: country ?? known0.country } : {}),
     note: terminals > 0 ? `${PLANS[plan].name} plan + ${terminals} ${terminals === 1 ? "terminal" : "terminals"}. The terminal ships to: ${address}` : `${PLANS[plan].name} plan (software only, no terminal).`,
     metadata: { kind: "signup", plan, billing, terminals: String(terminals), terminalAddress: address.slice(0, 400), total: String(quote.totalMinor), taxRate: String(tax.ratePercent), currency: book.currency },
   });

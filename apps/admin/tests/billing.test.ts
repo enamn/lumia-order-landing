@@ -83,6 +83,9 @@ describe.skipIf(!enabled)("Lumia-run subscriptions, Stripe only takes payments",
     expect(b.lines.map((l: any) => l.unitMinor * l.quantity).reduce((a: number, c: number) => a + c, 0)).toBe(376740); // what Stripe charges is exactly the quote, VAT included
     expect(b.lines.at(-1)).toMatchObject({ name: "VAT (5%)", unitMinor: 17940 });
     expect((await db.business.findUniqueOrThrow({ where: { id: biz } })).stripeCustomerId).toBe("cus_1");
+    expect(calls[0]!.body).toMatchObject({ shippingCountry: "AE", customer: { address: { country: "AE" } } }); // the restaurant's own country unless the owner picks another
+    await startCheckout(owner, biz, { plan: "plus", billing: "yearly", terminals: 1, address: "Olaya St, Riyadh, Saudi Arabia", country: "SA" }); expect(calls.at(-1)!.body).toMatchObject({ shippingCountry: "SA" });
+    await expect(startCheckout(owner, biz, { plan: "plus", billing: "yearly", terminals: 1, address: "Somewhere 123", country: "US" })).rejects.toMatchObject({ code: "VALIDATION_FAILED" });
     await expect(startCheckout(viewer, biz, { plan: "plus", billing: "yearly", terminals: 1, address: "Shop 4, Al Majaz 2" })).rejects.toMatchObject({ status: 403 });
     await expect(startCheckout(owner, biz, { plan: "gold", billing: "yearly", terminals: 1, address: "Shop 4, Al Majaz 2" })).rejects.toMatchObject({ code: "VALIDATION_FAILED" });
     await expect(startCheckout(owner, biz, { plan: "pro", billing: "monthly", terminals: 1, address: "x" })).rejects.toMatchObject({ code: "VALIDATION_FAILED" });

@@ -14,7 +14,7 @@ import { EmailVerify } from "./EmailVerify";
 import { CountryPick } from "./CountryPick";
 import { StatusBanner } from "./StatusBanner";
 import { currencySign, formatMoneyUi, fromMinor, moneyUi, parseAmount, scaleOf, toMinor, withSign } from "@/modules/market/money";
-import { marketOf, isCountryCode, MARKETS } from "@/modules/market/countries";
+import { marketOf, isCountryCode, MARKETS, GCC_CODES } from "@/modules/market/countries";
 import { AccountMenu, PlanBadge } from "./AccountMenu";
 import { BillingPage } from "./BillingPage";
 import { CustomersPage } from "./CustomersPage";
@@ -22,6 +22,7 @@ import { CampaignsPage, type SendInput } from "./CampaignsPage";
 import { WhatsAppNumbers, WhatsAppLinkGuide, type WaNumber, type LinkMode } from "./WhatsAppPage";
 import { ArabicDom } from "./ArabicDom";
 import { mountEmbeddedCheckout } from "@/lib/stripe-embed";
+import { REGIONS } from "@/modules/market/regions";
 import { authClient } from "@/lib/auth-client";
 import { logoToDataUrl } from "@/lib/logo";
 import { COUNTRIES, countryOf, groupDigits as fmt, maskPhone } from "@/modules/auth/countries";
@@ -203,10 +204,10 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     } catch (e: any) { this.setState({ embedSecret: null, subErr: e?.message ?? "We couldn’t load the payment form. Please try again." }); }
   };
   unmountStripe = () => { try { this.stripeForm?.destroy(); } catch { /* already gone */ } this.stripeForm = null; };
-  startPay = async (plan: string, bill: string, terminals: number, address: string) => {
+  startPay = async (plan: string, bill: string, terminals: number, address: string, country?: string) => {
     this.setState({ sub: "paying", subErr: "" });
     try {
-      const r = await api(`/api/v1/businesses/${this.state.businessId}/subscription/checkout`, "POST", { plan, billing: bill, terminals, address });
+      const r = await api(`/api/v1/businesses/${this.state.businessId}/subscription/checkout`, "POST", { plan, billing: bill, terminals, address, ...(country ? { country } : {}) });
       if (r.clientSecret && r.publishableKey) this.setState({ sub: null, embedSecret: r.clientSecret, embedKey: r.publishableKey, embedId: r.sessionId }); else window.location.assign(r.url);
     }
     catch (e: any) { this.setState({ sub: null, subErr: e?.message ?? "We couldn’t open the payment page. Please try again." }); }
@@ -314,7 +315,10 @@ export default class FlowApp extends React.Component<FlowProps, any> {
     const priceOf = (p: { id: string; m: number; y: number }, year: boolean): number | null => (pr ? pr.plans?.[p.id]?.[year ? "yearly" : "monthly"] ?? null : d?.pricesUnavailable ? null : year ? p.y : p.m);
     const tb = d?.prices?.terminalBook ?? { yearly: TERM, monthly: 599, extra: 599, regular: 699 }, tPrice = (id: string) => (yr ? tb.yearly[id] : tb.monthly), hasTerm = (d?.terminals ?? 0) > 0, ended = d?.access?.reason === "ended", qty = terminalOn ? (s.termQty ?? (hasTerm ? 0 : 1)) : 0, // a restaurant that already owns a terminal starts without another one
        termAmt = qty > 0 ? tPrice(sel.id) + (qty - 1) * tb.extra : 0;
-    const planAmt = priceOf(sel, yr) ?? 0, base = planAmt + termAmt, rate = d?.tax?.ratePercent ?? 0, vat = Math.round(base * rate) / 100, tot = base + vat, addrVal: string = s.addr ?? d?.defaults?.address ?? "", addrOk = qty === 0 || addrVal.trim().length > 5, paying = s.sub === "paying";
+    const planAmt = priceOf(sel, yr) ?? 0, base = planAmt + termAmt, rate = d?.tax?.ratePercent ?? 0, vat = Math.round(base * rate) / 100, tot = base + vat, dflt = d?.defaults ?? {}, adCountry: keyof typeof MARKETS = isCountryCode(s.addrP?.country ?? dflt.country) ? (s.addrP?.country ?? dflt.country) : "AE", adRegions = REGIONS[adCountry], adRegionOk = (x?: string) => adRegions.some(r => r.en === x),
+      ap: Record<string, string> = { area: "", street: dflt.street ?? "", building: "", note: "", ...(s.addrP ?? {}), country: adCountry, city: adRegionOk(s.addrP?.city) ? s.addrP.city : s.addrP?.country ? "" : adRegionOk(dflt.city) ? dflt.city : "" },
+      addrVal: string = [ap.building, ap.street, ap.area, ap.city, MARKETS[adCountry].nameEn].map(x => (x ?? "").trim()).filter(Boolean).join(", ") + (ap.note?.trim() ? ` (${ap.note.trim()})` : ""),
+      addrOk = qty === 0 || (["city", "area", "street", "building"].every(k => (ap[k] ?? "").trim().length > 1) && addrVal.length <= 400), paying = s.sub === "paying";
     const paidPlan = active ? SUB_PLANS.find(p => p.id === d.plan) : undefined, endDate = fd(new Date(d?.trial?.endsAt ?? Date.now()));
     const periodEnd = d?.currentPeriodEnd ? new Date(d.currentPeriodEnd) : null, pastDue = d?.status === "PAST_DUE";
     const tab = (v: string, label: string) => { const on = s.bill === v; return { label, on, fw: on ? 600 : 500, bg: on ? "#fff" : "transparent", fg: on ? "#1A0815" : "#8A5A6E", sh: on ? "0 1px 3px rgba(26,8,21,.12)" : "none", pick: () => this.setState({ bill: v }) }; };
@@ -341,7 +345,18 @@ export default class FlowApp extends React.Component<FlowProps, any> {
         plans: SUB_PLANS.map(p => { const on = p.id === sel.id; return { name: p.name, desc: p.desc, inc: p.inc, hasInc: !!p.inc, feats: p.feats, on, price: priceOf(p, yr) === null ? "—" : money(yr ? Math.round(priceOf(p, true)! / 12 * 100) / 100 : priceOf(p, false)!), per: priceOf(p, yr) === null ? "" : "/ month", strike: yr && priceOf(p, false) !== null ? money(priceOf(p, false)!) : "", eq: priceOf(p, yr) === null ? "Coming soon" : yr ? `Billed yearly: ${money(priceOf(p, true)!)}` : "Billed monthly",
           cta: "Choose " + p.name, term: money(tPrice(p.id)), ctaBg: on ? "linear-gradient(90deg,#FF5577,#C93DFF)" : "#1A0815", choose: () => { if (priceOf(p, yr) !== null) this.setState({ plan: p.id, planStep: "pay", subErr: "" }); }, bd: on ? "#FF5577" : "#F0E4E8", bg: on ? "#FFF7FA" : "#fff", ring: on ? "#FF5577" : "#D9BFCB", dot: on ? "#FF5577" : "transparent", pick: () => this.setState({ plan: p.id }) }; }),
         selName: sel.name + " plan", selBilling: yr ? "Billed yearly" : "Billed monthly", planAmt: money(planAmt), termAmt: money(termAmt), termLine: qty > 1 ? `Terminal × ${qty}` : "Terminal", termPrice: money(tPrice(sel.id)), termRegular: tb.regular ? money(tb.regular) : "", hasRegular: !!tb.regular, termQty: qty, termMin: qty <= 0, decOp: qty <= 0 ? 0.3 : 1, terminalOn, hasTerm: qty > 0, termBadge: hasTerm ? "Optional" : "Required", termDesc: hasTerm ? "You already have a terminal. Add another only if you need one, for example one per branch." : "Receives, accepts and prints your orders. Every subscription includes at least one terminal.", pricesSoon: !!d?.pricesUnavailable, pricesSoonMsg: A("Paid plans for your country are not open yet. You can keep setting up, and we will open plans as soon as prices for your country are ready.", "الباقات المدفوعة في بلدك غير متاحة بعد. يمكنك متابعة الإعداد وسنفتح الباقات فور جاهزية الأسعار."),
-        termQtyNote: qty > 1 ? `Extra terminals ${money(tb.extra)} each` : hasTerm && qty === 0 ? "You already have a terminal. Add one only if you need another." : "How many branches do you have? One terminal per branch is required.", addr: addrVal, addrErr: s.addrTry && !addrOk, addrBd: s.addrTry && !addrOk ? "#B42318" : "#ECD9E0",
+        termQtyNote: qty > 1 ? `Extra terminals ${money(tb.extra)} each` : hasTerm && qty === 0 ? "You already have a terminal. Add one only if you need another." : "How many branches do you have? One terminal per branch is required.", addr: addrVal, addrFields: ((): any[] => {
+          const L = s.lang === "ar", mk = MARKETS[adCountry], set = (k: string, v: string) => this.setState((st: any) => ({ addrP: { ...(st.addrP ?? {}), [k]: v, ...(k === "country" ? { city: "" } : {}) } }));
+          const bad = (k: string) => !!s.addrTry && (ap[k] ?? "").trim().length < 2;
+          return [
+            { k: "country", label: L ? "الدولة" : "Country", select: GCC_CODES.map(c => ({ v: c, t: L ? MARKETS[c].nameAr : MARKETS[c].nameEn })), val: adCountry, ac: "country", onChange: (e: any) => set("country", e.target.value) },
+            { k: "city", label: L ? mk.regionLabelAr : mk.regionLabelEn, select: [{ v: "", t: L ? "اختر" : "Choose" }, ...adRegions.map(r => ({ v: r.en, t: L ? r.ar : r.en }))], val: ap.city, bad: bad("city"), ac: "address-level1", onChange: (e: any) => set("city", e.target.value) },
+            { k: "area", label: "Area or district", ph: "Al Barsha", val: ap.area, bad: bad("area"), ac: "address-level2", onChange: (e: any) => set("area", e.target.value) },
+            { k: "street", label: "Street", ph: "Sheikh Zayed Road", val: ap.street, bad: bad("street"), ac: "address-line1", onChange: (e: any) => set("street", e.target.value) },
+            { k: "building", label: "Building, villa or shop number", ph: "Shop 4, Al Majaz Tower", val: ap.building, bad: bad("building"), ac: "address-line2", onChange: (e: any) => set("building", e.target.value) },
+            { k: "note", label: "Landmark or delivery notes (optional)", ph: "Next to the pharmacy, ask for Ahmad", val: ap.note, wide: true, ac: "off", onChange: (e: any) => set("note", e.target.value) },
+          ];
+        })(), addrErr: s.addrTry && !addrOk, addrBd: s.addrTry && !addrOk ? "#B42318" : "#ECD9E0",
         subtotal: money(base), vat: money(vat), hasVat: rate > 0, vatLabel: `VAT (${rate}%)`, total: money(tot), payLabel: paying ? "Opening secure payment…" : "Continue to payment · " + money(tot), renew: fd(new Date(Date.now() + (yr ? 365 : 30) * 86_400_000)), invalid: paying, payOp: paying ? 0.7 : 1,
         cols: narrow || s.w < 1100 ? "minmax(0,1fr)" : "minmax(0,1.5fr) minmax(340px,1fr)", err: s.subErr || (d?.tax && !d.tax.eligible ? taxMsg(d.tax.reasons?.[0], ar) : ""), embed: !!s.embedSecret, notEmbed: !s.embedSecret,
       },
@@ -351,7 +366,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
       noopPrevent: (e: any) => e?.preventDefault?.(),
       lockOpen: !!lk, lock: lk || LOCKS.customers, lockClose: () => this.setState({ lock: null }), lockUpgrade: () => this.setState({ lock: null, sub: null, plan: lk ? lk.id : s.plan, page: "Plans", planStep: "plans" }),
       subLater: () => this.setState({ sub: null }), subOpenPlans: () => this.setState({ sub: null, lock: null, page: "Plans", planStep: "plans", subErr: "" }), subClosePlans: () => { if (!paying) { this.unmountStripe(); this.setState({ page: "Overview", planStep: "plans", embedSecret: null }); } }, subBackPlans: () => { if (!paying) { this.unmountStripe(); this.setState({ planStep: "plans", embedSecret: null }); } }, subEmbedBack: () => { this.unmountStripe(); this.setState({ embedSecret: null }); }, stripeRef: this.stripeRef,
-      subPay: (e: any) => { e?.preventDefault?.(); if (!addrOk) { this.setState({ addrTry: true }); return; } if (!paying) this.startPay(sel.id, s.bill, qty, addrVal.trim()); },
+      subPay: (e: any) => { e?.preventDefault?.(); if (!addrOk) { this.setState({ addrTry: true }); return; } if (!paying) this.startPay(sel.id, s.bill, qty, addrVal.trim(), adCountry); },
       subPortal: () => this.openBilling(), onAddr: (e: any) => this.setState({ addr: e.target.value }), termInc: () => this.setState({ termQty: Math.min(10, qty + 1) }), termDec: () => this.setState({ termQty: Math.max(0, qty - 1) }),
       pagePlans: s.page === "Plans",
     };

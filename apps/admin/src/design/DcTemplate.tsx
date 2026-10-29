@@ -1692,16 +1692,35 @@ export function DcTemplate({ vm }: { vm: any }) {
                                             </div>
                                             {vm.sub.hasTerm && (
                                               <>
-                                              <label style={S("display:flex;flex-direction:column;gap:6px")}>
-                                                <span style={S("font-size:14px;font-weight:500;color:#3D1C31")}>
+                                              <fieldset style={S("border:0;margin:0;padding:0;min-width:0;display:flex;flex-direction:column;gap:12px")}>
+                                                <legend style={S("padding:0;margin-bottom:10px;font-size:14px;font-weight:500;color:#3D1C31")}>
                                                   Delivery address for the terminal
-                                                </span>
-                                                <input autoComplete="street-address" placeholder="Building, street, area, emirate" value={vm.sub.addr} onChange={vm.onAddr} style={S(`height:48px;padding:0 14px;border-radius:12px;border:1.5px solid ${vm.sub.addrBd};background:#fff;font-size:15px`)} className="dch14" />
-                                              </label>
+                                                </legend>
+                                                <div style={S("display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px")}>
+                                                  {vm.sub.addrFields.map((f: any) => (
+                                                    <label key={f.k} style={S(`display:flex;flex-direction:column;gap:6px;${f.wide ? "grid-column:1/-1" : ""}`)}>
+                                                      <span style={S("font-size:13px;font-weight:500;color:#5B3B4F")}>
+                                                        {f.label}
+                                                      </span>
+                                                      {f.select ? (
+                                                        <select autoComplete={f.ac} value={f.val} onChange={f.onChange} aria-invalid={f.bad || undefined} style={S(`height:48px;padding:0 12px;border-radius:12px;border:1.5px solid ${f.bad ? "#B42318" : "#ECD9E0"};background:#fff;font-size:15px;color:#1A0815`)} className="dch14">
+                                                          {f.select.map((o: any) => (
+                                                            <option key={o.v} value={o.v}>
+                                                              {o.t}
+                                                            </option>
+                                                          ))}
+                                                        </select>
+                                                      ) : (
+                                                        <input autoComplete={f.ac} placeholder={f.ph} value={f.val} onChange={f.onChange} aria-invalid={f.bad || undefined} style={S(`height:48px;padding:0 14px;border-radius:12px;border:1.5px solid ${f.bad ? "#B42318" : "#ECD9E0"};background:#fff;font-size:15px`)} className="dch14" />
+                                                      )}
+                                                    </label>
+                                                  ))}
+                                                </div>
+                                              </fieldset>
                                               {vm.sub.addrErr && (
                                                 <>
                                                 <span style={S("font-size:13px;color:#B42318;margin-top:-6px")}>
-                                                  Add a delivery address for your terminal to continue.
+                                                  Fill in the region, area, street and building to continue.
                                                 </span>
                                                 </>
                                               )}
