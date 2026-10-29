@@ -148,7 +148,16 @@ export function BillingPage({ businessId, onChoosePlan, onChanged, focus, ar = f
               <button type="button" className="b b-out" style={{ minHeight: 40 }} disabled={!!busy} onClick={openCard}>{sub.card ? t("Change card", "تغيير البطاقة") : t("Add card", "إضافة بطاقة")}</button>
             </div>}</div>
         </div>
-        {cardForm && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}><div ref={slot} style={{ minHeight: 300, border: "1.5px solid #ECD9E0", borderRadius: 16, padding: 12, background: "#fff" }} /><div><button type="button" className="b b-out" onClick={() => setCardForm(null)}>{t("Cancel", "إلغاء")}</button></div></div>}
+        {cardForm && <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, background: "rgba(26,8,21,.5)", backdropFilter: "blur(3px)" }} onMouseDown={e => { if (e.target === e.currentTarget) setCardForm(null); }} onKeyDown={e => { if (e.key === "Escape") setCardForm(null); }}>
+          <div role="dialog" aria-modal="true" aria-label={t("Update payment method", "تحديث طريقة الدفع")} style={{ width: "100%", maxWidth: 520, maxHeight: "calc(100dvh - 32px)", display: "flex", flexDirection: "column", background: "#fff", borderRadius: 20, boxShadow: "0 30px 80px -20px rgba(26,8,21,.5)", overflow: "hidden" }}>
+            <div style={{ ...row, justifyContent: "space-between", flexWrap: "nowrap", padding: "18px 22px 14px", borderBottom: `1px solid ${LINE}` }}>
+              <h2 style={{ ...h2, margin: 0 }}>{t("Update payment method", "تحديث طريقة الدفع")}</h2>
+              <button type="button" aria-label={t("Close", "إغلاق")} onClick={() => setCardForm(null)} style={{ width: 44, height: 44, border: 0, background: "none", borderRadius: 12, fontSize: 22, lineHeight: 1, color: MUTED, cursor: "pointer", flex: "none" }}>×</button>
+            </div>
+            <div style={{ overflowY: "auto", padding: "16px 22px 8px" }}><div ref={slot} style={{ minHeight: 300 }} /></div>
+            <div style={{ padding: "10px 22px 18px", display: "flex", justifyContent: "flex-end" }}><button type="button" className="b b-out" onClick={() => setCardForm(null)}>{t("Cancel", "إلغاء")}</button></div>
+          </div>
+        </div>}
         {sub.pendingBilling && !ending && <p style={muted}>{t("Yearly billing starts on ", "تبدأ الفوترة السنوية في ")}<b>{date(sub.currentPeriodEnd)}</b>. <button type="button" className="lk" disabled={!!busy} onClick={() => run("plan", () => api(`${base}/change`, "POST", { plan: sub.plan, billing: sub.billing }), t("The scheduled change was cancelled.", "تم إلغاء التغيير المجدول."))}>{t("Undo", "تراجع")}</button></p>}
         {canManage && <div style={{ borderTop: "1px solid #F3EEF1", paddingTop: 8, ...row }}>
           {ending ? <><p style={{ ...muted, flex: "1 1 260px" }}>{t(`Your plan is set to end on ${date(sub.currentPeriodEnd)}.`, `ستنتهي باقتك في ${date(sub.currentPeriodEnd)}.`)}</p><button type="button" className="b b-out" disabled={!!busy} onClick={() => run("resume", () => api(`${base}/resume`, "POST"), t("Your plan will keep renewing.", "ستتجدد باقتك تلقائياً."))}>{t("Keep my plan", "الإبقاء على باقتي")}</button></>
