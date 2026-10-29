@@ -529,7 +529,7 @@ export function DcTemplate({ vm }: { vm: any }) {
           {vm.is.dash && (
             <>
             <div data-screen-label="06 Dashboard \u00b7 Menu" dir={vm.dir} style={S(`flex:none;width:100%;display:flex;height:${vm.L.dashH};overflow:hidden;background:#fff`)}>
-              {vm.dashWide && (
+              {vm.dashWide && !vm.pagePlans && (
                 <>
                 <aside style={S("flex:0 0 232px;border-inline-end:1px solid #F0E4E8;background:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh")}>
                   <div style={S("height:64px;padding:0 20px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #F0E4E8")}>
@@ -1506,7 +1506,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                             )}
                           </header>
                           <div style={S("flex:1;min-height:0;overflow-y:auto")}>
-                            <div style={S(`max-width:1100px;margin:0 auto;padding:${vm.sub.pad};display:flex;flex-direction:column;gap:22px;align-items:center`)}>
+                            <div style={S(`width:100%;max-width:none;margin:0;padding:${vm.sub.pad};display:flex;flex-direction:column;gap:22px;align-items:stretch`)}>
                               {vm.sub.stepPlans && (
                                 <>
                                 <div data-screen-label="11 Choose a plan" style={S("display:flex;flex-direction:column;gap:22px;width:100%")}>
