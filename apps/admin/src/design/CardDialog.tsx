@@ -13,18 +13,26 @@ async function loadStripeJs(): Promise<(key: string) => any> {
   return w.Stripe;
 }
 
+// Apple's web script: it lets Apple Pay work in Chrome, Firefox and Edge on a computer (the customer scans a QR code with an iPhone). Safari has Apple Pay built in.
+// If it cannot load the popup works without it.
+async function loadApplePayScript() {
+  const w = window as any;
+  if (w.ApplePaySession || document.querySelector("script[data-apple-pay]")) return;
+  await new Promise<void>(resolve => { const s = document.createElement("script"); s.src = "https://applepay.cdn-apple.com/jsapi/1.latest/apple-pay-sdk.js"; s.crossOrigin = "anonymous"; s.dataset.applePay = "1"; s.onload = () => resolve(); s.onerror = () => resolve(); document.head.appendChild(s); setTimeout(resolve, 4000); });
+}
+
 export function CardDialog({ ar, base, api, onClose, onSaved }: { ar: boolean; base: string; api: (path: string, method?: string, body?: unknown) => Promise<any>; onClose: () => void; onSaved: () => void }) {
   const t = (en: string, a: string) => (ar ? a : en);
   const expressSlot = React.useRef<HTMLDivElement>(null), addressSlot = React.useRef<HTMLDivElement>(null), paymentSlot = React.useRef<HTMLDivElement>(null), dialogRef = React.useRef<HTMLDivElement>(null);
   const live = React.useRef<{ stripe: any; elements: any; clientSecret: string; email?: string } | null>(null);
-  const [ready, setReady] = React.useState(false), [saving, setSaving] = React.useState(false), [error, setError] = React.useState(""), [wallets, setWallets] = React.useState(false);
+  const [ready, setReady] = React.useState(false), [saving, setSaving] = React.useState(false), [error, setError] = React.useState(""), [wallets, setWallets] = React.useState(false), [checked, setChecked] = React.useState(false);
 
   React.useEffect(() => {
     let gone = false, elements: any = null;
     (async () => {
       try {
         const r = await api(`${base}/card-setup`, "POST");
-        const Stripe = await loadStripeJs();
+        const [Stripe] = await Promise.all([loadStripeJs(), loadApplePayScript()]);
         if (gone) return;
         const stripe = Stripe(r.publishableKey);
         elements = stripe.elements({
@@ -36,7 +44,8 @@ export function CardDialog({ ar, base, api, onClose, onSaved }: { ar: boolean; b
         const payment = elements.create("payment", { layout: "tabs", wallets: { applePay: "never", googlePay: "never" }, fields: { billingDetails: { name: "never", email: "never", address: "never" } } });
         // Apple Pay and Google Pay: their own buttons at the top. Apple Pay is always offered: in Chrome and Firefox on a computer it asks the customer to scan a QR code with their iPhone.
         const express = elements.create("expressCheckout", { buttonHeight: 48, paymentMethods: { applePay: "always", googlePay: "auto", link: "never", paypal: "never", amazonPay: "never", klarna: "never" }, layout: { maxColumns: 2, maxRows: 1, overflow: "never" } });
-        express.on("ready", (e: any) => { if (!gone) setWallets(!!e?.availablePaymentMethods && Object.values(e.availablePaymentMethods).some(Boolean)); });
+        // Whether a wallet button really drew itself (Stripe draws none when the browser has no wallet to offer).
+        express.on("ready", (e: any) => { console.info("wallets reported by Stripe:", JSON.stringify(e?.availablePaymentMethods ?? null)); setTimeout(() => { if (!gone) setWallets((expressSlot.current?.offsetHeight ?? 0) > 20); setChecked(true); }, 400); });
         express.on("confirm", () => { void confirm(); });
         express.mount(expressSlot.current!); address.mount(addressSlot.current!); payment.mount(paymentSlot.current!);
         payment.on("ready", () => { if (!gone) setReady(true); });
@@ -71,8 +80,10 @@ export function CardDialog({ ar, base, api, onClose, onSaved }: { ar: boolean; b
       </div>
       <div style={{ padding: "4px 24px 8px", display: "flex", flexDirection: "column", gap: 16, minHeight: ready || error ? undefined : 260, position: "relative" }}>
         {!ready && !error && <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}><LumiaLoader size={56} /></div>}
-        <div style={{ opacity: ready && wallets ? 1 : 0, height: wallets ? undefined : 0, overflow: "hidden" }}><div ref={expressSlot} /></div>
-        {ready && wallets && <p style={{ margin: 0, textAlign: "center", fontSize: 13, color: MUTED }}>{t("Or enter your card", "أو أدخل بطاقتك")}</p>}
+        <div style={{ opacity: ready ? 1 : 0 }}><div ref={expressSlot} /></div>
+        {ready && checked && (wallets
+          ? <p style={{ margin: 0, textAlign: "center", fontSize: 13, color: MUTED }}>{t("Or enter your card", "أو أدخل بطاقتك")}</p>
+          : <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: MUTED }}>{t("Apple Pay and Google Pay are not offered by this browser. Open Billing in Safari with a card in Apple Wallet, or in Chrome signed in to Google Pay.", "لا يعرض هذا المتصفح Apple Pay وGoogle Pay. افتح الفوترة في Safari ومعك بطاقة في Apple Wallet، أو في Chrome مسجّلاً الدخول إلى Google Pay.")}</p>)}
         <div style={{ opacity: ready ? 1 : 0 }}><div ref={addressSlot} /></div>
         <div style={{ opacity: ready ? 1 : 0 }}><div ref={paymentSlot} /></div>
         {error && <div role="alert" style={{ padding: "12px 14px", borderRadius: 12, background: "#FDECEC", color: "#8A1F14", fontSize: 14, lineHeight: 1.5 }}>{error}</div>}
