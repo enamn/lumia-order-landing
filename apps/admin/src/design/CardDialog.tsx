@@ -34,8 +34,8 @@ export function CardDialog({ ar, base, api, onClose, onSaved }: { ar: boolean; b
         // Name and address come from the address field; the card field then asks only for the card itself.
         const address = elements.create("address", { mode: "billing", defaultValues: { name: r.name ?? "", address: { country: "AE" } } });
         const payment = elements.create("payment", { layout: "tabs", wallets: { applePay: "never", googlePay: "never" }, fields: { billingDetails: { name: "never", email: "never", address: "never" } } });
-        // Apple Pay and Google Pay: their own buttons at the top, shown only when this browser or device can use them.
-        const express = elements.create("expressCheckout", { buttonHeight: 48, paymentMethods: { link: "never", paypal: "never", amazonPay: "never", klarna: "never" }, layout: { maxColumns: 2, maxRows: 1, overflow: "never" } });
+        // Apple Pay and Google Pay: their own buttons at the top. Apple Pay is always offered: in Chrome and Firefox on a computer it asks the customer to scan a QR code with their iPhone.
+        const express = elements.create("expressCheckout", { buttonHeight: 48, paymentMethods: { applePay: "always", googlePay: "auto", link: "never", paypal: "never", amazonPay: "never", klarna: "never" }, layout: { maxColumns: 2, maxRows: 1, overflow: "never" } });
         express.on("ready", (e: any) => { if (!gone) setWallets(!!e?.availablePaymentMethods && Object.values(e.availablePaymentMethods).some(Boolean)); });
         express.on("confirm", () => { void confirm(); });
         express.mount(expressSlot.current!); address.mount(addressSlot.current!); payment.mount(paymentSlot.current!);
