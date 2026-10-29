@@ -803,9 +803,9 @@ export function DcTemplate({ vm }: { vm: any }) {
                               <div style={S("display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding:12px 14px;border-radius:12px;background:#FBF3F8;font-size:14px")}>
                                 <span style={S("color:#3D1C31")}>
                                   {"Tracking no. "}
-                                  <span style={S("font-weight:600;color:#1A0815;font-variant-numeric:tabular-nums")}>
+                                  <bdi dir="ltr" style={S("font-weight:600;color:#1A0815;font-variant-numeric:tabular-nums;unicode-bidi:isolate")}>
                                     {vm.term.tracking}
-                                  </span>
+                                  </bdi>
                                 </span>
                               </div>
                               </>
