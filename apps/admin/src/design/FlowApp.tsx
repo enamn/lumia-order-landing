@@ -189,7 +189,7 @@ export default class FlowApp extends React.Component<FlowProps, any> {
   confirmPayment = async (sessionId?: string) => {
     this.setState({ sub: "confirming" });
     if (sessionId) { try { await api(`/api/v1/businesses/${this.state.businessId}/subscription/confirm`, "POST", { sessionId }); } catch { /* the webhook may still activate it: fall through to the check below */ } }
-    for (let i = 0; i < 15; i++) { const d = await this.loadSub(); if (d && (d.status === "ACTIVE" || d.status === "PAST_DUE")) { this.setState({ sub: "done", page: "Overview" }); return; } await new Promise(r => setTimeout(r, 2000)); }
+    for (let i = 0; i < 15; i++) { const d = await this.loadSub(); if (d && (d.status === "ACTIVE" || d.status === "PAST_DUE")) { this.setState({ sub: "done", page: "Overview" }, () => { this.loadOverview(); this.showOverviewLoader(); }); return; } await new Promise(r => setTimeout(r, 2000)); }
     this.setState({ sub: null, subErr: "" }); // still processing: it will appear on its own
   };
   stripeRef = React.createRef<HTMLDivElement>(); stripeForm: any = null;
