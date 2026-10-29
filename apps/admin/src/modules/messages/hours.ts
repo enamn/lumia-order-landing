@@ -70,7 +70,7 @@ export function closedText(state: Extract<OpenState, { open: false }>, lang: "en
   const lines = hoursLines(state.week, lang).join("\n");
   if (lang === "ar") {
     const head = state.why === "break" ? `عذراً، ${restaurant} في استراحة قصيرة الآن ولا نستقبل الطلبات حالياً.` : state.why === "last" ? `عذراً، انتهى وقت استقبال الطلبات اليوم في ${restaurant}.` : `عذراً، ${restaurant} مغلق الآن ولا نستقبل الطلبات حالياً.`;
-    const open = state.reopenOn ? `سنعود في ${state.reopenOn}.` : state.next ? `نفتح ${when(state.next)}.` : "";
+    const open = state.reopenOn ? `سنعود في ${state.reopenOn}.` : state.next ? `نحن نفتح ${when(state.next)}.` : "";
     return `${head}\n\n🕒 ساعات العمل:\n${lines}\n\n${open}\nيسعدنا استقبال طلبك وقتها 🙏`;
   }
   const head = state.why === "break" ? `Sorry, ${restaurant} is on a short break and isn't taking orders right now.` : state.why === "last" ? `Sorry, ${restaurant} has stopped taking orders for today.` : `Sorry, ${restaurant} is closed right now and isn't taking orders.`;

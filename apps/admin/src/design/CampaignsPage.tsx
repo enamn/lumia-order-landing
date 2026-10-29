@@ -56,7 +56,7 @@ export function CampaignsPage(p: {
   const A = (en: string, ar: string) => (p.ar ? ar : en);
   const [tab, setTab] = React.useState<"new" | "sent">("new"), [step, setStep] = React.useState(0), [kind, setKind] = React.useState<CampaignKind>("message");
   const all = p.customers ?? [], eligible = all.filter(c => !c.optedOut), currency = p.currency ?? "AED";
-  const [filter, setFilter] = React.useState<Filter>("all"), [q, setQ] = React.useState(""), untouched = React.useRef(!p.selected.length);
+  const [filter, setFilter] = React.useState<Filter>("all"), [q, setQ] = React.useState("");
   const [withCode, setWithCode] = React.useState(true), [pct, setPct] = React.useState(20), [days, setDays] = React.useState(7), [code, setCode] = React.useState("SAVE20"), [codeTouched, setCodeTouched] = React.useState(false);
   const [msg, setMsg] = React.useState(p.selected.length ? p.defaults.offer : p.defaults.all), [msgTouched, setMsgTouched] = React.useState(false);
   const [pickMsg, setPickMsg] = React.useState(""), [ids, setIds] = React.useState<string[]>([]), [itemQ, setItemQ] = React.useState("");
@@ -68,8 +68,7 @@ export function CampaignsPage(p: {
   React.useEffect(() => { top.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [step]);
 
   const groups: Record<Filter, CustomerRow[]> = { all: eligible, regular: eligible.filter(c => segmentOf(c) === "regular"), new: eligible.filter(c => segmentOf(c) === "new"), away: eligible.filter(c => segmentOf(c) === "away") };
-  // The list is the audience: everyone starts ticked, a group button ticks just that group, and single customers can be ticked or cleared.
-  React.useEffect(() => { if (untouched.current && eligible.length) { untouched.current = false; p.onSelect(eligible.map(c => c.id)); } }, [eligible.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The list is the audience: nobody is ticked until the owner chooses. A group button only filters the list.
   const sel = new Set(p.selected), recips = eligible.filter(c => sel.has(c.id)), n = recips.length, isAll = n > 0 && n === eligible.length;
   const term = q.trim().toLowerCase().replace(/\s/g, "");
   const shown = groups[filter].filter(c => !term || c.name.toLowerCase().replace(/\s/g, "").includes(term) || c.phone.includes(term));

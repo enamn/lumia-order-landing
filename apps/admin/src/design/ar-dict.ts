@@ -660,12 +660,9 @@ export const AR: Record<string, string> = {
  "Saturday open": "فتح السبت",
  "Sunday open": "فتح الأحد",
  "When a customer asks today": "عندما يسأل عميل اليوم",
- "We are open today until 10:00 PM.": "نحن مفتوحون اليوم حتى 10:00 م.",
  "We are closed today.": "نحن مغلقون اليوم.",
  "Outside opening hours": "خارج ساعات العمل",
- "Sorry, we are currently closed. It opens today at 9:00 AM.": "عذراً، نحن مغلقون حالياً. يفتح اليوم الساعة 9:00 ص.",
  "Near closing time": "قرب وقت الإغلاق",
- "We close at 10:00 PM. Please confirm your order now.": "نغلق الساعة 10:00 م. يرجى تأكيد طلبك الآن.",
  "While temporarily closed": "أثناء الإغلاق المؤقت",
  "Menu setup": "إعداد القائمة",
  "Lumia AI answers from your approved menu: items, prices and what's available.": "يجيب لوميا AI من قائمتك المعتمدة: الأصناف والأسعار وما هو متاح.",
@@ -754,7 +751,17 @@ const MONTHS: Record<string, string> = { January: "يناير", February: "فب�
 const date = (d: string, m: string, y: string) => `${d} ${MONTHS[m]} ${y}`;
 const DATE = "(\\d{1,2}) (January|February|March|April|May|June|July|August|September|October|November|December) (\\d{4})";
 
+const DAYS_AR: Record<string, string> = { Monday: "الاثنين", Tuesday: "الثلاثاء", Wednesday: "الأربعاء", Thursday: "الخميس", Friday: "الجمعة", Saturday: "السبت", Sunday: "الأحد" };
+const CLOCK = "(\\d{1,2}:\\d{2}) ([AP])M";
+const clockAr = (t: string, ap: string) => `${t} ${ap === "A" ? "ص" : "م"}`;
+const whenAr = (w: string) => (w === "today" ? "اليوم" : w === "tomorrow" ? "غداً" : `يوم ${DAYS_AR[w.replace(/^on /, "")] ?? w}`);
+
 export const AR_PATTERNS: [RegExp, (m: RegExpExecArray) => string][] = [
+  [new RegExp(`^We are open today until ${CLOCK}\\.$`), m => `نحن مفتوحون اليوم حتى ${clockAr(m[1]!, m[2]!)}.`],
+  [new RegExp(`^Sorry, we are currently closed\\. We open (today|tomorrow|on [A-Za-z]+) at ${CLOCK}\\.$`), m => `عذراً، نحن مغلقون حالياً. نحن نفتح ${whenAr(m[1]!)} الساعة ${clockAr(m[2]!, m[3]!)}.`],
+  [/^Sorry, we are currently closed\. We open soon\.$/, () => "عذراً، نحن مغلقون حالياً. نحن نفتح قريباً."],
+  [new RegExp(`^We close at ${CLOCK}\\. Please confirm your order now\\.$`), m => `نحن نغلق الساعة ${clockAr(m[1]!, m[2]!)}. يرجى تأكيد طلبك الآن.`],
+  [new RegExp(`^Sorry, (.+) is temporarily closed( and reopens on (\\d{1,2}) (${Object.keys(MONTHS).join("|")}))?\\. We can't take orders right now\\.$`), m => `عذراً، ${m[1]} مغلق مؤقتاً${m[3] ? ` وسيعود في ${m[3]} ${MONTHS[m[4]!]}` : ""}. لا يمكننا استقبال الطلبات حالياً.`],
   [new RegExp(`^Your free trial ends on ${DATE}\\. Pick a plan to keep receiving WhatsApp orders\\.$`), m => `تنتهي تجربتك المجانية في ${date(m[1]!, m[2]!, m[3]!)}. اختر باقة لتواصل استقبال طلبات واتساب.`],
   [/^Choose (Starter|Plus|Pro)$/, m => `اختر ${m[1]}`],
   [/^\/ year$/, () => "/ سنة"],

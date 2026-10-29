@@ -46,6 +46,11 @@ export const TOPUP_IDS = Object.keys(TOPUPS) as TopUpId[];
 export const UAE_BOOK: PriceBook = { country: "AE", currency: "AED", decimals: 2, plans: { starter: { monthly: PLANS.starter.monthly, yearly: PLANS.starter.yearly }, plus: { monthly: PLANS.plus.monthly, yearly: PLANS.plus.yearly }, pro: { monthly: PLANS.pro.monthly, yearly: PLANS.pro.yearly } }, extraBranch: { monthly: EXTRA_BRANCH.monthly, yearly: EXTRA_BRANCH.yearly }, topups: { orders50: TOPUPS.orders50.price, orders200: TOPUPS.orders200.price }, terminal: TERMINAL };
 // Retries after a failed renewal, in days after the previous attempt. After the last one fails the subscription lapses.
 export const RETRY_DAYS = [1, 3, 5];
+// Sandbox clock (BILLING_SANDBOX=true, test payments only): a month lasts 1 minute, a year 1 hour and a retry "day" 1 minute, like Apple's sandbox, so the whole
+// subscribe, renew, retry and cancel path can be tried in minutes. Never switch it on where real cards are charged.
+export const BILLING_SANDBOX = process.env.BILLING_SANDBOX === "true";
+export const RETRY_STEP_MS = BILLING_SANDBOX ? 60_000 : 86_400_000;
+export const SANDBOX_PERIOD_MS = { monthly: 60_000, yearly: 3_600_000 } as const;
 
 export interface Line { name: string; unitMinor: number; quantity: number }
 export interface Quote { lines: Line[]; subtotalMinor: number; vatMinor: number; totalMinor: number }
@@ -90,6 +95,7 @@ export function quoteUpgrade(from: PlanId, to: PlanId, billing: Billing, periodS
 
 // One month or one year later, keeping the day of the month where possible (31 Jan -> 28/29 Feb).
 export function addPeriod(from: Date, billing: Billing): Date {
+  if (BILLING_SANDBOX) return new Date(from.getTime() + SANDBOX_PERIOD_MS[billing]);
   const d = new Date(from.getTime()), day = d.getUTCDate();
   d.setUTCDate(1); if (billing === "yearly") d.setUTCFullYear(d.getUTCFullYear() + 1); else d.setUTCMonth(d.getUTCMonth() + 1);
   d.setUTCDate(Math.min(day, new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate()));

@@ -711,7 +711,7 @@ export function DcTemplate({ vm }: { vm: any }) {
                   )}
                   {vm.notSettings && (
                     <>
-                    <main style={S(`flex:1;min-width:0;min-height:0;overflow-y:auto;padding:${vm.L.dashPad};display:flex;flex-direction:column;gap:26px`)}>
+                    <main className={vm.mainClass} style={S(`flex:1;min-width:0;min-height:0;overflow-y:auto;padding:${vm.L.dashPad};display:flex;flex-direction:column;gap:26px`)}>
                       {vm.emailBannerNode}
                       {vm.pageOverview && (
                         <>

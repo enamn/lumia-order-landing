@@ -50,9 +50,9 @@ export function BillingPage({ businessId, onChoosePlan, onChanged, focus, ar = f
   const t = (en: string, a: string) => (ar ? a : en), date = fmtDate(ar);
   const base = `/api/v1/businesses/${businessId}/subscription`;
   const [sub, setSub] = React.useState<any>(null), [invoices, setInvoices] = React.useState<any[]>([]), [error, setError] = React.useState(""), [busy, setBusy] = React.useState(""), [note, setNote] = React.useState("");
-  const [cycle, setCycle] = React.useState<"monthly" | "yearly">("monthly"), [quotes, setQuotes] = React.useState<Record<string, any>>({}), [cardForm, setCardForm] = React.useState<null | { secret: string; key: string; id: string }>(null), [ask, setAsk] = React.useState<Ask | null>(null);
+  const [cycle, setCycle] = React.useState<"monthly" | "yearly">("monthly"), [quotes, setQuotes] = React.useState<Record<string, any>>({}), [cardForm, setCardForm] = React.useState<null | { secret: string; key: string; id: string }>(null), [ask, setAsk] = React.useState<Ask | null>(null), [cards, setCards] = React.useState<any[] | null>(null);
   const slot = React.useRef<HTMLDivElement>(null), form = React.useRef<EmbeddedForm | null>(null), alertRef = React.useRef<HTMLDivElement>(null), askRef = React.useRef<HTMLButtonElement>(null);
-  const load = React.useCallback(async () => { try { const [s, i] = await Promise.all([api(base), api(`${base}/invoices`)]); setSub(s); setInvoices(i); setCycle(c => (s.billing === "yearly" ? "yearly" : c)); } catch (e: any) { setError(e.message); } }, [base]);
+  const load = React.useCallback(async () => { try { const [s, i] = await Promise.all([api(base), api(`${base}/invoices`)]); setSub(s); setInvoices(i); if (s.hasCustomer) api(`${base}/cards`, "POST").then(r => setCards(r.cards)).catch(() => setCards([])); else setCards([]); setCycle(c => (s.billing === "yearly" ? "yearly" : c)); } catch (e: any) { setError(e.message); } }, [base]);
   React.useEffect(() => { load(); }, [load]);
   // What each bigger plan would cost today, under the cycle being looked at (a yearly owner can only see yearly).
   const target: "monthly" | "yearly" = sub?.billing === "yearly" ? "yearly" : cycle;
@@ -94,7 +94,9 @@ export function BillingPage({ businessId, onChoosePlan, onChanged, focus, ar = f
   const reason = (show: boolean) => show && blocked ? <p style={muted}>{blocked}</p> : null;
 
   const askCancel = () => setAsk({ where: "cancel", title: t("Cancel your plan?", "إلغاء باقتك؟"), rows: [[t("Stays active until", "تبقى فعّالة حتى"), date(sub.currentPeriodEnd)], [t("Charged after that", "المبلغ بعد ذلك"), t("Nothing", "لا شيء")]], note: t("Your restaurant keeps working until then. You can keep the plan again before that date, or subscribe to any plan afterwards.", "يستمر مطعمك بالعمل حتى ذلك التاريخ. يمكنك الإبقاء على الباقة قبله، أو الاشتراك في أي باقة بعده."), confirm: t("Cancel plan", "إلغاء الباقة"), danger: true, go: () => run("cancel", () => api(`${base}/cancel`, "POST"), t("Your plan will end at the end of this period.", "ستنتهي باقتك في نهاية هذه الفترة.")) });
-  const askRemoveCard = () => setAsk({ where: "card", title: t("Remove this card?", "إزالة هذه البطاقة؟"), rows: [[t("Card", "البطاقة"), `${sub.card?.brand ?? t("Card", "بطاقة")} •••• ${sub.card?.last4 ?? ""}`]], note: t("Your plan is set to end, so nothing more will be charged. To keep your plan later, add a card again first.", "باقتك ستنتهي، فلن يُخصم منك شيء بعد الآن. للإبقاء على باقتك لاحقاً، أضف بطاقة من جديد أولاً."), confirm: t("Remove card", "إزالة البطاقة"), danger: true, go: () => run("removecard", () => api(`${base}/remove-card`, "POST"), t("Your card was removed.", "تمت إزالة البطاقة.")) });
+  const cardName = (c: any) => `${c.wallet === "apple_pay" ? "Apple Pay · " : c.wallet === "google_pay" ? "Google Pay · " : ""}${c.brand ? c.brand.charAt(0).toUpperCase() + c.brand.slice(1) : t("Card", "بطاقة")} •••• ${c.last4}`;
+  const askRemoveCard = (c: any) => setAsk({ where: "cards", title: t("Remove this card?", "إزالة هذه البطاقة؟"), rows: [[t("Card", "البطاقة"), cardName(c)]], note: c.isDefault ? t("Your plan is set to end, so nothing more will be charged. To keep your plan later, add a card again first.", "باقتك ستنتهي، فلن يُخصم شيء آخر. للإبقاء على باقتك لاحقاً، أضف بطاقة من جديد أولاً.") : t("This card is not used for your renewals.", "هذه البطاقة غير مستخدمة في تجديداتك."), confirm: t("Remove card", "إزالة البطاقة"), danger: true, go: () => run("card-remove", () => api(`${base}/remove-card`, "POST", { paymentMethodId: c.id }), t("Card removed.", "تمت إزالة البطاقة.")) });
+  const askMakeMain = (c: any) => setAsk({ where: "cards", title: t("Use this card for renewals?", "استخدام هذه البطاقة للتجديدات؟"), rows: [[t("Card", "البطاقة"), cardName(c)]], note: pastDue ? t("Your overdue renewal will be tried on this card right away.", "سيتم تجربة التجديد المتأخر على هذه البطاقة فوراً.") : t("Your next renewal and any extras are charged to this card.", "ستُخصم عليها تجديداتك القادمة وأي إضافات."), confirm: t("Use this card", "استخدام هذه البطاقة"), go: () => run("card-main", () => api(`${base}/default-card`, "POST", { paymentMethodId: c.id }), t("This card now pays your renewals.", "هذه البطاقة تدفع تجديداتك الآن.")) });
   const askTopUp = (pk: any) => setAsk({ where: "usage", title: ar ? `شراء ${num(pk.orders)} طلب إضافي` : `Buy ${num(pk.orders)} extra orders`, rows: [[t("Charged now", "المبلغ الآن"), money(pk.totalMinor) + (vatTag ? t(" (incl. VAT)", " (شامل الضريبة)") : "")], [t("Card", "البطاقة"), `${sub.card?.brand ?? t("Card", "بطاقة")} •••• ${sub.card?.last4 ?? ""}`], [t("Expire", "الصلاحية"), t("Never", "لا تنتهي")]], note: t("They are used after this month’s orders run out.", "تُستخدم بعد نفاد طلبات هذا الشهر."), confirm: t(`Pay ${money(pk.totalMinor)}`, `ادفع ${money(pk.totalMinor)}`), go: () => run("topup", () => api(`${base}/topup`, "POST", { pack: pk.id, requestId: crypto.randomUUID() }), ar ? `تمت إضافة ${num(pk.orders)} طلب.` : `${num(pk.orders)} orders added.`) });
   const per = sub.billing === "yearly" ? t("year", "سنة") : t("month", "شهر"), b = sub.branches ?? {};
   const askBranch = () => setAsk({ where: "branches", title: t("Add a branch", "إضافة فرع"), rows: [[t("Pay now", "ادفع الآن"), `${money(b.payNowMinor ?? 0)}${vatTag ? t(" (incl. VAT)", " (شامل الضريبة)") : ""}`], [t("Covers", "تغطي"), ar ? `باقي هذه الفترة، حتى ${date(sub.currentPeriodEnd)}` : `Rest of this period, to ${date(sub.currentPeriodEnd)}`], [t("From renewal", "من التجديد"), ar ? `${money(b.priceMinor ?? 0)}${vatTag} لكل ${per}` : `${money(b.priceMinor ?? 0)}${vatTag} per ${per}`], [t("Adds", "يضيف"), ar ? `${b.ordersPerBranch} طلب شهرياً` : `${b.ordersPerBranch} orders a month`]], note: t("Taking a branch off later happens at renewal, and nothing is refunded for the current period.", "إزالة الفرع لاحقاً تتم عند التجديد، ولا يُسترد شيء عن الفترة الحالية."), confirm: t(`Pay ${money(b.payNowMinor ?? 0)}`, `ادفع ${money(b.payNowMinor ?? 0)}`), go: () => run("branch", () => api(`${base}/branch`, "POST", { requestId: crypto.randomUUID() }), t("Branch added. You can set it up in Settings.", "تمت إضافة الفرع. يمكنك إعداده من الإعدادات.")) });
@@ -107,7 +109,7 @@ export function BillingPage({ businessId, onChoosePlan, onChanged, focus, ar = f
   const saving = mine && plan(mine.id) ? Math.round((1 - plan(mine.id).yearly / (plan(mine.id).monthly * 12)) * 100) : 0;
   const higher = catalog.filter(p => p.rank > (mine?.rank ?? 0));
 
-  return <div className="bl" dir={ar ? "rtl" : "ltr"} lang={ar ? "ar" : "en"} style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 960 }}>
+  return <div className="bl" data-screen-label="10 Billing" dir={ar ? "rtl" : "ltr"} lang={ar ? "ar" : "en"} style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 960 }}>
     <style>{CSS}</style>
     <div><h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: ar ? 0 : "-0.035em", margin: 0 }}>{t("Billing", "الفوترة")}</h1><p style={{ ...muted, marginTop: 6 }}>{t("Your plan, orders, payment card and invoices.", "باقتك وطلباتك وبطاقة الدفع والفواتير.")}</p></div>
     <div ref={alertRef} style={{ display: error || note ? "flex" : "none", flexDirection: "column", gap: 8 }}>
@@ -144,9 +146,7 @@ export function BillingPage({ businessId, onChoosePlan, onChanged, focus, ar = f
             {sub.card ? <><p className="nums" style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-0.02em", margin: "2px 0 0" }}><span style={{ textTransform: "capitalize" }}>{sub.card.brand}</span> •••• {sub.card.last4}</p><p style={muted}>{t("expires ", "تنتهي ")}{String(sub.card.expMonth).padStart(2, "0")}/{String(sub.card.expYear).slice(-2)}</p></> : <p style={{ ...muted, margin: "6px 0 0" }}>{t("No card on file", "لا توجد بطاقة محفوظة")}</p>}
             {canManage && !cardForm && <div style={{ ...row, gap: 4, marginTop: 4 }}>
               <button type="button" className="b b-out" style={{ minHeight: 40 }} disabled={!!busy} onClick={openCard}>{sub.card ? t("Change card", "تغيير البطاقة") : t("Add card", "إضافة بطاقة")}</button>
-              {sub.card && ending && <button type="button" className="lk quiet" disabled={!!busy} onClick={askRemoveCard}>{t("Remove card", "إزالة البطاقة")}</button>}
-            </div>}
-            {canManage && sub.card && !ending && !cardForm && <p style={{ ...muted, fontSize: 13 }}>{t("This card pays your renewals. To remove it, cancel your plan first.", "تُدفع تجديداتك بهذه البطاقة. لإزالتها، ألغِ باقتك أولاً.")}</p>}</div>
+            </div>}</div>
         </div>
         {cardForm && <div style={{ display: "flex", flexDirection: "column", gap: 10 }}><div ref={slot} style={{ minHeight: 300, border: "1.5px solid #ECD9E0", borderRadius: 16, padding: 12, background: "#fff" }} /><div><button type="button" className="b b-out" onClick={() => setCardForm(null)}>{t("Cancel", "إلغاء")}</button></div></div>}
         {sub.pendingBilling && !ending && <p style={muted}>{t("Yearly billing starts on ", "تبدأ الفوترة السنوية في ")}<b>{date(sub.currentPeriodEnd)}</b>. <button type="button" className="lk" disabled={!!busy} onClick={() => run("plan", () => api(`${base}/change`, "POST", { plan: sub.plan, billing: sub.billing }), t("The scheduled change was cancelled.", "تم إلغاء التغيير المجدول."))}>{t("Undo", "تراجع")}</button></p>}
@@ -155,9 +155,21 @@ export function BillingPage({ businessId, onChoosePlan, onChanged, focus, ar = f
             : <button type="button" className="lk quiet" disabled={!!busy} onClick={askCancel}>{t("Cancel plan", "إلغاء الباقة")}</button>}
         </div>}
         {sheet("cancel")}
-        {sheet("card")}
       </>}
     </section>
+
+    {cards && cards.length > 0 && <section className="card" style={card} aria-label={t("Your cards", "بطاقاتك")}>
+      <div style={{ ...row, justifyContent: "space-between" }}><h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>{t("Your cards", "بطاقاتك")}</h2>{canManage && !cardForm && <button type="button" className="b b-out" style={{ minHeight: 40 }} disabled={!!busy} onClick={openCard}>{t("Add a card", "إضافة بطاقة")}</button>}</div>
+      <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>{cards.map((c: any, k: number) => <li key={c.id} style={{ ...row, padding: "12px 0", borderTop: k ? `1px solid ${LINE}` : 0, justifyContent: "space-between" }}>
+        <span style={{ display: "flex", flexDirection: "column", gap: 2 }}><b className="nums" style={{ fontSize: 15 }}>{cardName(c)}</b><span style={muted}>{t("expires ", "تنتهي ")}{String(c.expMonth).padStart(2, "0")}/{String(c.expYear).slice(-2)}{c.isDefault && <> · <b style={{ color: INK }}>{t("pays your renewals", "تدفع تجديداتك")}</b></>}</span></span>
+        {canManage && <span style={{ ...row, gap: 4 }}>
+          {!c.isDefault && sub.status !== "NONE" && <button type="button" className="lk" disabled={!!busy} onClick={() => askMakeMain(c)}>{t("Use for renewals", "استخدمها للتجديد")}</button>}
+          {(!c.isDefault || !active || ending) && <button type="button" className="lk quiet" disabled={!!busy} onClick={() => askRemoveCard(c)}>{t("Remove", "إزالة")}</button>}
+        </span>}
+      </li>)}</ul>
+      <p style={{ ...muted, fontSize: 13 }}>{t("Apple Pay and Google Pay appear here as cards once you pay with them.", "تظهر Apple Pay وGoogle Pay هنا كبطاقات بعد الدفع بهما.")}</p>
+      {sheet("cards")}
+    </section>}
 
     {sub.usage && (() => { const u = sub.usage, o = u.orders, left = Math.max(0, o.limit - o.used) + u.credits, over = o.used >= o.limit && u.credits === 0, warm = o.limit > 0 && o.used / o.limit >= 0.8;
       // Voice notes, menu imports and the AI-reply pool are fair-use limits behind the order limit: they only show when one is nearly used up.

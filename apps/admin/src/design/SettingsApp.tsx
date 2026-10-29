@@ -299,7 +299,7 @@ class SettingsApp extends React.Component<Props, any> {
       ? [{ when: 'While temporarily closed', text: `Sorry, ${brand} is temporarily closed${H.closedUntil ? ` and reopens on ${new Date(H.closedUntil + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}` : ''}. We can't take orders right now.` }]
       : [
         today && today.open ? { when: 'When a customer asks today', text: `We are open today until ${fmt12(today.to)}.` } : { when: 'Today', text: 'We are closed today.' },
-        { when: 'Outside opening hours', text: `Sorry, we are currently closed. It opens ${nextOpen}.` },
+        { when: 'Outside opening hours', text: `Sorry, we are currently closed. We open ${nextOpen}.` },
         today && today.open && { when: 'Near closing time', text: `We close at ${fmt12(today.to)}. Please confirm your order now.` },
       ].filter(Boolean);
 

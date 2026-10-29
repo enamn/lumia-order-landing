@@ -7,13 +7,13 @@ export interface CustomerRow { id: string; name: string; phone: string; orders: 
 export type Segment = "all" | "regular" | "new" | "away";
 type Sort = "recent" | "orders" | "spent";
 
-const INK = "#1A0815", BODY = "#3D1C31", MUTED = "#8A5A6E", LINE = "#F0E4E8", ROSE = "#FF5577", WINE = "#8A2040";
+const INK = "#1A0815", BODY = "#3D1C31", MUTED = "#76566A", LINE = "#EDE5E9", ROSE = "#F0446F", WINE = "#A3153F";
 const DAY = 86_400_000, AWAY_DAYS = 30, REGULAR_ORDERS = 3;
 const daysSince = (iso: string | null) => (iso ? Math.floor((Date.now() - new Date(iso).getTime()) / DAY) : Infinity);
 // One tag per customer, in the order an owner acts on it: someone who went quiet matters more than how often they used to order.
 export const segmentOf = (c: CustomerRow): Exclude<Segment, "all"> | null => daysSince(c.lastOrderAt) > AWAY_DAYS ? "away" : c.orders >= REGULAR_ORDERS ? "regular" : c.orders <= 1 ? "new" : null;
-export const TONE: Record<Exclude<Segment, "all">, { bg: string; fg: string }> = { regular: { bg: "#FDEAF2", fg: WINE }, new: { bg: "#E4F4EC", fg: "#16704A" }, away: { bg: "#FFF1DC", fg: "#7A4B00" } };
-const AV = ["#FDEAF2", "#F1E6FF", "#FFF1DC", "#E4F4EC", "#E6F0FF"];
+export const TONE: Record<Exclude<Segment, "all">, { bg: string; fg: string }> = { regular: { bg: "#F3E8FF", fg: "#6B2FA8" }, new: { bg: "#E4F4EC", fg: "#16704A" }, away: { bg: "#FFF1DC", fg: "#7A4B00" } };
+const AV = ["#FFE6EE", "#EEE6FF", "#FFEFD6", "#E1F3E8", "#E3EEFF"];
 const avatarOf = (id: string) => AV[[...id].reduce((n, ch) => n + ch.charCodeAt(0), 0) % AV.length]!;
 const initials = (n: string) => n.split(/\s+/).filter(w => w && !/^(al|el)$/i.test(w)).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "#";
 const prettyPhone = (p: string) => (/^\+971\d{9}$/.test(p) ? `+971 ${p.slice(4, 6)} ${p.slice(6, 9)} ${p.slice(9)}` : p);
@@ -24,11 +24,11 @@ const CSS = `
 .cx-head{display:grid;grid-template-columns:44px minmax(0,1fr) 84px 128px 132px 36px;align-items:center}
 .cx-cell-m{display:none}
 .cx-segs{display:flex;flex-wrap:wrap;gap:8px}
-.cx-main:hover{background:#FFFAFC}
+.cx-main:hover{background:#FFF8FB}
 .cx-main:focus-visible,.cx-btn:focus-visible,.cx-seg:focus-visible,.cx-ck:focus-visible{outline:2px solid ${ROSE};outline-offset:2px}
-.cx-seg:hover{border-color:#E3CBD4}
-.cx-btn:hover{background:#FBF5F8}
-.cx-skel{background:linear-gradient(90deg,#F6EEF2 0%,#FBF7F9 50%,#F6EEF2 100%);background-size:200% 100%;animation:cx-sh 1.2s ease-in-out infinite;border-radius:8px}
+.cx-seg:hover{border-color:#DDC8D2}
+.cx-btn:hover{background:#F8F1F5}
+.cx-skel{background:linear-gradient(90deg,#F4EFF2 0%,#FBF7F9 50%,#F4EFF2 100%);background-size:200% 100%;animation:cx-sh 1.2s ease-in-out infinite;border-radius:8px}
 @keyframes cx-sh{to{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){.cx-skel{animation:none}}
 @media (max-width:720px){
@@ -83,7 +83,7 @@ export function CustomersPage(p: { ar: boolean; list: CustomerRow[] | null; erro
       {label}{sort === k && <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 7.5 1.5 3h7z" fill={INK} /></svg>}
     </button>
   );
-  const iconBtn: React.CSSProperties = { minHeight: 40, padding: "0 14px", borderRadius: 11, border: "1.5px solid #ECD9E0", background: "#fff", color: INK, fontSize: 14, fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer", textDecoration: "none" };
+  const iconBtn: React.CSSProperties = { minHeight: 40, padding: "0 14px", borderRadius: 11, border: "1.5px solid #E6DBE1", background: "#fff", color: INK, fontSize: 14, fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer", textDecoration: "none" };
 
   return (
     <div dir={p.ar ? "rtl" : "ltr"} data-screen-label="07 Dashboard · Customers" style={{ display: "flex", flexDirection: "column", gap: 18, color: INK, paddingBottom: p.selected.length ? 88 : 0 }}>
@@ -94,7 +94,7 @@ export function CustomersPage(p: { ar: boolean; list: CustomerRow[] | null; erro
           <p style={{ fontSize: 15, color: BODY, margin: "4px 0 0" }}>{p.list === null ? A("Loading your customers…", "جارٍ تحميل عملائك…") : !all.length ? A("No WhatsApp orders yet", "لا توجد طلبات واتساب بعد") : all.length === 1 ? A("1 customer has ordered from you on WhatsApp", "عميل واحد طلب منك عبر واتساب") : A(`${all.length} customers have ordered from you on WhatsApp`, `${all.length} عميل طلبوا منك عبر واتساب`)}</p>
         </div>
         {all.length > 0 && (
-          <label style={{ flex: "1 1 260px", maxWidth: 360, height: 44, display: "flex", alignItems: "center", gap: 10, padding: "0 14px", borderRadius: 12, border: "1.5px solid #E3CBD4", background: "#fff" }}>
+          <label style={{ flex: "1 1 260px", maxWidth: 360, height: 44, display: "flex", alignItems: "center", gap: 10, padding: "0 14px", borderRadius: 12, border: "1.5px solid #DDC8D2", background: "#fff" }}>
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true" style={{ flex: "none" }}><circle cx="9" cy="9" r="5.5" stroke={MUTED} strokeWidth="1.7" /><path d="m13.2 13.2 3.3 3.3" stroke={MUTED} strokeWidth="1.7" strokeLinecap="round" /></svg>
             <input value={q} onChange={e => setQ(e.target.value)} placeholder={A("Search name or number", "ابحث بالاسم أو الرقم")} aria-label={A("Search customers", "ابحث في العملاء")} style={{ flex: 1, minWidth: 0, border: 0, outline: "none", background: "transparent", fontSize: 15, height: "100%", color: INK }} />
           </label>
@@ -108,8 +108,8 @@ export function CustomersPage(p: { ar: boolean; list: CustomerRow[] | null; erro
           {[0, 1, 2, 3, 4].map(i => <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", background: "#fff" }}><span className="cx-skel" style={{ width: 40, height: 40, borderRadius: "50%" }} /><span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}><span className="cx-skel" style={{ width: "38%", height: 12 }} /><span className="cx-skel" style={{ width: "24%", height: 10 }} /></span><span className="cx-skel" style={{ width: 64, height: 12 }} /></div>)}
         </div>
       ) : !all.length ? (
-        <div style={{ border: `1px dashed #E3CBD4`, borderRadius: 20, padding: "40px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10 }}>
-          <span style={{ width: 56, height: 56, borderRadius: "50%", background: "#FDEAF2", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="26" height="26" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5" stroke={WINE} strokeWidth="1.6" strokeLinecap="round" /></svg></span>
+        <div style={{ border: `1px dashed #DDC8D2`, borderRadius: 20, padding: "40px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10 }}>
+          <span style={{ width: 56, height: 56, borderRadius: "50%", background: "#FFF1F6", display: "flex", alignItems: "center", justifyContent: "center" }}><svg width="26" height="26" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 9.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 16.5c.8-2.9 3.2-4.5 6-4.5s5.2 1.6 6 4.5" stroke={WINE} strokeWidth="1.6" strokeLinecap="round" /></svg></span>
           <h2 style={{ fontSize: 19, fontWeight: 600, margin: "6px 0 0" }}>{A("Your customers will appear here", "سيظهر عملاؤك هنا")}</h2>
           <p style={{ fontSize: 15, lineHeight: 1.55, color: BODY, margin: 0, maxWidth: 420, textWrap: "pretty" }}>{A("Everyone who orders on WhatsApp is added automatically, with their orders, spending and saved addresses.", "كل من يطلب عبر واتساب يُضاف تلقائياً، مع طلباته وما أنفقه وعناوينه المحفوظة.")}</p>
         </div>
@@ -120,10 +120,10 @@ export function CustomersPage(p: { ar: boolean; list: CustomerRow[] | null; erro
             {(["all", "regular", "new", "away"] as Segment[]).map(k => {
               const on = seg === k;
               return (
-                <button key={k} type="button" role="tab" aria-selected={on} className="cx-seg" onClick={() => { setSeg(k); setOpen(null); }} style={{ flex: "none", height: 40, padding: "0 14px", borderRadius: 999, border: `1.5px solid ${on ? INK : "#ECD9E0"}`, background: on ? INK : "#fff", color: on ? "#fff" : INK, fontSize: 14, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer", whiteSpace: "nowrap", transition: "background .15s, color .15s" }}>
-                  {k !== "all" && <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: "50%", background: TONE[k].fg, boxShadow: on ? "0 0 0 2px rgba(255,255,255,.9)" : "none" }} />}
+                <button key={k} type="button" role="tab" aria-selected={on} className="cx-seg" onClick={() => { setSeg(k); setOpen(null); }} style={{ flex: "none", height: 40, padding: "0 14px", borderRadius: 999, border: `1.5px solid ${on ? ROSE : "#E6DBE1"}`, background: on ? "#FFF1F6" : "#fff", color: on ? WINE : INK, fontSize: 14, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer", whiteSpace: "nowrap", transition: "background .15s, color .15s" }}>
+                  {k !== "all" && <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: "50%", background: TONE[k].fg, boxShadow: "none" }} />}
                   {SEG[k][0]}
-                  <span style={{ fontWeight: 500, color: on ? "rgba(255,255,255,.75)" : MUTED, ...num }}>{counts[k]}</span>
+                  <span style={{ fontWeight: 500, color: MUTED, ...num }}>{counts[k]}</span>
                 </button>
               );
             })}
@@ -136,7 +136,7 @@ export function CustomersPage(p: { ar: boolean; list: CustomerRow[] | null; erro
           )}
 
           <div role="table" aria-label={A("Customers", "العملاء")} style={{ border: `1px solid ${LINE}`, borderRadius: 18, overflow: "hidden", background: "#fff" }}>
-            <div role="row" className="cx-head" style={{ minHeight: 44, borderBottom: `1px solid ${LINE}`, background: "#FBF8F9", paddingInlineEnd: 6 }}>
+            <div role="row" className="cx-head" style={{ minHeight: 44, borderBottom: `1px solid ${LINE}`, background: "#FAF7F9", paddingInlineEnd: 6 }}>
               <button type="button" className="cx-ck" onClick={toggleShown} aria-label={allOn ? A("Clear selection", "إلغاء التحديد") : A("Select all shown", "تحديد الكل")} disabled={!eligible.length} style={{ height: 44, display: "flex", alignItems: "center", justifyContent: "center", border: 0, background: "none", cursor: "pointer" }}><Check on={allOn} disabled={!eligible.length} /></button>
               {sortBtn("recent", A("Customer · newest first", "العميل · الأحدث أولاً"), "start")}
               {sortBtn("orders", A("Orders", "الطلبات"))}
@@ -145,7 +145,7 @@ export function CustomersPage(p: { ar: boolean; list: CustomerRow[] | null; erro
               <span />
             </div>
             {/* phone: the sort lives above the list since the column headers are hidden */}
-            <div className="cx-cell-m" style={{ alignItems: "center", gap: 4, padding: "8px 10px", borderBottom: `1px solid ${LINE}`, background: "#FBF8F9", flexWrap: "wrap" }}>
+            <div className="cx-cell-m" style={{ alignItems: "center", gap: 4, padding: "8px 10px", borderBottom: `1px solid ${LINE}`, background: "#FAF7F9", flexWrap: "wrap" }}>
               <button type="button" className="cx-ck" onClick={toggleShown} aria-label={allOn ? A("Clear selection", "إلغاء التحديد") : A("Select all shown", "تحديد الكل")} disabled={!eligible.length} style={{ width: 34, height: 40, display: "flex", alignItems: "center", justifyContent: "center", border: 0, background: "none", cursor: "pointer" }}><Check on={allOn} disabled={!eligible.length} /></button>
               <span style={{ fontSize: 13, color: MUTED, marginInlineEnd: "auto" }}>{A("Sort", "ترتيب")}</span>
               {sortBtn("recent", A("Recent", "الأحدث"))}{sortBtn("orders", A("Orders", "الطلبات"))}{sortBtn("spent", A("Spent", "المبلغ"))}
@@ -154,7 +154,7 @@ export function CustomersPage(p: { ar: boolean; list: CustomerRow[] | null; erro
             {rows.map((c, i) => {
               const on = sel.has(c.id), isOpen = open === c.id, tag = segmentOf(c), avg = c.orders ? Math.round(c.spentMinor / c.orders) : 0;
               return (
-                <div key={c.id} role="rowgroup" style={{ borderTop: i ? `1px solid ${LINE}` : 0, background: on ? "#FFF7FA" : "#fff" }}>
+                <div key={c.id} role="rowgroup" style={{ borderTop: i ? `1px solid ${LINE}` : 0, background: on ? "#FFF8FB" : "#fff" }}>
                   <div role="row" className="cx-row" style={{ minHeight: 68, paddingInlineEnd: 6 }}>
                     <button type="button" className="cx-ck" onClick={() => !c.optedOut && toggle(c.id)} disabled={c.optedOut} aria-pressed={on} aria-label={c.optedOut ? A(`${c.name} turned off offers`, `${c.name} أوقف العروض`) : (on ? A("Deselect ", "إلغاء تحديد ") : A("Select ", "تحديد ")) + c.name} title={c.optedOut ? A("This customer turned off offers", "هذا العميل أوقف استلام العروض") : undefined} style={{ alignSelf: "stretch", display: "flex", alignItems: "center", justifyContent: "center", border: 0, background: "none", cursor: c.optedOut ? "not-allowed" : "pointer" }}><Check on={on} disabled={c.optedOut} /></button>
                     <button type="button" className="cx-main" onClick={() => setOpen(isOpen ? null : c.id)} aria-expanded={isOpen} style={{ gridColumn: "2 / -1", display: "grid", gridTemplateColumns: "subgrid", alignItems: "center", alignSelf: "stretch", border: 0, background: "none", cursor: "pointer", textAlign: "start", color: INK, padding: 0, borderRadius: 10 }}>
@@ -164,6 +164,7 @@ export function CustomersPage(p: { ar: boolean; list: CustomerRow[] | null; erro
                           <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
                             <span style={{ fontSize: 15, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", ...(c.name === c.phone ? num : {}) }}>{c.name === c.phone ? prettyPhone(c.phone) : c.name}</span>
                             {tag && <span className="cx-cell-d" style={{ flex: "none", fontSize: 12, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: TONE[tag].bg, color: TONE[tag].fg }}>{TAG[tag]}</span>}
+                            {c.optedOut && <span style={{ flex: "none", fontSize: 12, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: "#F4EFF2", color: "#5E4555" }}>{A("Offers off", "العروض متوقفة")}</span>}
                           </span>
                           {c.name !== c.phone && <span className="cx-cell-d" style={{ fontSize: 14, color: BODY, ...num, textAlign: p.ar ? "right" : "left" }}>{prettyPhone(c.phone)}</span>}
                           <span className="cx-cell-m" style={{ fontSize: 13, color: BODY, gap: 6, alignItems: "center", flexWrap: "wrap" }}>
@@ -182,7 +183,7 @@ export function CustomersPage(p: { ar: boolean; list: CustomerRow[] | null; erro
                     <div style={{ padding: "4px 18px 18px", paddingInlineStart: 60, display: "flex", flexDirection: "column", gap: 16 }}>
                       <dl style={{ margin: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 10 }}>
                         {[[A("Orders", "الطلبات"), String(c.orders)], [A("Spent", "المبلغ"), p.money(c.spentMinor)], [A("Average order", "متوسط الطلب"), c.orders ? p.money(avg) : "—"], [A("Last order", "آخر طلب"), c.lastOrderAt ? new Date(c.lastOrderAt).toLocaleDateString(p.ar ? "ar-AE-u-nu-latn" : "en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"]].map(([k, v]) => (
-                          <div key={k} style={{ background: "#FBF8F9", borderRadius: 12, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 2 }}><dt style={{ fontSize: 12, color: MUTED }}>{k}</dt><dd style={{ margin: 0, fontSize: 16, fontWeight: 600, ...num, textAlign: p.ar ? "right" : "left" }}>{v}</dd></div>
+                          <div key={k} style={{ background: "#FAF7F9", borderRadius: 12, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 2 }}><dt style={{ fontSize: 12, color: MUTED }}>{k}</dt><dd style={{ margin: 0, fontSize: 16, fontWeight: 600, ...num, textAlign: p.ar ? "right" : "left" }}>{v}</dd></div>
                         ))}
                       </dl>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -197,7 +198,7 @@ export function CustomersPage(p: { ar: boolean; list: CustomerRow[] | null; erro
                           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,220px),1fr))", gap: 8 }}>
                             {c.addresses.map((a, j) => (
                               <div key={j} style={{ border: `1px solid ${LINE}`, borderRadius: 12, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
-                                <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600 }}>{a.label}{(a.isDefault || (j === 0 && !c.addresses.some(x => x.isDefault))) && <span style={{ fontSize: 12, fontWeight: 600, padding: "1px 7px", borderRadius: 999, background: "#FDEAF2", color: WINE }}>{A("Default", "الافتراضي")}</span>}</span>
+                                <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600 }}>{a.label}{(a.isDefault || (j === 0 && !c.addresses.some(x => x.isDefault))) && <span style={{ fontSize: 12, fontWeight: 600, padding: "1px 7px", borderRadius: 999, background: "#FFF1F6", color: WINE }}>{A("Default", "الافتراضي")}</span>}</span>
                                 <span style={{ fontSize: 14, lineHeight: 1.45, color: BODY, textWrap: "pretty" }}>{a.text}</span>
                                 <span style={{ fontSize: 13, color: MUTED }}>{a.uses ? (a.uses === 1 ? A("Used for 1 order", "استُخدم لطلب واحد") : A(`Used for ${a.uses} orders`, `استُخدم لـ${a.uses} طلبات`)) : A("Not used yet", "لم يُستخدم بعد")}</span>
                               </div>
@@ -217,10 +218,10 @@ export function CustomersPage(p: { ar: boolean; list: CustomerRow[] | null; erro
 
       {/* Selection: one bar, pinned to the bottom so it's reachable on a phone */}
       {p.selected.length > 0 && (
-        <div role="region" aria-label={A("Selected customers", "العملاء المحددون")} style={{ position: "sticky", bottom: 16, zIndex: 5, alignSelf: "center", width: "min(100%, 560px)", display: "flex", alignItems: "center", gap: 10, padding: "10px 10px", paddingInlineStart: 18, borderRadius: 16, background: INK, color: "#fff", boxShadow: "0 18px 40px -18px rgba(26,8,21,.6)" }}>
+        <div role="region" aria-label={A("Selected customers", "العملاء المحددون")} style={{ position: "sticky", bottom: 16, zIndex: 5, alignSelf: "center", width: "min(100%, 560px)", display: "flex", alignItems: "center", gap: 10, padding: "10px 10px", paddingInlineStart: 18, borderRadius: 16, background: "#fff", color: INK, border: `1px solid ${LINE}`, boxShadow: "0 18px 40px -22px rgba(26,8,21,.4)" }}>
           <span style={{ flex: 1, fontSize: 15, fontWeight: 600, ...num, textAlign: p.ar ? "right" : "left" }}>{p.selected.length === 1 ? A("1 selected", "عميل واحد محدد") : A(`${p.selected.length} selected`, `${p.selected.length} محددون`)}</span>
-          <button type="button" onClick={() => p.onSelect([])} style={{ height: 40, padding: "0 12px", borderRadius: 10, border: 0, background: "transparent", color: "rgba(255,255,255,.85)", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>{A("Clear", "إلغاء")}</button>
-          <button type="button" onClick={() => p.onSendOffer()} style={{ height: 42, padding: "0 16px", borderRadius: 11, border: 0, background: "linear-gradient(90deg,#FF5577,#C93DFF)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{A("Send offer", "أرسل عرضاً")}</button>
+          <button type="button" onClick={() => p.onSelect([])} style={{ height: 40, padding: "0 12px", borderRadius: 10, border: 0, background: "transparent", color: MUTED, fontSize: 14, fontWeight: 500, cursor: "pointer" }}>{A("Clear", "إلغاء")}</button>
+          <button type="button" onClick={() => p.onSendOffer()} style={{ height: 42, padding: "0 16px", borderRadius: 11, border: 0, background: "linear-gradient(90deg,#D92B55,#B02BE0)", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>{A("Send offer", "أرسل عرضاً")}</button>
         </div>
       )}
     </div>

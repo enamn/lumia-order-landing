@@ -49,12 +49,11 @@ export function CampaignPreview(p: {
             {p.items.map(i => <div key={i.id} style={{ flex: "0 0 150px", scrollSnapAlign: "start", border: `1px solid ${WA_LINE}`, borderRadius: 9, padding: 4, background: "#fff" }}>
               {tile(i, 96)}
               <div style={{ padding: "6px 4px 2px" }}><div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3 }}>{name(i)}</div><div style={{ ...small, ...nums }}>{price(i.priceMinor)}</div></div>
-              <div style={{ borderTop: `1px solid ${WA_LINE}`, marginTop: 6, padding: "8px 0 4px", textAlign: "center", color: WA_ACTION, fontSize: 14, fontWeight: 500 }}>{A("Order", "اطلب")}</div>
+              <div style={{ borderTop: `1px solid ${WA_LINE}`, marginTop: 6, padding: "8px 0 4px", textAlign: "center", color: WA_ACTION, fontSize: 14, fontWeight: 500 }}>{A("Order now", "اطلب الآن")}</div>
             </div>)}
           </div>
           <div style={{ ...copy, paddingTop: 2 }}><span style={small}>{stop}</span></div>
         </div>}
-        <div style={{ width: "100%" }}><span className="cv-btn">{A("See full menu", "المنيو الكامل")}</span></div>
       </>}
 
       {p.kind === "list" && <>
@@ -69,7 +68,7 @@ export function CampaignPreview(p: {
             <span style={small}>{stop}</span>
           </div>
         </div>}
-        <div style={{ width: "92%", display: "flex", flexDirection: "column", gap: 4 }}><span className="cv-btn">{A("Order now", "اطلب الآن")}</span><span className="cv-btn">{A("Full menu", "المنيو الكامل")}</span></div>
+        <div style={{ width: "92%" }}><span className="cv-btn">{A("Order now", "اطلب الآن")}</span></div>
       </>}
   </PhoneFrame>;
 }

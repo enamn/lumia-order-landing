@@ -72,9 +72,9 @@ describe.skipIf(!enabled)("plan allowances, buffer, credits and top-ups", () => 
     const before = (await usageSummary(biz)).credits;
     charge = { status: "succeeded", paymentIntentId: "pi_topup" };
     const s = await buyTopUp(owner, biz, { pack: "orders50", requestId: "req-bbbbbbbb" });
-    expect(calls.at(-1)).toMatchObject({ path: "/internal/billing/charge", body: { amountMinor: 7900, idempotencyKey: `topup:sub-${suffix}:req-bbbbbbbb` } });
+    expect(calls.at(-1)).toMatchObject({ path: "/internal/billing/charge", body: { amountMinor: 9900, idempotencyKey: `topup:sub-${suffix}:req-bbbbbbbb` } });
     expect(s.usage.credits).toBe(before + 50);
-    expect(await db.billingInvoice.findFirstOrThrow({ where: { businessId: biz, kind: "TOPUP" } })).toMatchObject({ totalMinor: 7900, vatMinor: 0 }); // Afkar's UAE VAT registration is inactive: no VAT collected
+    expect(await db.billingInvoice.findFirstOrThrow({ where: { businessId: biz, kind: "TOPUP" } })).toMatchObject({ totalMinor: 9900, vatMinor: 0 }); // Afkar's UAE VAT registration is inactive: no VAT collected
     expect(s.topups.map(t => t.id)).toEqual(["orders50", "orders200"]);
     await expect(buyTopUp(owner, biz, { pack: "nope", requestId: "req-cccccccc" })).rejects.toBeTruthy();
     await db.subscription.update({ where: { id: `sub-${suffix}` }, data: { stripePaymentMethodId: null } });

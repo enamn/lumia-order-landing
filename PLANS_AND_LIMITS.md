@@ -177,3 +177,12 @@ Items go out one per line; if WhatsApp refuses line breaks in a parameter the sa
 - **Customers writing after expiry** (trial ended or plan ended, not VAT setup): the first 3 customers of that lock period each trigger an email to the owner (“<name> wrote to you on WhatsApp”); after that, one summary email a day. These are not held back by the one-email-a-day limit. The customer notice is skipped when the owner turned automatic replies off, and for STOP/START words. Choosing a plan switches everything back on at once; the number is never disconnected.
 - Setup needed on lumia-order-api: `RESEND_API_KEY` and `EMAIL_FROM` (default `Lumia Order <noreply@order.lumia.ae>`); the sending domain must be verified in Resend. Until the key is set, no email goes out and the job retries every hour.
 - **Contact email:** phone sign-ups have no real email, so every restaurant without a verified one sees a banner at the top of the dashboard ("Add your email to get plan reminders") with the address field and a 6-digit code sent by email (valid 10 minutes, 30 s between codes, 5 codes an hour, 5 wrong guesses). The same address and a Verify button are in Settings → Profile → Email; changing the address un-verifies it. No verified email, no reminders.
+
+
+## Testing billing (sandbox)
+
+- Set `BILLING_SANDBOX=true` on the app (test Stripe keys only). A month then lasts **1 minute**, a year **1 hour**, and the retry schedule (1, 3, 5 days) runs in **1, 3, 5 minutes**. Receipt emails show the time of day.
+- Run `sh apps/admin/scripts/billing-sandbox.sh` to charge what is due every 20 seconds (in production Cloud Scheduler calls the same job hourly).
+- Test cards: `4242 4242 4242 4242` pays; `4000 0000 0000 0341` attaches fine and then fails on renewal (retry path); `4000 0025 0000 3155` asks for 3-D Secure.
+- Apple Pay and Google Pay come with Stripe's payment form. They need to be switched on in the Stripe dashboard (Settings, Payment methods) and the app's domain registered for Apple Pay (Payment method domains). They are saved as cards and show in Billing with their wallet name.
+- Emails sent: subscribed, renewed, upgraded, extra orders added, extra branch added, renewal failed (each retry), bank confirmation needed, plan ended.

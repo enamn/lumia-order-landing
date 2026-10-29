@@ -19,12 +19,15 @@ export function MenuPreview({ businessId }: { businessId: string }) {
   }
   const ar = data?.locale === "ar";
   return <details className="ai-more menu-preview"><summary>Preview customer menu</summary>
+    <div className="menu-preview-layout"><div className="menu-preview-side">
     <p className="muted">Preview the response to a menu question. No messages, media uploads, or orders are sent.</p>
     <div className="menu-preview-controls"><label>Language <select className="input" value={lang} disabled={busy} onChange={e => { const locale = e.target.value as "ar" | "en"; setLang(locale); if (data) void load(0, branch, locale); }}><option value="ar">العربية</option><option value="en">English</option></select></label>
       {data && <label>Branch <select className="input" value={branch} disabled={busy} onChange={e => { setBranch(e.target.value); void load(0, e.target.value); }}><option value="">Shared menu</option>{data.branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></label>}
       <button type="button" className="button button-outline button-sm" disabled={busy} onClick={() => void load()}>{busy ? "Loading…" : data ? "Restart preview" : "Open preview"}</button></div>
     {error && <p role="alert" className="error-message">{error}</p>}
-    {data && <div style={{ width: "min(100%, 380px)", margin: "16px 0" }}><PhoneFrame name={data.name} ar={ar} caption={ar ? "معاينة فقط — في المحادثة الحقيقية، تقدر تطلب أو تسأل بنص أو فويس." : "Preview only. In the real chat, customers can order or ask by text or voice."}>
+    </div>
+    <div className="menu-preview-slot">
+    {data ? <div style={{ margin: "16px 0" }}><PhoneFrame name={data.name} ar={ar} caption={ar ? "معاينة فقط — في المحادثة الحقيقية، تقدر تطلب أو تسأل بنص أو فويس." : "Preview only. In the real chat, customers can order or ask by text or voice."}>
       <div className="menu-preview-question">{ar ? "شو عندك؟" : "What do you have?"}</div>
       <div className="menu-preview-bubble"><p>{data.batch.cards.length ? data.batch.text : ar ? "ما في أصناف متاحة حالياً." : "No items are available right now."}</p>
         <div className="menu-carousel-track" ref={track}>{data.batch.cards.map(card => <article className="menu-carousel-card" key={card.itemId} dir={ar ? "rtl" : "ltr"}>
@@ -38,6 +41,7 @@ export function MenuPreview({ businessId }: { businessId: string }) {
       {detail && <div className="menu-preview-bubble menu-preview-followup"><p>{detail}</p></div>}
       {advice && <><div className="menu-preview-question">{ar ? "نعم" : "Yes"}</div><div className="menu-preview-bubble"><p>{preferenceQuestion(data.menu, data.locale)}</p></div></>}
       {!advice && data.batch.cards.length > 0 && <button type="button" className="button button-outline button-sm" onClick={() => setAdvice(true)}>{ar ? "مثال: الرد بنعم لطلب النصيحة" : "Example: say yes to advice"}</button>}
-    </PhoneFrame></div>}
+    </PhoneFrame></div> : <div className="menu-preview-empty" aria-hidden="true"><span>{lang === "ar" ? "ستظهر المعاينة هنا" : "The preview appears here"}</span></div>}
+    </div></div>
   </details>;
 }

@@ -32,7 +32,7 @@ export function TerminalArt({ scanned }: { scanned: boolean }) {
       ce('div', { style: { width: 262, height: 525.5, transform: 'scale(.365)', transformOrigin: '0 0', background: scanned ? 'linear-gradient(180deg,#FFFFFF 0%,#EEF8F2 100%)' : 'linear-gradient(180deg,#FFFFFF 0%,#FDF4F8 62%,#F6ECFF 100%)', padding: '0 16px 20px', display: 'flex', flexDirection: 'column', color: '#1A0815', fontFamily: "'Geist',system-ui,sans-serif" } },
         ce('div', { style: { display: 'flex', alignItems: 'center', gap: 8, height: 54, flex: 'none' } }, logo(28), ce('span', { style: { fontSize: 16, fontWeight: 600 } }, 'Lumia Order')),
         scanned ? done : scanning));
-    return ce('div', { key: 'term', style: { position: 'relative', width: 150, height: 356, animation: scanned ? 'none' : 'lo-tbob 2.4s ease-in-out infinite', filter: 'drop-shadow(0 22px 22px rgba(26,8,21,.28))' } },
+    return ce('div', { key: 'term', style: { direction: 'ltr', position: 'relative', width: 150, height: 356, animation: scanned ? 'none' : 'lo-tbob 2.4s ease-in-out infinite', filter: 'drop-shadow(0 22px 22px rgba(26,8,21,.28))' } },
       ce('img', { src: '/brand/terminal.png', alt: 'Lumia Order terminal', style: { position: 'absolute', inset: 0, width: 150, height: 'auto', display: 'block' } }),
       screen);
   }
