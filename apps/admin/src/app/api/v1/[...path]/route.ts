@@ -7,7 +7,7 @@ import { extractMenuFromUrl } from "@/modules/menu/import-url";
 import { setLanguage } from "@/modules/auth/profile";
 import { connectWhatsApp, getWhatsAppStatus, getImportInfo, applyImport, useCatalog, disconnectWhatsApp } from "@/modules/whatsapp/link";
 import { createMessageTemplate } from "@/modules/whatsapp/templates";
-import { getSubscription, startCheckout, startCardUpdate, removeCard, listCards, makeDefaultCard, confirmSession, quotePlanChange, changePlan, buyTopUp, buyBranch, setExtraBranches, setCancel, listInvoices } from "@/modules/billing/service";
+import { getSubscription, startCheckout, startCardUpdate, removeCard, listCards, makeDefaultCard, startCardSetup, confirmCardSetup, confirmSession, quotePlanChange, changePlan, buyTopUp, buyBranch, setExtraBranches, setCancel, listInvoices } from "@/modules/billing/service";
 import { getSettings, saveSettingsSection } from "@/modules/settings/service";
 import { getMessageStats, getOverview, listConversations } from "@/modules/messages/inbound";
 import { getConversation, sendReply } from "@/modules/messages/reply";
@@ -80,6 +80,8 @@ async function handle(request: Request, context: Context) {
       if (method === "POST" && path.length === 4) {
         if (subId === "checkout") return startCheckout(userId, businessId, await jsonBody(request));
         if (subId === "card") return startCardUpdate(userId, businessId);
+        if (subId === "card-setup") return startCardSetup(userId, businessId);
+        if (subId === "card-confirm") return confirmCardSetup(userId, businessId, await jsonBody(request));
         if (subId === "cards") return listCards(userId, businessId);
         if (subId === "default-card") return makeDefaultCard(userId, businessId, await jsonBody(request));
         if (subId === "remove-card") return removeCard(userId, businessId, await jsonBody(request).catch(() => undefined));

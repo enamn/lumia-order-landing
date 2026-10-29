@@ -5,7 +5,7 @@
 // Plans only go up: a bigger plan starts now, a longer cycle starts at the renewal, and a smaller plan means cancelling and subscribing again.
 import React from "react";
 import { ContentLoader } from "@/components/lumia-loader";
-import { mountEmbeddedCheckout, type EmbeddedForm } from "@/lib/stripe-embed";
+import { CardDialog } from "./CardDialog";
 import { formatMoneyUi, moneyUi } from "@/modules/market/money";
 
 async function api(path: string, method = "GET", body?: unknown) {
@@ -50,19 +50,13 @@ export function BillingPage({ businessId, onChoosePlan, onChanged, focus, ar = f
   const t = (en: string, a: string) => (ar ? a : en), date = fmtDate(ar);
   const base = `/api/v1/businesses/${businessId}/subscription`;
   const [sub, setSub] = React.useState<any>(null), [invoices, setInvoices] = React.useState<any[]>([]), [error, setError] = React.useState(""), [busy, setBusy] = React.useState(""), [note, setNote] = React.useState("");
-  const [cycle, setCycle] = React.useState<"monthly" | "yearly">("monthly"), [quotes, setQuotes] = React.useState<Record<string, any>>({}), [cardForm, setCardForm] = React.useState<null | { secret: string; key: string; id: string }>(null), [ask, setAsk] = React.useState<Ask | null>(null), [cards, setCards] = React.useState<any[] | null>(null);
-  const slot = React.useRef<HTMLDivElement>(null), form = React.useRef<EmbeddedForm | null>(null), alertRef = React.useRef<HTMLDivElement>(null), askRef = React.useRef<HTMLButtonElement>(null);
+  const [cycle, setCycle] = React.useState<"monthly" | "yearly">("monthly"), [quotes, setQuotes] = React.useState<Record<string, any>>({}), [cardForm, setCardForm] = React.useState(false), [ask, setAsk] = React.useState<Ask | null>(null), [cards, setCards] = React.useState<any[] | null>(null);
+  const alertRef = React.useRef<HTMLDivElement>(null), askRef = React.useRef<HTMLButtonElement>(null);
   const load = React.useCallback(async () => { try { const [s, i] = await Promise.all([api(base), api(`${base}/invoices`)]); setSub(s); setInvoices(i); if (s.hasCustomer) api(`${base}/cards`, "POST").then(r => setCards(r.cards)).catch(() => setCards([])); else setCards([]); setCycle(c => (s.billing === "yearly" ? "yearly" : c)); } catch (e: any) { setError(e.message); } }, [base]);
   React.useEffect(() => { load(); }, [load]);
   // What each bigger plan would cost today, under the cycle being looked at (a yearly owner can only see yearly).
   const target: "monthly" | "yearly" = sub?.billing === "yearly" ? "yearly" : cycle;
   React.useEffect(() => { if (!sub || !sub.plan || !sub.catalog || sub.status === "NONE") return; let live = true; Promise.all(sub.catalog.filter((p: any) => p.rank >= (sub.catalog.find((c: any) => c.id === sub.plan)?.rank ?? 1)).map((p: any) => api(`${base}/quote`, "POST", { plan: p.id, billing: target }).then(q => [p.id, q] as const).catch(() => [p.id, null] as const))).then((r: any) => { if (live) setQuotes(Object.fromEntries(r)); }); return () => { live = false; }; }, [sub, target, base]);
-  React.useEffect(() => {
-    if (!cardForm || !slot.current) return; let gone = false;
-    mountEmbeddedCheckout(slot.current, cardForm.secret, cardForm.key, async () => { form.current?.destroy(); form.current = null; setCardForm(null); try { await api(`${base}/confirm`, "POST", { sessionId: cardForm.id }); setNote(t("Your card was updated.", "تم تحديث بطاقتك.")); await load(); onChanged(); } catch (e: any) { setError(e.message); } })
-      .then(f => { if (gone) f.destroy(); else form.current = f; }).catch(e => setError(e.message));
-    return () => { gone = true; form.current?.destroy(); form.current = null; };
-  }, [cardForm, base, load, onChanged]); // eslint-disable-line react-hooks/exhaustive-deps
   React.useEffect(() => { if (error) alertRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [error]);
   React.useEffect(() => { if (ask) askRef.current?.focus(); }, [ask]);
 
@@ -90,7 +84,7 @@ export function BillingPage({ businessId, onChoosePlan, onChanged, focus, ar = f
       <button type="button" className="b b-out" disabled={!!busy} onClick={() => setAsk(null)} onKeyDown={e => { if (e.key === "Escape") setAsk(null); }}>{t("Not now", "ليس الآن")}</button>
       {!ask.danger && sub.card && <button type="button" className="lk quiet" disabled={!!busy} onClick={openCard}>{t("Pay with a different card", "الدفع ببطاقة أخرى")}</button>}
     </div></div>;
-  const openCard = () => { setAsk(null); run("card", async () => { const r = await api(`${base}/card`, "POST"); if (r.clientSecret) setCardForm({ secret: r.clientSecret, key: r.publishableKey, id: r.sessionId }); else window.location.assign(r.url); }, ""); };
+  const openCard = () => { setAsk(null); setError(""); setNote(""); setCardForm(true); };
   const reason = (show: boolean) => show && blocked ? <p style={muted}>{blocked}</p> : null;
 
   const askCancel = () => setAsk({ where: "cancel", title: t("Cancel your plan?", "إلغاء باقتك؟"), rows: [[t("Stays active until", "تبقى فعّالة حتى"), date(sub.currentPeriodEnd)], [t("Charged after that", "المبلغ بعد ذلك"), t("Nothing", "لا شيء")]], note: t("Your restaurant keeps working until then. You can keep the plan again before that date, or subscribe to any plan afterwards.", "يستمر مطعمك بالعمل حتى ذلك التاريخ. يمكنك الإبقاء على الباقة قبله، أو الاشتراك في أي باقة بعده."), confirm: t("Cancel plan", "إلغاء الباقة"), danger: true, go: () => run("cancel", () => api(`${base}/cancel`, "POST"), t("Your plan will end at the end of this period.", "ستنتهي باقتك في نهاية هذه الفترة.")) });
@@ -148,16 +142,7 @@ export function BillingPage({ businessId, onChoosePlan, onChanged, focus, ar = f
               <button type="button" className="b b-out" style={{ minHeight: 40 }} disabled={!!busy} onClick={openCard}>{sub.card ? t("Change card", "تغيير البطاقة") : t("Add card", "إضافة بطاقة")}</button>
             </div>}</div>
         </div>
-        {cardForm && <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", overflowY: "auto", padding: 16, background: "rgba(26,8,21,.5)", backdropFilter: "blur(3px)" }} onMouseDown={e => { if (e.target === e.currentTarget) setCardForm(null); }} onKeyDown={e => { if (e.key === "Escape") setCardForm(null); }}>
-          <div role="dialog" aria-modal="true" aria-label={t("Update payment method", "تحديث طريقة الدفع")} style={{ width: "100%", maxWidth: 520, margin: "auto", display: "flex", flexDirection: "column", background: "#fff", borderRadius: 20, boxShadow: "0 30px 80px -20px rgba(26,8,21,.5)" }}>
-            <div style={{ ...row, justifyContent: "space-between", flexWrap: "nowrap", padding: "14px 22px 10px", borderBottom: `1px solid ${LINE}` }}>
-              <h2 style={{ ...h2, margin: 0 }}>{t("Update payment method", "تحديث طريقة الدفع")}</h2>
-              <button type="button" aria-label={t("Close", "إغلاق")} onClick={() => setCardForm(null)} style={{ width: 44, height: 44, border: 0, background: "none", borderRadius: 12, fontSize: 22, lineHeight: 1, color: MUTED, cursor: "pointer", flex: "none" }}>×</button>
-            </div>
-            <div style={{ padding: "14px 22px 4px" }}><div ref={slot} /></div>
-            <div style={{ padding: "6px 22px 16px", display: "flex", justifyContent: "flex-end" }}><button type="button" className="b b-out" onClick={() => setCardForm(null)}>{t("Cancel", "إلغاء")}</button></div>
-          </div>
-        </div>}
+        {cardForm && <CardDialog ar={ar} base={base} api={api} onClose={() => setCardForm(false)} onSaved={async () => { setCardForm(false); setNote(t("Your card was saved.", "تم حفظ بطاقتك.")); await load(); onChanged(); }} />}
         {sub.pendingBilling && !ending && <p style={muted}>{t("Yearly billing starts on ", "تبدأ الفوترة السنوية في ")}<b>{date(sub.currentPeriodEnd)}</b>. <button type="button" className="lk" disabled={!!busy} onClick={() => run("plan", () => api(`${base}/change`, "POST", { plan: sub.plan, billing: sub.billing }), t("The scheduled change was cancelled.", "تم إلغاء التغيير المجدول."))}>{t("Undo", "تراجع")}</button></p>}
         {canManage && <div style={{ borderTop: "1px solid #F3EEF1", paddingTop: 8, ...row }}>
           {ending ? <><p style={{ ...muted, flex: "1 1 260px" }}>{t(`Your plan is set to end on ${date(sub.currentPeriodEnd)}.`, `ستنتهي باقتك في ${date(sub.currentPeriodEnd)}.`)}</p><button type="button" className="b b-out" disabled={!!busy} onClick={() => run("resume", () => api(`${base}/resume`, "POST"), t("Your plan will keep renewing.", "ستتجدد باقتك تلقائياً."))}>{t("Keep my plan", "الإبقاء على باقتي")}</button></>

@@ -175,6 +175,26 @@ export async function startCardUpdate(userId: string, businessId: string) {
   return { sessionId: reply.id, url: reply.url, clientSecret: reply.clientSecret, publishableKey: reply.publishableKey };
 }
 
+// The card form drawn by Lumia (Stripe Elements): a SetupIntent opens it, the browser confirms it with Stripe, and confirmCardSetup then saves the card.
+export async function startCardSetup(userId: string, businessId: string) {
+  await authorize(userId, businessId, "business.manage");
+  const [sub, b] = await Promise.all([getSubscriptionFor(businessId), db.business.findUniqueOrThrow({ where: { id: businessId }, select: { stripeCustomerId: true } })]);
+  const customerId = sub?.stripeCustomerId ?? b.stripeCustomerId;
+  if (!customerId) throw new AppError("NO_SUBSCRIPTION", "There is no card on file yet.", 409);
+  const r = await api<{ setupIntentId: string; clientSecret: string; publishableKey: string }>("/internal/billing/card-setup", { customerId, businessId });
+  const known = await customerPayload(userId, businessId);
+  return { ...r, name: known.customer.name, email: known.email };
+}
+export async function confirmCardSetup(userId: string, businessId: string, input: unknown, now = new Date()) {
+  const { setupIntentId } = z.object({ setupIntentId: z.string().regex(/^seti_\w+$/) }).strict().parse(input);
+  await authorize(userId, businessId, "business.manage");
+  const r = await api<{ setupIntentId: string; succeeded: boolean; customerId?: string; paymentMethodId?: string; metadata: Record<string, string> }>("/internal/billing/card-setup/result", { setupIntentId });
+  if (r.metadata.businessId !== businessId) throw new AppError("NOT_FOUND", "Card not found.", 404);
+  if (!r.succeeded || !r.paymentMethodId) throw new AppError("CARD_NOT_SAVED", "The card could not be saved. Please try again.", 402);
+  const result = await applySession(businessId, { sessionId: r.setupIntentId, mode: "setup", complete: true, paid: true, customerId: r.customerId, paymentMethodId: r.paymentMethodId, metadata: { ...r.metadata, businessId, kind: "card" } }, now);
+  return { ...result, subscription: await getSubscription(userId, businessId) };
+}
+
 async function nextInvoiceNumber(now: Date): Promise<string> {
   const id = `invoice-${now.getUTCFullYear()}`;
   for (let attempt = 0; ; attempt++) {

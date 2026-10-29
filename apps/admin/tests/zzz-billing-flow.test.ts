@@ -4,14 +4,14 @@ import { ensureMongoIndexes } from "../scripts/mongo-indexes";
 import { createBusiness } from "../src/modules/business/service";
 import { setSupplierRegistration } from "../src/modules/tax/service";
 import { quoteSignup, quoteRenewal } from "../src/modules/billing/plans";
-import { confirmSession, runBilling, listCards, makeDefaultCard, removeCard, setCancel, buyTopUp, changePlan } from "../src/modules/billing/service";
+import { confirmSession, runBilling, startCardSetup, confirmCardSetup, listCards, makeDefaultCard, removeCard, setCancel, buyTopUp, changePlan } from "../src/modules/billing/service";
 import { runReminders } from "../src/modules/billing/reminders";
 const enabled = process.env.RUN_DB_TESTS === "true";
 
 // The whole paid path with Stripe and the mail service faked: subscribe, receipts, cards, renew, retry, top-up, cancel.
 describe.skipIf(!enabled)("billing flow: subscribe, cards, renew, retry, credits, cancel", () => {
   const suffix = crypto.randomUUID().slice(0, 8); let owner: string, biz: string;
-  let mails: { to: string; subject: string; text: string }[], charge: any, saved: any[], removed: string[], session: any;
+  let mails: { to: string; subject: string; text: string }[], charge: any, saved: any[], removed: string[], session: any, setup: any;
   const sub = () => db.subscription.findFirstOrThrow({ where: { businessId: biz } });
   const paid = (meta: Record<string, string>, amountTotalMinor?: number, pm = "pm_1") => ({ sessionId: `cs_${Math.random().toString(36).slice(2, 10)}`, mode: meta.kind === "card" ? "setup" : "payment", complete: true, paid: true, customerId: "cus_1", paymentMethodId: pm, paymentIntentId: `pi_${suffix}_signup`, amountTotalMinor, metadata: { businessId: biz, ...meta } });
   beforeAll(async () => {
@@ -21,6 +21,8 @@ describe.skipIf(!enabled)("billing flow: subscribe, cards, renew, retry, credits
     vi.stubGlobal("fetch", vi.fn(async (url: string, init: RequestInit) => {
       const path = new URL(url).pathname, body = JSON.parse(String(init.body));
       if (path === "/internal/billing/session") return Response.json(session);
+      if (path === "/internal/billing/card-setup") return Response.json({ setupIntentId: "seti_form1", clientSecret: "seti_form1_secret_x", publishableKey: "pk_test_x" });
+      if (path === "/internal/billing/card-setup/result") return Response.json(setup);
       if (path === "/internal/billing/card") return Response.json({ brand: "visa", last4: "4242", expMonth: 12, expYear: 2030 });
       if (path === "/internal/billing/cards") return Response.json({ cards: saved });
       if (path === "/internal/billing/card/remove") { removed.push(body.paymentMethodId); saved = saved.filter(c => c.id !== body.paymentMethodId); return Response.json({ removed: true }); }
@@ -48,6 +50,17 @@ describe.skipIf(!enabled)("billing flow: subscribe, cards, renew, retry, credits
     expect(await sub()).toMatchObject({ stripePaymentMethodId: "pm_2", card: { last4: "0005", wallet: "apple_pay" } });
     await removeCard(owner, biz, { paymentMethodId: "pm_1" }); expect(removed).toEqual(["pm_1"]);
     await expect(makeDefaultCard(owner, biz, { paymentMethodId: "pm_9" })).rejects.toMatchObject({ status: 404 });
+  });
+  it("saves a card from Lumia's own card form once Stripe confirms it, and refuses an unfinished or foreign setup", async () => {
+    const open = await startCardSetup(owner, biz); expect(open).toMatchObject({ setupIntentId: "seti_form1", clientSecret: "seti_form1_secret_x", publishableKey: "pk_test_x" });
+    setup = { setupIntentId: "seti_form1", succeeded: false, customerId: "cus_1", paymentMethodId: "pm_form", metadata: { businessId: biz } };
+    await expect(confirmCardSetup(owner, biz, { setupIntentId: "seti_form1" })).rejects.toMatchObject({ code: "CARD_NOT_SAVED" }); // not confirmed by Stripe yet
+    setup = { ...setup, succeeded: true, metadata: { businessId: "someone-else" } };
+    await expect(confirmCardSetup(owner, biz, { setupIntentId: "seti_form1" })).rejects.toMatchObject({ status: 404 });
+    setup = { ...setup, metadata: { businessId: biz } };
+    expect((await confirmCardSetup(owner, biz, { setupIntentId: "seti_form1" })).applied).toBe(true);
+    expect(await sub()).toMatchObject({ stripePaymentMethodId: "pm_form", stripeCustomerId: "cus_1" });
+    expect(await confirmCardSetup(owner, biz, { setupIntentId: "seti_form1" })).toMatchObject({ applied: false, reason: "ALREADY_APPLIED" });
   });
   it("a renewal mails a receipt; a failed one mails every retry; the last card can go once the plan is cancelled", async () => {
     const s0 = await sub(); mails = []; charge = { status: "succeeded", paymentIntentId: `pi_${suffix}_r` };
