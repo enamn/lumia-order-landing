@@ -15,9 +15,9 @@ async function loadStripeJs(): Promise<(key: string) => any> {
 
 export function CardDialog({ ar, base, api, onClose, onSaved }: { ar: boolean; base: string; api: (path: string, method?: string, body?: unknown) => Promise<any>; onClose: () => void; onSaved: () => void }) {
   const t = (en: string, a: string) => (ar ? a : en);
-  const addressSlot = React.useRef<HTMLDivElement>(null), paymentSlot = React.useRef<HTMLDivElement>(null), dialogRef = React.useRef<HTMLDivElement>(null);
-  const live = React.useRef<{ stripe: any; elements: any; email?: string } | null>(null);
-  const [ready, setReady] = React.useState(false), [saving, setSaving] = React.useState(false), [error, setError] = React.useState("");
+  const expressSlot = React.useRef<HTMLDivElement>(null), addressSlot = React.useRef<HTMLDivElement>(null), paymentSlot = React.useRef<HTMLDivElement>(null), dialogRef = React.useRef<HTMLDivElement>(null);
+  const live = React.useRef<{ stripe: any; elements: any; clientSecret: string; email?: string } | null>(null);
+  const [ready, setReady] = React.useState(false), [saving, setSaving] = React.useState(false), [error, setError] = React.useState(""), [wallets, setWallets] = React.useState(false);
 
   React.useEffect(() => {
     let gone = false, elements: any = null;
@@ -33,26 +33,32 @@ export function CardDialog({ ar, base, api, onClose, onSaved }: { ar: boolean; b
         });
         // Name and address come from the address field; the card field then asks only for the card itself.
         const address = elements.create("address", { mode: "billing", defaultValues: { name: r.name ?? "", address: { country: "AE" } } });
-        const payment = elements.create("payment", { layout: "tabs", fields: { billingDetails: { name: "never", email: "never", address: "never" } } });
-        address.mount(addressSlot.current!); payment.mount(paymentSlot.current!);
+        const payment = elements.create("payment", { layout: "tabs", wallets: { applePay: "never", googlePay: "never" }, fields: { billingDetails: { name: "never", email: "never", address: "never" } } });
+        // Apple Pay and Google Pay: their own buttons at the top, shown only when this browser or device can use them.
+        const express = elements.create("expressCheckout", { buttonHeight: 48, paymentMethods: { link: "never", paypal: "never", amazonPay: "never", klarna: "never" }, layout: { maxColumns: 2, maxRows: 1, overflow: "never" } });
+        express.on("ready", (e: any) => { if (!gone) setWallets(!!e?.availablePaymentMethods && Object.values(e.availablePaymentMethods).some(Boolean)); });
+        express.on("confirm", () => { void confirm(); });
+        express.mount(expressSlot.current!); address.mount(addressSlot.current!); payment.mount(paymentSlot.current!);
         payment.on("ready", () => { if (!gone) setReady(true); });
-        live.current = { stripe, elements, email: r.email };
+        live.current = { stripe, elements, clientSecret: r.clientSecret, email: r.email };
       } catch (e: any) { if (!gone) setError(e.message || t("We couldn’t load the payment form.", "تعذّر تحميل نموذج الدفع.")); }
     })();
-    return () => { gone = true; try { elements?.getElement?.("address")?.destroy(); elements?.getElement?.("payment")?.destroy(); } catch { /* already gone */ } live.current = null; };
+    return () => { gone = true; try { elements?.getElement?.("expressCheckout")?.destroy(); elements?.getElement?.("address")?.destroy(); elements?.getElement?.("payment")?.destroy(); } catch { /* already gone */ } live.current = null; };
   }, [base]); // eslint-disable-line react-hooks/exhaustive-deps
   React.useEffect(() => { dialogRef.current?.focus(); }, []);
 
-  const save = async () => {
+  // Used by the Update button and by the Apple Pay / Google Pay buttons: Stripe confirms the card, then Lumia saves it.
+  async function confirm() {
     const l = live.current; if (!l || saving) return;
     setSaving(true); setError("");
     try {
-      const { error: err, setupIntent } = await l.stripe.confirmSetup({ elements: l.elements, redirect: "if_required", confirmParams: { return_url: window.location.href, payment_method_data: { billing_details: l.email ? { email: l.email } : {} } } });
+      const { error: err, setupIntent } = await l.stripe.confirmSetup({ elements: l.elements, clientSecret: l.clientSecret, redirect: "if_required", confirmParams: { return_url: window.location.href, payment_method_data: { billing_details: l.email ? { email: l.email } : {} } } });
       if (err) { setError(err.message || t("The card could not be saved.", "تعذّر حفظ البطاقة.")); setSaving(false); return; }
       await api(`${base}/card-confirm`, "POST", { setupIntentId: setupIntent.id });
       onSaved();
     } catch (e: any) { setError(e.message); setSaving(false); }
-  };
+  }
+  const save = confirm;
 
   const btn: React.CSSProperties = { minHeight: 44, padding: "0 22px", borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: "pointer" };
   return <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", overflowY: "auto", padding: 16, background: "rgba(26,8,21,.5)", backdropFilter: "blur(3px)" }}
@@ -65,6 +71,8 @@ export function CardDialog({ ar, base, api, onClose, onSaved }: { ar: boolean; b
       </div>
       <div style={{ padding: "4px 24px 8px", display: "flex", flexDirection: "column", gap: 16, minHeight: ready || error ? undefined : 260, position: "relative" }}>
         {!ready && !error && <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}><LumiaLoader size={56} /></div>}
+        <div style={{ opacity: ready && wallets ? 1 : 0, height: wallets ? undefined : 0, overflow: "hidden" }}><div ref={expressSlot} /></div>
+        {ready && wallets && <p style={{ margin: 0, textAlign: "center", fontSize: 13, color: MUTED }}>{t("Or enter your card", "أو أدخل بطاقتك")}</p>}
         <div style={{ opacity: ready ? 1 : 0 }}><div ref={addressSlot} /></div>
         <div style={{ opacity: ready ? 1 : 0 }}><div ref={paymentSlot} /></div>
         {error && <div role="alert" style={{ padding: "12px 14px", borderRadius: 12, background: "#FDECEC", color: "#8A1F14", fontSize: 14, lineHeight: 1.5 }}>{error}</div>}
